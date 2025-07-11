@@ -36,7 +36,7 @@ public class Frontend extends JPanel implements ActionListener {
     private JPanel settingsPanel;
 
     public Frontend(int width, int height){
-        setPreferredSize(new Dimension(width, height));  // Set the initial dimension of the Frame
+        setSize(width, height);  // Set the initial dimension of the Frame
 
         // Initialize all the Panels
         initBoard();  // Set the properties of the Board
@@ -68,6 +68,7 @@ public class Frontend extends JPanel implements ActionListener {
         this.sidebarPanel.setPreferredSize(new Dimension((int) this.windowSize.getWidth()/5, (int) this.windowSize.getHeight()));
 //        this.sidebarPanel.setBackground(dark);
         this.sidebarPanel.setBackground(Color.BLACK);
+
 
         // Set the margin of the Sidebar [top: 60, bottom: 60, left: 30, right: 30]
         this.sidebarPanel.setBorder(BorderFactory.createEmptyBorder(60,30,60,30));
@@ -252,49 +253,33 @@ public class Frontend extends JPanel implements ActionListener {
         this.showAllPanel = new JPanel();
         this.showAllPanel.setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - this.sidebarPanel.getWidth()), (int) this.windowSize.getHeight()));
 
-        // Create the List Model for the JList and read all the data from the database
-//        DefaultListModel<Data> dataModel = new DefaultListModel<>();
 
-//        for (int row = 1; row <= this.database.getRowsNumber(); row++){
-//            dataModel.addElement(this.database.getData(row));
+        // Create the List Model for the JList and read all the data from the database
+        DefaultListModel<String> dataModel = new DefaultListModel<>();
+
+//        for (int i = 0; i < 1000; i++){
+//            dataModel.add(i, i+") "+Math.random());
 //        }
 
         // Create the JList used to show all the data saved inside the database
         JList dataList = new JList();
-//        dataList.setModel(dataModel);  // Set the Model of the JList to the one created
-        dataList.setPreferredSize(new Dimension(300, 250));
+        dataList.setModel(dataModel);  // Set the Model of the JList to the one created
 
-        dataList.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                super.mouseClicked(e);
-//                Data data = dataModel.getElementAt(dataList.getSelectedIndex());
-//                cryptography.setMasterPassword(masterPassword);
-//
-//                JOptionPane.showMessageDialog(showAllPanel,
-//                        "The data retrieved is: \n" +
-//                                "- Username: " + Data.encodeToString(cryptography.decrypt(Data.decode(data.getUSERNAME()))) + "\n" +
-//                                "- Email Address: " + Data.encodeToString(cryptography.decrypt(Data.decode(data.getEMAIL_ADDRESS()))) + "\n" +
-//                                "- Password: " + Data.encodeToString(cryptography.decrypt(Data.decode(data.getPASSWORD()))) + "\n" +
-//                                "- Service: " + Data.encodeToString(cryptography.decrypt(Data.decode(data.getSERVICE()))) + "\n" +
-//                                "- Additional Data: " + Data.encodeToString(cryptography.decrypt(Data.decode(data.getADDITIONAL_DATA()))) + "\n"
-//                );
-            }
-        });
-
+        JScrollPane scrollPane = new JScrollPane(dataList);
+        scrollPane.setPreferredSize(new Dimension(1000, 750));
 
         // Add the Show All Panel to the Board as it's the default panel at the start
         this.currentPanel = this.showAllPanel;
         add(this.showAllPanel, BorderLayout.CENTER);
 
         // Add all the components to the JPanel
-        this.showAllPanel.add(dataList);
+        this.showAllPanel.add(scrollPane, BorderLayout.CENTER);
     }
 
     // Initialize all the components of the Settings Panel
     private void initSettingsPanel(){
         this.settingsPanel = new JPanel();
-        this.settingsPanel.setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - this.sidebarPanel.getWidth()), (int) this.windowSize.getHeight()));
+//        this.settingsPanel.setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - this.sidebarPanel.getWidth()), (int) this.windowSize.getHeight()));
         this.settingsPanel.setBackground(Color.RED);
     }
 
@@ -314,7 +299,7 @@ public class Frontend extends JPanel implements ActionListener {
         repaint();
     }
 
-    // TODO: Add Google Drive synchronization if enabled by the user
+    // TODO: Add Goooogle Drive synchronization if enabled by the user
     // Method executed by the timer
     @Override
     public void actionPerformed(ActionEvent e) {
