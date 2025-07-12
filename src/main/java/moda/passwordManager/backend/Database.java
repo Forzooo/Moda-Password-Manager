@@ -140,16 +140,41 @@ public class Database {
         return new Data(data[0], data[1], data[2], data[3], data[4]);
     }
 
+    /**
+     * Get each ID and service_data from the Database
+     * @return ResultSet
+     */
+    public ResultSet getFullServiceData(){
+
+        ResultSet queryResult; // The set where are stored the records found in the database
+
+        try {
+            PreparedStatement query = this.connection.prepareStatement(
+                "SELECT id, service_data FROM "+Database.TABLE_NAME
+            );
+            queryResult = query.executeQuery();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return queryResult;
+    }
+
     // Modify the data of a column of a row
-    public void modifyColumnData(int id, String columnName, String data){
+    public void changeData(int id, Data data){
 
         try {
             // Create the UPDATE query and set its parameters
             PreparedStatement query = this.connection.prepareStatement(
-                "UPDATE "+Database.TABLE_NAME+" SET "+columnName+"=? WHERE id=?"
+                "UPDATE "+Database.TABLE_NAME+" SET username_data=?, email_address_data=?, password_data=?, service_data=?, additional_data=? WHERE id=?"
             );
-            query.setString(1, data);
-            query.setInt(2, id);
+            query.setString(1, data.getUSERNAME());
+            query.setString(2, data.getEMAIL_ADDRESS());
+            query.setString(3, data.getPASSWORD());
+            query.setString(4, data.getSERVICE());
+            query.setString(5, data.getADDITIONAL_DATA());
+            query.setInt(6, id);
 
             query.executeUpdate();  // Execute the query
 
