@@ -45,9 +45,10 @@ public class GoogleDrive {
     public GoogleDrive(){
         this.jsonFactory = GsonFactory.getDefaultInstance();
 
-        initDriveService();
-
-        createDirectory();
+        // TODO: Temporary disabled until proper backend event are defined
+//        initDriveService();
+//
+//        createDirectory();
     }
 
     // Initialize the Drive service
