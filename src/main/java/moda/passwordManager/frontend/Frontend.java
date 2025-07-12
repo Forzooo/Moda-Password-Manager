@@ -1,6 +1,7 @@
 package moda.passwordManager.frontend;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -29,6 +30,8 @@ public class Frontend extends JPanel implements ActionListener {
      */
     private Dimension windowSize;
 
+    private final int MIN_CONTENT_WIDTH = 500;
+
     // All the JPanel of the GUI, defined as class attributes
     private JPanel sidebarPanel;
     private JPanel addDataPanel;
@@ -36,7 +39,7 @@ public class Frontend extends JPanel implements ActionListener {
     private JPanel settingsPanel;
 
     public Frontend(int width, int height){
-        setPreferredSize(new Dimension(width, height));  // Set the initial dimension of the Frame
+        setSize(width, height);  // Set the initial dimension of the Frame
 
         // Initialize all the Panels
         initBoard();  // Set the properties of the Board
@@ -63,17 +66,23 @@ public class Frontend extends JPanel implements ActionListener {
     // Initialize all the components of the Sidebar Panel
     private void initSidebarPanel(){
 
-        this.sidebarPanel = new JPanel();  // Create the Sidebar panel
+        final int MAX_SIDEBAR = 300;
 
-        this.sidebarPanel.setPreferredSize(new Dimension((int) this.windowSize.getWidth()/5, (int) this.windowSize.getHeight()));
-//        this.sidebarPanel.setBackground(dark);
+        this.sidebarPanel = new JPanel() {
+            @Override public Dimension getPreferredSize() {
+                Container parent = getParent(); // il Frame
+                if (parent != null) {
+                    int larghezza = Math.min(parent.getWidth() / 3, MAX_SIDEBAR);
+                    return new Dimension(larghezza, parent.getHeight());
+                }
+                return new Dimension(MAX_SIDEBAR, 0);
+            }
+        };
+
         this.sidebarPanel.setBackground(Color.BLACK);
 
-        // Set the margin of the Sidebar [top: 60, bottom: 60, left: 30, right: 30]
-        this.sidebarPanel.setBorder(BorderFactory.createEmptyBorder(60,30,60,30));
-
-        // Set the layout of the Sidebar to BoxLayout giving importance to the Y axis
-        this.sidebarPanel.setLayout(new BoxLayout(this.sidebarPanel, BoxLayout.Y_AXIS));
+        //this.sidebarPanel.setPreferredSize(new Dimension((int) this.windowSize.getWidth()/5, (int) this.windowSize.getHeight()));
+        //this.sidebarPanel.setMaximumSize(new Dimension((int) this.windowSize.getWidth()/5, Integer.MAX_VALUE));
 
         add(this.sidebarPanel, BorderLayout.WEST);  // Add the Sidebar to the Panel
 
@@ -81,9 +90,11 @@ public class Frontend extends JPanel implements ActionListener {
         JLabel passwordManagerLabel = new JLabel();
         passwordManagerLabel.setText("MODA");
 //        passwordManagerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);  // Set the text-alignment to center
-        passwordManagerLabel.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 80));  // Set the font of the label
+        passwordManagerLabel.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 80));  // Set the font of the label
 //        passwordManagerLabel.setForeground(light);  // Set the color of the label
         passwordManagerLabel.setForeground(Color.WHITE);  // Set the color of the label
+
+        JPanel buttonPanel = new JPanel(new GridLayout(3, 1));
 
         // Create the JButtons used to switch between JPanels of the dynamic part
         Dimension buttonDimension = new Dimension(350, 50);
@@ -124,20 +135,35 @@ public class Frontend extends JPanel implements ActionListener {
         // Add the components to the Sidebar
         this.sidebarPanel.add(Box.createRigidArea(new Dimension(0, 20))); // Add RigidArea to add spacing between components
         this.sidebarPanel.add(passwordManagerLabel);
-        this.sidebarPanel.add(Box.createRigidArea(new Dimension(0, (int) (this.windowSize.getHeight()/5))));
-        this.sidebarPanel.add(addDataButton);
-        this.sidebarPanel.add(Box.createRigidArea(new Dimension(0, 30)));
-        this.sidebarPanel.add(showDataButton);
-        this.sidebarPanel.add(Box.createRigidArea(new Dimension(0, (int) this.windowSize.getHeight()/6)));
-        this.sidebarPanel.add(settingsButton);
-        this.sidebarPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+
+        buttonPanel.add(addDataButton);
+        buttonPanel.add(showDataButton);
+        buttonPanel.add(settingsButton);
+
+        this.sidebarPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+//        this.sidebarPanel.add(Box.createRigidArea(new Dimension(0, (int) (this.windowSize.getHeight()/5))));
+//        this.sidebarPanel.add(addDataButton);
+//        this.sidebarPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+//        this.sidebarPanel.add(showDataButton);
+//        this.sidebarPanel.add(Box.createRigidArea(new Dimension(0, (int) this.windowSize.getHeight()/6)));
+//        this.sidebarPanel.add(settingsButton);
+//        this.sidebarPanel.add(Box.createRigidArea(new Dimension(0, 30)));
 
     }
 
     // Initialize all the components of the Add Data Panel
     private void initAddDataPanel(){
 
-        this.addDataPanel = new JPanel();
+
+
+        this.addDataPanel = new JPanel(new BorderLayout()) {
+            @Override
+            public Dimension getMinimumSize() {
+                // altezza 0 → “qualsiasi”, conta solo la larghezza minima
+                return new Dimension(MIN_CONTENT_WIDTH, 0);
+            }
+        };
 
         this.addDataPanel.setLayout(new BoxLayout(this.addDataPanel, BoxLayout.Y_AXIS));
         this.addDataPanel.setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - this.sidebarPanel.getWidth()), (int) this.windowSize.getHeight()));
@@ -249,53 +275,66 @@ public class Frontend extends JPanel implements ActionListener {
 
     // Initialize all the components of the Show All Panel
     private void initShowDataPanel(){
-        this.showAllPanel = new JPanel();
-        this.showAllPanel.setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - this.sidebarPanel.getWidth()), (int) this.windowSize.getHeight()));
+
+
+
+        this.showAllPanel = new JPanel(new BorderLayout()) {
+            @Override
+            public Dimension getMinimumSize() {
+                // altezza 0 → “qualsiasi”, conta solo la larghezza minima
+                return new Dimension(MIN_CONTENT_WIDTH, 0);
+            }
+        };
+        //this.showAllPanel.setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - this.sidebarPanel.getWidth()), (int) this.windowSize.getHeight()));
+
+
 
         // Create the List Model for the JList and read all the data from the database
-//        DefaultListModel<Data> dataModel = new DefaultListModel<>();
+        DefaultListModel<String> dataModel = new DefaultListModel<>();
 
-//        for (int row = 1; row <= this.database.getRowsNumber(); row++){
-//            dataModel.addElement(this.database.getData(row));
-//        }
+        for (int i = 0; i < 1000; i++){
+            dataModel.add(i, i+") "+Math.random());
+        }
 
         // Create the JList used to show all the data saved inside the database
         JList dataList = new JList();
-//        dataList.setModel(dataModel);  // Set the Model of the JList to the one created
-        dataList.setPreferredSize(new Dimension(300, 250));
+        dataList.setModel(dataModel);  // Set the Model of the JList to the one created
 
-        dataList.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                super.mouseClicked(e);
-//                Data data = dataModel.getElementAt(dataList.getSelectedIndex());
-//                cryptography.setMasterPassword(masterPassword);
-//
-//                JOptionPane.showMessageDialog(showAllPanel,
-//                        "The data retrieved is: \n" +
-//                                "- Username: " + Data.encodeToString(cryptography.decrypt(Data.decode(data.getUSERNAME()))) + "\n" +
-//                                "- Email Address: " + Data.encodeToString(cryptography.decrypt(Data.decode(data.getEMAIL_ADDRESS()))) + "\n" +
-//                                "- Password: " + Data.encodeToString(cryptography.decrypt(Data.decode(data.getPASSWORD()))) + "\n" +
-//                                "- Service: " + Data.encodeToString(cryptography.decrypt(Data.decode(data.getSERVICE()))) + "\n" +
-//                                "- Additional Data: " + Data.encodeToString(cryptography.decrypt(Data.decode(data.getADDITIONAL_DATA()))) + "\n"
-//                );
-            }
-        });
+        dataList.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 20));
 
+        dataList.setFixedCellHeight(40);
+
+        JScrollPane scrollPane = new JScrollPane(dataList);
+        scrollPane.setPreferredSize(new Dimension(1000, 750));
+
+        scrollPane.setBorder(new EmptyBorder(10,30,10,30));
 
         // Add the Show All Panel to the Board as it's the default panel at the start
         this.currentPanel = this.showAllPanel;
         add(this.showAllPanel, BorderLayout.CENTER);
 
         // Add all the components to the JPanel
-        this.showAllPanel.add(dataList);
+        this.showAllPanel.add(scrollPane, BorderLayout.CENTER);
     }
 
     // Initialize all the components of the Settings Panel
     private void initSettingsPanel(){
-        this.settingsPanel = new JPanel();
-        this.settingsPanel.setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - this.sidebarPanel.getWidth()), (int) this.windowSize.getHeight()));
+
+        this.settingsPanel = new JPanel(new BorderLayout()) {
+            @Override
+            public Dimension getMinimumSize() {
+                // altezza 0 → “qualsiasi”, conta solo la larghezza minima
+                return new Dimension(MIN_CONTENT_WIDTH, 0);
+            }
+        };
+//        this.settingsPanel.setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - this.sidebarPanel.getWidth()), (int) this.windowSize.getHeight()));
         this.settingsPanel.setBackground(Color.RED);
+
+        JLabel label = new JLabel();
+
+        label.setText("Settings");
+
+        settingsPanel.add(label, BorderLayout.CENTER);
     }
 
     // This method is used to switch to a new panel hiding the previous one
@@ -314,7 +353,7 @@ public class Frontend extends JPanel implements ActionListener {
         repaint();
     }
 
-    // TODO: Add Google Drive synchronization if enabled by the user
+    // TODO: Add Goooogle Drive synchronization if enabled by the user
     // Method executed by the timer
     @Override
     public void actionPerformed(ActionEvent e) {
