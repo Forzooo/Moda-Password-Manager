@@ -3,6 +3,8 @@ package moda.passwordManager.backend;
 import moda.passwordManager.communicationHandler.CommunicationHandler;
 import moda.passwordManager.communicationHandler.Event;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -16,10 +18,10 @@ public class Backend extends Thread {
     // The CommunicationHandler object used to communicate with the Frontend thread
     private CommunicationHandler communicationHandler;
 
-    private byte[] masterPassword;  // The Master Password used for encryption purposes
-
     private Event eventToSend;  // The event that is sent to the frontend. Must be set using its setter
     private ArrayList dataToSend;  // The data that is added to the Event to send to the frontend
+
+    private boolean runFlag;  // Let the thread run until the connection is closed
 
     public Backend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
         // Create the communication handler with the two queues
@@ -31,11 +33,14 @@ public class Backend extends Thread {
         this.googleDrive = new GoogleDrive();
 
         this.eventToSend = null;
+        this.dataToSend = new ArrayList();
+
+        this.runFlag = true;
     }
 
     @Override
     public void run() {
-        while (true){
+        while (this.runFlag){
             /**
              * If there's an even to send, send it
              * It does not make the thread to stop forever because if an event is read from the Frontend, it's
@@ -47,13 +52,9 @@ public class Backend extends Thread {
                 resetSendData();  // Reset the data to send to the frontend
             }
             Event event = this.communicationHandler.receive();  // Wait for an event from the Frontend
-            processEvent(event);  // Process the operation from th
-            createResponse(event);
+            processEvent(event);  // Process the operation requested from the frontend
+            createEvent(event);  // Create an event to send to the frontend
         }
-    }
-
-    public void setEventToSend(Event eventToSend){
-        this.eventToSend = eventToSend;
     }
 
     /**
@@ -61,26 +62,66 @@ public class Backend extends Thread {
      */
     public void resetSendData(){
         this.eventToSend = null;
-        this.dataToSend = new ArrayList();
+        this.dataToSend.clear();  // Clear the data
     }
 
     public void processEvent(Event event){
+        ArrayList eventData = event.getData();
         switch (event.getName()){
             case "set-master-password":
-                // Retrieve the master password from the data sent
-                setMasterPassword(event.getData().getFirst());
+                setMasterPassword((String) eventData.getFirst());
                 break;
 
+            case "close-connection":
+                closeConnection();
+                break;
+
+            case "get-full-service-data":
+                getFullServiceData();
+                break;
+
+            case "save-data":
+                saveData((Data) eventData.getFirst());
+                break;
+
+            case "get-single-data":
+                getSingleData((int) eventData.getFirst());
+                break;
+
+            case "delete-data":
+                deleteSingleData((int) eventData.getFirst());
+                break;
+
+            case "change-data":
+                changeData((int) eventData.getFirst(), (Data) eventData.get(1));
+                break;
         }
     }
 
-    public void createResponse(Event event){
-        switch (event.getName()){
-            case "set-master-password":
-                // Send back a message to tell the master password has been set
-                this.eventToSend = new Event("set-master-password-completed", this.dataToSend);
-                break;
-        }
+    /**
+     * Create the event that will be sent to the Frontend
+     * @param event
+     */
+    public void createEvent(Event event){
+        this.eventToSend = new Event(event.getName()+"-completed", this.dataToSend);
+    }
+
+    /**
+     * Decrypts any string that was encrypted and decodes it
+     * @param encryptedString
+     * @return Decrypted string
+     */
+    private String decryptData(String encryptedString){
+        return new String(this.cryptography.decrypt(Data.decode(encryptedString)));
+    }
+
+    /**
+     * Encrypts any plaintext string and encodes it to base64
+     * @param plaintextData
+     * @return
+     */
+    private String encryptData(String plaintextData){
+        return Data.encodeToBase64(this.cryptography.encrypt(plaintextData));
     }
 
     /**
@@ -88,8 +129,104 @@ public class Backend extends Thread {
      * Can be called only from event: "set-master-password"
      * @param masterPassword
      */
-    private void setMasterPassword(Object masterPassword){
-        this.masterPassword = (byte[]) masterPassword;
+    private void setMasterPassword(String masterPassword){
+        this.cryptography.setMasterPassword(masterPassword.getBytes());
+    }
+
+    /**
+     * Close the connection with the Frontend and stop the execution of the thread
+     */
+    private void closeConnection(){
+        this.communicationHandler = null;
+        this.runFlag = false;
+    }
+
+    /**
+     * Retrieve all the serviceData with their IDs from the database
+     */
+    private void getFullServiceData(){
+        ResultSet resultSet = this.database.getFullServiceData();
+
+        ArrayList data = new ArrayList();  // The IDs and service_data ArrayList are stored inside another ArrayList
+        ArrayList<Integer> idList = new ArrayList<>();
+        ArrayList<String> serviceDataList = new ArrayList<>();
+
+        data.add(idList);
+        data.add(serviceDataList);
+
+        while (true){
+            try {
+                if (!resultSet.next()){
+                    resultSet.close();  // Close the ResultSet, and implicitly the query, as it has completed its purpose
+                    break;
+                }
+                idList.add(resultSet.getInt("id"));
+                serviceDataList.add(decryptData(resultSet.getString("service_data")));
+
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        this.dataToSend.add(data);  // Add the data to the data to send
+    }
+
+    /**
+     * Save the user data, after encrypting it, inside the database
+     * @param data
+     */
+    private void saveData(Data data){
+        String username = encryptData(data.getUSERNAME());
+        String emailAddress = encryptData(data.getEMAIL_ADDRESS());
+        String password = encryptData(data.getPASSWORD());
+        String service = encryptData(data.getSERVICE());
+        String additionalData = encryptData(data.getADDITIONAL_DATA());
+
+        Data dataEncrypted = new Data(username, emailAddress, password, service, additionalData);
+        this.database.addData(dataEncrypted);
+    }
+
+    /**
+     * Retrieve the data with the associated id from the database <br/>
+     * Moreover decrypt it
+     * @param id
+     */
+    private void getSingleData(int id){
+        Data singleData = this.database.getData(id);
+
+        String username = decryptData(singleData.getUSERNAME());
+        String emailAddress = decryptData(singleData.getEMAIL_ADDRESS());
+        String password = decryptData(singleData.getPASSWORD());
+        String service = decryptData(singleData.getSERVICE());
+        String additionalData = decryptData(singleData.getADDITIONAL_DATA());
+
+        Data decryptedData = new Data(username, emailAddress, password, service, additionalData);
+        this.dataToSend.add(decryptedData);
+    }
+
+    /**
+     * Delete the record of the database with a specific ID
+     * @param id
+     */
+    private void deleteSingleData(int id){
+        this.database.deleteData(id);
+    }
+
+    /**
+     * Change the data of a record inside the database
+     * @param id
+     * @param data
+     */
+    private void changeData(int id, Data data){
+        // Encrypt the data before saving it into the database
+        Data encryptedData = new Data(
+                encryptData(data.getUSERNAME()),
+                encryptData(data.getEMAIL_ADDRESS()),
+                encryptData(data.getPASSWORD()),
+                encryptData(data.getSERVICE()),
+                encryptData(data.getADDITIONAL_DATA())
+        );
+        this.database.changeData(id, encryptedData);
     }
 
 }
