@@ -11,4 +11,12 @@ public class Event {
         this.name = name;
         this.data = new ArrayList(data);
     }
+
+    public String getName() {
+        return name;
+    }
+
+    public ArrayList getData() {
+        return data;
+    }
 }
