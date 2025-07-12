@@ -2,7 +2,6 @@ package moda.passwordManager.communicationHandler;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
-// TODO: creare un Issue per l'encryption
 public class CommunicationHandler {
 
     private LinkedBlockingQueue<Event> sender;  // Send Event from this queue to the other thread
