@@ -147,12 +147,7 @@ public class Backend extends Thread {
     private void getFullServiceData(){
         ResultSet resultSet = this.database.getFullServiceData();
 
-        ArrayList data = new ArrayList();  // The IDs and service_data ArrayList are stored inside another ArrayList
-        ArrayList<Integer> idList = new ArrayList<>();
-        ArrayList<String> serviceDataList = new ArrayList<>();
-
-        data.add(idList);
-        data.add(serviceDataList);
+        ArrayList<Data> data = new ArrayList<>();  // The IDs and service_data are stored inside a Data object
 
         while (true){
             try {
@@ -160,8 +155,9 @@ public class Backend extends Thread {
                     resultSet.close();  // Close the ResultSet, and implicitly the query, as it has completed its purpose
                     break;
                 }
-                idList.add(resultSet.getInt("id"));
-                serviceDataList.add(decryptData(resultSet.getString("service_data")));
+                int id = resultSet.getInt("id");
+                String serviceData = decryptData(resultSet.getString("service_data"));
+                data.add(new Data(id, serviceData));
 
             } catch (SQLException e) {
                 throw new RuntimeException(e);
@@ -182,7 +178,7 @@ public class Backend extends Thread {
         String service = encryptData(data.getSERVICE());
         String additionalData = encryptData(data.getADDITIONAL_DATA());
 
-        Data dataEncrypted = new Data(username, emailAddress, password, service, additionalData);
+        Data dataEncrypted = new Data(data.getID(), username, emailAddress, password, service, additionalData);
         this.database.addData(dataEncrypted);
     }
 
@@ -200,7 +196,7 @@ public class Backend extends Thread {
         String service = decryptData(singleData.getSERVICE());
         String additionalData = decryptData(singleData.getADDITIONAL_DATA());
 
-        Data decryptedData = new Data(username, emailAddress, password, service, additionalData);
+        Data decryptedData = new Data(id, username, emailAddress, password, service, additionalData);
         this.dataToSend.add(decryptedData);
     }
 
@@ -220,6 +216,7 @@ public class Backend extends Thread {
     private void changeData(int id, Data data){
         // Encrypt the data before saving it into the database
         Data encryptedData = new Data(
+                id,
                 encryptData(data.getUSERNAME()),
                 encryptData(data.getEMAIL_ADDRESS()),
                 encryptData(data.getPASSWORD()),
