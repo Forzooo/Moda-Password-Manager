@@ -1,12 +1,19 @@
 package moda.passwordManager.frontend;
 
+import moda.passwordManager.backend.Data;
+import moda.passwordManager.communicationHandler.CommunicationHandler;
+import moda.passwordManager.communicationHandler.Event;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /*
 The Board class is defined as two parts: the left one and the right one.
@@ -16,9 +23,10 @@ a proper handling using the switchPanel() method
  */
 public class Frontend extends JPanel implements ActionListener {
 
-    // Define the Timer and its delay used to synchronize between multiple devices using GDrive
-    private Timer timer;
-    private final int DELAY = 1500;
+    // Define the Scheduled Executor Service and its delay used to perform background tasks
+    private ScheduledExecutorService executorService;
+    private final int INITIAL_DELAY = 1500;  // The delay before starting to execute any task
+    private final int DELAY = 10000;  // The delay between each cycle of tasks to perform
 
     // The dynamicState indicates which Panel needs to be switched to from the current one selected
     private GUIState dynamicState;
@@ -35,11 +43,24 @@ public class Frontend extends JPanel implements ActionListener {
     // All the JPanel of the GUI, defined as class attributes
     private JPanel sidebarPanel;
     private JPanel addDataPanel;
-    private JPanel showAllPanel;
+    private JPanel showDataPanel;
     private JPanel settingsPanel;
 
-    public Frontend(int width, int height){
+    /**
+     * The service_data shown in the JList of "Show Data" panel <br/>
+     * It's updated automatically by the timer
+     */
+    private ArrayList<Data> userData;  // A Data object is required as each service shown needs to be associated with its ID
+    private DefaultListModel<String> userDataModel;
+
+    // The CommunicationHandler object used to communicate with the Backend thread
+    private CommunicationHandler communicationHandler;
+
+    public Frontend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue, int width, int height){
         setSize(width, height);  // Set the initial dimension of the Frame
+
+        initCommunication(backendQueue, frontendQueue);
+        initExecutorService();
 
         // Initialize all the Panels
         initBoard();  // Set the properties of the Board
@@ -50,6 +71,7 @@ public class Frontend extends JPanel implements ActionListener {
     }
 
     private void initBoard(){
+
         setFocusable(true);  // Set the focus on the frame to get the keyboard inputs
         setLayout(new BorderLayout());  // The layout for the Board is the Border one
 //        addKeyListener(new TAdapter());
@@ -59,8 +81,31 @@ public class Frontend extends JPanel implements ActionListener {
 
         this.windowSize = getToolkit().getScreenSize();  // Get the initial size of the window
 
-        this.timer = new Timer(DELAY, this::actionPerformed);
-        this.timer.start();
+        // Initialize the user data ArrayList and Model
+        this.userData = new ArrayList<>();
+        this.userDataModel = new DefaultListModel<>();
+
+//        this.timer = new Timer(DELAY, this::actionPerformed);
+//        this.timer.start();
+    }
+
+    /**
+     * Initialize the communication between the frontend and the backend
+     * @param backendQueue
+     * @param frontendQueue
+     */
+    private void initCommunication(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
+        this.communicationHandler = new CommunicationHandler(frontendQueue, backendQueue);
+        sendMasterPassword("Moda-Test");  // TODO: Remove the function after the Issue #10 has been completed
+    }
+
+    /**
+     * Initialize the executor service used to perform background tasks in the frontend
+     */
+    private void initExecutorService(){
+        this.executorService = Executors.newSingleThreadScheduledExecutor();  // Create a single thread for the periodic execution of methods
+
+        this.executorService.scheduleAtFixedRate(this::updateUserData, INITIAL_DELAY, DELAY, TimeUnit.MILLISECONDS);
     }
 
     // Initialize all the components of the Sidebar Panel
@@ -154,8 +199,6 @@ public class Frontend extends JPanel implements ActionListener {
 
     // Initialize all the components of the Add Data Panel
     private void initAddDataPanel(){
-
-
 
         this.addDataPanel = new JPanel(new BorderLayout()) {
             @Override
@@ -276,29 +319,17 @@ public class Frontend extends JPanel implements ActionListener {
     // Initialize all the components of the Show All Panel
     private void initShowDataPanel(){
 
-
-
-        this.showAllPanel = new JPanel(new BorderLayout()) {
+        this.showDataPanel = new JPanel(new BorderLayout()) {
             @Override
             public Dimension getMinimumSize() {
                 // altezza 0 → “qualsiasi”, conta solo la larghezza minima
                 return new Dimension(MIN_CONTENT_WIDTH, 0);
             }
         };
-        //this.showAllPanel.setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - this.sidebarPanel.getWidth()), (int) this.windowSize.getHeight()));
-
-
-
-        // Create the List Model for the JList and read all the data from the database
-        DefaultListModel<String> dataModel = new DefaultListModel<>();
-
-        for (int i = 0; i < 1000; i++){
-            dataModel.add(i, i+") "+Math.random());
-        }
 
         // Create the JList used to show all the data saved inside the database
         JList dataList = new JList();
-        dataList.setModel(dataModel);  // Set the Model of the JList to the one created
+        dataList.setModel(this.userDataModel);  // Set the Model of the JList to the userData one
 
         dataList.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 20));
 
@@ -310,11 +341,11 @@ public class Frontend extends JPanel implements ActionListener {
         scrollPane.setBorder(new EmptyBorder(10,30,10,30));
 
         // Add the Show All Panel to the Board as it's the default panel at the start
-        this.currentPanel = this.showAllPanel;
-        add(this.showAllPanel, BorderLayout.CENTER);
+        this.currentPanel = this.showDataPanel;
+        add(this.showDataPanel, BorderLayout.CENTER);
 
         // Add all the components to the JPanel
-        this.showAllPanel.add(scrollPane, BorderLayout.CENTER);
+        this.showDataPanel.add(scrollPane, BorderLayout.CENTER);
     }
 
     // Initialize all the components of the Settings Panel
@@ -344,7 +375,7 @@ public class Frontend extends JPanel implements ActionListener {
         // Based on the section chosen change the current panel to the new one
         switch (this.dynamicState){
             case ADD_DATA -> this.currentPanel = this.addDataPanel;
-            case SHOW_DATA -> this.currentPanel = this.showAllPanel;
+            case SHOW_DATA -> this.currentPanel = this.showDataPanel;
             case SETTINGS -> this.currentPanel = this.settingsPanel;
         }
 
@@ -353,10 +384,48 @@ public class Frontend extends JPanel implements ActionListener {
         repaint();
     }
 
-    // TODO: Add Goooogle Drive synchronization if enabled by the user
-    // Method executed by the timer
+    // Method executed periodically by the timer
     @Override
     public void actionPerformed(ActionEvent e) {
+        updateUserData();
+    }
+
+    /**
+     * Send the master password the user has entered to the backend
+     * @param masterPassword
+     */
+    private void sendMasterPassword(String masterPassword){
+        // Create and send the event to the backend telling to set the master password
+        ArrayList dataToSend = new ArrayList();  // The communication requires using an ArrayList for the data
+        dataToSend.add(masterPassword);
+        Event setMasterPassword = new Event("set-master-password", dataToSend);
+
+        this.communicationHandler.send(setMasterPassword);
+
+        // Wait for the confirm event and notify the user about it
+        Event confirmEvent = this.communicationHandler.receive();
+//        notifyUser();  // Example method to show the user a messagebox with the operation status
+    }
+
+    /**
+     * Update the userData and its model to show the updated data of the database
+     */
+    private void updateUserData(){
+        // Create and send the event to the backend asking for the user data
+        Event updateUserData = new Event("get-full-service-data", new ArrayList());
+        this.communicationHandler.send(updateUserData);
+
+        // Wait for the response of the backend and update the data with the new one
+        Event updatedDataEvent = this.communicationHandler.receive();
+        ArrayList<Data> updatedData = (ArrayList<Data>) updatedDataEvent.getData().getFirst();
+
+        this.userData.clear();  // Clear the ArrayList from the previous data
+        this.userData.addAll(updatedData);  // Update the ArrayList with the new data
+
+        this.userDataModel.clear();  // Clear the model from the previous data
+        for (int i = 0; i < updatedData.size(); i++){
+            this.userDataModel.add(i, updatedData.get(i).getSERVICE());
+        }
 
     }
 }
