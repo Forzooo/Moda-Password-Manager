@@ -32,7 +32,7 @@
 * Nome: `get-full-service-data`
 * Mittente: Frontend
 * Descrizione: Invia al frontend una lista contenente tutti i _serviceData_ con i relativi _ID_ del database.
-* Dati: int[] ID, String[] _serviceData_
+* Dati: ArrayList\<Data\>
 * Evento di risposta: -
 
 ### save-data
@@ -80,8 +80,8 @@
 ### change-data
 * Nome: `delete-data`
 * Mittente: Frontend
-* Descrizione: Invia l'ID e i dati da modificare nel database
-* Dati: int ID, Array dati
+* Descrizione: Invia l'oggetto di tipo Data contenente l'ID con i relativi dati aggiornati
+* Dati: Data object
 * Evento di risposta: `change-data-completed`
 
 ### change-data-completed

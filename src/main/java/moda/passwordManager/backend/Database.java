@@ -35,14 +35,14 @@ public class Database {
             Statement query = this.connection.createStatement();  // Define a new query
 
             query.execute(
-            "CREATE TABLE IF NOT EXISTS "+Database.TABLE_NAME+" (" +
-                "     id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "     username_data TEXT," +
-                "     email_address_data TEXT," +
-                "     password_data TEXT," +
-                "     service_data TEXT," +
-                "     additional_data TEXT" +
-                ");"
+                "CREATE TABLE IF NOT EXISTS "+Database.TABLE_NAME+" (" +
+                        "     id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                        "     username_data TEXT," +
+                        "     email_address_data TEXT," +
+                        "     password_data TEXT," +
+                        "     service_data TEXT," +
+                        "     additional_data TEXT" +
+                        ");"
             );
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -65,10 +65,10 @@ public class Database {
         try {
             // Create an INSERT INTO query
             PreparedStatement query = this.connection.prepareStatement(
-                "INSERT INTO " + Database.TABLE_NAME + " " +
-                "(username_data, email_address_data, password_data," +
-                "service_data, additional_data)" +
-                " VALUES (?, ?, ?, ?, ?)"
+                    "INSERT INTO " + Database.TABLE_NAME + " " +
+                            "(username_data, email_address_data, password_data," +
+                            "service_data, additional_data)" +
+                            " VALUES (?, ?, ?, ?, ?)"
             );
 
             // Add all the data to the query
@@ -137,7 +137,7 @@ public class Database {
         }
 
         // Return a Data object containing all the data retrieved
-        return new Data(data[0], data[1], data[2], data[3], data[4]);
+        return new Data(id, data[0], data[1], data[2], data[3], data[4]);
     }
 
     /**
@@ -150,7 +150,7 @@ public class Database {
 
         try {
             PreparedStatement query = this.connection.prepareStatement(
-                "SELECT id, service_data FROM "+Database.TABLE_NAME
+                    "SELECT id, service_data FROM "+Database.TABLE_NAME
             );
             queryResult = query.executeQuery();
 
@@ -167,7 +167,7 @@ public class Database {
         try {
             // Create the UPDATE query and set its parameters
             PreparedStatement query = this.connection.prepareStatement(
-                "UPDATE "+Database.TABLE_NAME+" SET username_data=?, email_address_data=?, password_data=?, service_data=?, additional_data=? WHERE id=?"
+                    "UPDATE "+Database.TABLE_NAME+" SET username_data=?, email_address_data=?, password_data=?, service_data=?, additional_data=? WHERE id=?"
             );
             query.setString(1, data.getUSERNAME());
             query.setString(2, data.getEMAIL_ADDRESS());

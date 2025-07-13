@@ -5,13 +5,15 @@ import java.util.Base64;
 
 public class Data {
 
+    private final int ID;
     private final String USERNAME;
     private final String EMAIL_ADDRESS;
     private final String PASSWORD;
     private final String SERVICE;
     private final String ADDITIONAL_DATA;
 
-    public Data(String username, String emailAddress, String password, String service, String additional){
+    public Data(int id, String username, String emailAddress, String password, String service, String additional){
+        this.ID = id;
         this.USERNAME = username;
         this.EMAIL_ADDRESS = emailAddress;
         this.PASSWORD = password;
@@ -19,7 +21,23 @@ public class Data {
         this.ADDITIONAL_DATA = additional;
     }
 
+    /**
+     * Constructor used for the JList of "Show Data" of Frontend where only ID and service are used
+     * @param id
+     * @param service
+     */
+    public Data(int id, String service){
+        this.ID = id;
+        this.SERVICE = service;
+        this.USERNAME = null;
+        this.EMAIL_ADDRESS = null;
+        this.PASSWORD = null;
+        this.ADDITIONAL_DATA = null;
+
+    }
+
     public Data(byte[] username, byte[] emailAddress, byte[] password, byte[] service, byte[] additional){
+        this.ID = -1;  // Set the ID as -1 as it won't be used when this constructor is called
         this.USERNAME = new String(username, StandardCharsets.UTF_8);
         this.EMAIL_ADDRESS = new String(emailAddress, StandardCharsets.UTF_8);
         this.PASSWORD = new String(password, StandardCharsets.UTF_8);
@@ -28,8 +46,13 @@ public class Data {
     }
 
     /*
-    * Get section for all the data to be able to be read from other classes.
-    */
+     * Get section for all the data to be able to be read from other classes.
+     */
+
+    public int getID() {
+        return ID;
+    }
+
     public String getUSERNAME() {
         return this.USERNAME;
     }
