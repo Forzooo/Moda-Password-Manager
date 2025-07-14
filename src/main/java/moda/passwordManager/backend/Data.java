@@ -45,6 +45,15 @@ public class Data {
         this.ADDITIONAL_DATA = new String(additional, StandardCharsets.UTF_8);
     }
 
+    public Data(String username, String emailAddress, String password, String service, String additional){
+        this.ID = -1;
+        this.USERNAME = username;
+        this.EMAIL_ADDRESS = emailAddress;
+        this.PASSWORD = password;
+        this.SERVICE = service;
+        this.ADDITIONAL_DATA = additional;
+    }
+
     /*
      * Get section for all the data to be able to be read from other classes.
      */
