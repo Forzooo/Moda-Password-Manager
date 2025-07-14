@@ -203,7 +203,7 @@ public class Frontend extends JPanel implements ActionListener {
         this.addDataPanel = new JPanel(new BorderLayout()) {
             @Override
             public Dimension getMinimumSize() {
-                // altezza 0 → “qualsiasi”, conta solo la larghezza minima
+                // altezza 0 -> “qualsiasi”, conta solo la larghezza minima
                 return new Dimension(MIN_CONTENT_WIDTH, 0);
             }
         };
@@ -281,11 +281,11 @@ public class Frontend extends JPanel implements ActionListener {
                             return;
                         }
 
-                        // Call the save data function which will encrypt the data and save it into the database
-//                        saveData(usernameTextField.getText(), emailAddressTextField.getText(),
-//                                passwordTextField.getText(), serviceTextField.getText(),
-//                                additionalDataTextField.getText()
-//                        );
+                        // Call the save data function to tell the backend to save the data into the database
+                        saveData(usernameTextField.getText(), emailAddressTextField.getText(),
+                                passwordTextField.getText(), serviceTextField.getText(),
+                                additionalDataTextField.getText()
+                        );
 
                         // Reset the placeholder after the data has been saved
                         usernamePlaceholder.showPlaceholder();
@@ -426,6 +426,20 @@ public class Frontend extends JPanel implements ActionListener {
         for (int i = 0; i < updatedData.size(); i++){
             this.userDataModel.add(i, updatedData.get(i).getSERVICE());
         }
-
     }
+
+    private void saveData(String username, String emailAddress, String password, String service, String additionalData){
+        // Create the Data object with the user data to send to the backend
+        Data userData = new Data(username, emailAddress, password, service, additionalData);
+
+        ArrayList dataToSend = new ArrayList();
+        dataToSend.add(userData);
+
+        // Create the Event to send to the backend
+        Event saveData = new Event("save-data", dataToSend);
+        this.communicationHandler.send(saveData);
+        this.communicationHandler.receive();
+//        notifyUser();  // Example method to show the user a messagebox with the operation status
+    }
+
 }
