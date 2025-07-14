@@ -399,9 +399,15 @@ public class Frontend extends JPanel implements ActionListener {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
+                // Only allow double clicks
                 if (e.getClickCount() == 2) {
+                    // Retrieve the ID from the selected data
+                    Data dataSelected = userData.get(dataList.getSelectedIndex());
+                    int id = dataSelected.getID();
 
-                    JDialog showData = new JDialog(); //TODO: IMPOSTARE IL SERVIZZIO DELLA PASSWORD COME TITOLO DELLA FINESTRA
+                    Data userSingleData = getSingleData(id);  // Retrieve the data with the ID from the database
+
+                    JDialog showData = new JDialog();
 
                     //showData.setLayout(new GridLayout(7,2));
                     showData.setLocationRelativeTo(null);
@@ -412,8 +418,10 @@ public class Frontend extends JPanel implements ActionListener {
                     JPanel panel = new JPanel(new GridLayout(7,2));
                     panel.setBorder(new EmptyBorder(20,20,20,20));
 
+                    // TODO: Modificare il sistema per aggiungere l'action performed ad ogni bottone utilizzando un ciclo for
+
                     JLabel username = new JLabel();
-                    username.setText("Salvador Dalì");
+                    username.setText(userSingleData.getUSERNAME());
 
                     JButton copyName = new JButton("❏");
                     copyName.addActionListener(new ActionListener() {
@@ -427,27 +435,27 @@ public class Frontend extends JPanel implements ActionListener {
                     panel.add(copyName);
 
                     JLabel email = new JLabel();
-                    email.setText("EEEEEEEEEEEEEEEEEEEEmail");
+                    email.setText(userSingleData.getEMAIL_ADDRESS());
 
-                    JButton copyEmal = new JButton("❏");
-                    copyEmal.addActionListener(new ActionListener() {
+                    JButton copyEmail = new JButton("❏");
+                    copyEmail.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            System.out.println("email copiatone");
+                            System.out.println("");
                         }
                     });
 
                     panel.add(email);
-                    panel.add(copyEmal);
+                    panel.add(copyEmail);
 
                     JLabel password = new JLabel();
-                    password.setText("Passwordozza diddio");
+                    password.setText(userSingleData.getPASSWORD());
 
                     JButton copyPassword = new JButton("❏");
                     copyPassword.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            System.out.println("password copiatone");
+                            System.out.println("");
                         }
                     });
 
@@ -455,13 +463,13 @@ public class Frontend extends JPanel implements ActionListener {
                     panel.add(copyPassword);
 
                     JLabel service = new JLabel();
-                    service.setText("I love Weners");
+                    service.setText(userSingleData.getSERVICE());
 
                     JButton copyService = new JButton("❏");
                     copyService.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            System.out.println("service copiatone");
+                            System.out.println("");
                         }
                     });
 
@@ -469,13 +477,13 @@ public class Frontend extends JPanel implements ActionListener {
                     panel.add(copyService);
 
                     JLabel data = new JLabel();
-                    data.setText("additional data");
+                    data.setText(userSingleData.getADDITIONAL_DATA());
 
                     JButton copyData = new JButton("❏");
                     copyData.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            System.out.println("data copiatone");
+                            System.out.println("");
                         }
                     });
 
@@ -487,7 +495,7 @@ public class Frontend extends JPanel implements ActionListener {
                     modifyButton.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            System.out.println("Modifica beneeeeeeeeee");
+                            System.out.println("");
                         }
                     });
 
@@ -592,6 +600,14 @@ public class Frontend extends JPanel implements ActionListener {
         }
     }
 
+    /**
+     * Save the data the user has entered in "Add Data" section into the database
+     * @param username
+     * @param emailAddress
+     * @param password
+     * @param service
+     * @param additionalData
+     */
     private void saveData(String username, String emailAddress, String password, String service, String additionalData){
         // Create the Data object with the user data to send to the backend
         Data userData = new Data(username, emailAddress, password, service, additionalData);
@@ -604,6 +620,26 @@ public class Frontend extends JPanel implements ActionListener {
         this.communicationHandler.send(saveData);
         this.communicationHandler.receive();
 //        notifyUser();  // Example method to show the user a messagebox with the operation status
+    }
+
+    /**
+     * Retrieve the data associated with an ID from the database to show it in "Show Data" section
+     * @param id
+     * @return
+     */
+    private Data getSingleData(int id){
+        // Create the event to send to the backend
+        ArrayList dataToSend = new ArrayList();
+        dataToSend.add(id);
+
+        Event getSingleData = new Event("get-single-data", dataToSend);
+        this.communicationHandler.send(getSingleData);
+
+        Event getSingleDataCompletd = this.communicationHandler.receive();  // Wait for the response
+
+        Data userSingleData = (Data) getSingleDataCompletd.getData().getFirst();  // Get the user single data
+
+        return userSingleData;
     }
 
 }
