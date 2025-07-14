@@ -10,6 +10,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -59,7 +60,11 @@ public class Frontend extends JPanel implements ActionListener {
     public Frontend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue, int width, int height){
         setSize(width, height);  // Set the initial dimension of the Frame
 
-        initCommunication(backendQueue, frontendQueue);
+        initCommunication(backendQueue, frontendQueue);  // Start the communication between the backend and the frontend
+
+        masterPasswordDialog();  // Ask the user for the master password before starting to use the password manager
+
+        // The Executor Service must be after the masterPasswordDialog as it requires the master password to operate
         initExecutorService();
 
         // Initialize all the Panels
@@ -68,8 +73,6 @@ public class Frontend extends JPanel implements ActionListener {
         initAddDataPanel();
         initShowDataPanel();
         initSettingsPanel();
-
-        masterPassword();
     }
 
     private void initBoard(){
@@ -99,14 +102,13 @@ public class Frontend extends JPanel implements ActionListener {
      */
     private void initCommunication(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
         this.communicationHandler = new CommunicationHandler(frontendQueue, backendQueue);
-        sendMasterPassword("Moda-Test");  // TODO: Remove the function after the Issue #10 has been completed
     }
 
-    private void masterPassword(){
-        JDialog askMasterPassword = new JDialog((Frame) null, "inserisci u passworde, prima che ti riempia le budella di piommo", true);
+    private void masterPasswordDialog(){
+        JDialog askMasterPassword = new JDialog((Frame) null, "Master Password", true);
 
         askMasterPassword.setUndecorated(true);
-        askMasterPassword.setTitle("Inserisci Master Password");
+        askMasterPassword.setTitle("Inserisci la Master Password");
         askMasterPassword.setSize(300, 150);
         askMasterPassword.setLocationRelativeTo(null);
         askMasterPassword.setAlwaysOnTop(true);
@@ -129,8 +131,10 @@ public class Frontend extends JPanel implements ActionListener {
         sendButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                // Retrieve the master password and send it to the backend
+                sendMasterPassword(input.getPassword());
 
-                askMasterPassword.dispose();
+                askMasterPassword.dispose();  // Close the window
             }
         });
 
@@ -433,13 +437,13 @@ public class Frontend extends JPanel implements ActionListener {
     }
 
     /**
-     * Send the master password the user has entered to the backend
+     * Send the master password the user has entered to the backend thread
      * @param masterPassword
      */
-    private void sendMasterPassword(String masterPassword){
+    private void sendMasterPassword(char[] masterPassword){
         // Create and send the event to the backend telling to set the master password
         ArrayList dataToSend = new ArrayList();  // The communication requires using an ArrayList for the data
-        dataToSend.add(masterPassword);
+        dataToSend.add(new String(masterPassword));  // Convert the char array to a string
         Event setMasterPassword = new Event("set-master-password", dataToSend);
 
         this.communicationHandler.send(setMasterPassword);
