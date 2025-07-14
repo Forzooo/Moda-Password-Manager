@@ -68,6 +68,8 @@ public class Frontend extends JPanel implements ActionListener {
         initAddDataPanel();
         initShowDataPanel();
         initSettingsPanel();
+
+        masterPassword();
     }
 
     private void initBoard(){
@@ -87,6 +89,7 @@ public class Frontend extends JPanel implements ActionListener {
 
 //        this.timer = new Timer(DELAY, this::actionPerformed);
 //        this.timer.start();
+
     }
 
     /**
@@ -97,6 +100,45 @@ public class Frontend extends JPanel implements ActionListener {
     private void initCommunication(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
         this.communicationHandler = new CommunicationHandler(frontendQueue, backendQueue);
         sendMasterPassword("Moda-Test");  // TODO: Remove the function after the Issue #10 has been completed
+    }
+
+    private void masterPassword(){
+        JDialog askMasterPassword = new JDialog((Frame) null, "inserisci u passworde, prima che ti riempia le budella di piommo", true);
+
+        askMasterPassword.setUndecorated(true);
+        askMasterPassword.setTitle("Inserisci Master Password");
+        askMasterPassword.setSize(300, 150);
+        askMasterPassword.setLocationRelativeTo(null);
+        askMasterPassword.setAlwaysOnTop(true);
+
+        askMasterPassword.setLayout(new FlowLayout());
+
+        JButton quitButton = new JButton("Cancel");
+        quitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                askMasterPassword.dispose();
+            }
+        });
+
+        JPasswordField input = new JPasswordField();
+        input.setPreferredSize(new Dimension(200, 25));
+
+        JButton sendButton = new JButton("LogIn");
+
+        sendButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                askMasterPassword.dispose();
+            }
+        });
+
+        askMasterPassword.add(input);
+        askMasterPassword.add(sendButton);
+        askMasterPassword.add(quitButton);
+
+        askMasterPassword.setVisible(true);
     }
 
     /**

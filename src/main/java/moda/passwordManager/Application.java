@@ -27,6 +27,7 @@ public class Application extends JFrame {
         setTitle("MODA - Password Manager");
         setSize(width, height);
         setVisible(true);
+        setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
     }
 

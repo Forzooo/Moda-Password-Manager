@@ -52,7 +52,7 @@ public class Placeholder implements FocusListener {
 
     // Hide the placeholder
     public void hidePlaceholder(){
-        this.textField.setText("");
+        this.textField.setText("pupù");
         this.textField.setForeground(Color.BLACK);
 
         this.showPlaceholderFlag = false;
