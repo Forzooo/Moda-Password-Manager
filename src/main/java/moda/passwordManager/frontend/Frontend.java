@@ -23,6 +23,8 @@ a proper handling using the switchPanel() method
  */
 public class Frontend extends JPanel implements ActionListener {
 
+    private final static String CURRENT_VERSION = "0.1.0";  // The current version of the software
+
     // Define the Scheduled Executor Service and its delay used to perform background tasks
     private ScheduledExecutorService executorService;
     private final int INITIAL_DELAY = 1500;  // The delay before starting to execute any task
@@ -181,20 +183,19 @@ public class Frontend extends JPanel implements ActionListener {
         this.sidebarPanel.add(Box.createRigidArea(new Dimension(0, 20))); // Add RigidArea to add spacing between components
         this.sidebarPanel.add(passwordManagerLabel);
 
+        // Add the current version of the software at the bottom of the sidebar
+        JLabel currentVersionLabel = new JLabel();
+        currentVersionLabel.setText("Version: " + CURRENT_VERSION);
+        currentVersionLabel.setForeground(Color.WHITE);  // Set the color of the label
+
+        this.sidebarPanel.add(currentVersionLabel);
+        this.sidebarPanel.add(Box.createRigidArea(new Dimension(220, 20))); // Add RigidArea to add spacing between components
+
         buttonPanel.add(addDataButton);
         buttonPanel.add(showDataButton);
         buttonPanel.add(settingsButton);
 
         this.sidebarPanel.add(buttonPanel, BorderLayout.SOUTH);
-
-//        this.sidebarPanel.add(Box.createRigidArea(new Dimension(0, (int) (this.windowSize.getHeight()/5))));
-//        this.sidebarPanel.add(addDataButton);
-//        this.sidebarPanel.add(Box.createRigidArea(new Dimension(0, 30)));
-//        this.sidebarPanel.add(showDataButton);
-//        this.sidebarPanel.add(Box.createRigidArea(new Dimension(0, (int) this.windowSize.getHeight()/6)));
-//        this.sidebarPanel.add(settingsButton);
-//        this.sidebarPanel.add(Box.createRigidArea(new Dimension(0, 30)));
-
     }
 
     // Initialize all the components of the Add Data Panel
