@@ -9,6 +9,8 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.Executors;
@@ -392,6 +394,122 @@ public class Frontend extends JPanel implements ActionListener {
 
         // Add all the components to the JPanel
         this.showDataPanel.add(scrollPane, BorderLayout.CENTER);
+
+        dataList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                if (e.getClickCount() == 2) {
+
+                    JDialog showData = new JDialog(); //TODO: IMPOSTARE IL SERVIZZIO DELLA PASSWORD COME TITOLO DELLA FINESTRA
+
+                    //showData.setLayout(new GridLayout(7,2));
+                    showData.setLocationRelativeTo(null);
+                    showData.setAlwaysOnTop(true);
+
+                    showData.setSize(new Dimension(200, 300));
+
+                    JPanel panel = new JPanel(new GridLayout(7,2));
+                    panel.setBorder(new EmptyBorder(20,20,20,20));
+
+                    JLabel username = new JLabel();
+                    username.setText("Salvador Dalì");
+
+                    JButton copyName = new JButton("❏");
+                    copyName.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            System.out.println("Nome copiatone");
+                        }
+                    });
+
+                    panel.add(username);
+                    panel.add(copyName);
+
+                    JLabel email = new JLabel();
+                    email.setText("EEEEEEEEEEEEEEEEEEEEmail");
+
+                    JButton copyEmal = new JButton("❏");
+                    copyEmal.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            System.out.println("email copiatone");
+                        }
+                    });
+
+                    panel.add(email);
+                    panel.add(copyEmal);
+
+                    JLabel password = new JLabel();
+                    password.setText("Passwordozza diddio");
+
+                    JButton copyPassword = new JButton("❏");
+                    copyPassword.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            System.out.println("password copiatone");
+                        }
+                    });
+
+                    panel.add(password);
+                    panel.add(copyPassword);
+
+                    JLabel service = new JLabel();
+                    service.setText("I love Weners");
+
+                    JButton copyService = new JButton("❏");
+                    copyService.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            System.out.println("service copiatone");
+                        }
+                    });
+
+                    panel.add(service);
+                    panel.add(copyService);
+
+                    JLabel data = new JLabel();
+                    data.setText("additional data");
+
+                    JButton copyData = new JButton("❏");
+                    copyData.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            System.out.println("data copiatone");
+                        }
+                    });
+
+                    panel.add(data);
+                    panel.add(copyData);
+
+                    JButton modifyButton = new JButton("Modify");
+
+                    modifyButton.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            System.out.println("Modifica beneeeeeeeeee");
+                        }
+                    });
+
+                    panel.add(modifyButton);
+
+                    JButton okButton = new JButton("OK");
+
+                    okButton.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            showData.dispose();
+                        }
+                    });
+
+                    panel.add(okButton);
+                    showData.add(panel);
+                    showData.setVisible(true);
+                }
+
+            }
+        });
+
     }
 
     // Initialize all the components of the Settings Panel
