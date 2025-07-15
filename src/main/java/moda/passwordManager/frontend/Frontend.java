@@ -436,7 +436,7 @@ public class Frontend extends JPanel implements ActionListener {
                                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                                 StringSelection dataToCopy = new StringSelection(data);  // Create a Transferable
                                 clipboard.setContents(dataToCopy, dataToCopy);  // Copy the transferable
-                                JOptionPane.showMessageDialog(panel, "Copied the data to che clipboard.");
+                                JOptionPane.showMessageDialog(panel, "Copied the data to the clipboard.");
                             }
                         });
 
