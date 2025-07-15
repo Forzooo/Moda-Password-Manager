@@ -7,8 +7,12 @@ import moda.passwordManager.communicationHandler.Event;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.Executors;
@@ -393,6 +397,83 @@ public class Frontend extends JPanel implements ActionListener {
 
         // Add all the components to the JPanel
         this.showDataPanel.add(scrollPane, BorderLayout.CENTER);
+
+        dataList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                // Only allow double clicks
+                if (e.getClickCount() == 2) {
+                    // Retrieve the ID from the selected data
+                    Data dataSelected = userData.get(dataList.getSelectedIndex());
+                    int id = dataSelected.getID();
+
+                    Data userSingleData = getSingleData(id);  // Retrieve the data with the ID from the database
+
+                    JDialog showData = new JDialog();
+
+                    //showData.setLayout(new GridLayout(7,2));
+                    showData.setLocationRelativeTo(null);
+                    showData.setAlwaysOnTop(true);
+
+                    showData.setSize(new Dimension(200, 300));
+
+                    JPanel panel = new JPanel(new GridLayout(7,2));
+                    panel.setBorder(new EmptyBorder(20,20,20,20));
+
+                    // Add dynamically all the user data retrieved
+                    for (String data : userSingleData.getFullUserData()){
+                        // Create the JLabel
+                        JLabel dataLabel = new JLabel();
+                        dataLabel.setText(data);
+
+                        // Create the JButton to copy the data
+                        JButton copyDataButton = new JButton();
+                        copyDataButton.setText("❏");
+                        copyDataButton.addActionListener(new ActionListener() {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                // Get the clipboard from the system
+                                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                                StringSelection dataToCopy = new StringSelection(data);  // Create a Transferable
+                                clipboard.setContents(dataToCopy, dataToCopy);  // Copy the transferable
+                                JOptionPane.showMessageDialog(panel, "Copied the data to the clipboard.");
+                            }
+                        });
+
+                        // Add the JLabel and the JButton to the panel
+                        panel.add(dataLabel);
+                        panel.add(copyDataButton);
+                    }
+
+                    JButton modifyButton = new JButton("Modify");
+
+                    modifyButton.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            // TODO: Add modify button event
+                        }
+                    });
+
+                    panel.add(modifyButton);
+
+                    JButton okButton = new JButton("OK");
+
+                    okButton.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            showData.dispose();
+                        }
+                    });
+
+                    panel.add(okButton);
+                    showData.add(panel);
+                    showData.setVisible(true);
+                }
+
+            }
+        });
+
     }
 
     // Initialize all the components of the Settings Panel
@@ -475,6 +556,14 @@ public class Frontend extends JPanel implements ActionListener {
         }
     }
 
+    /**
+     * Save the data the user has entered in "Add Data" section into the database
+     * @param username
+     * @param emailAddress
+     * @param password
+     * @param service
+     * @param additionalData
+     */
     private void saveData(String username, String emailAddress, String password, String service, String additionalData){
         // Create the Data object with the user data to send to the backend
         Data userData = new Data(username, emailAddress, password, service, additionalData);
@@ -487,6 +576,26 @@ public class Frontend extends JPanel implements ActionListener {
         this.communicationHandler.send(saveData);
         this.communicationHandler.receive();
 //        notifyUser();  // Example method to show the user a messagebox with the operation status
+    }
+
+    /**
+     * Retrieve the data associated with an ID from the database to show it in "Show Data" section
+     * @param id
+     * @return
+     */
+    private Data getSingleData(int id){
+        // Create the event to send to the backend
+        ArrayList dataToSend = new ArrayList();
+        dataToSend.add(id);
+
+        Event getSingleData = new Event("get-single-data", dataToSend);
+        this.communicationHandler.send(getSingleData);
+
+        Event getSingleDataCompletd = this.communicationHandler.receive();  // Wait for the response
+
+        Data userSingleData = (Data) getSingleDataCompletd.getData().getFirst();  // Get the user single data
+
+        return userSingleData;
     }
 
 }

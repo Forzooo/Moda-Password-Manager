@@ -83,6 +83,15 @@ public class Data {
     }
 
     /**
+     * Return a String array which includes all the data of a record, not including the ID, to iterate more
+     * easily over them.
+     * @return String array of 5 elements
+     */
+    public String[] getFullUserData(){
+        return new String[]{this.USERNAME, this.EMAIL_ADDRESS, this.PASSWORD, this.SERVICE, this.ADDITIONAL_DATA};
+    }
+
+    /**
      * Encode any given data, in byte array format, to the Base64 format
      * @param data
      * @return A Base64 byte array
