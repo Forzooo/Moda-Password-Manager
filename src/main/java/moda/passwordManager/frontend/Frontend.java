@@ -7,6 +7,8 @@ import moda.passwordManager.communicationHandler.Event;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -418,84 +420,37 @@ public class Frontend extends JPanel implements ActionListener {
                     JPanel panel = new JPanel(new GridLayout(7,2));
                     panel.setBorder(new EmptyBorder(20,20,20,20));
 
-                    // TODO: Modificare il sistema per aggiungere l'action performed ad ogni bottone utilizzando un ciclo for
+                    // Add dynamically all the user data retrieved
+                    for (String data : userSingleData.getFullUserData()){
+                        // Create the JLabel
+                        JLabel dataLabel = new JLabel();
+                        dataLabel.setText(data);
 
-                    JLabel username = new JLabel();
-                    username.setText(userSingleData.getUSERNAME());
+                        // Create the JButton to copy the data
+                        JButton copyDataButton = new JButton();
+                        copyDataButton.setText("❏");
+                        copyDataButton.addActionListener(new ActionListener() {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                // Get the clipboard from the system
+                                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                                StringSelection dataToCopy = new StringSelection(data);  // Create a Transferable
+                                clipboard.setContents(dataToCopy, dataToCopy);  // Copy the transferable
+                                JOptionPane.showMessageDialog(panel, "Copied the data to che clipboard.");
+                            }
+                        });
 
-                    JButton copyName = new JButton("❏");
-                    copyName.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            System.out.println("Nome copiatone");
-                        }
-                    });
-
-                    panel.add(username);
-                    panel.add(copyName);
-
-                    JLabel email = new JLabel();
-                    email.setText(userSingleData.getEMAIL_ADDRESS());
-
-                    JButton copyEmail = new JButton("❏");
-                    copyEmail.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            System.out.println("");
-                        }
-                    });
-
-                    panel.add(email);
-                    panel.add(copyEmail);
-
-                    JLabel password = new JLabel();
-                    password.setText(userSingleData.getPASSWORD());
-
-                    JButton copyPassword = new JButton("❏");
-                    copyPassword.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            System.out.println("");
-                        }
-                    });
-
-                    panel.add(password);
-                    panel.add(copyPassword);
-
-                    JLabel service = new JLabel();
-                    service.setText(userSingleData.getSERVICE());
-
-                    JButton copyService = new JButton("❏");
-                    copyService.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            System.out.println("");
-                        }
-                    });
-
-                    panel.add(service);
-                    panel.add(copyService);
-
-                    JLabel data = new JLabel();
-                    data.setText(userSingleData.getADDITIONAL_DATA());
-
-                    JButton copyData = new JButton("❏");
-                    copyData.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            System.out.println("");
-                        }
-                    });
-
-                    panel.add(data);
-                    panel.add(copyData);
+                        // Add the JLabel and the JButton to the panel
+                        panel.add(dataLabel);
+                        panel.add(copyDataButton);
+                    }
 
                     JButton modifyButton = new JButton("Modify");
 
                     modifyButton.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            System.out.println("");
+                            // TODO: Add modify button event
                         }
                     });
 
