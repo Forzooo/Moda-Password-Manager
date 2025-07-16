@@ -15,6 +15,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -113,40 +115,41 @@ public class Frontend extends JPanel implements ActionListener {
     private void masterPasswordDialog(){
         JDialog askMasterPassword = new JDialog((Frame) null, "Master Password", true);
 
-        askMasterPassword.setUndecorated(true);
+//        askMasterPassword.setUndecorated(true);
         askMasterPassword.setTitle("Inserisci la Master Password");
-        askMasterPassword.setSize(300, 150);
+        askMasterPassword.setSize(300, 100);
         askMasterPassword.setLocationRelativeTo(null);
         askMasterPassword.setAlwaysOnTop(true);
 
         askMasterPassword.setLayout(new FlowLayout());
 
-        JButton quitButton = new JButton("Cancel");
-        quitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                askMasterPassword.dispose();
-            }
-        });
-
         JPasswordField input = new JPasswordField();
         input.setPreferredSize(new Dimension(200, 25));
 
+        input.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sendMasterPassword(input.getPassword());
+                askMasterPassword.dispose();  // Close the window
+            }
+        });
+
         JButton sendButton = new JButton("LogIn");
+        sendButton.setFont(new Font("Comic Sans MS", Font.BOLD, 12));
 
         sendButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // Retrieve the master password and send it to the backend
                 sendMasterPassword(input.getPassword());
-
                 askMasterPassword.dispose();  // Close the window
+                JOptionPane.showMessageDialog(null, "pupù");
+
             }
         });
 
         askMasterPassword.add(input);
         askMasterPassword.add(sendButton);
-        askMasterPassword.add(quitButton);
 
         askMasterPassword.setVisible(true);
     }
@@ -187,7 +190,7 @@ public class Frontend extends JPanel implements ActionListener {
         JLabel passwordManagerLabel = new JLabel();
         passwordManagerLabel.setText("MODA");
 //        passwordManagerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);  // Set the text-alignment to center
-        passwordManagerLabel.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 80));  // Set the font of the label
+        passwordManagerLabel.setFont(new Font("Comic Sans MS", Font.BOLD, 80));  // Set the font of the label
 //        passwordManagerLabel.setForeground(light);  // Set the color of the label
         passwordManagerLabel.setForeground(Color.WHITE);  // Set the color of the label
 
@@ -197,6 +200,7 @@ public class Frontend extends JPanel implements ActionListener {
         Dimension buttonDimension = new Dimension(350, 50);
 
         Button addDataButton = new Button();
+        addDataButton.setFont(new Font("Comic Sans MS", Font.BOLD, 20));
         addDataButton.setText("Add Data");
         addDataButton.setMaximumSize(buttonDimension);
         addDataButton.addActionListener(new ActionListener() {
@@ -208,6 +212,7 @@ public class Frontend extends JPanel implements ActionListener {
         });
 
         Button showDataButton = new Button();
+        showDataButton.setFont(new Font("Comic Sans MS", Font.BOLD, 20));
         showDataButton.setText("Show Data");
         showDataButton.setMaximumSize(buttonDimension);
         showDataButton.addActionListener(new ActionListener() {
@@ -219,6 +224,7 @@ public class Frontend extends JPanel implements ActionListener {
         });
 
         Button settingsButton = new Button();  // TODO: Use the settings icon instead of the text
+        settingsButton.setFont(new Font("Comic Sans MS", Font.BOLD, 20));
         settingsButton.setText("Settings");
         settingsButton.setMaximumSize(buttonDimension);
         settingsButton.addActionListener(new ActionListener() {
@@ -269,7 +275,7 @@ public class Frontend extends JPanel implements ActionListener {
 
         JLabel addDataLabel = new JLabel();
         addDataLabel.setText("Add a new data:");
-        addDataLabel.setFont(new Font("Arial", Font.PLAIN, 16));
+        addDataLabel.setFont(new Font("Comic Sans MS", Font.PLAIN, 16));
 
         // Create all the JTextField for the data input
         Dimension textFieldDimension = new Dimension(1600, 30);  // Define the dimension of any JTextField
@@ -382,7 +388,7 @@ public class Frontend extends JPanel implements ActionListener {
         JList dataList = new JList();
         dataList.setModel(this.userDataModel);  // Set the Model of the JList to the userData one
 
-        dataList.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 20));
+        dataList.setFont(new Font("Comic Sans MS", Font.BOLD, 20));
 
         dataList.setFixedCellHeight(40);
 
@@ -412,24 +418,35 @@ public class Frontend extends JPanel implements ActionListener {
 
                     JDialog showData = new JDialog();
 
-                    //showData.setLayout(new GridLayout(7,2));
+                    showData.setSize(new Dimension(600, 400));
+
+                    showData.setUndecorated(true);
+                    showData.setResizable(false);
                     showData.setLocationRelativeTo(null);
                     showData.setAlwaysOnTop(true);
 
-                    showData.setSize(new Dimension(200, 300));
-
-                    JPanel panel = new JPanel(new GridLayout(7,2));
+                    JPanel panel = new JPanel();
+                    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
                     panel.setBorder(new EmptyBorder(20,20,20,20));
+
+                    JTextField dataField;
+                    List<JTextField> dataFields = new ArrayList<>();
 
                     // Add dynamically all the user data retrieved
                     for (String data : userSingleData.getFullUserData()){
                         // Create the JLabel
-                        JLabel dataLabel = new JLabel();
-                        dataLabel.setText(data);
+                        dataField = new JTextField();
+                        dataField.setText(data);
+                        dataField.setEditable(false);
+                        dataFields.add(dataField);
 
                         // Create the JButton to copy the data
                         JButton copyDataButton = new JButton();
                         copyDataButton.setText("❏");
+                        copyDataButton.setPreferredSize(new Dimension(50, 50));
+                        copyDataButton.setMaximumSize(new Dimension(50, 50));
+                        copyDataButton.setMinimumSize(new Dimension(50, 50));
+
                         copyDataButton.addActionListener(new ActionListener() {
                             @Override
                             public void actionPerformed(ActionEvent e) {
@@ -442,22 +459,20 @@ public class Frontend extends JPanel implements ActionListener {
                         });
 
                         // Add the JLabel and the JButton to the panel
-                        panel.add(dataLabel);
-                        panel.add(copyDataButton);
+                        JPanel rowPanel = new JPanel(new BorderLayout(5, 0));
+                        rowPanel.setBorder(new EmptyBorder(5, 0, 5, 0));  // Padding between rows
+                        rowPanel.add(dataField, BorderLayout.CENTER);
+                        rowPanel.add(copyDataButton, BorderLayout.EAST);
+
+                        panel.add(rowPanel);
                     }
 
                     JButton modifyButton = new JButton("Modify");
 
-                    modifyButton.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            // TODO: Add modify button event
-                        }
-                    });
-
                     panel.add(modifyButton);
 
                     JButton okButton = new JButton("OK");
+                    panel.add(okButton);
 
                     okButton.addActionListener(new ActionListener() {
                         @Override
@@ -466,7 +481,46 @@ public class Frontend extends JPanel implements ActionListener {
                         }
                     });
 
-                    panel.add(okButton);
+                    JButton saveButton = new JButton("Save Changes");
+                    saveButton.setVisible(false);  // It's shown only when modifyButton is clicked
+
+                    panel.add(saveButton);
+
+                    // Add the action lister after the creation of the OK button as it needs to be removed
+                    // when the modify button is clicked
+                    modifyButton.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            // Set the JTextFields to be editable to allow changes
+                            for (JTextField fields : dataFields){
+                                fields.setEditable(true);
+                            }
+                            modifyButton.setEnabled(false);  // Disable the button as it's already being used
+                            okButton.setVisible(false);  // Hide the ok button
+                            saveButton.setVisible(true);  // Show the button used to apply changes
+                        }
+                    });
+
+                    // Save the changes and send the event to the backend
+                    saveButton.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            // Store the updated strings into an array
+                            String[] updatedData = new String[5];
+
+                            for (int i = 0; i < dataFields.size(); i++){
+                                updatedData[i] = dataFields.get(i).getText();
+                            }
+                            // Send the data to the backend
+                            changeData(id, updatedData[0], updatedData[1], updatedData[2], updatedData[3], updatedData[4]);
+
+                            // Hide the save button, show the ok button and enable the modify button again
+                            saveButton.setVisible(false);
+                            okButton.setVisible(true);
+                            modifyButton.setEnabled(true);
+                        }
+                    });
+
                     showData.add(panel);
                     showData.setVisible(true);
                 }
@@ -596,6 +650,29 @@ public class Frontend extends JPanel implements ActionListener {
         Data userSingleData = (Data) getSingleDataCompletd.getData().getFirst();  // Get the user single data
 
         return userSingleData;
+    }
+
+    /**
+     * Update a record of the database
+     * @param id
+     * @param username
+     * @param emailAddress
+     * @param password
+     * @param service
+     * @param additional
+     */
+    private void changeData(int id, String username, String emailAddress, String password, String service, String additional){
+        // Create the data to send with the event
+        Data data = new Data(id, username, emailAddress, password, service, additional);
+
+        ArrayList dataToSend = new ArrayList();
+        dataToSend.add(data);
+
+        // Create and send the event
+        Event event = new Event("change-data", dataToSend);
+        this.communicationHandler.send(event);
+        this.communicationHandler.receive();
+//        notifyUser();  // Example method to show the user a messagebox with the operation status
     }
 
 }
