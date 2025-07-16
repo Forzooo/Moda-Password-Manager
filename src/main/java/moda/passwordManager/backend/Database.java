@@ -162,7 +162,7 @@ public class Database {
     }
 
     // Modify the data of a column of a row
-    public void changeData(int id, Data data){
+    public void changeData(Data data){
 
         try {
             // Create the UPDATE query and set its parameters
@@ -174,7 +174,7 @@ public class Database {
             query.setString(3, data.getPASSWORD());
             query.setString(4, data.getSERVICE());
             query.setString(5, data.getADDITIONAL_DATA());
-            query.setInt(6, id);
+            query.setInt(6, data.getID());
 
             query.executeUpdate();  // Execute the query
 

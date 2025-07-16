@@ -93,7 +93,7 @@ public class Backend extends Thread {
                 break;
 
             case "change-data":
-                changeData((int) eventData.getFirst(), (Data) eventData.get(1));
+                changeData((Data) eventData.getFirst());
                 break;
         }
     }
@@ -210,20 +210,19 @@ public class Backend extends Thread {
 
     /**
      * Change the data of a record inside the database
-     * @param id
      * @param data
      */
-    private void changeData(int id, Data data){
+    private void changeData(Data data){
         // Encrypt the data before saving it into the database
         Data encryptedData = new Data(
-                id,
+                data.getID(),
                 encryptData(data.getUSERNAME()),
                 encryptData(data.getEMAIL_ADDRESS()),
                 encryptData(data.getPASSWORD()),
                 encryptData(data.getSERVICE()),
                 encryptData(data.getADDITIONAL_DATA())
         );
-        this.database.changeData(id, encryptedData);
+        this.database.changeData(encryptedData);
     }
 
 }

@@ -78,7 +78,7 @@
 * Evento di risposta: -
 
 ### change-data
-* Nome: `delete-data`
+* Nome: `change-data`
 * Mittente: Frontend
 * Descrizione: Invia l'oggetto di tipo Data contenente l'ID con i relativi dati aggiornati
 * Dati: Data object

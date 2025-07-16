@@ -429,16 +429,16 @@ public class Frontend extends JPanel implements ActionListener {
                     panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
                     panel.setBorder(new EmptyBorder(20,20,20,20));
 
-                    JTextField dataTxtField;
+                    JTextField dataField;
                     List<JTextField> dataFields = new ArrayList<>();
 
                     // Add dynamically all the user data retrieved
                     for (String data : userSingleData.getFullUserData()){
                         // Create the JLabel
-                        dataTxtField = new JTextField();
-                        dataTxtField.setText(data);
-                        dataTxtField.setEditable(false);
-                        dataFields.add(dataTxtField);
+                        dataField = new JTextField();
+                        dataField.setText(data);
+                        dataField.setEditable(false);
+                        dataFields.add(dataField);
 
                         // Create the JButton to copy the data
                         JButton copyDataButton = new JButton();
@@ -461,7 +461,7 @@ public class Frontend extends JPanel implements ActionListener {
                         // Add the JLabel and the JButton to the panel
                         JPanel rowPanel = new JPanel(new BorderLayout(5, 0));
                         rowPanel.setBorder(new EmptyBorder(5, 0, 5, 0));  // Padding between rows
-                        rowPanel.add(dataTxtField, BorderLayout.CENTER);
+                        rowPanel.add(dataField, BorderLayout.CENTER);
                         rowPanel.add(copyDataButton, BorderLayout.EAST);
 
                         panel.add(rowPanel);
@@ -469,29 +469,10 @@ public class Frontend extends JPanel implements ActionListener {
 
                     JButton modifyButton = new JButton("Modify");
 
-                    modifyButton.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            if (Objects.equals(modifyButton.getText(), "Modify")) {
-                                for (JTextField fields : dataFields){
-                                    fields.setEditable(true);
-                                }
-                                modifyButton.setText("Save");
-                            } else {
-                                for (JTextField fields : dataFields){
-                                    fields.setEditable(false);
-                                }
-                                for (String data : userSingleData.getFullUserData()){
-                                    // TODO: Modificare il dato
-                                }
-                                modifyButton.setText("Modify");
-                            }
-                        }
-                    });
-
                     panel.add(modifyButton);
 
                     JButton okButton = new JButton("OK");
+                    panel.add(okButton);
 
                     okButton.addActionListener(new ActionListener() {
                         @Override
@@ -500,7 +481,46 @@ public class Frontend extends JPanel implements ActionListener {
                         }
                     });
 
-                    panel.add(okButton);
+                    JButton saveButton = new JButton("Save Changes");
+                    saveButton.setVisible(false);  // It's shown only when modifyButton is clicked
+
+                    panel.add(saveButton);
+
+                    // Add the action lister after the creation of the OK button as it needs to be removed
+                    // when the modify button is clicked
+                    modifyButton.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            // Set the JTextFields to be editable to allow changes
+                            for (JTextField fields : dataFields){
+                                fields.setEditable(true);
+                            }
+                            modifyButton.setEnabled(false);  // Disable the button as it's already being used
+                            okButton.setVisible(false);  // Hide the ok button
+                            saveButton.setVisible(true);  // Show the button used to apply changes
+                        }
+                    });
+
+                    // Save the changes and send the event to the backend
+                    saveButton.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            // Store the updated strings into an array
+                            String[] updatedData = new String[5];
+
+                            for (int i = 0; i < dataFields.size(); i++){
+                                updatedData[i] = dataFields.get(i).getText();
+                            }
+                            // Send the data to the backend
+                            changeData(id, updatedData[0], updatedData[1], updatedData[2], updatedData[3], updatedData[4]);
+
+                            // Hide the save button, show the ok button and enable the modify button again
+                            saveButton.setVisible(false);
+                            okButton.setVisible(true);
+                            modifyButton.setEnabled(true);
+                        }
+                    });
+
                     showData.add(panel);
                     showData.setVisible(true);
                 }
@@ -630,6 +650,29 @@ public class Frontend extends JPanel implements ActionListener {
         Data userSingleData = (Data) getSingleDataCompletd.getData().getFirst();  // Get the user single data
 
         return userSingleData;
+    }
+
+    /**
+     * Update a record of the database
+     * @param id
+     * @param username
+     * @param emailAddress
+     * @param password
+     * @param service
+     * @param additional
+     */
+    private void changeData(int id, String username, String emailAddress, String password, String service, String additional){
+        // Create the data to send with the event
+        Data data = new Data(id, username, emailAddress, password, service, additional);
+
+        ArrayList dataToSend = new ArrayList();
+        dataToSend.add(data);
+
+        // Create and send the event
+        Event event = new Event("change-data", dataToSend);
+        this.communicationHandler.send(event);
+        this.communicationHandler.receive();
+//        notifyUser();  // Example method to show the user a messagebox with the operation status
     }
 
 }
