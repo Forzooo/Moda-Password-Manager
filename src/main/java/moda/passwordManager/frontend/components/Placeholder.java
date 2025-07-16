@@ -1,4 +1,4 @@
-package moda.passwordManager.frontend;
+package moda.passwordManager.frontend.components;
 
 import javax.swing.*;
 import java.awt.*;

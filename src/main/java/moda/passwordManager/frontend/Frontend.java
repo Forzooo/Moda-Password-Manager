@@ -3,6 +3,8 @@ package moda.passwordManager.frontend;
 import moda.passwordManager.backend.Data;
 import moda.passwordManager.communicationHandler.CommunicationHandler;
 import moda.passwordManager.communicationHandler.Event;
+import moda.passwordManager.frontend.components.Placeholder;
+import moda.passwordManager.frontend.panels.AddDataPanel;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -14,9 +16,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 /*
 The Board class is defined as two parts: the left one and the right one.
 The left one is a sidebar which is static, that means it won't change its appearance during the execution,
-while the right side is defined based on the button selected on the sidebar, thus it's dynamic and needs
+while the right side is defined based on the JButton selected on the sidebar, thus it's dynamic and needs
 a proper handling using the switchPanel() method
  */
 public class Frontend extends JPanel implements ActionListener {
@@ -77,8 +77,11 @@ public class Frontend extends JPanel implements ActionListener {
 
         // Initialize all the Panels
         initBoard();  // Set the properties of the Board
+
         initSidebarPanel();
-        initAddDataPanel();
+        initPanels();  // Initialize all the JPanels
+
+        //        initAddDataPanel();
         initShowDataPanel();
         initSettingsPanel();
     }
@@ -135,7 +138,6 @@ public class Frontend extends JPanel implements ActionListener {
         });
 
         JButton sendButton = new JButton("LogIn");
-        sendButton.setFont(new Font("Comic Sans MS", Font.BOLD, 12));
 
         sendButton.addActionListener(new ActionListener() {
             @Override
@@ -143,8 +145,6 @@ public class Frontend extends JPanel implements ActionListener {
                 // Retrieve the master password and send it to the backend
                 sendMasterPassword(input.getPassword());
                 askMasterPassword.dispose();  // Close the window
-                JOptionPane.showMessageDialog(null, "pupù");
-
             }
         });
 
@@ -161,6 +161,14 @@ public class Frontend extends JPanel implements ActionListener {
         this.executorService = Executors.newSingleThreadScheduledExecutor();  // Create a single thread for the periodic execution of methods
 
         this.executorService.scheduleAtFixedRate(this::updateUserData, INITIAL_DELAY, DELAY, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Initialize all the panels
+     */
+    private void initPanels(){
+
+        this.addDataPanel = new AddDataPanel(this.communicationHandler, this.MIN_CONTENT_WIDTH, this.windowSize, this.sidebarPanel.getWidth());
     }
 
     // Initialize all the components of the Sidebar Panel
@@ -190,7 +198,7 @@ public class Frontend extends JPanel implements ActionListener {
         JLabel passwordManagerLabel = new JLabel();
         passwordManagerLabel.setText("MODA");
 //        passwordManagerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);  // Set the text-alignment to center
-        passwordManagerLabel.setFont(new Font("Comic Sans MS", Font.BOLD, 80));  // Set the font of the label
+        passwordManagerLabel.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 80));  // Set the font of the label
 //        passwordManagerLabel.setForeground(light);  // Set the color of the label
         passwordManagerLabel.setForeground(Color.WHITE);  // Set the color of the label
 
@@ -199,8 +207,7 @@ public class Frontend extends JPanel implements ActionListener {
         // Create the JButtons used to switch between JPanels of the dynamic part
         Dimension buttonDimension = new Dimension(350, 50);
 
-        Button addDataButton = new Button();
-        addDataButton.setFont(new Font("Comic Sans MS", Font.BOLD, 20));
+        JButton addDataButton = new JButton();
         addDataButton.setText("Add Data");
         addDataButton.setMaximumSize(buttonDimension);
         addDataButton.addActionListener(new ActionListener() {
@@ -211,8 +218,7 @@ public class Frontend extends JPanel implements ActionListener {
             }
         });
 
-        Button showDataButton = new Button();
-        showDataButton.setFont(new Font("Comic Sans MS", Font.BOLD, 20));
+        JButton showDataButton = new JButton();
         showDataButton.setText("Show Data");
         showDataButton.setMaximumSize(buttonDimension);
         showDataButton.addActionListener(new ActionListener() {
@@ -223,8 +229,7 @@ public class Frontend extends JPanel implements ActionListener {
             }
         });
 
-        Button settingsButton = new Button();  // TODO: Use the settings icon instead of the text
-        settingsButton.setFont(new Font("Comic Sans MS", Font.BOLD, 20));
+        JButton settingsButton = new JButton();  // TODO: Use the settings icon instead of the text
         settingsButton.setText("Settings");
         settingsButton.setMaximumSize(buttonDimension);
         settingsButton.addActionListener(new ActionListener() {
@@ -254,125 +259,6 @@ public class Frontend extends JPanel implements ActionListener {
         this.sidebarPanel.add(buttonPanel, BorderLayout.SOUTH);
     }
 
-    // Initialize all the components of the Add Data Panel
-    private void initAddDataPanel(){
-
-        this.addDataPanel = new JPanel(new BorderLayout()) {
-            @Override
-            public Dimension getMinimumSize() {
-                // altezza 0 -> “qualsiasi”, conta solo la larghezza minima
-                return new Dimension(MIN_CONTENT_WIDTH, 0);
-            }
-        };
-
-        this.addDataPanel.setLayout(new BoxLayout(this.addDataPanel, BoxLayout.Y_AXIS));
-        this.addDataPanel.setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - this.sidebarPanel.getWidth()), (int) this.windowSize.getHeight()));
-//        this.addDataPanel.setBackground(light);
-        this.addDataPanel.setBackground(Color.WHITE);
-
-        // Set the margin of the Add Data Panel [top: 60, bottom: 60, left: 30, right: 30]
-        this.addDataPanel.setBorder(BorderFactory.createEmptyBorder(60,30,60,30));
-
-        JLabel addDataLabel = new JLabel();
-        addDataLabel.setText("Add a new data:");
-        addDataLabel.setFont(new Font("Comic Sans MS", Font.PLAIN, 16));
-
-        // Create all the JTextField for the data input
-        Dimension textFieldDimension = new Dimension(1600, 30);  // Define the dimension of any JTextField
-
-        JTextField usernameTextField = new JTextField();
-        usernameTextField.setMaximumSize(textFieldDimension);
-        Placeholder usernamePlaceholder = new Placeholder(usernameTextField, "Username");
-
-        JTextField emailAddressTextField = new JTextField();
-        emailAddressTextField.setMaximumSize(textFieldDimension);
-        Placeholder emailAddressPlaceholder = new Placeholder(emailAddressTextField, "Email Address");
-
-        // The password field is not a JPasswordField because the user needs to know the password being entered in the database
-        JTextField passwordTextField = new JTextField();
-        passwordTextField.setMaximumSize(textFieldDimension);
-        Placeholder passwordPlaceholder = new Placeholder(passwordTextField, "Password");
-
-        JTextField serviceTextField = new JTextField();
-        serviceTextField.setMaximumSize(textFieldDimension);
-        Placeholder servicePlaceholder = new Placeholder(serviceTextField, "Service");
-
-        JTextField additionalDataTextField = new JTextField();
-        additionalDataTextField.setMaximumSize(textFieldDimension);
-        Placeholder additionalDataPlaceholder = new Placeholder(additionalDataTextField, "Additional Data");
-
-        // Create the MButton for Reset and Confirm operations
-        Dimension buttonDimension = new Dimension(250, 20);  // Define the dimension of any MButton
-
-        Button resetButton = new Button();
-        resetButton.setText("Reset");
-        resetButton.setMaximumSize(buttonDimension);
-        resetButton.addActionListener(  // When the Reset button is clicked then all the JTextFields are reset
-                new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        // Reset the JTextFields by showing their placeholder
-                        usernamePlaceholder.showPlaceholder();
-                        emailAddressPlaceholder.showPlaceholder();
-                        passwordPlaceholder.showPlaceholder();
-                        servicePlaceholder.showPlaceholder();
-                        additionalDataPlaceholder.showPlaceholder();
-                    }
-                }
-        );
-
-        Button saveButton = new Button();
-        saveButton.setText("Save");
-        saveButton.setMaximumSize(buttonDimension);
-
-        // Save the data entered in the JTextField in the database after some cryptographic operations
-        saveButton.addActionListener(
-                new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        // If at least one placeholder is enabled then don't allow the data to be saved
-                        if(usernamePlaceholder.isShowPlaceholderFlag() || emailAddressPlaceholder.isShowPlaceholderFlag() ||
-                                passwordPlaceholder.isShowPlaceholderFlag() || servicePlaceholder.isShowPlaceholderFlag() ||
-                                additionalDataPlaceholder.isShowPlaceholderFlag()
-                        ){
-                            return;
-                        }
-
-                        // Call the save data function to tell the backend to save the data into the database
-                        saveData(usernameTextField.getText(), emailAddressTextField.getText(),
-                                passwordTextField.getText(), serviceTextField.getText(),
-                                additionalDataTextField.getText()
-                        );
-
-                        // Reset the placeholder after the data has been saved
-                        usernamePlaceholder.showPlaceholder();
-                        emailAddressPlaceholder.showPlaceholder();
-                        passwordPlaceholder.showPlaceholder();
-                        servicePlaceholder.showPlaceholder();
-                        additionalDataPlaceholder.showPlaceholder();
-                    }
-                }
-        );
-
-        // Add all the components to the Panel
-        this.addDataPanel.add(addDataLabel);
-        this.addDataPanel.add(Box.createRigidArea(new Dimension(0, 20)));  // Add RigidArea to add spacing between components
-        this.addDataPanel.add(usernameTextField);
-        this.addDataPanel.add(Box.createRigidArea(new Dimension(0, 20)));
-        this.addDataPanel.add(emailAddressTextField);
-        this.addDataPanel.add(Box.createRigidArea(new Dimension(0, 20)));
-        this.addDataPanel.add(passwordTextField);
-        this.addDataPanel.add(Box.createRigidArea(new Dimension(0, 20)));
-        this.addDataPanel.add(serviceTextField);
-        this.addDataPanel.add(Box.createRigidArea(new Dimension(0, 20)));
-        this.addDataPanel.add(additionalDataTextField);
-        this.addDataPanel.add(Box.createRigidArea(new Dimension(0, 20)));
-        this.addDataPanel.add(resetButton);
-        this.addDataPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        this.addDataPanel.add(saveButton);
-
-    }
-
     // Initialize all the components of the Show All Panel
     private void initShowDataPanel(){
 
@@ -387,8 +273,6 @@ public class Frontend extends JPanel implements ActionListener {
         // Create the JList used to show all the data saved inside the database
         JList dataList = new JList();
         dataList.setModel(this.userDataModel);  // Set the Model of the JList to the userData one
-
-        dataList.setFont(new Font("Comic Sans MS", Font.BOLD, 20));
 
         dataList.setFixedCellHeight(40);
 
@@ -486,8 +370,8 @@ public class Frontend extends JPanel implements ActionListener {
 
                     panel.add(saveButton);
 
-                    // Add the action lister after the creation of the OK button as it needs to be removed
-                    // when the modify button is clicked
+                    // Add the action lister after the creation of the OK JButton as it needs to be removed
+                    // when the modify JButton is clicked
                     modifyButton.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
@@ -495,9 +379,9 @@ public class Frontend extends JPanel implements ActionListener {
                             for (JTextField fields : dataFields){
                                 fields.setEditable(true);
                             }
-                            modifyButton.setEnabled(false);  // Disable the button as it's already being used
-                            okButton.setVisible(false);  // Hide the ok button
-                            saveButton.setVisible(true);  // Show the button used to apply changes
+                            modifyButton.setEnabled(false);  // Disable the JButton as it's already being used
+                            okButton.setVisible(false);  // Hide the ok JButton
+                            saveButton.setVisible(true);  // Show the JButton used to apply changes
                         }
                     });
 
@@ -514,7 +398,7 @@ public class Frontend extends JPanel implements ActionListener {
                             // Send the data to the backend
                             changeData(id, updatedData[0], updatedData[1], updatedData[2], updatedData[3], updatedData[4]);
 
-                            // Hide the save button, show the ok button and enable the modify button again
+                            // Hide the save JButton, show the ok JButton and enable the modify JButton again
                             saveButton.setVisible(false);
                             okButton.setVisible(true);
                             modifyButton.setEnabled(true);
@@ -610,27 +494,7 @@ public class Frontend extends JPanel implements ActionListener {
         }
     }
 
-    /**
-     * Save the data the user has entered in "Add Data" section into the database
-     * @param username
-     * @param emailAddress
-     * @param password
-     * @param service
-     * @param additionalData
-     */
-    private void saveData(String username, String emailAddress, String password, String service, String additionalData){
-        // Create the Data object with the user data to send to the backend
-        Data userData = new Data(username, emailAddress, password, service, additionalData);
 
-        ArrayList dataToSend = new ArrayList();
-        dataToSend.add(userData);
-
-        // Create the Event to send to the backend
-        Event saveData = new Event("save-data", dataToSend);
-        this.communicationHandler.send(saveData);
-        this.communicationHandler.receive();
-//        notifyUser();  // Example method to show the user a messagebox with the operation status
-    }
 
     /**
      * Retrieve the data associated with an ID from the database to show it in "Show Data" section
