@@ -122,35 +122,34 @@ public class Frontend extends JPanel implements ActionListener {
         askMasterPassword.setAlwaysOnTop(true);
 
         askMasterPassword.setLayout(new FlowLayout());
-/*
-        JButton quitButton = new JButton("Cancel");
-        quitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                askMasterPassword.dispose();
-                //TODO: far si che se premi cancel NON si apra il password manager
-            }
-        });
-*/
+
         JPasswordField input = new JPasswordField();
         input.setPreferredSize(new Dimension(200, 25));
 
-        JButton sendButton = new JButton("LogIn");
+        input.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sendMasterPassword(input.getPassword());
+                askMasterPassword.dispose();  // Close the window
+            }
+        });
 
-        //TODO: far si che se anche primi invio mandi la password
+        JButton sendButton = new JButton("LogIn");
+        sendButton.setFont(new Font("Comic Sans MS", Font.BOLD, 12));
+
         sendButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // Retrieve the master password and send it to the backend
                 sendMasterPassword(input.getPassword());
-
                 askMasterPassword.dispose();  // Close the window
+                JOptionPane.showMessageDialog(null, "pupù");
+
             }
         });
 
         askMasterPassword.add(input);
         askMasterPassword.add(sendButton);
-//        askMasterPassword.add(quitButton);
 
         askMasterPassword.setVisible(true);
     }
@@ -191,7 +190,7 @@ public class Frontend extends JPanel implements ActionListener {
         JLabel passwordManagerLabel = new JLabel();
         passwordManagerLabel.setText("MODA");
 //        passwordManagerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);  // Set the text-alignment to center
-        passwordManagerLabel.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 80));  // Set the font of the label
+        passwordManagerLabel.setFont(new Font("Comic Sans MS", Font.BOLD, 80));  // Set the font of the label
 //        passwordManagerLabel.setForeground(light);  // Set the color of the label
         passwordManagerLabel.setForeground(Color.WHITE);  // Set the color of the label
 
@@ -201,6 +200,7 @@ public class Frontend extends JPanel implements ActionListener {
         Dimension buttonDimension = new Dimension(350, 50);
 
         Button addDataButton = new Button();
+        addDataButton.setFont(new Font("Comic Sans MS", Font.BOLD, 20));
         addDataButton.setText("Add Data");
         addDataButton.setMaximumSize(buttonDimension);
         addDataButton.addActionListener(new ActionListener() {
@@ -212,6 +212,7 @@ public class Frontend extends JPanel implements ActionListener {
         });
 
         Button showDataButton = new Button();
+        showDataButton.setFont(new Font("Comic Sans MS", Font.BOLD, 20));
         showDataButton.setText("Show Data");
         showDataButton.setMaximumSize(buttonDimension);
         showDataButton.addActionListener(new ActionListener() {
@@ -223,6 +224,7 @@ public class Frontend extends JPanel implements ActionListener {
         });
 
         Button settingsButton = new Button();  // TODO: Use the settings icon instead of the text
+        settingsButton.setFont(new Font("Comic Sans MS", Font.BOLD, 20));
         settingsButton.setText("Settings");
         settingsButton.setMaximumSize(buttonDimension);
         settingsButton.addActionListener(new ActionListener() {
@@ -273,7 +275,7 @@ public class Frontend extends JPanel implements ActionListener {
 
         JLabel addDataLabel = new JLabel();
         addDataLabel.setText("Add a new data:");
-        addDataLabel.setFont(new Font("Arial", Font.PLAIN, 16));
+        addDataLabel.setFont(new Font("Comic Sans MS", Font.PLAIN, 16));
 
         // Create all the JTextField for the data input
         Dimension textFieldDimension = new Dimension(1600, 30);  // Define the dimension of any JTextField
@@ -386,7 +388,7 @@ public class Frontend extends JPanel implements ActionListener {
         JList dataList = new JList();
         dataList.setModel(this.userDataModel);  // Set the Model of the JList to the userData one
 
-        dataList.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 20));
+        dataList.setFont(new Font("Comic Sans MS", Font.BOLD, 20));
 
         dataList.setFixedCellHeight(40);
 
