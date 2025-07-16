@@ -15,6 +15,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -113,27 +115,29 @@ public class Frontend extends JPanel implements ActionListener {
     private void masterPasswordDialog(){
         JDialog askMasterPassword = new JDialog((Frame) null, "Master Password", true);
 
-        askMasterPassword.setUndecorated(true);
+//        askMasterPassword.setUndecorated(true);
         askMasterPassword.setTitle("Inserisci la Master Password");
-        askMasterPassword.setSize(300, 150);
+        askMasterPassword.setSize(300, 100);
         askMasterPassword.setLocationRelativeTo(null);
         askMasterPassword.setAlwaysOnTop(true);
 
         askMasterPassword.setLayout(new FlowLayout());
-
+/*
         JButton quitButton = new JButton("Cancel");
         quitButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 askMasterPassword.dispose();
+                //TODO: far si che se premi cancel NON si apra il password manager
             }
         });
-
+*/
         JPasswordField input = new JPasswordField();
         input.setPreferredSize(new Dimension(200, 25));
 
         JButton sendButton = new JButton("LogIn");
 
+        //TODO: far si che se anche primi invio mandi la password
         sendButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -146,7 +150,7 @@ public class Frontend extends JPanel implements ActionListener {
 
         askMasterPassword.add(input);
         askMasterPassword.add(sendButton);
-        askMasterPassword.add(quitButton);
+//        askMasterPassword.add(quitButton);
 
         askMasterPassword.setVisible(true);
     }
@@ -412,24 +416,35 @@ public class Frontend extends JPanel implements ActionListener {
 
                     JDialog showData = new JDialog();
 
-                    //showData.setLayout(new GridLayout(7,2));
+                    showData.setSize(new Dimension(600, 400));
+
+                    showData.setUndecorated(true);
+                    showData.setResizable(false);
                     showData.setLocationRelativeTo(null);
                     showData.setAlwaysOnTop(true);
 
-                    showData.setSize(new Dimension(200, 300));
-
-                    JPanel panel = new JPanel(new GridLayout(7,2));
+                    JPanel panel = new JPanel();
+                    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
                     panel.setBorder(new EmptyBorder(20,20,20,20));
+
+                    JTextField dataTxtField;
+                    List<JTextField> dataFields = new ArrayList<>();
 
                     // Add dynamically all the user data retrieved
                     for (String data : userSingleData.getFullUserData()){
                         // Create the JLabel
-                        JLabel dataLabel = new JLabel();
-                        dataLabel.setText(data);
+                        dataTxtField = new JTextField();
+                        dataTxtField.setText(data);
+                        dataTxtField.setEditable(false);
+                        dataFields.add(dataTxtField);
 
                         // Create the JButton to copy the data
                         JButton copyDataButton = new JButton();
                         copyDataButton.setText("❏");
+                        copyDataButton.setPreferredSize(new Dimension(50, 50));
+                        copyDataButton.setMaximumSize(new Dimension(50, 50));
+                        copyDataButton.setMinimumSize(new Dimension(50, 50));
+
                         copyDataButton.addActionListener(new ActionListener() {
                             @Override
                             public void actionPerformed(ActionEvent e) {
@@ -442,8 +457,12 @@ public class Frontend extends JPanel implements ActionListener {
                         });
 
                         // Add the JLabel and the JButton to the panel
-                        panel.add(dataLabel);
-                        panel.add(copyDataButton);
+                        JPanel rowPanel = new JPanel(new BorderLayout(5, 0));
+                        rowPanel.setBorder(new EmptyBorder(5, 0, 5, 0));  // Padding between rows
+                        rowPanel.add(dataTxtField, BorderLayout.CENTER);
+                        rowPanel.add(copyDataButton, BorderLayout.EAST);
+
+                        panel.add(rowPanel);
                     }
 
                     JButton modifyButton = new JButton("Modify");
@@ -451,7 +470,20 @@ public class Frontend extends JPanel implements ActionListener {
                     modifyButton.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            // TODO: Add modify button event
+                            if (Objects.equals(modifyButton.getText(), "Modify")) {
+                                for (JTextField fields : dataFields){
+                                    fields.setEditable(true);
+                                }
+                                modifyButton.setText("Save");
+                            } else {
+                                for (JTextField fields : dataFields){
+                                    fields.setEditable(false);
+                                }
+                                for (String data : userSingleData.getFullUserData()){
+                                    // TODO: Modificare il dato
+                                }
+                                modifyButton.setText("Modify");
+                            }
                         }
                     });
 
