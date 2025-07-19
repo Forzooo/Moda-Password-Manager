@@ -53,7 +53,7 @@ public class Frontend extends JPanel {
     private JPanel sidebarPanel;
     private AddDataPanel addDataPanel;
     private ShowDataPanel showDataPanel;
-    private JPanel settingsPanel;
+    private SettingsPanel settingsPanel;
 
     // The CommunicationHandler object used to communicate with the Backend thread
     private CommunicationHandler communicationHandler;
@@ -73,10 +73,6 @@ public class Frontend extends JPanel {
 
         initSidebarPanel();
         initPanels();  // Initialize all the JPanels
-
-        //        initAddDataPanel();
-//        initShowDataPanel();
-        initSettingsPanel();
     }
 
     private void initBoard(){
@@ -161,6 +157,9 @@ public class Frontend extends JPanel {
                                              this.sidebarPanel.getWidth());
         this.showDataPanel = new ShowDataPanel(this.communicationHandler, this.MIN_CONTENT_WIDTH, this.windowSize,
                                                this.sidebarPanel.getWidth());
+        this.settingsPanel = new SettingsPanel(this.communicationHandler, this.MIN_CONTENT_WIDTH, this.windowSize,
+                this.sidebarPanel.getWidth());
+
 
         // Add the Show All Panel to the Board as it's the default panel at the start
         this.currentPanel = this.showDataPanel;
@@ -253,26 +252,6 @@ public class Frontend extends JPanel {
         buttonPanel.add(settingsButton);
 
         this.sidebarPanel.add(buttonPanel, BorderLayout.SOUTH);
-    }
-
-    // Initialize all the components of the Settings Panel
-    private void initSettingsPanel(){
-
-        this.settingsPanel = new JPanel(new BorderLayout()) {
-            @Override
-            public Dimension getMinimumSize() {
-                // altezza 0 -> “qualsiasi”, conta solo la larghezza minima
-                return new Dimension(MIN_CONTENT_WIDTH, 0);
-            }
-        };
-//        this.settingsPanel.setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - this.sidebarPanel.getWidth()), (int) this.windowSize.getHeight()));
-        this.settingsPanel.setBackground(Color.RED);
-
-        JLabel label = new JLabel();
-
-        label.setText("Settings");
-
-        settingsPanel.add(label, BorderLayout.CENTER);
     }
 
     // This method is used to switch to a new panel hiding the previous one

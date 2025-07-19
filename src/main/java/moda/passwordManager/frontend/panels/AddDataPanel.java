@@ -51,7 +51,7 @@ public class AddDataPanel extends JPanel {
 
     /**
      * Get the layout used for the panel
-     * @return BorderLayout
+     * @return BoxLayout
      */
     private BoxLayout getPanelLayout() {
         return new BoxLayout(this, BoxLayout.Y_AXIS);
