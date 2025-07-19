@@ -1,22 +1,14 @@
 package moda.passwordManager.frontend;
 
-import moda.passwordManager.backend.Data;
 import moda.passwordManager.communicationHandler.CommunicationHandler;
 import moda.passwordManager.communicationHandler.Event;
-import moda.passwordManager.frontend.components.Placeholder;
 import moda.passwordManager.frontend.panels.*;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -28,20 +20,21 @@ The left one is a sidebar which is static, that means it won't change its appear
 while the right side is defined based on the JButton selected on the sidebar, thus it's dynamic and needs
 a proper handling using the switchPanel() method
  */
-public class Frontend extends JPanel {
+public class Frontend extends JPanel implements ActionListener {
 
     private final static String CURRENT_VERSION = "0.1.0";  // The current version of the software
 
     // Define the Scheduled Executor Service and its delay used to perform background tasks
     private ScheduledExecutorService executorService;
-    private final int INITIAL_DELAY = 1500;  // The delay before starting to execute any task
-    private final int DELAY = 10000;  // The delay between each cycle of tasks to perform
+    private final static int INITIAL_DELAY = 1500;  // The delay before starting to execute any task
+    private final static int DELAY = 10000;  // The delay between each cycle of tasks to perform
 
-    // The dynamicState indicates which Panel needs to be switched to from the current one selected
-    private GUIState dynamicState;
-    private JPanel currentPanel;
+    private JPanel currentPanel;  // The current selected JPanel
 
-    /*
+    private Timer swingTimer;  // The timer used to show the JPanel chosen by the user
+    private final static int TIMER_DELAY = 1000;  // Repeat each timer action every second
+
+    /**
     A Dimension attribute, retrieved from getToolkit().getScreenSize(), used to dynamically resize
     the components of the window
      */
@@ -50,7 +43,7 @@ public class Frontend extends JPanel {
     private final int MIN_CONTENT_WIDTH = 500;
 
     // All the JPanel of the GUI, defined as class attributes
-    private JPanel sidebarPanel;
+    private SidebarPanel sidebarPanel;
     private AddDataPanel addDataPanel;
     private ShowDataPanel showDataPanel;
     private SettingsPanel settingsPanel;
@@ -65,29 +58,20 @@ public class Frontend extends JPanel {
 
         masterPasswordDialog();  // Ask the user for the master password before starting to use the password manager
 
-        // The Executor Service must be after the masterPasswordDialog as it requires the master password to operate
+        // The Executor Service must be init after the masterPasswordDialog as it requires the master password to operate
         initExecutorService();
 
-        // Initialize all the Panels
-        initBoard();  // Set the properties of the Board
-
-        initSidebarPanel();
+        initFrame();  // Set the properties of the JFrame
         initPanels();  // Initialize all the JPanels
+        initSwingTimer();  // Initialize the Swing timer only after all the frontend components have been created
     }
 
-    private void initBoard(){
+    private void initFrame(){
 
         setFocusable(true);  // Set the focus on the frame to get the keyboard inputs
         setLayout(new BorderLayout());  // The layout for the Board is the Border one
-//        addKeyListener(new TAdapter());
-
-        // Set the initial state of the dynamic part to Show All Panel
-        this.dynamicState = GUIState.SHOW_DATA;
 
         this.windowSize = getToolkit().getScreenSize();  // Get the initial size of the window
-
-//        this.timer = new Timer(DELAY, this::actionPerformed);
-//        this.timer.start();
 
     }
 
@@ -149,117 +133,41 @@ public class Frontend extends JPanel {
     }
 
     /**
+     * Initialize the Swing timer used to perform graphical tasks in the frontend
+     */
+    private void initSwingTimer(){
+        this.swingTimer = new Timer(TIMER_DELAY, this::actionPerformed);
+        this.swingTimer.start();
+    }
+
+    /**
      * Initialize all the panels
      */
     private void initPanels(){
+
+        this.sidebarPanel = new SidebarPanel(this.windowSize, CURRENT_VERSION);
+        add(this.sidebarPanel, BorderLayout.WEST);  // Add the Sidebar to the Frame
 
         this.addDataPanel = new AddDataPanel(this.communicationHandler, this.MIN_CONTENT_WIDTH, this.windowSize,
                                              this.sidebarPanel.getWidth());
         this.showDataPanel = new ShowDataPanel(this.communicationHandler, this.MIN_CONTENT_WIDTH, this.windowSize,
                                                this.sidebarPanel.getWidth());
         this.settingsPanel = new SettingsPanel(this.communicationHandler, this.MIN_CONTENT_WIDTH, this.windowSize,
-                this.sidebarPanel.getWidth());
-
+                                               this.sidebarPanel.getWidth());
 
         // Add the Show All Panel to the Board as it's the default panel at the start
         this.currentPanel = this.showDataPanel;
         add(this.showDataPanel, BorderLayout.CENTER);
     }
 
-    // Initialize all the components of the Sidebar Panel
-    private void initSidebarPanel(){
-
-        final int MAX_SIDEBAR = 300;
-
-        this.sidebarPanel = new JPanel() {
-            @Override public Dimension getPreferredSize() {
-                Container parent = getParent(); // il Frame
-                if (parent != null) {
-                    int larghezza = Math.min(parent.getWidth() / 3, MAX_SIDEBAR);
-                    return new Dimension(larghezza, parent.getHeight());
-                }
-                return new Dimension(MAX_SIDEBAR, 0);
-            }
-        };
-
-        this.sidebarPanel.setBackground(Color.BLACK);
-
-        //this.sidebarPanel.setPreferredSize(new Dimension((int) this.windowSize.getWidth()/5, (int) this.windowSize.getHeight()));
-        //this.sidebarPanel.setMaximumSize(new Dimension((int) this.windowSize.getWidth()/5, Integer.MAX_VALUE));
-
-        add(this.sidebarPanel, BorderLayout.WEST);  // Add the Sidebar to the Panel
-
-        // Create the JLabel that displays the name of the Password Manager
-        JLabel passwordManagerLabel = new JLabel();
-        passwordManagerLabel.setText("MODA");
-//        passwordManagerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);  // Set the text-alignment to center
-        passwordManagerLabel.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 80));  // Set the font of the label
-//        passwordManagerLabel.setForeground(light);  // Set the color of the label
-        passwordManagerLabel.setForeground(Color.WHITE);  // Set the color of the label
-
-        JPanel buttonPanel = new JPanel(new GridLayout(3, 1));
-
-        // Create the JButtons used to switch between JPanels of the dynamic part
-        Dimension buttonDimension = new Dimension(350, 50);
-
-        JButton addDataButton = new JButton();
-        addDataButton.setText("Add Data");
-        addDataButton.setMaximumSize(buttonDimension);
-        addDataButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dynamicState = GUIState.ADD_DATA;
-                switchPanel();
-            }
-        });
-
-        JButton showDataButton = new JButton();
-        showDataButton.setText("Show Data");
-        showDataButton.setMaximumSize(buttonDimension);
-        showDataButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dynamicState = GUIState.SHOW_DATA;
-                switchPanel();
-            }
-        });
-
-        JButton settingsButton = new JButton();  // TODO: Use the settings icon instead of the text
-        settingsButton.setText("Settings");
-        settingsButton.setMaximumSize(buttonDimension);
-        settingsButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dynamicState = GUIState.SETTINGS;
-                switchPanel();
-            }
-        });
-
-        // Add the components to the Sidebar
-        this.sidebarPanel.add(Box.createRigidArea(new Dimension(0, 20))); // Add RigidArea to add spacing between components
-        this.sidebarPanel.add(passwordManagerLabel);
-
-        // Add the current version of the software at the bottom of the sidebar
-        JLabel currentVersionLabel = new JLabel();
-        currentVersionLabel.setText("Version: " + CURRENT_VERSION);
-        currentVersionLabel.setForeground(Color.WHITE);  // Set the color of the label
-
-        this.sidebarPanel.add(currentVersionLabel);
-        this.sidebarPanel.add(Box.createRigidArea(new Dimension(220, 20))); // Add RigidArea to add spacing between components
-
-        buttonPanel.add(addDataButton);
-        buttonPanel.add(showDataButton);
-        buttonPanel.add(settingsButton);
-
-        this.sidebarPanel.add(buttonPanel, BorderLayout.SOUTH);
-    }
-
-    // This method is used to switch to a new panel hiding the previous one
+    /**
+     * Switch to a new JPanel hiding the previous one
+     */
     private void switchPanel(){
         remove(this.currentPanel);  // Remove the current (old) panel from the Board
 
         // Based on the section chosen change the current panel to the new one
-        switch (this.dynamicState){
+        switch (this.sidebarPanel.getDynamicState()){
             case ADD_DATA -> this.currentPanel = this.addDataPanel;
             case SHOW_DATA -> this.currentPanel = this.showDataPanel;
             case SETTINGS -> this.currentPanel = this.settingsPanel;
@@ -270,6 +178,10 @@ public class Frontend extends JPanel {
         repaint();
     }
 
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        switchPanel();
+    }
 
     /**
      * Send the master password the user has entered to the backend thread

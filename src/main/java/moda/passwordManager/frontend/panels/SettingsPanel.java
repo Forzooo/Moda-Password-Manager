@@ -1,15 +1,9 @@
 package moda.passwordManager.frontend.panels;
 
-import moda.passwordManager.backend.Data;
 import moda.passwordManager.communicationHandler.CommunicationHandler;
-import moda.passwordManager.communicationHandler.Event;
-import moda.passwordManager.frontend.components.Placeholder;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
 
 public class SettingsPanel extends JPanel {
 
@@ -19,22 +13,6 @@ public class SettingsPanel extends JPanel {
     // Attributes for the configuration of the panel
     private final int MIN_CONTENT_WIDTH;
     private Dimension windowSize;
-
-    // Swing components
-    private JTextField usernameTextField;
-    private JTextField emailAddressTextField;
-    private JTextField passwordTextField;
-    private JTextField serviceTextField;
-    private JTextField additionalDataTextField;
-
-    private Placeholder usernamePlaceholder;
-    private Placeholder emailAddressPlaceholder;
-    private Placeholder passwordPlaceholder;
-    private Placeholder servicePlaceholder;
-    private Placeholder additionalDataPlaceholder;
-
-    private JButton resetButton;
-    private JButton saveButton;
 
     public SettingsPanel(CommunicationHandler communicationHandler, int MIN_CONTENT_WIDTH, Dimension windowSize, int sidebarPanelWidth) {
         super();  // Initialize the Panel
