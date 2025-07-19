@@ -4,7 +4,7 @@ import moda.passwordManager.backend.Data;
 import moda.passwordManager.communicationHandler.CommunicationHandler;
 import moda.passwordManager.communicationHandler.Event;
 import moda.passwordManager.frontend.components.Placeholder;
-import moda.passwordManager.frontend.panels.AddDataPanel;
+import moda.passwordManager.frontend.panels.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -28,7 +28,7 @@ The left one is a sidebar which is static, that means it won't change its appear
 while the right side is defined based on the JButton selected on the sidebar, thus it's dynamic and needs
 a proper handling using the switchPanel() method
  */
-public class Frontend extends JPanel implements ActionListener {
+public class Frontend extends JPanel {
 
     private final static String CURRENT_VERSION = "0.1.0";  // The current version of the software
 
@@ -51,16 +51,9 @@ public class Frontend extends JPanel implements ActionListener {
 
     // All the JPanel of the GUI, defined as class attributes
     private JPanel sidebarPanel;
-    private JPanel addDataPanel;
-    private JPanel showDataPanel;
+    private AddDataPanel addDataPanel;
+    private ShowDataPanel showDataPanel;
     private JPanel settingsPanel;
-
-    /**
-     * The service_data shown in the JList of "Show Data" panel <br/>
-     * It's updated automatically by the timer
-     */
-    private ArrayList<Data> userData;  // A Data object is required as each service shown needs to be associated with its ID
-    private DefaultListModel<String> userDataModel;
 
     // The CommunicationHandler object used to communicate with the Backend thread
     private CommunicationHandler communicationHandler;
@@ -82,7 +75,7 @@ public class Frontend extends JPanel implements ActionListener {
         initPanels();  // Initialize all the JPanels
 
         //        initAddDataPanel();
-        initShowDataPanel();
+//        initShowDataPanel();
         initSettingsPanel();
     }
 
@@ -96,10 +89,6 @@ public class Frontend extends JPanel implements ActionListener {
         this.dynamicState = GUIState.SHOW_DATA;
 
         this.windowSize = getToolkit().getScreenSize();  // Get the initial size of the window
-
-        // Initialize the user data ArrayList and Model
-        this.userData = new ArrayList<>();
-        this.userDataModel = new DefaultListModel<>();
 
 //        this.timer = new Timer(DELAY, this::actionPerformed);
 //        this.timer.start();
@@ -168,7 +157,14 @@ public class Frontend extends JPanel implements ActionListener {
      */
     private void initPanels(){
 
-        this.addDataPanel = new AddDataPanel(this.communicationHandler, this.MIN_CONTENT_WIDTH, this.windowSize, this.sidebarPanel.getWidth());
+        this.addDataPanel = new AddDataPanel(this.communicationHandler, this.MIN_CONTENT_WIDTH, this.windowSize,
+                                             this.sidebarPanel.getWidth());
+        this.showDataPanel = new ShowDataPanel(this.communicationHandler, this.MIN_CONTENT_WIDTH, this.windowSize,
+                                               this.sidebarPanel.getWidth());
+
+        // Add the Show All Panel to the Board as it's the default panel at the start
+        this.currentPanel = this.showDataPanel;
+        add(this.showDataPanel, BorderLayout.CENTER);
     }
 
     // Initialize all the components of the Sidebar Panel
@@ -259,168 +255,13 @@ public class Frontend extends JPanel implements ActionListener {
         this.sidebarPanel.add(buttonPanel, BorderLayout.SOUTH);
     }
 
-    // Initialize all the components of the Show All Panel
-    private void initShowDataPanel(){
-
-        this.showDataPanel = new JPanel(new BorderLayout()) {
-            @Override
-            public Dimension getMinimumSize() {
-                // altezza 0 → “qualsiasi”, conta solo la larghezza minima
-                return new Dimension(MIN_CONTENT_WIDTH, 0);
-            }
-        };
-
-        // Create the JList used to show all the data saved inside the database
-        JList dataList = new JList();
-        dataList.setModel(this.userDataModel);  // Set the Model of the JList to the userData one
-
-        dataList.setFixedCellHeight(40);
-
-        JScrollPane scrollPane = new JScrollPane(dataList);
-        scrollPane.setPreferredSize(new Dimension(1000, 750));
-
-        scrollPane.setBorder(new EmptyBorder(10,30,10,30));
-
-        // Add the Show All Panel to the Board as it's the default panel at the start
-        this.currentPanel = this.showDataPanel;
-        add(this.showDataPanel, BorderLayout.CENTER);
-
-        // Add all the components to the JPanel
-        this.showDataPanel.add(scrollPane, BorderLayout.CENTER);
-
-        dataList.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                super.mouseClicked(e);
-                // Only allow double clicks
-                if (e.getClickCount() == 2) {
-                    // Retrieve the ID from the selected data
-                    Data dataSelected = userData.get(dataList.getSelectedIndex());
-                    int id = dataSelected.getID();
-
-                    Data userSingleData = getSingleData(id);  // Retrieve the data with the ID from the database
-
-                    JDialog showData = new JDialog();
-
-                    showData.setSize(new Dimension(600, 400));
-
-                    showData.setUndecorated(true);
-                    showData.setResizable(false);
-                    showData.setLocationRelativeTo(null);
-                    showData.setAlwaysOnTop(true);
-
-                    JPanel panel = new JPanel();
-                    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-                    panel.setBorder(new EmptyBorder(20,20,20,20));
-
-                    JTextField dataField;
-                    List<JTextField> dataFields = new ArrayList<>();
-
-                    // Add dynamically all the user data retrieved
-                    for (String data : userSingleData.getFullUserData()){
-                        // Create the JLabel
-                        dataField = new JTextField();
-                        dataField.setText(data);
-                        dataField.setEditable(false);
-                        dataFields.add(dataField);
-
-                        // Create the JButton to copy the data
-                        JButton copyDataButton = new JButton();
-                        copyDataButton.setText("❏");
-                        copyDataButton.setPreferredSize(new Dimension(50, 50));
-                        copyDataButton.setMaximumSize(new Dimension(50, 50));
-                        copyDataButton.setMinimumSize(new Dimension(50, 50));
-
-                        copyDataButton.addActionListener(new ActionListener() {
-                            @Override
-                            public void actionPerformed(ActionEvent e) {
-                                // Get the clipboard from the system
-                                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                                StringSelection dataToCopy = new StringSelection(data);  // Create a Transferable
-                                clipboard.setContents(dataToCopy, dataToCopy);  // Copy the transferable
-                                JOptionPane.showMessageDialog(panel, "Copied the data to the clipboard.");
-                            }
-                        });
-
-                        // Add the JLabel and the JButton to the panel
-                        JPanel rowPanel = new JPanel(new BorderLayout(5, 0));
-                        rowPanel.setBorder(new EmptyBorder(5, 0, 5, 0));  // Padding between rows
-                        rowPanel.add(dataField, BorderLayout.CENTER);
-                        rowPanel.add(copyDataButton, BorderLayout.EAST);
-
-                        panel.add(rowPanel);
-                    }
-
-                    JButton modifyButton = new JButton("Modify");
-
-                    panel.add(modifyButton);
-
-                    JButton okButton = new JButton("OK");
-                    panel.add(okButton);
-
-                    okButton.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            showData.dispose();
-                        }
-                    });
-
-                    JButton saveButton = new JButton("Save Changes");
-                    saveButton.setVisible(false);  // It's shown only when modifyButton is clicked
-
-                    panel.add(saveButton);
-
-                    // Add the action lister after the creation of the OK JButton as it needs to be removed
-                    // when the modify JButton is clicked
-                    modifyButton.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            // Set the JTextFields to be editable to allow changes
-                            for (JTextField fields : dataFields){
-                                fields.setEditable(true);
-                            }
-                            modifyButton.setEnabled(false);  // Disable the JButton as it's already being used
-                            okButton.setVisible(false);  // Hide the ok JButton
-                            saveButton.setVisible(true);  // Show the JButton used to apply changes
-                        }
-                    });
-
-                    // Save the changes and send the event to the backend
-                    saveButton.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            // Store the updated strings into an array
-                            String[] updatedData = new String[5];
-
-                            for (int i = 0; i < dataFields.size(); i++){
-                                updatedData[i] = dataFields.get(i).getText();
-                            }
-                            // Send the data to the backend
-                            changeData(id, updatedData[0], updatedData[1], updatedData[2], updatedData[3], updatedData[4]);
-
-                            // Hide the save JButton, show the ok JButton and enable the modify JButton again
-                            saveButton.setVisible(false);
-                            okButton.setVisible(true);
-                            modifyButton.setEnabled(true);
-                        }
-                    });
-
-                    showData.add(panel);
-                    showData.setVisible(true);
-                }
-
-            }
-        });
-
-    }
-
     // Initialize all the components of the Settings Panel
     private void initSettingsPanel(){
 
         this.settingsPanel = new JPanel(new BorderLayout()) {
             @Override
             public Dimension getMinimumSize() {
-                // altezza 0 → “qualsiasi”, conta solo la larghezza minima
+                // altezza 0 -> “qualsiasi”, conta solo la larghezza minima
                 return new Dimension(MIN_CONTENT_WIDTH, 0);
             }
         };
@@ -450,11 +291,6 @@ public class Frontend extends JPanel implements ActionListener {
         repaint();
     }
 
-    // Method executed periodically by the timer
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        updateUserData();
-    }
 
     /**
      * Send the master password the user has entered to the backend thread
@@ -474,69 +310,10 @@ public class Frontend extends JPanel implements ActionListener {
     }
 
     /**
-     * Update the userData and its model to show the updated data of the database
+     * Method used only to call the update user data inside the ShowDataPanel class
      */
     private void updateUserData(){
-        // Create and send the event to the backend asking for the user data
-        Event updateUserData = new Event("get-full-service-data", new ArrayList());
-        this.communicationHandler.send(updateUserData);
-
-        // Wait for the response of the backend and update the data with the new one
-        Event updatedDataEvent = this.communicationHandler.receive();
-        ArrayList<Data> updatedData = (ArrayList<Data>) updatedDataEvent.getData().getFirst();
-
-        this.userData.clear();  // Clear the ArrayList from the previous data
-        this.userData.addAll(updatedData);  // Update the ArrayList with the new data
-
-        this.userDataModel.clear();  // Clear the model from the previous data
-        for (int i = 0; i < updatedData.size(); i++){
-            this.userDataModel.add(i, updatedData.get(i).getSERVICE());
-        }
-    }
-
-
-
-    /**
-     * Retrieve the data associated with an ID from the database to show it in "Show Data" section
-     * @param id
-     * @return
-     */
-    private Data getSingleData(int id){
-        // Create the event to send to the backend
-        ArrayList dataToSend = new ArrayList();
-        dataToSend.add(id);
-
-        Event getSingleData = new Event("get-single-data", dataToSend);
-        this.communicationHandler.send(getSingleData);
-
-        Event getSingleDataCompletd = this.communicationHandler.receive();  // Wait for the response
-
-        Data userSingleData = (Data) getSingleDataCompletd.getData().getFirst();  // Get the user single data
-
-        return userSingleData;
-    }
-
-    /**
-     * Update a record of the database
-     * @param id
-     * @param username
-     * @param emailAddress
-     * @param password
-     * @param service
-     * @param additional
-     */
-    private void changeData(int id, String username, String emailAddress, String password, String service, String additional){
-        // Create the data to send with the event
-        Data data = new Data(id, username, emailAddress, password, service, additional);
-
-        ArrayList dataToSend = new ArrayList();
-        dataToSend.add(data);
-
-        // Create and send the event
-        Event event = new Event("change-data", dataToSend);
-        this.communicationHandler.send(event);
-        this.communicationHandler.receive();
-//        notifyUser();  // Example method to show the user a messagebox with the operation status
+        this.showDataPanel.updateUserData();
     }
 
 }

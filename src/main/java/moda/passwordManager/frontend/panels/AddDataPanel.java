@@ -20,7 +20,7 @@ public class AddDataPanel extends JPanel {
     private final int MIN_CONTENT_WIDTH;
     private Dimension windowSize;
 
-    // Attributes of general use components
+    // Swing components
     private JTextField usernameTextField;
     private JTextField emailAddressTextField;
     private JTextField passwordTextField;
