@@ -29,10 +29,12 @@ public class Frontend extends JPanel implements ActionListener {
     private final static int INITIAL_DELAY = 1500;  // The delay before starting to execute any task
     private final static int DELAY = 10000;  // The delay between each cycle of tasks to perform
 
+    // The dynamicState indicates which Panel needs to be switched to from the current one selected
+    private GUIState dynamicState;
     private JPanel currentPanel;  // The current selected JPanel
 
     private Timer swingTimer;  // The timer used to show the JPanel chosen by the user
-    private final static int TIMER_DELAY = 1000;  // Repeat each timer action every second
+    private final static int TIMER_DELAY = 500;  // Repeat each timer action every second
 
     /**
     A Dimension attribute, retrieved from getToolkit().getScreenSize(), used to dynamically resize
@@ -150,8 +152,11 @@ public class Frontend extends JPanel implements ActionListener {
 
         this.addDataPanel = new AddDataPanel(this.communicationHandler, this.MIN_CONTENT_WIDTH, this.windowSize,
                                              this.sidebarPanel.getWidth());
+
         this.showDataPanel = new ShowDataPanel(this.communicationHandler, this.MIN_CONTENT_WIDTH, this.windowSize,
                                                this.sidebarPanel.getWidth());
+        this.dynamicState = GUIState.SHOW_DATA;  // Set the default dynamic state to be the Show Data panel
+
         this.settingsPanel = new SettingsPanel(this.communicationHandler, this.MIN_CONTENT_WIDTH, this.windowSize,
                                                this.sidebarPanel.getWidth());
 
@@ -164,10 +169,16 @@ public class Frontend extends JPanel implements ActionListener {
      * Switch to a new JPanel hiding the previous one
      */
     private void switchPanel(){
+        // Check if the panel has changed, otherwise stop the method to avoid useless operations
+        if (this.dynamicState.equals(this.sidebarPanel.getDynamicState())){
+            return;
+        }
+        this.dynamicState = this.sidebarPanel.getDynamicState();  // Update the dynamic state
+
         remove(this.currentPanel);  // Remove the current (old) panel from the Board
 
         // Based on the section chosen change the current panel to the new one
-        switch (this.sidebarPanel.getDynamicState()){
+        switch (this.dynamicState){
             case ADD_DATA -> this.currentPanel = this.addDataPanel;
             case SHOW_DATA -> this.currentPanel = this.showDataPanel;
             case SETTINGS -> this.currentPanel = this.settingsPanel;
@@ -178,6 +189,10 @@ public class Frontend extends JPanel implements ActionListener {
         repaint();
     }
 
+    /**
+     * The tasks that the Swing Timer performs periodically
+     * @param e the event to be processed
+     */
     @Override
     public void actionPerformed(ActionEvent e) {
         switchPanel();
