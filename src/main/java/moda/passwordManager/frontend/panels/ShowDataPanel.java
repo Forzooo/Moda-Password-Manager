@@ -85,8 +85,32 @@ public class ShowDataPanel extends JPanel {
     private void initComponents(){
         // Create the JList used to show all the data saved inside the database
         this.dataList = new JList();
-        this.dataList.setFixedCellHeight(40);
+        this.dataList.setFixedCellHeight(30);
         this.dataList.setModel(this.userDataModel);  // Set the model of the JList (Strings containing service data)
+        this.dataList.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 20));
+
+        dataList.setSelectionBackground(Color.black);
+        dataList.setSelectionForeground(Color.white);
+
+        dataList.setCellRenderer(new DefaultListCellRenderer(){ //imposto un metodo per far renderizzare le celle della lista come mi pare
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) { //questo non so bene cosa sia, ma nell'esempio che ho spudoratamente copiato era così
+                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+                if (!isSelected) {  //questo perché invece quando è selezionato sarà nero nero los fondos
+                    if (! (index % 2 == 0)) {   //banalmente se la riga è pari avrà un colore di sfondo, mentre se è dispari un'altro
+                        c.setBackground(new Color(241, 241, 241)); // pari righe
+                    } else {
+                        c.setBackground(new Color(255, 255, 255)); // righe dispari
+                    }
+                } else {
+                    c.setBackground(list.getSelectionBackground());
+                    c.setForeground(list.getSelectionForeground());
+                }
+
+                return c;
+
+            }
+        });
 
         JScrollPane scrollPane = new JScrollPane(this.dataList);
         scrollPane.setPreferredSize(new Dimension(1000, 750));
@@ -123,6 +147,16 @@ public class ShowDataPanel extends JPanel {
                     JPanel panel = new JPanel();
                     panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
                     panel.setBorder(new EmptyBorder(20,20,20,20));
+
+                    JButton okButton = new JButton("OK");
+                    panel.add(okButton);
+
+                    okButton.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            showData.dispose();
+                        }
+                    });
 
                     JTextField dataField;
                     List<JTextField> dataFields = new ArrayList<>();
@@ -163,16 +197,15 @@ public class ShowDataPanel extends JPanel {
                     }
 
                     JButton modifyButton = new JButton("Modify");
-
                     panel.add(modifyButton);
 
-                    JButton okButton = new JButton("OK");
-                    panel.add(okButton);
+                    JButton deleteButton = new JButton("De lete");
+                    panel.add(deleteButton);
 
-                    okButton.addActionListener(new ActionListener() {
+                    deleteButton.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            showData.dispose();
+                            JOptionPane.showConfirmDialog(showData, "Stai per eliminare definitivamente la password\nprocedere?");
                         }
                     });
 
