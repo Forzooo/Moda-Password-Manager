@@ -96,7 +96,7 @@ public class ShowDataPanel extends JPanel {
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) { //questo non so bene cosa sia, ma nell'esempio che ho spudoratamente copiato era così
                 Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
-                if (!isSelected) {  //questo perché invece quando è selezionato sarà nero nero los fondos
+                if (!isSelected) {  //questo perché invece quando è selezionato sarà nero
                     if (! (index % 2 == 0)) {   //banalmente se la riga è pari avrà un colore di sfondo, mentre se è dispari un'altro
                         c.setBackground(new Color(241, 241, 241)); // pari righe
                     } else {
@@ -133,10 +133,11 @@ public class ShowDataPanel extends JPanel {
                     Data dataSelected = userData.get(dataList.getSelectedIndex());
                     int id = dataSelected.getID();
 
-                    Data userSingleData = getSingleData(id);  // Retrieve the data with the ID from the database
+                    // Retrieve the data with the ID from the database
+                    Data userSingleData = getSingleData(id);
 
+                    // Create a JDialog where the data will be shown
                     JDialog showData = new JDialog();
-
                     showData.setSize(new Dimension(600, 400));
 
                     showData.setUndecorated(true);
@@ -144,19 +145,16 @@ public class ShowDataPanel extends JPanel {
                     showData.setLocationRelativeTo(null);
                     showData.setAlwaysOnTop(true);
 
+                    showData.add(new SingleDataPanel(userSingleData));
+                    showData.setVisible(true);
+
+                    /*
                     JPanel panel = new JPanel();
                     panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
                     panel.setBorder(new EmptyBorder(20,20,20,20));
 
                     JButton okButton = new JButton("OK");
                     panel.add(okButton);
-
-                    okButton.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            showData.dispose();
-                        }
-                    });
 
                     JTextField dataField;
                     List<JTextField> dataFields = new ArrayList<>();
@@ -196,10 +194,17 @@ public class ShowDataPanel extends JPanel {
                         panel.add(rowPanel);
                     }
 
+                    okButton.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            showData.dispose();
+                        }
+                    });
+
                     JButton modifyButton = new JButton("Modify");
                     panel.add(modifyButton);
 
-                    JButton deleteButton = new JButton("De lete");
+                    JButton deleteButton = new JButton("Delete");
                     panel.add(deleteButton);
 
                     deleteButton.addActionListener(new ActionListener() {
@@ -251,7 +256,9 @@ public class ShowDataPanel extends JPanel {
 
                     showData.add(panel);
                     showData.setVisible(true);
+                     */
                 }
+
 
             }
         });
