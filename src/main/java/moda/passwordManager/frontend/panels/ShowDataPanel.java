@@ -140,7 +140,6 @@ public class ShowDataPanel extends JPanel {
                     JDialog showData = new JDialog();
                     showData.setSize(new Dimension(600, 400));
 
-                    showData.setUndecorated(true);
                     showData.setResizable(false);
                     showData.setLocationRelativeTo(null);
                     showData.setAlwaysOnTop(true);

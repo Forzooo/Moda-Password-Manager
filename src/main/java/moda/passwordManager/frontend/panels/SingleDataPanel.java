@@ -29,7 +29,6 @@ public class SingleDataPanel extends JPanel {
 
         initPanel();
         initComponents();
-        initActionListener();
     }
 
     /**
@@ -45,7 +44,6 @@ public class SingleDataPanel extends JPanel {
      */
     private void initComponents(){
         // Create all the JButton
-        this.closeButton = new JButton("Close");
         this.modifyButton = new JButton("Modify");
         this.deleteButton = new JButton("Delete");
 
@@ -75,21 +73,11 @@ public class SingleDataPanel extends JPanel {
             add(rowPanel);
         }
 
-        add(this.modifyButton);
-        add(this.deleteButton);
-        add(this.closeButton);
-    }
+        JPanel buttons = new JPanel();
+        buttons.add(this.modifyButton);
+        buttons.add(this.deleteButton);
 
-    /**
-     * Initialize all the action listeners
-     */
-    private void initActionListener(){
-        this.closeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-            }
-        });
+        add(buttons);
     }
 
     /**
