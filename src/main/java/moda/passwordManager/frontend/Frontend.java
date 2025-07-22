@@ -95,6 +95,9 @@ public class Frontend extends JPanel implements ActionListener {
         askMasterPassword.setLocationRelativeTo(null);
         askMasterPassword.setAlwaysOnTop(true);
 
+        Image icon = Toolkit.getDefaultToolkit().getImage("src/main/resources/icon.png");
+        askMasterPassword.setIconImage(icon);
+
         askMasterPassword.setLayout(new FlowLayout());
 
         JPasswordField input = new JPasswordField();

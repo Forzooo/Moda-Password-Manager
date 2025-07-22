@@ -26,6 +26,10 @@ public class Application extends JFrame {
 
         setTitle("MODA - Password Manager");
         setSize(width, height);
+
+        Image icon = Toolkit.getDefaultToolkit().getImage("src/main/resources/icon.png");
+        setIconImage(icon);
+
         setVisible(true);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
