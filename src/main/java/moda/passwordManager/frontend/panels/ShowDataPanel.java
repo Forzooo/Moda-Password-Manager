@@ -85,8 +85,32 @@ public class ShowDataPanel extends JPanel {
     private void initComponents(){
         // Create the JList used to show all the data saved inside the database
         this.dataList = new JList();
-        this.dataList.setFixedCellHeight(40);
+        this.dataList.setFixedCellHeight(30);
         this.dataList.setModel(this.userDataModel);  // Set the model of the JList (Strings containing service data)
+        this.dataList.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 20));
+
+        dataList.setSelectionBackground(Color.black);
+        dataList.setSelectionForeground(Color.white);
+
+        dataList.setCellRenderer(new DefaultListCellRenderer(){ //imposto un metodo per far renderizzare le celle della lista come mi pare
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) { //questo non so bene cosa sia, ma nell'esempio che ho spudoratamente copiato era così
+                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+                if (!isSelected) {  //questo perché invece quando è selezionato sarà nero
+                    if (! (index % 2 == 0)) {   //banalmente se la riga è pari avrà un colore di sfondo, mentre se è dispari un'altro
+                        c.setBackground(new Color(241, 241, 241)); // pari righe
+                    } else {
+                        c.setBackground(new Color(255, 255, 255)); // righe dispari
+                    }
+                } else {
+                    c.setBackground(list.getSelectionBackground());
+                    c.setForeground(list.getSelectionForeground());
+                }
+
+                return c;
+
+            }
+        });
 
         JScrollPane scrollPane = new JScrollPane(this.dataList);
         scrollPane.setPreferredSize(new Dimension(1000, 750));
@@ -109,117 +133,20 @@ public class ShowDataPanel extends JPanel {
                     Data dataSelected = userData.get(dataList.getSelectedIndex());
                     int id = dataSelected.getID();
 
-                    Data userSingleData = getSingleData(id);  // Retrieve the data with the ID from the database
+                    // Retrieve the data with the ID from the database
+                    Data userSingleData = getSingleData(id);
 
+                    // Create a JDialog where the data will be shown
                     JDialog showData = new JDialog();
-
                     showData.setSize(new Dimension(600, 400));
 
-                    showData.setUndecorated(true);
                     showData.setResizable(false);
                     showData.setLocationRelativeTo(null);
                     showData.setAlwaysOnTop(true);
 
-                    JPanel panel = new JPanel();
-                    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-                    panel.setBorder(new EmptyBorder(20,20,20,20));
-
-                    JTextField dataField;
-                    List<JTextField> dataFields = new ArrayList<>();
-
-                    // Add dynamically all the user data retrieved
-                    for (String data : userSingleData.getFullUserData()){
-                        // Create the JLabel
-                        dataField = new JTextField();
-                        dataField.setText(data);
-                        dataField.setEditable(false);
-                        dataFields.add(dataField);
-
-                        // Create the JButton to copy the data
-                        JButton copyDataButton = new JButton();
-                        copyDataButton.setText("❏");
-                        copyDataButton.setPreferredSize(new Dimension(50, 50));
-                        copyDataButton.setMaximumSize(new Dimension(50, 50));
-                        copyDataButton.setMinimumSize(new Dimension(50, 50));
-
-                        copyDataButton.addActionListener(new ActionListener() {
-                            @Override
-                            public void actionPerformed(ActionEvent e) {
-                                // Get the clipboard from the system
-                                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                                StringSelection dataToCopy = new StringSelection(data);  // Create a Transferable
-                                clipboard.setContents(dataToCopy, dataToCopy);  // Copy the transferable
-                                JOptionPane.showMessageDialog(panel, "Copied the data to the clipboard.");
-                            }
-                        });
-
-                        // Add the JLabel and the JButton to the panel
-                        JPanel rowPanel = new JPanel(new BorderLayout(5, 0));
-                        rowPanel.setBorder(new EmptyBorder(5, 0, 5, 0));  // Padding between rows
-                        rowPanel.add(dataField, BorderLayout.CENTER);
-                        rowPanel.add(copyDataButton, BorderLayout.EAST);
-
-                        panel.add(rowPanel);
-                    }
-
-                    JButton modifyButton = new JButton("Modify");
-
-                    panel.add(modifyButton);
-
-                    JButton okButton = new JButton("OK");
-                    panel.add(okButton);
-
-                    okButton.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            showData.dispose();
-                        }
-                    });
-
-                    JButton saveButton = new JButton("Save Changes");
-                    saveButton.setVisible(false);  // It's shown only when modifyButton is clicked
-
-                    panel.add(saveButton);
-
-                    // Add the action lister after the creation of the OK JButton as it needs to be removed
-                    // when the modify JButton is clicked
-                    modifyButton.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            // Set the JTextFields to be editable to allow changes
-                            for (JTextField fields : dataFields){
-                                fields.setEditable(true);
-                            }
-                            modifyButton.setEnabled(false);  // Disable the JButton as it's already being used
-                            okButton.setVisible(false);  // Hide the ok JButton
-                            saveButton.setVisible(true);  // Show the JButton used to apply changes
-                        }
-                    });
-
-                    // Save the changes and send the event to the backend
-                    saveButton.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            // Store the updated strings into an array
-                            String[] updatedData = new String[5];
-
-                            for (int i = 0; i < dataFields.size(); i++){
-                                updatedData[i] = dataFields.get(i).getText();
-                            }
-                            // Send the data to the backend
-                            changeData(id, updatedData[0], updatedData[1], updatedData[2], updatedData[3], updatedData[4]);
-
-                            // Hide the save JButton, show the ok JButton and enable the modify JButton again
-                            saveButton.setVisible(false);
-                            okButton.setVisible(true);
-                            modifyButton.setEnabled(true);
-                        }
-                    });
-
-                    showData.add(panel);
+                    showData.add(new SingleDataPanel(communicationHandler, userSingleData));
                     showData.setVisible(true);
                 }
-
             }
         });
     }
@@ -242,29 +169,6 @@ public class ShowDataPanel extends JPanel {
         Data userSingleData = (Data) getSingleDataCompletd.getData().getFirst();  // Get the user single data
 
         return userSingleData;
-    }
-
-    /**
-     * Update a record of the database
-     * @param id
-     * @param username
-     * @param emailAddress
-     * @param password
-     * @param service
-     * @param additional
-     */
-    private void changeData(int id, String username, String emailAddress, String password, String service, String additional){
-        // Create the data to send with the event
-        Data data = new Data(id, username, emailAddress, password, service, additional);
-
-        ArrayList dataToSend = new ArrayList();
-        dataToSend.add(data);
-
-        // Create and send the event
-        Event event = new Event("change-data", dataToSend);
-        this.communicationHandler.send(event);
-        this.communicationHandler.receive();
-//        notifyUser();  // Example method to show the user a messagebox with the operation status
     }
 
     /**
