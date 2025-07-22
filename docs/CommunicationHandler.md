@@ -63,14 +63,14 @@
 * Dati: Data object
 * Evento di risposta: -
 
-### delete-single-data
+### delete-data
 * Nome: `delete-data`
 * Mittente: Frontend
 * Descrizione: Invia un ID al backend per richiedere di rimuovere il record che ha quel ID
 * Dati: int ID
 * Evento di risposta: `delete-data-completed`
 
-### delete-single-data-completed
+### delete-data-completed
 * Nome: `delete-data-completed`
 * Mittente: Backend
 * Descrizione: Notifica il frontend indicando che quel record è stato cancellato
