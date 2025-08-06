@@ -145,7 +145,7 @@ public class Backend extends Thread {
      * Retrieve all the serviceData with their IDs from the database
      */
     private void getFullServiceData(){
-        ResultSet resultSet = this.database.getFullServiceData();
+        ResultSet resultSet = this.database.getServiceFields();
 
         ArrayList<Data> data = new ArrayList<>();  // The IDs and service_data are stored inside a Data object
 
@@ -156,7 +156,7 @@ public class Backend extends Thread {
                     break;
                 }
                 int id = resultSet.getInt("id");
-                String serviceData = decryptData(resultSet.getString("service_data"));
+                String serviceData = decryptData(resultSet.getString("service"));
                 data.add(new Data(id, serviceData));
 
             } catch (SQLException e) {
@@ -179,7 +179,7 @@ public class Backend extends Thread {
         String additionalData = encryptData(data.getADDITIONAL_DATA());
 
         Data dataEncrypted = new Data(data.getID(), username, emailAddress, password, service, additionalData);
-        this.database.addData(dataEncrypted);
+        this.database.addRecord(dataEncrypted);
     }
 
     /**
@@ -188,7 +188,7 @@ public class Backend extends Thread {
      * @param id
      */
     private void getSingleData(int id){
-        Data singleData = this.database.getData(id);
+        Data singleData = this.database.getRecord(id);
 
         String username = decryptData(singleData.getUSERNAME());
         String emailAddress = decryptData(singleData.getEMAIL_ADDRESS());
@@ -205,7 +205,7 @@ public class Backend extends Thread {
      * @param id
      */
     private void deleteSingleData(int id){
-        this.database.deleteData(id);
+        this.database.deleteRecord(id);
     }
 
     /**
@@ -222,7 +222,7 @@ public class Backend extends Thread {
                 encryptData(data.getSERVICE()),
                 encryptData(data.getADDITIONAL_DATA())
         );
-        this.database.changeData(encryptedData);
+        this.database.changeRecord(encryptedData);
     }
 
 }
