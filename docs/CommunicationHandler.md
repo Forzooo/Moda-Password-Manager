@@ -20,18 +20,18 @@
 * Dati: -
 * Evento di risposta: -
 
-### get-full-service-data
-* Nome: `get-full-service-data`
+### get-service-fields
+* Nome: `get-service-fields`
 * Mittente: Frontend
 * Descrizione: Richiedi dal backend una lista contenente tutti i _serviceData_ con i relativi _ID_ del database
                selezionato.
 * Dati: -
-* Evento di risposta: `get-full-service-data-completed`
+* Evento di risposta: `get-service-fields-completed`
 
-### get-full-service-data-completed
-* Nome: `get-full-service-data`
-* Mittente: Frontend
-* Descrizione: Invia al frontend una lista contenente tutti i _serviceData_ con i relativi _ID_ del database.
+### get-service-fields-completed
+* Nome: `get-service-fields-completed`
+* Mittente: Backend
+* Descrizione: Invia al frontend una lista contenente tutti i _service_ con i relativi _ID_ del database.
 * Dati: ArrayList\<Data\>
 * Evento di risposta: -
 
@@ -49,15 +49,15 @@
 * Dati: -
 * Evento di risposta: -
 
-### get-single-data
-* Nome: `get-single-data`
+### get-data
+* Nome: `get-data`
 * Mittente: Frontend
 * Descrizione: Invia un ID al Backend per richiedere tutti i dati decrittati relativi a quel specifico ID
 * Dati: int ID
-* Evento di risposta: `get-single-database-data-completed`
+* Evento di risposta: `get-data-completed`
 
-### get-single-data-completed
-* Nome: `get-single-data-completed`
+### get-data-completed
+* Nome: `get-data-completed`
 * Mittente: Backend
 * Descrizione: Invia tutti i dati decrittati relativi a un ID
 * Dati: Data object

@@ -11,13 +11,8 @@ public class Database {
     private Connection connection;  // Attribute used to handle all the database queries
 
     public Database(){
-        try {
-            // Try to connect to the database if it exists, otherwise create it and then connect to it
-            this.connection = DriverManager.getConnection("jdbc:sqlite:"+DB_PATH);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
 
+        initConnection();  // Connect to the database
         createTable();  // Create the table of the database if it does not already exist
     }
 
@@ -29,6 +24,17 @@ public class Database {
         return Database.DB_PATH;
     }
 
+    /**
+     * Try to connect to the database if it exists, otherwise create it and then connect to it
+     */
+    private void initConnection(){
+        try {
+            this.connection = DriverManager.getConnection("jdbc:sqlite:"+DB_PATH);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     // Create a table, if it does not exist already, used to store all the data
     private void createTable(){
         try {
@@ -37,10 +43,10 @@ public class Database {
             query.execute(
                 "CREATE TABLE IF NOT EXISTS "+Database.TABLE_NAME+" (" +
                         "     id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                        "     username_data TEXT," +
-                        "     email_address_data TEXT," +
-                        "     password_data TEXT," +
-                        "     service_data TEXT," +
+                        "     username TEXT," +
+                        "     email_address TEXT," +
+                        "     password TEXT," +
+                        "     service TEXT," +
                         "     additional_data TEXT" +
                         ");"
             );
@@ -50,24 +56,17 @@ public class Database {
     }
 
     /**
-     * Given a string array of 5 elements in the following indexes, add it to the table:
-     * <ul>
-     *     <li>0 - username_data</li>
-     *     <li>1 - email_address_data</li>
-     *     <li>2 - password_data</li>
-     *     <li>3 - service_data</li>
-     *     <li>4 - additional_data</li>
-     * </ul>
-     * @param data
+     * Add a record to the table
+     * @param data Data object to add
      */
-    public void addData(Data data){
+    public void addRecord(Data data){
 
         try {
             // Create an INSERT INTO query
             PreparedStatement query = this.connection.prepareStatement(
                     "INSERT INTO " + Database.TABLE_NAME + " " +
-                            "(username_data, email_address_data, password_data," +
-                            "service_data, additional_data)" +
+                            "(username, email_address, password," +
+                            "service, additional_data)" +
                             " VALUES (?, ?, ?, ?, ?)"
             );
 
@@ -89,8 +88,11 @@ public class Database {
         }
     }
 
-    // Delete an entire row based on the id provided
-    public void deleteData(int id){
+    /**
+     * Delete a record from the table
+     * @param id The record ID
+     */
+    public void deleteRecord(int id){
         try {
             PreparedStatement query = this.connection.prepareStatement("DELETE FROM "+Database.TABLE_NAME+" WHERE id=?");
             query.setInt(1, id);  // Set the ID of the row
@@ -107,11 +109,11 @@ public class Database {
     }
 
     /**
-     * Based on the ID given retrieve all the data of that row
-     * @param id
+     * Retrieve all the Data from a record
+     * @param id The record ID
      * @return Data object
      */
-    public Data getData(int id){
+    public Data getRecord(int id){
         String[] data = new String[5];
 
         try {
@@ -121,10 +123,10 @@ public class Database {
 
             // Execute the query and retrive the data from the row
             ResultSet queryResult = query.executeQuery();
-            data[0] = queryResult.getString("username_data");
-            data[1] = queryResult.getString("email_address_data");
-            data[2] = queryResult.getString("password_data");
-            data[3] = queryResult.getString("service_data");
+            data[0] = queryResult.getString("username");
+            data[1] = queryResult.getString("email_address");
+            data[2] = queryResult.getString("password");
+            data[3] = queryResult.getString("service");
             data[4] = queryResult.getString("additional_data");
 
             // Close the query
@@ -141,33 +143,14 @@ public class Database {
     }
 
     /**
-     * Get each ID and service_data from the Database
-     * @return ResultSet
+     * Change the data fields inside a record
+     * @param data The data to replace the previous one
      */
-    public ResultSet getFullServiceData(){
-
-        ResultSet queryResult; // The set where are stored the records found in the database
-
-        try {
-            PreparedStatement query = this.connection.prepareStatement(
-                    "SELECT id, service_data FROM "+Database.TABLE_NAME
-            );
-            queryResult = query.executeQuery();
-
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-        return queryResult;
-    }
-
-    // Modify the data of a column of a row
-    public void changeData(Data data){
-
+    public void changeRecord(Data data){
         try {
             // Create the UPDATE query and set its parameters
             PreparedStatement query = this.connection.prepareStatement(
-                    "UPDATE "+Database.TABLE_NAME+" SET username_data=?, email_address_data=?, password_data=?, service_data=?, additional_data=? WHERE id=?"
+                    "UPDATE "+Database.TABLE_NAME+" SET username=?, email_address=?, password=?, service=?, additional_data=? WHERE id=?"
             );
             query.setString(1, data.getUSERNAME());
             query.setString(2, data.getEMAIL_ADDRESS());
@@ -186,8 +169,32 @@ public class Database {
         }
     }
 
-    // Return the number of rows inside the database
-    public int getRowsNumber(){
+    /**
+     * Get each ID and service field from the table
+     * @return ResultSet Return the result of the query
+     */
+    public ResultSet getServiceFields(){
+
+        ResultSet queryResult; // The set where are stored the records found in the database
+
+        try {
+            PreparedStatement query = this.connection.prepareStatement(
+                    "SELECT id, service FROM "+Database.TABLE_NAME
+            );
+            queryResult = query.executeQuery();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return queryResult;
+    }
+    
+    /**
+     * Return the number of records inside the table
+     * @return Number of records
+     */
+    public int getRecordsNumber(){
         int rowsNumber = 0;  // Initialize the number of rows to 0
 
         try {

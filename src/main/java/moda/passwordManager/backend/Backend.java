@@ -67,7 +67,7 @@ public class Backend extends Thread {
 
     public void processEvent(Event event){
         ArrayList eventData = event.getData();
-        switch (event.getName()){
+        switch (event.getNAME()){
             case "set-master-password":
                 setMasterPassword((String) eventData.getFirst());
                 break;
@@ -76,16 +76,16 @@ public class Backend extends Thread {
                 closeConnection();
                 break;
 
-            case "get-full-service-data":
-                getFullServiceData();
+            case "get-service-fields":
+                getServiceFields();
                 break;
 
             case "save-data":
                 saveData((Data) eventData.getFirst());
                 break;
 
-            case "get-single-data":
-                getSingleData((int) eventData.getFirst());
+            case "get-data":
+                getData((int) eventData.getFirst());
                 break;
 
             case "delete-data":
@@ -103,7 +103,7 @@ public class Backend extends Thread {
      * @param event
      */
     public void createEvent(Event event){
-        this.eventToSend = new Event(event.getName()+"-completed", this.dataToSend);
+        this.eventToSend = new Event(event.getNAME()+"-completed", this.dataToSend);
     }
 
     /**
@@ -142,12 +142,12 @@ public class Backend extends Thread {
     }
 
     /**
-     * Retrieve all the serviceData with their IDs from the database
+     * Retrieve all the service fields with their IDs from the database
      */
-    private void getFullServiceData(){
-        ResultSet resultSet = this.database.getFullServiceData();
+    private void getServiceFields(){
+        ResultSet resultSet = this.database.getServiceFields();
 
-        ArrayList<Data> data = new ArrayList<>();  // The IDs and service_data are stored inside a Data object
+        ArrayList<Data> data = new ArrayList<>();  // The IDs and service are stored inside a Data object
 
         while (true){
             try {
@@ -156,7 +156,7 @@ public class Backend extends Thread {
                     break;
                 }
                 int id = resultSet.getInt("id");
-                String serviceData = decryptData(resultSet.getString("service_data"));
+                String serviceData = decryptData(resultSet.getString("service"));
                 data.add(new Data(id, serviceData));
 
             } catch (SQLException e) {
@@ -179,7 +179,7 @@ public class Backend extends Thread {
         String additionalData = encryptData(data.getADDITIONAL_DATA());
 
         Data dataEncrypted = new Data(data.getID(), username, emailAddress, password, service, additionalData);
-        this.database.addData(dataEncrypted);
+        this.database.addRecord(dataEncrypted);
     }
 
     /**
@@ -187,8 +187,8 @@ public class Backend extends Thread {
      * Moreover decrypt it
      * @param id
      */
-    private void getSingleData(int id){
-        Data singleData = this.database.getData(id);
+    private void getData(int id){
+        Data singleData = this.database.getRecord(id);
 
         String username = decryptData(singleData.getUSERNAME());
         String emailAddress = decryptData(singleData.getEMAIL_ADDRESS());
@@ -205,7 +205,7 @@ public class Backend extends Thread {
      * @param id
      */
     private void deleteSingleData(int id){
-        this.database.deleteData(id);
+        this.database.deleteRecord(id);
     }
 
     /**
@@ -222,7 +222,7 @@ public class Backend extends Thread {
                 encryptData(data.getSERVICE()),
                 encryptData(data.getADDITIONAL_DATA())
         );
-        this.database.changeData(encryptedData);
+        this.database.changeRecord(encryptedData);
     }
 
 }
