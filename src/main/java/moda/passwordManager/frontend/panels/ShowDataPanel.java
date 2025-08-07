@@ -134,7 +134,7 @@ public class ShowDataPanel extends JPanel {
                     int id = dataSelected.getID();
 
                     // Retrieve the data with the ID from the database
-                    Data userSingleData = getSingleData(id);
+                    Data userSingleData = getData(id);
 
                     // Create a JDialog where the data will be shown
                     JDialog showData = new JDialog();
@@ -156,19 +156,19 @@ public class ShowDataPanel extends JPanel {
      * @param id
      * @return
      */
-    private Data getSingleData(int id){
+    private Data getData(int id){
         // Create the event to send to the backend
         ArrayList dataToSend = new ArrayList();
         dataToSend.add(id);
 
-        Event getSingleData = new Event("get-single-data", dataToSend);
-        this.communicationHandler.send(getSingleData);
+        Event getData = new Event("get-data", dataToSend);
+        this.communicationHandler.send(getData);
 
         Event getSingleDataCompletd = this.communicationHandler.receive();  // Wait for the response
 
-        Data userSingleData = (Data) getSingleDataCompletd.getData().getFirst();  // Get the user single data
+        Data userData = (Data) getSingleDataCompletd.getData().getFirst();  // Get the user data
 
-        return userSingleData;
+        return userData;
     }
 
     /**
@@ -176,7 +176,7 @@ public class ShowDataPanel extends JPanel {
      */
     public void updateUserData(){
         // Create and send the event to the backend asking for the user data
-        Event updateUserData = new Event("get-full-service-data", new ArrayList());
+        Event updateUserData = new Event("get-service-fields", new ArrayList());
         this.communicationHandler.send(updateUserData);
 
         // Wait for the response of the backend and update the data with the new one

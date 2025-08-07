@@ -15,7 +15,7 @@ public class CommunicationHandler {
     }
 
     /**
-     * Send an Event to the other thread. <br/>
+     * Send an Event to the other thread.
      */
     public void send(Event event) {
         try {

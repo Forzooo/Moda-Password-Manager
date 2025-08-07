@@ -67,7 +67,7 @@ public class Backend extends Thread {
 
     public void processEvent(Event event){
         ArrayList eventData = event.getData();
-        switch (event.getName()){
+        switch (event.getNAME()){
             case "set-master-password":
                 setMasterPassword((String) eventData.getFirst());
                 break;
@@ -76,16 +76,16 @@ public class Backend extends Thread {
                 closeConnection();
                 break;
 
-            case "get-full-service-data":
-                getFullServiceData();
+            case "get-service-fields":
+                getServiceFields();
                 break;
 
             case "save-data":
                 saveData((Data) eventData.getFirst());
                 break;
 
-            case "get-single-data":
-                getSingleData((int) eventData.getFirst());
+            case "get-data":
+                getData((int) eventData.getFirst());
                 break;
 
             case "delete-data":
@@ -103,7 +103,7 @@ public class Backend extends Thread {
      * @param event
      */
     public void createEvent(Event event){
-        this.eventToSend = new Event(event.getName()+"-completed", this.dataToSend);
+        this.eventToSend = new Event(event.getNAME()+"-completed", this.dataToSend);
     }
 
     /**
@@ -142,12 +142,12 @@ public class Backend extends Thread {
     }
 
     /**
-     * Retrieve all the serviceData with their IDs from the database
+     * Retrieve all the service fields with their IDs from the database
      */
-    private void getFullServiceData(){
+    private void getServiceFields(){
         ResultSet resultSet = this.database.getServiceFields();
 
-        ArrayList<Data> data = new ArrayList<>();  // The IDs and service_data are stored inside a Data object
+        ArrayList<Data> data = new ArrayList<>();  // The IDs and service are stored inside a Data object
 
         while (true){
             try {
@@ -187,7 +187,7 @@ public class Backend extends Thread {
      * Moreover decrypt it
      * @param id
      */
-    private void getSingleData(int id){
+    private void getData(int id){
         Data singleData = this.database.getRecord(id);
 
         String username = decryptData(singleData.getUSERNAME());
