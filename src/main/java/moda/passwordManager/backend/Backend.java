@@ -95,6 +95,10 @@ public class Backend extends Thread {
             case "change-data":
                 changeData((Data) eventData.getFirst());
                 break;
+
+            case "generate-string":
+                generateString((int) eventData.getFirst(), (char[]) eventData.get(1));
+                break;
         }
     }
 
@@ -223,6 +227,15 @@ public class Backend extends Thread {
                 encryptData(data.getADDITIONAL_DATA())
         );
         this.database.changeRecord(encryptedData);
+    }
+
+    /**
+     * Randomically generate a string of a certain length
+     * @param charNum The length of the string
+     * @param charSet The set of the characters to use
+     */
+    private void generateString(int charNum, char[] charSet){
+        this.dataToSend.add(this.cryptography.generateString(charNum, charSet).toString());  // Convert the StringBuilder to a String and append it
     }
 
 }

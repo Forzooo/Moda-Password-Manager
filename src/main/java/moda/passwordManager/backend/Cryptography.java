@@ -226,4 +226,21 @@ public class Cryptography {
         return temporaryData;
     }
 
+    /**
+     * Randomically generate a string of a certain length
+     * @param charNum The length of the string
+     * @param charSet The set of the characters to use
+     */
+    public StringBuilder generateString(int charNum, char[] charSet){
+        StringBuilder stringBuilder = new StringBuilder();  // Create a StringBuilder object to append characters better
+        SecureRandom secureRandom = new SecureRandom();  // Used for the random character to pick
+
+        for (int i = 0; i < charNum; i++){
+            int index = secureRandom.nextInt(charSet.length);  // Generate an index between 0, and the length of the set
+            stringBuilder.append(charSet[index]);  // Append the character at the random index to the string builder
+        }
+
+        return stringBuilder;
+    }
+
 }

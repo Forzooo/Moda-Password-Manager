@@ -35,6 +35,7 @@ public class AddDataPanel extends JPanel {
 
     private JButton resetButton;
     private JButton saveButton;
+    private JButton generatePasswordButton;
 
     public AddDataPanel(CommunicationHandler communicationHandler, int MIN_CONTENT_WIDTH, Dimension windowSize, int sidebarPanelWidth) {
         super();  // Initialize the Panel
@@ -117,22 +118,28 @@ public class AddDataPanel extends JPanel {
         this.saveButton.setText("Save");
         this.saveButton.setMaximumSize(buttonDimension);
 
+        this.generatePasswordButton = new JButton();
+        this.generatePasswordButton.setText("Generate Password");
+        this.generatePasswordButton.setMaximumSize(buttonDimension);
+
         // Add all the components to the Panel
         add(addDataLabel);
         add(Box.createRigidArea(new Dimension(0, 20)));  // Add RigidArea to add spacing between components
-        add(usernameTextField);
+        add(this.usernameTextField);
         add(Box.createRigidArea(new Dimension(0, 20)));
-        add(emailAddressTextField);
+        add(this.emailAddressTextField);
         add(Box.createRigidArea(new Dimension(0, 20)));
-        add(passwordTextField);
+        add(this.passwordTextField);
         add(Box.createRigidArea(new Dimension(0, 20)));
-        add(serviceTextField);
+        add(this.serviceTextField);
         add(Box.createRigidArea(new Dimension(0, 20)));
-        add(additionalDataTextField);
+        add(this.additionalDataTextField);
         add(Box.createRigidArea(new Dimension(0, 20)));
-        add(resetButton);
+        add(this.resetButton);
         add(Box.createRigidArea(new Dimension(0, 10)));
-        add(saveButton);
+        add(this.saveButton);
+        add(Box.createRigidArea(new Dimension(0, 10)));
+        add(this.generatePasswordButton);
     }
 
     /**
@@ -175,7 +182,16 @@ public class AddDataPanel extends JPanel {
                 }
         );
 
-
+        this.generatePasswordButton.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    String password = generatePassword();  // Get the random password
+                    passwordPlaceholder.hidePlaceholder();  // Hide the placeholder
+                    passwordTextField.setText(password);  // Set the password to the Text Field
+                }
+            }
+        );
     }
 
     /**
@@ -205,10 +221,38 @@ public class AddDataPanel extends JPanel {
         dataToSend.add(userData);
 
         // Create the Event to send to the backend
-        moda.passwordManager.communicationHandler.Event saveData = new Event("save-data", dataToSend);
+        Event saveData = new Event("save-data", dataToSend);
         this.communicationHandler.send(saveData);
         this.communicationHandler.receive();
 //        notifyUser();  // Example method to show the user a messagebox with the operation status
+    }
+
+    // TODO: Aggiungere il dialog dove viene chiesto all'utente il numero di caratteri e quali vuole usare (numeri,
+    //  lettere, caratteri speciali)
+    private String generatePassword(){
+        int passwordLength = 32;  // Fixed length of the password for testing only
+
+        // Fixed char set of the password for testing only
+        char[] charSet = {
+                'A','B','C','D','E','F','G','H','I','J','K','L','M',
+                'N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
+                'a','b','c','d','e','f','g','h','i','j','k','l','m',
+                'n','o','p','q','r','s','t','u','v','w','x','y','z',
+                '0','1','2','3','4','5','6','7','8','9',
+                '!','?','.',','
+        };
+        // Create the data to send with the event
+        ArrayList dataToSend = new ArrayList();
+        dataToSend.add(passwordLength);
+        dataToSend.add(charSet);
+
+        // Create the Event to send to the backend
+        Event generatePassword = new Event("generate-string", dataToSend);
+        this.communicationHandler.send(generatePassword);
+
+        Event response = this.communicationHandler.receive();  // Wait for the result
+
+        return (String) response.getData().getFirst();  // Return the string generated
     }
 
 }
