@@ -22,7 +22,7 @@ a proper handling using the switchPanel() method
  */
 public class Frontend extends JPanel implements ActionListener {
 
-    private final static String CURRENT_VERSION = "0.1.0";  // The current version of the software
+    private final static String VERSION = "0.1.0";  // The current version of the software
 
     // Define the Scheduled Executor Service and its delay used to perform background tasks
     private ScheduledExecutorService executorService;
@@ -37,8 +37,8 @@ public class Frontend extends JPanel implements ActionListener {
     private final static int TIMER_DELAY = 500;  // Repeat each timer action every second
 
     /**
-    A Dimension attribute, retrieved from getToolkit().getScreenSize(), used to dynamically resize
-    the components of the window
+    * A Dimension attribute, retrieved from getToolkit().getScreenSize(), used to dynamically resize
+    * the components of the window
      */
     private Dimension windowSize;
 
@@ -147,7 +147,7 @@ public class Frontend extends JPanel implements ActionListener {
      */
     private void initPanels(){
 
-        this.sidebarPanel = new SidebarPanel(this.windowSize, CURRENT_VERSION);
+        this.sidebarPanel = new SidebarPanel(this.windowSize, VERSION);
         add(this.sidebarPanel, BorderLayout.WEST);  // Add the Sidebar to the Frame
 
         this.addDataPanel = new AddDataPanel(this.communicationHandler, this.MIN_CONTENT_WIDTH, this.windowSize,
