@@ -94,13 +94,27 @@
 ### generate-string
 * Nome: `generate-string`
 * Mittente: Frontend
-* Descrizione: Richiedi dal Backend una stringa generata casualmente di un certo numero di caratteri
-* Dati: _int_ numero di caratteri, _char[]_ lista dei caratteri da utilizzare
+* Descrizione: Richiedi dal backend una stringa generata casualmente utilizzando i parametri configurati
+* Dati: -
 * Evento di risposta: `generate-string-completed`
 
 ### generate-string-completed
 * Nome: `generate-string-completed`
 * Mittente: Backend
-* Descrizione: Invia la stringa generata casualmente del numero di caratteri richiesto dal frontend
+* Descrizione: Invia la stringa generata casualmente utilizzando i parametri configurati
 * Dati: _String_
 * Evento di risposta: -
+
+### configure-string-generation
+* Nome: `configure-string-generation`
+* Mittente: Frontend
+* Descrizione: Imposta nel backend i parametri della generazione della stringa
+* Dati: _int_ numero di caratteri, _char[]_ lista dei caratteri da utilizzare
+* Evento di risposta: `configure-string-generation-completed`
+
+### configure-string-generation-completed
+* Nome: `configure-string-generation`
+* Mittente: Backend
+* Descrizione: Imposta i parametri della generazione della stringa ricevuti dal frontend
+* Dati: -
+* Evento di risposta: `-`

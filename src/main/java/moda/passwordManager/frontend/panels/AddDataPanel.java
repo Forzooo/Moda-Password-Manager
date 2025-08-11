@@ -193,9 +193,8 @@ public class AddDataPanel extends JPanel {
         this.generatePasswordButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String password = generatePassword();  // Get the random password
                 passwordPlaceholder.hide();  // Hide the placeholder
-                passwordTextField.setText(password);  // Set the password to the Text Field
+                generatePassword();  // Generate the password
             }
         });
 
@@ -203,7 +202,7 @@ public class AddDataPanel extends JPanel {
         this.configurePasswordGeneration.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                GeneratePasswordDialog generatePasswordDialog = new GeneratePasswordDialog();
+                GeneratePasswordDialog generatePasswordDialog = new GeneratePasswordDialog(communicationHandler);
                 generatePasswordDialog.setVisible(true);
             }
         });
@@ -243,30 +242,15 @@ public class AddDataPanel extends JPanel {
 //        notifyUser();  // Example method to show the user a messagebox with the operation status
     }
 
-    private String generatePassword() {
-
-        int passwordLength = 32;  // Fixed length of the password for testing only
-
-        // Fixed char set of the password for testing only
-        char[] charSet = {
-                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-                'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-                'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-                'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-                '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-                '!', '?', '.', ','
-        };
-        // Create the data to send with the event
-        ArrayList dataToSend = new ArrayList();
-        dataToSend.add(passwordLength);
-        dataToSend.add(charSet);
+    private void generatePassword() {
 
         // Create the Event to send to the backend
-        Event generatePassword = new Event("generate-string", dataToSend);
+        Event generatePassword = new Event("generate-string", new ArrayList());
         this.communicationHandler.send(generatePassword);
 
         Event response = this.communicationHandler.receive();  // Wait for the result
 
-        return (String) response.getData().getFirst();  // Return the string generated
+        String password = (String) response.getData().getFirst();  // Get the password from the backend
+        this.passwordTextField.setText(password);  // Set the password to the TextField
     }
 }

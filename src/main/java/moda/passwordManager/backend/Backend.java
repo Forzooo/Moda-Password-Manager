@@ -15,6 +15,12 @@ public class Backend extends Thread {
     private Database database;
     private GoogleDrive googleDrive;
 
+    // Until the settings of the software are developed, the length and the set of characters to use
+    // are initialized at the initialization of the backend and remain the same if the user does not change
+    // them in the frontend
+    private int stringLength;
+    private char[] stringCharacters;
+
     // The CommunicationHandler object used to communicate with the Frontend thread
     private CommunicationHandler communicationHandler;
 
@@ -31,6 +37,16 @@ public class Backend extends Thread {
         this.cryptography = new Cryptography();
         this.database = new Database();
         this.googleDrive = new GoogleDrive();
+
+        this.stringLength = 32;
+        this.stringCharacters = new char[]{
+                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+                'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+                'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+                'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+                '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                '!', '?', '.', ','
+        };
 
         this.eventToSend = null;
         this.dataToSend = new ArrayList();
@@ -97,7 +113,11 @@ public class Backend extends Thread {
                 break;
 
             case "generate-string":
-                generateString((int) eventData.getFirst(), (char[]) eventData.get(1));
+                generateString();
+                break;
+
+            case "configure-string-generation":
+                configureStringGeneration((int) eventData.getFirst(), (char[]) eventData.get(1));
                 break;
         }
     }
@@ -231,11 +251,14 @@ public class Backend extends Thread {
 
     /**
      * Randomically generate a string of a certain length
-     * @param charNum The length of the string
-     * @param charSet The set of the characters to use
      */
-    private void generateString(int charNum, char[] charSet){
-        this.dataToSend.add(this.cryptography.generateString(charNum, charSet).toString());
+    private void generateString(){
+        this.dataToSend.add(this.cryptography.generateString(this.stringLength, this.stringCharacters).toString());
+    }
+
+    private void configureStringGeneration(int stringLength, char[] stringSet){
+        this.stringLength = stringLength;
+        this.stringCharacters = stringSet;
     }
 
 }
