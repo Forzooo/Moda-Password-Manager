@@ -4,6 +4,7 @@ import moda.passwordManager.backend.Data;
 import moda.passwordManager.communicationHandler.CommunicationHandler;
 import moda.passwordManager.communicationHandler.Event;
 import moda.passwordManager.frontend.components.Placeholder;
+import moda.passwordManager.frontend.dialogs.GeneratePasswordDialog;
 
 import javax.swing.*;
 import java.awt.*;
@@ -36,6 +37,7 @@ public class AddDataPanel extends JPanel {
     private JButton resetButton;
     private JButton saveButton;
     private JButton generatePasswordButton;
+    private JButton configurePasswordGeneration;
 
     public AddDataPanel(CommunicationHandler communicationHandler, int MIN_CONTENT_WIDTH, Dimension windowSize, int sidebarPanelWidth) {
         super();  // Initialize the Panel
@@ -52,6 +54,7 @@ public class AddDataPanel extends JPanel {
 
     /**
      * Get the layout used for the panel
+     *
      * @return BoxLayout
      */
     private BoxLayout getPanelLayout() {
@@ -60,9 +63,10 @@ public class AddDataPanel extends JPanel {
 
     /**
      * Set the configuration of the JPanel
+     *
      * @param sidebarPanelWidth
      */
-    private void initPanel(int sidebarPanelWidth){
+    private void initPanel(int sidebarPanelWidth) {
         setLayout(getPanelLayout());  // Set its layout
 
         // Set the preferred size
@@ -71,13 +75,13 @@ public class AddDataPanel extends JPanel {
         setBackground(Color.WHITE);
 
         // Set the margin of the Add Data Panel [top: 60, bottom: 60, left: 30, right: 30]
-        setBorder(BorderFactory.createEmptyBorder(60,30,60,30));
+        setBorder(BorderFactory.createEmptyBorder(60, 30, 60, 30));
     }
 
     /**
      * Initialize the components of the panel
      */
-    private void initComponents(){
+    private void initComponents() {
 
         JLabel addDataLabel = new JLabel();
         addDataLabel.setText("Add a new data:");
@@ -118,9 +122,14 @@ public class AddDataPanel extends JPanel {
         this.saveButton.setText("Save");
         this.saveButton.setMaximumSize(buttonDimension);
 
+        // Create the Buttons for the Generation and the configuration of the password
         this.generatePasswordButton = new JButton();
         this.generatePasswordButton.setText("Generate Password");
         this.generatePasswordButton.setMaximumSize(buttonDimension);
+
+        this.configurePasswordGeneration = new JButton();
+        this.configurePasswordGeneration.setText("Configure the Password Generation");
+        this.configurePasswordGeneration.setMaximumSize(buttonDimension);
 
         // Add all the components to the Panel
         add(addDataLabel);
@@ -140,12 +149,14 @@ public class AddDataPanel extends JPanel {
         add(this.saveButton);
         add(Box.createRigidArea(new Dimension(0, 10)));
         add(this.generatePasswordButton);
+        add(Box.createRigidArea(new Dimension(0, 10)));
+        add(this.configurePasswordGeneration);
     }
 
     /**
      * Initialize all the action listeners
      */
-    private void initActionListener(){
+    private void initActionListener() {
         // When the Reset JButton is clicked then all the JTextField placeholders are reset
         this.resetButton.addActionListener(
                 new ActionListener() {
@@ -158,62 +169,67 @@ public class AddDataPanel extends JPanel {
         );
 
         // Save the data entered in the JTextFields in the database by calling the backend
-        this.saveButton.addActionListener(
-                new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        // If at least one placeholder is enabled then don't allow the data to be saved
-                        if(usernamePlaceholder.isShowPlaceholderFlag() || emailAddressPlaceholder.isShowPlaceholderFlag() ||
-                                passwordPlaceholder.isShowPlaceholderFlag() || servicePlaceholder.isShowPlaceholderFlag() ||
-                                additionalDataPlaceholder.isShowPlaceholderFlag()
-                        ){
-                            return;
-                        }
-
-                        // Call the save data function to tell the backend to save the data into the database
-                        saveData(usernameTextField.getText(), emailAddressTextField.getText(),
-                                passwordTextField.getText(), serviceTextField.getText(),
-                                additionalDataTextField.getText()
-                        );
-
-                        // Reset the placeholder after the data has been saved
-                        resetPlaceholders();
-                    }
+        this.saveButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // If at least one placeholder is enabled then don't allow the data to be saved
+                if (usernamePlaceholder.isShown() || emailAddressPlaceholder.isShown() ||
+                        passwordPlaceholder.isShown() || servicePlaceholder.isShown() ||
+                        additionalDataPlaceholder.isShown()) {
+                    return;
                 }
-        );
 
-        this.generatePasswordButton.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    String password = generatePassword();  // Get the random password
-                    passwordPlaceholder.hidePlaceholder();  // Hide the placeholder
-                    passwordTextField.setText(password);  // Set the password to the Text Field
-                }
+                // Call the save data function to tell the backend to save the data into the database
+                saveData(usernameTextField.getText(), emailAddressTextField.getText(),
+                        passwordTextField.getText(), serviceTextField.getText(),
+                        additionalDataTextField.getText()
+                );
+
+                // Reset the placeholder after the data has been saved
+                resetPlaceholders();
             }
-        );
+        });
+
+        this.generatePasswordButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String password = generatePassword();  // Get the random password
+                passwordPlaceholder.hide();  // Hide the placeholder
+                passwordTextField.setText(password);  // Set the password to the Text Field
+            }
+        });
+
+        // Initialize the Dialog for the configuration and show it to the user
+        this.configurePasswordGeneration.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                GeneratePasswordDialog generatePasswordDialog = new GeneratePasswordDialog();
+                generatePasswordDialog.setVisible(true);
+            }
+        });
     }
 
     /**
      * Reset all the placeholders
      */
-    private void resetPlaceholders(){
-        this.usernamePlaceholder.showPlaceholder();
-        this.emailAddressPlaceholder.showPlaceholder();
-        this.passwordPlaceholder.showPlaceholder();
-        this.servicePlaceholder.showPlaceholder();
-        this.additionalDataPlaceholder.showPlaceholder();
+    private void resetPlaceholders() {
+        this.usernamePlaceholder.show();
+        this.emailAddressPlaceholder.show();
+        this.passwordPlaceholder.show();
+        this.servicePlaceholder.show();
+        this.additionalDataPlaceholder.show();
     }
 
     /**
      * Save the data the user has entered in "Add Data" section into the database
+     *
      * @param username
      * @param emailAddress
      * @param password
      * @param service
      * @param additionalData
      */
-    private void saveData(String username, String emailAddress, String password, String service, String additionalData){
+    private void saveData(String username, String emailAddress, String password, String service, String additionalData) {
         // Create the Data object with the user data to send to the backend
         Data userData = new Data(username, emailAddress, password, service, additionalData);
 
@@ -227,19 +243,18 @@ public class AddDataPanel extends JPanel {
 //        notifyUser();  // Example method to show the user a messagebox with the operation status
     }
 
-    // TODO: Aggiungere il dialog dove viene chiesto all'utente il numero di caratteri e quali vuole usare (numeri,
-    //  lettere, caratteri speciali)
-    private String generatePassword(){
+    private String generatePassword() {
+
         int passwordLength = 32;  // Fixed length of the password for testing only
 
         // Fixed char set of the password for testing only
         char[] charSet = {
-                'A','B','C','D','E','F','G','H','I','J','K','L','M',
-                'N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
-                'a','b','c','d','e','f','g','h','i','j','k','l','m',
-                'n','o','p','q','r','s','t','u','v','w','x','y','z',
-                '0','1','2','3','4','5','6','7','8','9',
-                '!','?','.',','
+                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+                'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+                'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+                'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+                '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                '!', '?', '.', ','
         };
         // Create the data to send with the event
         ArrayList dataToSend = new ArrayList();
@@ -254,5 +269,4 @@ public class AddDataPanel extends JPanel {
 
         return (String) response.getData().getFirst();  // Return the string generated
     }
-
 }

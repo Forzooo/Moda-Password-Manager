@@ -5,20 +5,19 @@ import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 
-// TODO: Change from JTextField only to any Swing Component
 /**
- * The Placeholder class is used to show a placeholder in Swing components.
+ * The Placeholder class is used to show a placeholder in JTextField components.
  */
 public class Placeholder implements FocusListener {
 
     private JTextField textField;  // The JTextField needs to be an attribute otherwise changes cannot be applied to it
     private final String TEXT;  // The text which is shown as a placeholder
-    private boolean showPlaceholderFlag;  // A flag that indicates whether it's needed to show the placeholder or not
+    private boolean shown;  // A flag that indicates whether it's needed to show the placeholder or not
 
     public Placeholder(JTextField textField, String text){
         this.textField = textField;
         this.TEXT = text;
-        this.showPlaceholderFlag = true;
+        this.shown = true;
 
         this.textField.setText(text);
         this.textField.setForeground(Color.GRAY);
@@ -28,8 +27,8 @@ public class Placeholder implements FocusListener {
     // If the user clicks on the TextField then remove the placeholder
     @Override
     public void focusGained(FocusEvent e) {
-        if (this.showPlaceholderFlag){
-            hidePlaceholder();
+        if (this.shown){
+            hide();
         }
     }
 
@@ -38,27 +37,27 @@ public class Placeholder implements FocusListener {
     public void focusLost(FocusEvent e) {
         // Show again the TextField only if the text inside it is empty
         if (this.textField.getText().isEmpty()){
-            showPlaceholder();
+            show();
         }
     }
 
     // Show the placeholder
-    public void showPlaceholder(){
+    public void show(){
         this.textField.setText(this.TEXT);
         this.textField.setForeground(Color.GRAY);
 
-        this.showPlaceholderFlag = true;
+        this.shown = true;
     }
 
     // Hide the placeholder
-    public void hidePlaceholder(){
+    public void hide(){
         this.textField.setText("");
         this.textField.setForeground(Color.BLACK);
 
-        this.showPlaceholderFlag = false;
+        this.shown = false;
     }
 
-    public boolean isShowPlaceholderFlag() {
-        return showPlaceholderFlag;
+    public boolean isShown() {
+        return shown;
     }
 }

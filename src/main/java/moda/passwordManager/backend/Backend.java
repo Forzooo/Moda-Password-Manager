@@ -235,7 +235,7 @@ public class Backend extends Thread {
      * @param charSet The set of the characters to use
      */
     private void generateString(int charNum, char[] charSet){
-        this.dataToSend.add(this.cryptography.generateString(charNum, charSet).toString());  // Convert the StringBuilder to a String and append it
+        this.dataToSend.add(this.cryptography.generateString(charNum, charSet).toString());
     }
 
 }
