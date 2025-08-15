@@ -4,6 +4,7 @@ import moda.passwordManager.backend.Data;
 import moda.passwordManager.communicationHandler.CommunicationHandler;
 import moda.passwordManager.communicationHandler.Event;
 import moda.passwordManager.frontend.components.Placeholder;
+import moda.passwordManager.frontend.dialogs.GeneratePasswordDialog;
 
 import javax.swing.*;
 import java.awt.*;
@@ -35,6 +36,8 @@ public class AddDataPanel extends JPanel {
 
     private JButton resetButton;
     private JButton saveButton;
+    private JButton generatePasswordButton;
+    private JButton configurePasswordGeneration;
 
     public AddDataPanel(CommunicationHandler communicationHandler, int MIN_CONTENT_WIDTH, Dimension windowSize, int sidebarPanelWidth) {
         super();  // Initialize the Panel
@@ -51,6 +54,7 @@ public class AddDataPanel extends JPanel {
 
     /**
      * Get the layout used for the panel
+     *
      * @return BoxLayout
      */
     private BoxLayout getPanelLayout() {
@@ -59,9 +63,10 @@ public class AddDataPanel extends JPanel {
 
     /**
      * Set the configuration of the JPanel
+     *
      * @param sidebarPanelWidth
      */
-    private void initPanel(int sidebarPanelWidth){
+    private void initPanel(int sidebarPanelWidth) {
         setLayout(getPanelLayout());  // Set its layout
 
         // Set the preferred size
@@ -70,13 +75,13 @@ public class AddDataPanel extends JPanel {
         setBackground(Color.WHITE);
 
         // Set the margin of the Add Data Panel [top: 60, bottom: 60, left: 30, right: 30]
-        setBorder(BorderFactory.createEmptyBorder(60,30,60,30));
+        setBorder(BorderFactory.createEmptyBorder(60, 30, 60, 30));
     }
 
     /**
      * Initialize the components of the panel
      */
-    private void initComponents(){
+    private void initComponents() {
 
         JLabel addDataLabel = new JLabel();
         addDataLabel.setText("Add a new data:");
@@ -117,28 +122,41 @@ public class AddDataPanel extends JPanel {
         this.saveButton.setText("Save");
         this.saveButton.setMaximumSize(buttonDimension);
 
+        // Create the Buttons for the Generation and the configuration of the password
+        this.generatePasswordButton = new JButton();
+        this.generatePasswordButton.setText("Generate Password");
+        this.generatePasswordButton.setMaximumSize(buttonDimension);
+
+        this.configurePasswordGeneration = new JButton();
+        this.configurePasswordGeneration.setText("Configure the Password Generation");
+        this.configurePasswordGeneration.setMaximumSize(buttonDimension);
+
         // Add all the components to the Panel
         add(addDataLabel);
         add(Box.createRigidArea(new Dimension(0, 20)));  // Add RigidArea to add spacing between components
-        add(usernameTextField);
+        add(this.usernameTextField);
         add(Box.createRigidArea(new Dimension(0, 20)));
-        add(emailAddressTextField);
+        add(this.emailAddressTextField);
         add(Box.createRigidArea(new Dimension(0, 20)));
-        add(passwordTextField);
+        add(this.passwordTextField);
         add(Box.createRigidArea(new Dimension(0, 20)));
-        add(serviceTextField);
+        add(this.serviceTextField);
         add(Box.createRigidArea(new Dimension(0, 20)));
-        add(additionalDataTextField);
+        add(this.additionalDataTextField);
         add(Box.createRigidArea(new Dimension(0, 20)));
-        add(resetButton);
+        add(this.generatePasswordButton);
         add(Box.createRigidArea(new Dimension(0, 10)));
-        add(saveButton);
+        add(this.configurePasswordGeneration);
+        add(Box.createRigidArea(new Dimension(0, 10)));
+        add(this.resetButton);
+        add(Box.createRigidArea(new Dimension(0, 10)));
+        add(this.saveButton);
     }
 
     /**
      * Initialize all the action listeners
      */
-    private void initActionListener(){
+    private void initActionListener() {
         // When the Reset JButton is clicked then all the JTextField placeholders are reset
         this.resetButton.addActionListener(
                 new ActionListener() {
@@ -151,53 +169,66 @@ public class AddDataPanel extends JPanel {
         );
 
         // Save the data entered in the JTextFields in the database by calling the backend
-        this.saveButton.addActionListener(
-                new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        // If at least one placeholder is enabled then don't allow the data to be saved
-                        if(usernamePlaceholder.isShowPlaceholderFlag() || emailAddressPlaceholder.isShowPlaceholderFlag() ||
-                                passwordPlaceholder.isShowPlaceholderFlag() || servicePlaceholder.isShowPlaceholderFlag() ||
-                                additionalDataPlaceholder.isShowPlaceholderFlag()
-                        ){
-                            return;
-                        }
-
-                        // Call the save data function to tell the backend to save the data into the database
-                        saveData(usernameTextField.getText(), emailAddressTextField.getText(),
-                                passwordTextField.getText(), serviceTextField.getText(),
-                                additionalDataTextField.getText()
-                        );
-
-                        // Reset the placeholder after the data has been saved
-                        resetPlaceholders();
-                    }
+        this.saveButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // If at least one placeholder is enabled then don't allow the data to be saved
+                if (usernamePlaceholder.isShown() || emailAddressPlaceholder.isShown() ||
+                        passwordPlaceholder.isShown() || servicePlaceholder.isShown() ||
+                        additionalDataPlaceholder.isShown()) {
+                    return;
                 }
-        );
 
+                // Call the save data function to tell the backend to save the data into the database
+                saveData(usernameTextField.getText(), emailAddressTextField.getText(),
+                        passwordTextField.getText(), serviceTextField.getText(),
+                        additionalDataTextField.getText()
+                );
 
+                // Reset the placeholder after the data has been saved
+                resetPlaceholders();
+            }
+        });
+
+        this.generatePasswordButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                passwordPlaceholder.hide();  // Hide the placeholder
+                generatePassword();  // Generate the password
+            }
+        });
+
+        // Initialize the Dialog for the configuration and show it to the user
+        this.configurePasswordGeneration.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                GeneratePasswordDialog generatePasswordDialog = new GeneratePasswordDialog(communicationHandler);
+                generatePasswordDialog.setVisible(true);
+            }
+        });
     }
 
     /**
      * Reset all the placeholders
      */
-    private void resetPlaceholders(){
-        this.usernamePlaceholder.showPlaceholder();
-        this.emailAddressPlaceholder.showPlaceholder();
-        this.passwordPlaceholder.showPlaceholder();
-        this.servicePlaceholder.showPlaceholder();
-        this.additionalDataPlaceholder.showPlaceholder();
+    private void resetPlaceholders() {
+        this.usernamePlaceholder.show();
+        this.emailAddressPlaceholder.show();
+        this.passwordPlaceholder.show();
+        this.servicePlaceholder.show();
+        this.additionalDataPlaceholder.show();
     }
 
     /**
      * Save the data the user has entered in "Add Data" section into the database
+     *
      * @param username
      * @param emailAddress
      * @param password
      * @param service
      * @param additionalData
      */
-    private void saveData(String username, String emailAddress, String password, String service, String additionalData){
+    private void saveData(String username, String emailAddress, String password, String service, String additionalData) {
         // Create the Data object with the user data to send to the backend
         Data userData = new Data(username, emailAddress, password, service, additionalData);
 
@@ -205,10 +236,21 @@ public class AddDataPanel extends JPanel {
         dataToSend.add(userData);
 
         // Create the Event to send to the backend
-        moda.passwordManager.communicationHandler.Event saveData = new Event("save-data", dataToSend);
+        Event saveData = new Event("save-data", dataToSend);
         this.communicationHandler.send(saveData);
         this.communicationHandler.receive();
 //        notifyUser();  // Example method to show the user a messagebox with the operation status
     }
 
+    private void generatePassword() {
+
+        // Create the Event to send to the backend
+        Event generatePassword = new Event("generate-string", new ArrayList());
+        this.communicationHandler.send(generatePassword);
+
+        Event response = this.communicationHandler.receive();  // Wait for the result
+
+        String password = (String) response.getData().getFirst();  // Get the password from the backend
+        this.passwordTextField.setText(password);  // Set the password to the TextField
+    }
 }
