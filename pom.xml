@@ -5,8 +5,25 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>moda</groupId>
-    <artifactId>Moda Password Manager</artifactId>
+    <artifactId>moda-password-manager</artifactId>
     <version>0.1.0</version>
+    <name>Moda Password Manager</name>
+    <description>Il Moda Password Manager</description>
+    <url>https://github.com/Forzooo/Moda-Password-Manager/</url>
+
+    <licenses>
+        <license>
+            <name>GNU General Public License, version 3 (GPLv3)</name>
+            <url>https://www.gnu.org/licenses/gpl-3.0.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:git://github.com/forzooo/moda-password-manager.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:forzooo/moda-password-manager.git</developerConnection>
+        <url>https://github.com/forzooo/moda-password-manager</url>
+    </scm>
 
     <properties>
         <maven.compiler.source>23</maven.compiler.source>
