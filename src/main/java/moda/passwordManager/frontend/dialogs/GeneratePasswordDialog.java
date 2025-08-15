@@ -9,7 +9,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * A JDialog used to retrieve the parameters of the generation of the password
@@ -43,8 +42,10 @@ public class GeneratePasswordDialog extends JDialog {
      *
      * @return BoxLayout
      */
-    private FlowLayout getDialogLayout() {
-        return new FlowLayout();  // TODO: Set a proper layout
+    private BoxLayout getDialogLayout() {
+        // The target is the Dialog so to use it we retrieve it from the content pane otherwise we would use the
+        // entire container including other JPanels
+        return new BoxLayout(getContentPane(), BoxLayout.Y_AXIS);
     }
 
     /**
@@ -56,7 +57,7 @@ public class GeneratePasswordDialog extends JDialog {
         setTitle("Configuration of the password");
 
         // Set the preferred size
-        setSize(new Dimension(700, 700));  // TODO: Set a proper dimension
+        setSize(new Dimension(400, 350));
 
         setBackground(Color.WHITE);
     }
@@ -65,7 +66,18 @@ public class GeneratePasswordDialog extends JDialog {
      * Initialize and add all the Swing components of the Dialog
      */
     private void initComponents(){
+        // All the Swing components are inside a panel to allow more stylization over the ones that dialog provides
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setPreferredSize(new Dimension(700, 500));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+
+        JLabel configurePasswordLabel = new JLabel();
+        configurePasswordLabel.setText("Configure the password generation");
+        configurePasswordLabel.setFont(new Font("Arial MT Bold", Font.BOLD, 18));
+
         this.passwordLengthTextField = new JTextField();
+        this.passwordLengthTextField.setMaximumSize(new Dimension(400, 30));
         this.passwordLengthPlaceholder = new Placeholder(this.passwordLengthTextField, "Enter the password length");
         this.passwordLengthPlaceholder.show();
 
@@ -81,33 +93,34 @@ public class GeneratePasswordDialog extends JDialog {
         this.saveConfigurationButton = new JButton();
         this.saveConfigurationButton.setText("Save configuration");
 
-        add(this.passwordLengthTextField);
-        add(this.lettersCheckBox);
-        add(this.numbersCheckBox);
-        add(this.specialCharactersCheckBox);
-        add(this.saveConfigurationButton);
+        // Adding all the components to the panel
+        panel.add(configurePasswordLabel);
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
+        panel.add(this.passwordLengthTextField);
+        panel.add(this.lettersCheckBox);
+        panel.add(this.numbersCheckBox);
+        panel.add(this.specialCharactersCheckBox);
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
+        panel.add(this.saveConfigurationButton);
+
+        // Adding the panel to the dialog
+        add(panel);
     }
 
     /**
      * Initialize all the Action Listeners of the components
      */
     private void initActionListener(){
-        // TODO: Add check on the user input to allow only numbers
-        this.passwordLengthTextField.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-            }
-        });
-
+        // Save the user configuration by sending the options to the backend
         this.saveConfigurationButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
 
+                // Retrieve the data from the user
                 int stringLength = Integer.parseInt(passwordLengthTextField.getText());  // Convert the text to an int
-
                 char[] stringCharacters = createStringCharacters();
 
-                // Create the data to send with the Event
+                // Add the data to send with the Event
                 ArrayList dataToSend = new ArrayList();
                 dataToSend.add(stringLength);
                 dataToSend.add(stringCharacters);
@@ -133,7 +146,10 @@ public class GeneratePasswordDialog extends JDialog {
 
         char[] numbers = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
-        char[] specialCharacters = {'!', '?', '.', ','};
+        char[] specialCharacters = {
+            '!', '?', '.', ',', '#', '$', '%', '&', '\'', '"', '(', ')', '+',
+            '-', '*', ':', ';', '@', '^', '_', '[', ']', '{', '}', '<', '>'
+        };
 
         // Define the set as an ArrayList as it's easier to handle
         ArrayList<Character> stringCharactersArrayList = new ArrayList<>();
@@ -156,7 +172,7 @@ public class GeneratePasswordDialog extends JDialog {
             }
         }
 
-        // Convert the ArrayList to a char array
+        // Convert the ArrayList to a char array for compatibility with string generation of the backend
         char[] stringCharacters = new char[stringCharactersArrayList.size()];
 
         for (int i = 0; i < stringCharacters.length; i++){

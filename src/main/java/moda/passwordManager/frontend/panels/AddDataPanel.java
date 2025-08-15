@@ -144,13 +144,13 @@ public class AddDataPanel extends JPanel {
         add(Box.createRigidArea(new Dimension(0, 20)));
         add(this.additionalDataTextField);
         add(Box.createRigidArea(new Dimension(0, 20)));
-        add(this.resetButton);
-        add(Box.createRigidArea(new Dimension(0, 10)));
-        add(this.saveButton);
-        add(Box.createRigidArea(new Dimension(0, 10)));
         add(this.generatePasswordButton);
         add(Box.createRigidArea(new Dimension(0, 10)));
         add(this.configurePasswordGeneration);
+        add(Box.createRigidArea(new Dimension(0, 10)));
+        add(this.resetButton);
+        add(Box.createRigidArea(new Dimension(0, 10)));
+        add(this.saveButton);
     }
 
     /**
