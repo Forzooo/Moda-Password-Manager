@@ -1,0 +1,75 @@
+name: Release new version binaries
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+env:
+  APP_NAME: Moda-Password-Manager
+  APP_VERSION: ${{ github.event.pull_request.title }}
+
+jobs:
+  build:
+    if: ${{ github.event.pull_request.merged == true }}
+    runs-on: windows-latest
+    name: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5.0.0
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v3.14.1
+        with:
+          java-version: '23'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Install WiX
+        shell: pwsh
+        run: |
+          if (Get-Command candle.exe -ErrorAction SilentlyContinue) {
+                Write-Host "Skipping WiX installation because is already installed."
+          } else {
+              choco install -y wixtoolset
+              refreshenv || true
+          }
+      - name: Build with Maven (package)
+        run: mvn -B -DskipTests package
+
+      - name: Build binaries with jpackage
+        run: mvn jpackage:jpackage -Pwindows
+
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: ${{ env.APP_NAME }}-windows-${{ env.APP_VERSION }}
+          path: "target/**/*.exe"
+  
+  release:
+    needs: build
+    if: ${{ github.event.pull_request.merged == true }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5.0.0
+      
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v5.0.0
+        with:
+          merge-multiple: true
+
+      - name: Create GitHub Release and upload artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.APP_VERSION }}
+          name:    ${{ env.APP_VERSION }}
+          body:    ${{ github.event.pull_request.body }}
+          draft: true
+          prerelease: false
+          files: "**/*.exe"
