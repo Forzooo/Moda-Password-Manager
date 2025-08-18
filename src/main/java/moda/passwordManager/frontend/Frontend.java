@@ -15,12 +15,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-/*
-The Board class is defined as two parts: the left one and the right one.
-The left one is a sidebar which is static, that means it won't change its appearance during the execution,
-while the right side is defined based on the JButton selected on the sidebar, thus it's dynamic and needs
-a proper handling using the switchPanel() method
- */
 public class Frontend extends JPanel implements ActionListener {
 
     private final static String VERSION = "0.2.0";  // The current version of the software
@@ -40,7 +34,7 @@ public class Frontend extends JPanel implements ActionListener {
     /**
     * A Dimension attribute, retrieved from getToolkit().getScreenSize(), used to dynamically resize
     * the components of the window
-     */
+    */
     private Dimension windowSize;
 
     private final int MIN_CONTENT_WIDTH = 500;
@@ -81,8 +75,8 @@ public class Frontend extends JPanel implements ActionListener {
 
     /**
      * Initialize the communication between the frontend and the backend
-     * @param backendQueue
-     * @param frontendQueue
+     * @param backendQueue The queue that events are received from
+     * @param frontendQueue The queue that events are sent from
      */
     private void initCommunication(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
         this.communicationHandler = new CommunicationHandler(frontendQueue, backendQueue);
@@ -92,8 +86,8 @@ public class Frontend extends JPanel implements ActionListener {
      * Initialize the executor service used to perform background tasks in the frontend
      */
     private void initExecutorService(){
-        this.executorService = Executors.newSingleThreadScheduledExecutor();  // Create a single thread for the periodic execution of methods
-
+        // Create a single thread for the periodic execution of methods
+        this.executorService = Executors.newSingleThreadScheduledExecutor();
         this.executorService.scheduleAtFixedRate(this::updateUserData, INITIAL_DELAY, DELAY, TimeUnit.MILLISECONDS);
     }
 
