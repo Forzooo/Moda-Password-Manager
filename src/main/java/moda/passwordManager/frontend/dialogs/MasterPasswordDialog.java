@@ -2,7 +2,6 @@ package moda.passwordManager.frontend.dialogs;
 
 import moda.passwordManager.communicationHandler.CommunicationHandler;
 import moda.passwordManager.communicationHandler.Event;
-import moda.passwordManager.frontend.components.Placeholder;
 
 import javax.swing.*;
 import java.awt.*;
@@ -28,7 +27,7 @@ public class MasterPasswordDialog extends JDialog {
 
         initDialog();
         initComponents();
-        initActionListener();
+        initListeners();
     }
 
     /**
@@ -84,9 +83,9 @@ public class MasterPasswordDialog extends JDialog {
     }
 
     /**
-     * Initialize all the Action Listeners of the components
+     * Initialize all the listeners on the components
      */
-    private void initActionListener(){
+    private void initListeners(){
         // Action Listener for the 'Enter' key pressed
         this.masterPassword.addActionListener(new ActionListener() {
             @Override

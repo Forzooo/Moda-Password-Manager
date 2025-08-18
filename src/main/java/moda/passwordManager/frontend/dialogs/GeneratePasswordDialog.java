@@ -34,7 +34,7 @@ public class GeneratePasswordDialog extends JDialog {
 
         initDialog();
         initComponents();
-        initActionListener();
+        initListeners();
     }
 
     /**
@@ -108,9 +108,9 @@ public class GeneratePasswordDialog extends JDialog {
     }
 
     /**
-     * Initialize all the Action Listeners of the components
+     * Initialize all the listeners on the components
      */
-    private void initActionListener(){
+    private void initListeners(){
         // Save the user configuration by sending the options to the backend
         this.saveConfigurationButton.addActionListener(new ActionListener() {
             @Override

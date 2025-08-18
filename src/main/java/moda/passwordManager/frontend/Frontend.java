@@ -23,7 +23,7 @@ a proper handling using the switchPanel() method
  */
 public class Frontend extends JPanel implements ActionListener {
 
-    private final static String VERSION = "0.1.0";  // The current version of the software
+    private final static String VERSION = "0.2.0";  // The current version of the software
 
     // Define the Scheduled Executor Service and its delay used to perform background tasks
     private ScheduledExecutorService executorService;
@@ -77,7 +77,6 @@ public class Frontend extends JPanel implements ActionListener {
         setLayout(new BorderLayout());  // The layout for the Board is the Border one
 
         this.windowSize = getToolkit().getScreenSize();  // Get the initial size of the window
-
     }
 
     /**
@@ -87,10 +86,6 @@ public class Frontend extends JPanel implements ActionListener {
      */
     private void initCommunication(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
         this.communicationHandler = new CommunicationHandler(frontendQueue, backendQueue);
-    }
-
-    private void masterPasswordDialog(){
-
     }
 
     /**
@@ -114,7 +109,6 @@ public class Frontend extends JPanel implements ActionListener {
      * Initialize all the panels
      */
     private void initPanels(){
-
         this.sidebarPanel = new SidebarPanel(this.windowSize, VERSION);
         add(this.sidebarPanel, BorderLayout.WEST);  // Add the Sidebar to the Frame
 

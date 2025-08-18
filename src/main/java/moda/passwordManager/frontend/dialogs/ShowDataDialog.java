@@ -1,4 +1,4 @@
-package moda.passwordManager.frontend.panels;
+package moda.passwordManager.frontend.dialogs;
 
 import moda.passwordManager.backend.Data;
 import moda.passwordManager.communicationHandler.CommunicationHandler;
@@ -14,7 +14,10 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SingleDataPanel extends JPanel {
+/**
+ * A JDialog that shows the all the information related to an ID selected by the user.
+ */
+public class ShowDataDialog extends JDialog {
 
     // Attribute to communicate with the backend
     private CommunicationHandler communicationHandler;
@@ -28,30 +31,32 @@ public class SingleDataPanel extends JPanel {
     private JButton saveChangesButton;
     private JButton deleteButton;
 
-    public SingleDataPanel(CommunicationHandler communicationHandler, Data data) {
+    public ShowDataDialog(CommunicationHandler communicationHandler, Data data) {
         super();  // Initialize the Panel
 
         this.communicationHandler = communicationHandler;
         this.data = data;
 
-        initPanel();
+        initDialog();
         initComponents();
-        initActionListener();
+        initListeners();
     }
 
     /**
-     * Set the configuration of the JPanel
+     * Set the configuration of the Dialog
      */
-    private void initPanel(){
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));  // Set its layout
-        setBorder(new EmptyBorder(20,20,20,20));
+    private void initDialog(){
+        setSize(new Dimension(600, 400));
+        setResizable(false);
+        setLocationRelativeTo(null);
+        setAlwaysOnTop(true);
     }
 
     /**
      * Get the panel of this class as some action listener require it
      * @return JPanel of the class
      */
-    private JPanel getPanel(){
+    private JDialog getDialog(){
         return this;
     }
 
@@ -59,6 +64,12 @@ public class SingleDataPanel extends JPanel {
      * Initialize the components of the panel
      */
     private void initComponents(){
+
+        // A panel is used instead of the dialog because it is more customizable
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));  // Set its layout
+        panel.setBorder(new EmptyBorder(20,20,20,20));
+
         // Create all the JButton
         this.modifyButton = new JButton("Modify");
         this.saveChangesButton = new JButton("Save Changes");
@@ -74,7 +85,7 @@ public class SingleDataPanel extends JPanel {
             JTextField dataTextField = new JTextField();
             dataTextField.setText(dataField);
             dataTextField.setEditable(false);  // The user cannot modify the data unless "Modify" is clicked
-            dataFields.add(dataTextField);
+            this.dataFields.add(dataTextField);
 
             // Create the JButton to copy the data field
             JButton copyDataButton = new JButton();
@@ -83,28 +94,31 @@ public class SingleDataPanel extends JPanel {
             copyDataButton.setMaximumSize(new Dimension(50, 50));
             copyDataButton.setMinimumSize(new Dimension(50, 50));
             copyDataButton.addActionListener(getCopyDataActionListener(dataField));
-            copyButtons.add(copyDataButton);
+            this.copyButtons.add(copyDataButton);
 
             // Add the JTextField and the JButton to the panel
             JPanel rowPanel = new JPanel(new BorderLayout(5, 0));
             rowPanel.setBorder(new EmptyBorder(5, 0, 5, 0));  // Padding between rows
             rowPanel.add(dataTextField, BorderLayout.CENTER);
             rowPanel.add(copyDataButton, BorderLayout.EAST);
-            add(rowPanel);
+            panel.add(rowPanel);
         }
 
+        // A panel for the buttons
         JPanel buttonsPanel = new JPanel();
         buttonsPanel.add(this.modifyButton);
         buttonsPanel.add(this.saveChangesButton);
         buttonsPanel.add(this.deleteButton);
 
-        add(buttonsPanel);
+        panel.add(buttonsPanel);
+
+        add(panel);
     }
 
     /**
-     * Initialize all the action listeners
+     * Initialize all the listeners on the components
      */
-    private void initActionListener(){
+    private void initListeners(){
         this.modifyButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -159,18 +173,19 @@ public class SingleDataPanel extends JPanel {
         this.deleteButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                int result = JOptionPane.showConfirmDialog(getPanel(), "Delete the data?");
+                int result = JOptionPane.showConfirmDialog(getDialog(), "Delete the data?");
 
                 // If the result is 0 (Yes) delete the data by sending an event to the backend
                 if (result == 0) {
                     deleteData();
+                    dispose();  // Destroy the dialog as the data shown has been deleted
                 }
             }
         });
     }
 
     /**
-     * Create an Action Listener to copy a dataField used by a JButton
+     * Create an Action Listener to copy a dataField used by the buttons
      * @param dataField
      * @return ActionListener with actionPerformed method
      */
@@ -182,7 +197,7 @@ public class SingleDataPanel extends JPanel {
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 StringSelection dataToCopy = new StringSelection(dataField);  // Create a Transferable
                 clipboard.setContents(dataToCopy, dataToCopy);  // Copy the transferable
-                JOptionPane.showMessageDialog(getPanel(), "Copied the data to the clipboard.");
+                JOptionPane.showMessageDialog(getDialog(), "Copied the data to the clipboard.");
             }
         };
     }
