@@ -2,6 +2,7 @@ package moda.passwordManager.frontend;
 
 import moda.passwordManager.communicationHandler.CommunicationHandler;
 import moda.passwordManager.communicationHandler.Event;
+import moda.passwordManager.frontend.dialogs.MasterPasswordDialog;
 import moda.passwordManager.frontend.panels.*;
 
 import javax.swing.*;
@@ -58,7 +59,9 @@ public class Frontend extends JPanel implements ActionListener {
 
         initCommunication(backendQueue, frontendQueue);  // Start the communication between the backend and the frontend
 
-        masterPasswordDialog();  // Ask the user for the master password before starting to use the password manager
+        // Ask the user for the master password before starting to use the password manager
+        MasterPasswordDialog masterPasswordDialog = new MasterPasswordDialog(this.communicationHandler);
+        masterPasswordDialog.setVisible(true);
 
         // The Executor Service must be init after the masterPasswordDialog as it requires the master password to operate
         initExecutorService();
@@ -87,45 +90,7 @@ public class Frontend extends JPanel implements ActionListener {
     }
 
     private void masterPasswordDialog(){
-        JDialog askMasterPassword = new JDialog((Frame) null, "Master Password", true);
 
-//        askMasterPassword.setUndecorated(true);
-        askMasterPassword.setTitle("Inserisci la Master Password");
-        askMasterPassword.setSize(300, 100);
-        askMasterPassword.setLocationRelativeTo(null);
-        askMasterPassword.setAlwaysOnTop(true);
-
-        ImageIcon imageIcon = new ImageIcon(getClass().getResource("/icon.png"));  // Get the image from the resources
-        askMasterPassword.setIconImage(imageIcon.getImage());  // Get the image from the ImageIcon and set it to the application
-
-        askMasterPassword.setLayout(new FlowLayout());
-
-        JPasswordField input = new JPasswordField();
-        input.setPreferredSize(new Dimension(200, 25));
-
-        input.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                sendMasterPassword(input.getPassword());
-                askMasterPassword.dispose();  // Close the window
-            }
-        });
-
-        JButton sendButton = new JButton("LogIn");
-
-        sendButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Retrieve the master password and send it to the backend
-                sendMasterPassword(input.getPassword());
-                askMasterPassword.dispose();  // Close the window
-            }
-        });
-
-        askMasterPassword.add(input);
-        askMasterPassword.add(sendButton);
-
-        askMasterPassword.setVisible(true);
     }
 
     /**
@@ -199,23 +164,6 @@ public class Frontend extends JPanel implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         switchPanel();
-    }
-
-    /**
-     * Send the master password the user has entered to the backend thread
-     * @param masterPassword
-     */
-    private void sendMasterPassword(char[] masterPassword){
-        // Create and send the event to the backend telling to set the master password
-        ArrayList dataToSend = new ArrayList();  // The communication requires using an ArrayList for the data
-        dataToSend.add(new String(masterPassword));  // Convert the char array to a string
-        Event setMasterPassword = new Event("set-master-password", dataToSend);
-
-        this.communicationHandler.send(setMasterPassword);
-
-        // Wait for the confirm event and notify the user about it
-        Event confirmEvent = this.communicationHandler.receive();
-//        notifyUser();  // Example method to show the user a messagebox with the operation status
     }
 
     /**
