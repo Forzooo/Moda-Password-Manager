@@ -49,7 +49,7 @@ public class AddDataPanel extends JPanel {
 
         initPanel(sidebarPanelWidth);
         initComponents();
-        initActionListener();
+        initListeners();
     }
 
     /**
@@ -154,9 +154,9 @@ public class AddDataPanel extends JPanel {
     }
 
     /**
-     * Initialize all the action listeners
+     * Initialize all the listeners on the components
      */
-    private void initActionListener() {
+    private void initListeners() {
         // When the Reset JButton is clicked then all the JTextField placeholders are reset
         this.resetButton.addActionListener(
                 new ActionListener() {

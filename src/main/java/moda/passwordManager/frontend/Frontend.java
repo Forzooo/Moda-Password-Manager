@@ -2,6 +2,7 @@ package moda.passwordManager.frontend;
 
 import moda.passwordManager.communicationHandler.CommunicationHandler;
 import moda.passwordManager.communicationHandler.Event;
+import moda.passwordManager.frontend.dialogs.MasterPasswordDialog;
 import moda.passwordManager.frontend.panels.*;
 
 import javax.swing.*;
@@ -14,15 +15,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-/*
-The Board class is defined as two parts: the left one and the right one.
-The left one is a sidebar which is static, that means it won't change its appearance during the execution,
-while the right side is defined based on the JButton selected on the sidebar, thus it's dynamic and needs
-a proper handling using the switchPanel() method
- */
 public class Frontend extends JPanel implements ActionListener {
 
-    private final static String VERSION = "0.1.0";  // The current version of the software
+    private final static String VERSION = "0.2.0";  // The current version of the software
 
     // Define the Scheduled Executor Service and its delay used to perform background tasks
     private ScheduledExecutorService executorService;
@@ -39,7 +34,7 @@ public class Frontend extends JPanel implements ActionListener {
     /**
     * A Dimension attribute, retrieved from getToolkit().getScreenSize(), used to dynamically resize
     * the components of the window
-     */
+    */
     private Dimension windowSize;
 
     private final int MIN_CONTENT_WIDTH = 500;
@@ -58,7 +53,9 @@ public class Frontend extends JPanel implements ActionListener {
 
         initCommunication(backendQueue, frontendQueue);  // Start the communication between the backend and the frontend
 
-        masterPasswordDialog();  // Ask the user for the master password before starting to use the password manager
+        // Ask the user for the master password before starting to use the password manager
+        MasterPasswordDialog masterPasswordDialog = new MasterPasswordDialog(this.communicationHandler);
+        masterPasswordDialog.setVisible(true);
 
         // The Executor Service must be init after the masterPasswordDialog as it requires the master password to operate
         initExecutorService();
@@ -74,66 +71,23 @@ public class Frontend extends JPanel implements ActionListener {
         setLayout(new BorderLayout());  // The layout for the Board is the Border one
 
         this.windowSize = getToolkit().getScreenSize();  // Get the initial size of the window
-
     }
 
     /**
      * Initialize the communication between the frontend and the backend
-     * @param backendQueue
-     * @param frontendQueue
+     * @param backendQueue The queue that events are received from
+     * @param frontendQueue The queue that events are sent from
      */
     private void initCommunication(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
         this.communicationHandler = new CommunicationHandler(frontendQueue, backendQueue);
-    }
-
-    private void masterPasswordDialog(){
-        JDialog askMasterPassword = new JDialog((Frame) null, "Master Password", true);
-
-//        askMasterPassword.setUndecorated(true);
-        askMasterPassword.setTitle("Inserisci la Master Password");
-        askMasterPassword.setSize(300, 100);
-        askMasterPassword.setLocationRelativeTo(null);
-        askMasterPassword.setAlwaysOnTop(true);
-
-        ImageIcon imageIcon = new ImageIcon(getClass().getResource("/icon.png"));  // Get the image from the resources
-        askMasterPassword.setIconImage(imageIcon.getImage());  // Get the image from the ImageIcon and set it to the application
-
-        askMasterPassword.setLayout(new FlowLayout());
-
-        JPasswordField input = new JPasswordField();
-        input.setPreferredSize(new Dimension(200, 25));
-
-        input.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                sendMasterPassword(input.getPassword());
-                askMasterPassword.dispose();  // Close the window
-            }
-        });
-
-        JButton sendButton = new JButton("LogIn");
-
-        sendButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Retrieve the master password and send it to the backend
-                sendMasterPassword(input.getPassword());
-                askMasterPassword.dispose();  // Close the window
-            }
-        });
-
-        askMasterPassword.add(input);
-        askMasterPassword.add(sendButton);
-
-        askMasterPassword.setVisible(true);
     }
 
     /**
      * Initialize the executor service used to perform background tasks in the frontend
      */
     private void initExecutorService(){
-        this.executorService = Executors.newSingleThreadScheduledExecutor();  // Create a single thread for the periodic execution of methods
-
+        // Create a single thread for the periodic execution of methods
+        this.executorService = Executors.newSingleThreadScheduledExecutor();
         this.executorService.scheduleAtFixedRate(this::updateUserData, INITIAL_DELAY, DELAY, TimeUnit.MILLISECONDS);
     }
 
@@ -149,7 +103,6 @@ public class Frontend extends JPanel implements ActionListener {
      * Initialize all the panels
      */
     private void initPanels(){
-
         this.sidebarPanel = new SidebarPanel(this.windowSize, VERSION);
         add(this.sidebarPanel, BorderLayout.WEST);  // Add the Sidebar to the Frame
 
@@ -199,23 +152,6 @@ public class Frontend extends JPanel implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         switchPanel();
-    }
-
-    /**
-     * Send the master password the user has entered to the backend thread
-     * @param masterPassword
-     */
-    private void sendMasterPassword(char[] masterPassword){
-        // Create and send the event to the backend telling to set the master password
-        ArrayList dataToSend = new ArrayList();  // The communication requires using an ArrayList for the data
-        dataToSend.add(new String(masterPassword));  // Convert the char array to a string
-        Event setMasterPassword = new Event("set-master-password", dataToSend);
-
-        this.communicationHandler.send(setMasterPassword);
-
-        // Wait for the confirm event and notify the user about it
-        Event confirmEvent = this.communicationHandler.receive();
-//        notifyUser();  // Example method to show the user a messagebox with the operation status
     }
 
     /**

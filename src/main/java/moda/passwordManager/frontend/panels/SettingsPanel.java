@@ -24,7 +24,7 @@ public class SettingsPanel extends JPanel {
 
         initPanel(sidebarPanelWidth);
         initComponents();
-        initActionListener();
+        initListeners();
     }
 
     /**
@@ -65,9 +65,9 @@ public class SettingsPanel extends JPanel {
     }
 
     /**
-     * Initialize all the action listeners
+     * Initialize all the listeners on the components
      */
-    private void initActionListener(){
+    private void initListeners(){
 
     }
 }
