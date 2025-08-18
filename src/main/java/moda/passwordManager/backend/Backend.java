@@ -14,6 +14,7 @@ public class Backend extends Thread {
     private Cryptography cryptography;
     private Database database;
     private GoogleDrive googleDrive;
+    private Settings settings;
 
     // Until the settings of the software are developed, the length and the set of characters to use
     // are initialized at the initialization of the backend and remain the same if the user does not change
@@ -34,8 +35,12 @@ public class Backend extends Thread {
         this.communicationHandler = new CommunicationHandler(backendQueue, frontendQueue);
 
         // Initialize all the backend components
+        this.settings = new Settings();
         this.cryptography = new Cryptography();
-        this.database = new Database();
+
+        // The path of the database is retrieved from the settings
+        this.database = new Database(this.settings.getAPPDATA_DIRECTORY_PATH());
+
         this.googleDrive = new GoogleDrive();
 
         this.stringLength = 32;

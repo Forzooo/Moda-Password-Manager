@@ -172,6 +172,7 @@ public class GoogleDrive {
 
     }
 
+    /*
     // Upload the database to Drive
     private void uploadDatabase(){
         // Create a Java File object with the path of the database
@@ -201,7 +202,9 @@ public class GoogleDrive {
             throw new RuntimeException(e);
         }
     }
+    */
 
+    /*
     // Download the database from Drive
     private void downloadDatabase(){
         OutputStream outputStream;
@@ -220,6 +223,7 @@ public class GoogleDrive {
             throw new RuntimeException(e);
         }
     }
+     */
 
     // Return the last change made to the database inside the drive
     public long getLastChangeDrive(){
@@ -244,6 +248,7 @@ public class GoogleDrive {
         return database.getModifiedTime().getValue();  // Return the last change as a long value
     }
 
+    /*
     // Return the last change made to the local database file
     public long getLastChangeLocal(){
         java.io.File database = new java.io.File(Database.getDbPath());
@@ -263,4 +268,5 @@ public class GoogleDrive {
             downloadDatabase();  // Download the database because the drive version is newer
         }
     }
+     */
 }
