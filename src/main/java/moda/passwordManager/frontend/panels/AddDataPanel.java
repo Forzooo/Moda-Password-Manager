@@ -174,8 +174,7 @@ public class AddDataPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 // If at least one placeholder is enabled then don't allow the data to be saved
                 if (usernamePlaceholder.isShown() || emailAddressPlaceholder.isShown() ||
-                        passwordPlaceholder.isShown() || servicePlaceholder.isShown() ||
-                        additionalDataPlaceholder.isShown()) {
+                        passwordPlaceholder.isShown() || servicePlaceholder.isShown()) {
                     return;
                 }
 
@@ -229,6 +228,11 @@ public class AddDataPanel extends JPanel {
      * @param additionalData
      */
     private void saveData(String username, String emailAddress, String password, String service, String additionalData) {
+        // Check whether additionalData has been set, otherwise set it to blank instead of the placeholder text
+        if (additionalDataPlaceholder.isShown()){
+            additionalData = "";
+        }
+
         // Create the Data object with the user data to send to the backend
         Data userData = new Data(username, emailAddress, password, service, additionalData);
 
