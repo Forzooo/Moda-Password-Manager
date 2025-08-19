@@ -13,7 +13,7 @@ public class Backend extends Thread {
     // Objects of the backend classes
     private Cryptography cryptography;
     private Database database;
-    private GoogleDrive googleDrive;
+//    private GoogleDrive googleDrive;  // Disabled until it's fully developed
     private Settings settings;
 
     // Until the settings of the software are developed, the length and the set of characters to use
@@ -39,9 +39,9 @@ public class Backend extends Thread {
         this.cryptography = new Cryptography();
 
         // The path of the database is retrieved from the settings
-        this.database = new Database(this.settings.getAPPDATA_DIRECTORY_PATH());
+        this.database = new Database(this.settings.readSetting("database/path"));
 
-        this.googleDrive = new GoogleDrive();
+//        this.googleDrive = new GoogleDrive();
 
         this.stringLength = 32;
         this.stringCharacters = new char[]{

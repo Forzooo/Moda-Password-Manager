@@ -147,30 +147,30 @@ public class GoogleDrive {
 
     // Retrieve the ID of the database of the password manager
     // Returns null only if the database does not exist
-    private String getDatabaseID(){
-
-         List<File> files;
-
-        try {
-            FileList result = this.drive.files().list()
-                    .setQ("name='"+Database.getDbName()+"' and '"+getDirectoryID()+"' in parents")
-                    .setSpaces("drive")
-                    .setFields("files(id)")
-                    .execute();
-
-            files = result.getFiles();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        // If the file does not exist return null
-        if (files.isEmpty()){
-            return null;
-        }
-
-        return files.getFirst().getId();  // Return the ID of the file
-
-    }
+//    private String getDatabaseID(){
+//
+//         List<File> files;
+//
+//        try {
+//            FileList result = this.drive.files().list()
+//                    .setQ("name='"+Database.getDbName()+"' and '"+getDirectoryID()+"' in parents")
+//                    .setSpaces("drive")
+//                    .setFields("files(id)")
+//                    .execute();
+//
+//            files = result.getFiles();
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//
+//        // If the file does not exist return null
+//        if (files.isEmpty()){
+//            return null;
+//        }
+//
+//        return files.getFirst().getId();  // Return the ID of the file
+//
+//    }
 
     /*
     // Upload the database to Drive
@@ -226,27 +226,27 @@ public class GoogleDrive {
      */
 
     // Return the last change made to the database inside the drive
-    public long getLastChangeDrive(){
-        File database;
-
-        String databaseID = getDatabaseID();  // Get the ID of the database
-
-        // If the database does not exist then return 0
-        if (databaseID == null){
-            return 0L;
-        }
-
-        try {
-            // Retrieve from the drive file the last change made to it
-            database = this.drive.files().get(databaseID)
-                    .setFields("id, name, modifiedTime")
-                    .execute();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return database.getModifiedTime().getValue();  // Return the last change as a long value
-    }
+//    public long getLastChangeDrive(){
+//        File database;
+//
+//        String databaseID = getDatabaseID();  // Get the ID of the database
+//
+//        // If the database does not exist then return 0
+//        if (databaseID == null){
+//            return 0L;
+//        }
+//
+//        try {
+//            // Retrieve from the drive file the last change made to it
+//            database = this.drive.files().get(databaseID)
+//                    .setFields("id, name, modifiedTime")
+//                    .execute();
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//
+//        return database.getModifiedTime().getValue();  // Return the last change as a long value
+//    }
 
     /*
     // Return the last change made to the local database file

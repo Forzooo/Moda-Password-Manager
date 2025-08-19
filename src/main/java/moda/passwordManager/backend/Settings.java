@@ -1,6 +1,12 @@
 package moda.passwordManager.backend;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.api.client.json.Json;
+
 import java.io.File;
+import java.io.IOException;
 
 /**
  * The settings class manages all the I/O operations made to the user settings of the Password Manager
@@ -8,9 +14,12 @@ import java.io.File;
 public class Settings {
 
     private final String APPDATA_DIRECTORY_PATH;
+    private File settingsFile;
+    private ObjectMapper objectMapper;
 
     public Settings(){
         this.APPDATA_DIRECTORY_PATH = System.getenv("APPDATA")+"\\Moda\\PasswordManager\\";  // Windows only
+        this.objectMapper = new ObjectMapper();  // Create the object mapper used to write/read from the settings file
 
         initSettings();
     }
@@ -22,6 +31,7 @@ public class Settings {
 
     private void initSettings(){
         createAppdataDirectory();
+        createSettingsFile();
     }
 
     /**
@@ -37,4 +47,78 @@ public class Settings {
 
         appdataDirectory.mkdirs();  // Create the directories
     }
+
+    /**
+     * Create the settings.json file inside the appdata directory
+     */
+    private void createSettingsFile(){
+        try {
+            this.settingsFile = new File(this.APPDATA_DIRECTORY_PATH+"settings.json");
+
+            // If the file exists already the creation is skipped
+            if (!this.settingsFile.createNewFile()){
+                return;
+            }
+
+            ObjectNode rootNode = this.objectMapper.createObjectNode();  // The root of all the JSON nodes
+
+            // Set all the database values
+            ObjectNode databaseNode = this.objectMapper.createObjectNode();  // Contains all the database values
+            databaseNode.put("path", this.APPDATA_DIRECTORY_PATH+"moda-password-manager.db");
+
+            // Set the string generation configuration
+            ObjectNode stringGeneration = this.objectMapper.createObjectNode();
+            stringGeneration.put("length", 32);
+            stringGeneration.put("letters", true);
+            stringGeneration.put("numbers", true);
+            stringGeneration.put("special", true);
+
+            // Define the hierarchy of the JSON
+            rootNode.put("database", databaseNode);
+            rootNode.put("string_generation", stringGeneration);
+
+            // Write the default data inside the settings file
+            this.objectMapper.writeValue(this.settingsFile, rootNode);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Retrieve a node from the path
+     * @param nodePath The path to get to the node (ex. database/path)
+     * @return The node requested
+     */
+    private JsonNode retrieveNode(String nodePath){
+        JsonNode currentNode;
+
+        try {
+            String[] nodes = nodePath.split("/");  // Split each node
+            JsonNode rootNode = this.objectMapper.readTree(this.settingsFile);  // Read the settings
+
+            // To get to the desired node the current node is updated with each iteration to get to the final one
+            currentNode = rootNode.deepCopy();
+            for (String node : nodes){
+                currentNode = currentNode.get(node);
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return currentNode;
+    }
+
+    /**
+     * Read a property from the settings file
+     * @param nodePath A string where contains the path to the property: each node is defined by a '/' (database/path)
+     * @return Value of the property
+     */
+    public String readSetting(String nodePath){
+        JsonNode property = retrieveNode(nodePath);  // Retrieve the property
+
+        return property.asText();
+    }
+
 }

@@ -4,21 +4,16 @@ import java.sql.*;
 
 public class Database {
 
-    private static final String DB_NAME = "moda-password-manager.db";  // Name of the database file
     private final String DB_PATH;  // Path of the database
     private static final String TABLE_NAME = "moda";  // Name of the table of the database
 
     private Connection connection;  // Attribute used to handle all the database queries
 
-    public Database(String appdataDirectoryPath){
-        this.DB_PATH = appdataDirectoryPath+"\\"+DB_NAME;  // Set the path of the database
+    public Database(String dbPath){
+        this.DB_PATH = dbPath;  // Set the path of the database
 
         initConnection();  // Connect to the database
         createTable();  // Create the table of the database if it does not already exist
-    }
-
-    public static String getDbName() {
-        return Database.DB_NAME;
     }
 
     public String getDbPath() {
