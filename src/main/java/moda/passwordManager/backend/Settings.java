@@ -3,7 +3,6 @@ package moda.passwordManager.backend;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.api.client.json.Json;
 
 import java.io.File;
 import java.io.IOException;
@@ -111,14 +110,91 @@ public class Settings {
     }
 
     /**
+     * Retrieve a node from the path
+     * @param rootNode The root node can be provided if it's required to keep the same root variable for changed to properties
+     * @param nodePath The path to get to the node (ex. database/path)
+     * @return The node requested
+     */
+    private JsonNode retrieveNode(JsonNode rootNode, String nodePath){
+
+        String[] nodes = nodePath.split("/");  // Split each node
+
+        // To get to the desired node the current node is updated with each iteration to get to the final one
+        JsonNode currentNode = rootNode;  // We want to use the same addresses so we cannot deepCopy the node tree
+        for (String node : nodes){
+            currentNode = currentNode.get(node);
+        }
+
+        return currentNode;
+    }
+
+    /**
+     * Write the settings.json file with the updated tree
+     * @param rootNode The entire settings tree
+     */
+    private void updateSettings(JsonNode rootNode){
+        try {
+            this.objectMapper.writeValue(this.settingsFile, rootNode);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
      * Read a property from the settings file
-     * @param nodePath A string where contains the path to the property: each node is defined by a '/' (database/path)
+     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/path)
      * @return Value of the property
      */
-    public String readSetting(String nodePath){
+    public String readStringSetting(String nodePath){
         JsonNode property = retrieveNode(nodePath);  // Retrieve the property
 
         return property.asText();
+    }
+
+    /**
+     * Read a property from the settings file
+     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/path)
+     * @return Value of the property
+     */
+    public int readIntSetting(String nodePath){
+        JsonNode property = retrieveNode(nodePath);  // Retrieve the property
+        return property.asInt();
+    }
+
+    /**
+     * Read a property from the settings file
+     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/path)
+     * @return Value of the property
+     */
+    public boolean readBooleanSetting(String nodePath){
+        JsonNode property = retrieveNode(nodePath);  // Retrieve the property
+        return property.asBoolean();
+    }
+
+    /**
+     * Read a property from the settings file
+     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/path)
+     * @param value The new value of the property
+     */
+    public void writeSetting(String nodePath, Object value){
+        try {
+            // As we need to change a property we need to keep the same root node, otherwise the changes would not be saved
+            JsonNode rootNode = this.objectMapper.readTree(this.settingsFile);
+
+            // To set the new value we first need to get to the node previous to the one we want to change
+            // so we have to split the nodePath based on the last '/' provided
+            String nodeName = nodePath.substring(nodePath.lastIndexOf("/")+1);
+            nodePath = nodePath.substring(0, nodePath.lastIndexOf("/"));
+            ObjectNode node = (ObjectNode) retrieveNode(rootNode, nodePath);  // Cast to ObjectNode otherwise it cannot be modified
+
+            // Convert the value to a JsonNode because there is no method to handle Object in ObjectNode
+            node.put(nodeName, this.objectMapper.valueToTree(value));
+
+            updateSettings(rootNode);  // Update the file
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

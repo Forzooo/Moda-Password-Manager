@@ -13,7 +13,7 @@ import java.util.ArrayList;
 /**
  * A JDialog used to retrieve the parameters of the generation of the password
  */
-public class GeneratePasswordDialog extends JDialog {
+public class ConfigureGenerationPasswordDialog extends JDialog {
 
     private CommunicationHandler communicationHandler;
 
@@ -27,7 +27,7 @@ public class GeneratePasswordDialog extends JDialog {
 
     private JButton saveConfigurationButton;
 
-    public GeneratePasswordDialog(CommunicationHandler communicationHandler){
+    public ConfigureGenerationPasswordDialog(CommunicationHandler communicationHandler){
         super();
 
         this.communicationHandler = communicationHandler;
@@ -118,12 +118,16 @@ public class GeneratePasswordDialog extends JDialog {
 
                 // Retrieve the data from the user
                 int stringLength = Integer.parseInt(passwordLengthTextField.getText());  // Convert the text to an int
-                char[] stringCharacters = createStringCharacters();
+                boolean lettersSelected = lettersCheckBox.isSelected();
+                boolean numbersSelected = numbersCheckBox.isSelected();
+                boolean specialCharactersSelected = specialCharactersCheckBox.isSelected();
 
                 // Add the data to send with the Event
                 ArrayList dataToSend = new ArrayList();
                 dataToSend.add(stringLength);
-                dataToSend.add(stringCharacters);
+                dataToSend.add(lettersSelected);
+                dataToSend.add(numbersSelected);
+                dataToSend.add(specialCharactersSelected);
 
                 // Create the Event
                 Event event = new Event("configure-string-generation", dataToSend);
@@ -135,50 +139,5 @@ public class GeneratePasswordDialog extends JDialog {
         });
     }
 
-    private char[] createStringCharacters(){
-        // Initialize the arrays with the different options of the characters
-        char[] letters = {
-            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-            'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-            'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
-        };
 
-        char[] numbers = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
-
-        char[] specialCharacters = {
-            '!', '?', '.', ',', '#', '$', '%', '&', '\'', '"', '(', ')', '+',
-            '-', '*', ':', ';', '@', '^', '_', '[', ']', '{', '}', '<', '>'
-        };
-
-        // Define the set as an ArrayList as it's easier to handle
-        ArrayList<Character> stringCharactersArrayList = new ArrayList<>();
-
-        if (lettersCheckBox.isSelected()){
-            for (char letter : letters){
-                stringCharactersArrayList.add(letter);
-            }
-        }
-
-        if (numbersCheckBox.isSelected()){
-            for (char number : numbers){
-                stringCharactersArrayList.add(number);
-            }
-        }
-
-        if (specialCharactersCheckBox.isSelected()){
-            for (char specialCharacter : specialCharacters){
-                stringCharactersArrayList.add(specialCharacter);
-            }
-        }
-
-        // Convert the ArrayList to a char array for compatibility with string generation of the backend
-        char[] stringCharacters = new char[stringCharactersArrayList.size()];
-
-        for (int i = 0; i < stringCharacters.length; i++){
-            stringCharacters[i] = stringCharactersArrayList.get(i);
-        }
-
-        return stringCharacters;
-    }
 }

@@ -108,13 +108,14 @@
 ### configure-string-generation
 * Nome: `configure-string-generation`
 * Mittente: Frontend
-* Descrizione: Imposta nel backend i parametri della generazione della stringa
-* Dati: _int_ numero di caratteri, _char[]_ lista dei caratteri da utilizzare
+* Descrizione: Salva nelle impostazioni i parametri per la generazione delle stringhe
+* Dati: _int_ numero di caratteri, _bool_ se le lettere sono abilitate, _bool_ se i numeri sono abilitati, _bool_ se i
+caratteri speciali sono abilitati
 * Evento di risposta: `configure-string-generation-completed`
 
 ### configure-string-generation-completed
 * Nome: `configure-string-generation`
 * Mittente: Backend
-* Descrizione: Imposta i parametri della generazione della stringa ricevuti dal frontend
+* Descrizione: Salva nelle impostazioni i parametri ricevuti
 * Dati: -
 * Evento di risposta: `-`

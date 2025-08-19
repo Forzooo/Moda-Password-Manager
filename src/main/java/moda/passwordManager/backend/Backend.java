@@ -16,12 +16,6 @@ public class Backend extends Thread {
 //    private GoogleDrive googleDrive;  // Disabled until it's fully developed
     private Settings settings;
 
-    // Until the settings of the software are developed, the length and the set of characters to use
-    // are initialized at the initialization of the backend and remain the same if the user does not change
-    // them in the frontend
-    private int stringLength;
-    private char[] stringCharacters;
-
     // The CommunicationHandler object used to communicate with the Frontend thread
     private CommunicationHandler communicationHandler;
 
@@ -36,23 +30,13 @@ public class Backend extends Thread {
 
         // Initialize all the backend components
         this.settings = new Settings();
+
         this.cryptography = new Cryptography();
 
         // The path of the database is retrieved from the settings
-        this.database = new Database(this.settings.readSetting("database/path"));
+        this.database = new Database(this.settings.readStringSetting("database/path"));
 
-//        this.googleDrive = new GoogleDrive();
-
-        this.stringLength = 32;
-        this.stringCharacters = new char[]{
-                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-                'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-                'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-                'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-                '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-                '!', '?', '.', ',', '#', '$', '%', '&', '\'', '"', '(', ')', '+',
-                '-', '*', ':', ';', '@', '^', '_', '[', ']', '{', '}', '<', '>'
-        };
+//        this.googleDrive = new GoogleDrive();  // Disabled until fully developed
 
         this.eventToSend = null;
         this.dataToSend = new ArrayList();
@@ -123,7 +107,8 @@ public class Backend extends Thread {
                 break;
 
             case "configure-string-generation":
-                configureStringGeneration((int) eventData.getFirst(), (char[]) eventData.get(1));
+                configureStringGeneration((int) eventData.getFirst(), (boolean) eventData.get(1),
+                        (boolean) eventData.get(2), (boolean) eventData.get(3));
                 break;
         }
     }
@@ -259,12 +244,83 @@ public class Backend extends Thread {
      * Randomically generate a string of a certain length
      */
     private void generateString(){
-        this.dataToSend.add(this.cryptography.generateString(this.stringLength, this.stringCharacters).toString());
+        // Read all the properties from the settings file
+        int stringLength = this.settings.readIntSetting("string_generation/length");
+        boolean letters = this.settings.readBooleanSetting("string_generation/letters");
+        boolean numbers = this.settings.readBooleanSetting("string_generation/numbers");
+        boolean special = this.settings.readBooleanSetting("string_generation/special");
+
+        char[] stringCharacters = generateStringCharacters(letters, numbers, special);  // Generate the characters
+
+        this.dataToSend.add(this.cryptography.generateString(stringLength, stringCharacters).toString());
     }
 
-    private void configureStringGeneration(int stringLength, char[] stringSet){
-        this.stringLength = stringLength;
-        this.stringCharacters = stringSet;
+    /**
+     * Generate the string characters used for the string generation
+     * @param letters Flag to indicate whether letters are generated
+     * @param numbers Flag to indicate whether numbers are generated
+     * @param special Flag to indicate whether special characters are generated
+     * @return A char array that contains all the characters chosen for the string generation
+     */
+    private char[] generateStringCharacters(boolean letters, boolean numbers, boolean special){
+        // Initialize the arrays with the different options of the characters
+        char[] lettersArray = {
+                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+                'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+                'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+                'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
+        };
+
+        char[] numbersArray = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+
+        char[] specialArray = {
+                '!', '?', '.', ',', '#', '$', '%', '&', '\'', '"', '(', ')', '+',
+                '-', '*', ':', ';', '@', '^', '_', '[', ']', '{', '}', '<', '>'
+        };
+
+        // Define the set as an ArrayList as it's easier to handle
+        ArrayList<Character> stringCharactersArrayList = new ArrayList<>();
+
+        if (letters){
+            for (char letter : lettersArray){
+                stringCharactersArrayList.add(letter);
+            }
+        }
+
+        if (numbers){
+            for (char number : numbersArray){
+                stringCharactersArrayList.add(number);
+            }
+        }
+
+        if (special){
+            for (char specialCharacter : specialArray){
+                stringCharactersArrayList.add(specialCharacter);
+            }
+        }
+
+        // Convert the ArrayList to a char array for compatibility with string generation
+        char[] stringCharacters = new char[stringCharactersArrayList.size()];
+
+        for (int i = 0; i < stringCharacters.length; i++){
+            stringCharacters[i] = stringCharactersArrayList.get(i);
+        }
+
+        return stringCharacters;
+    }
+
+    /**
+     * Set in the settings file the user preferences for the generation of strings
+     * @param length The length of the string
+     * @param letters Flag to indicate whether letters are generated
+     * @param numbers Flag to indicate whether numbers are generated
+     * @param special Flag to indicate whether special characters are generated
+     */
+    private void configureStringGeneration(int length, boolean letters, boolean numbers, boolean special){
+        this.settings.writeSetting("string_generation/length", length);
+        this.settings.writeSetting("string_generation/letters", letters);
+        this.settings.writeSetting("string_generation/numbers", numbers);
+        this.settings.writeSetting("string_generation/special", special);
     }
 
 }
