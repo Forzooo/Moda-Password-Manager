@@ -20,7 +20,6 @@ public class Backend extends Thread {
     private CommunicationHandler communicationHandler;
 
     private Event eventToSend;  // The event that is sent to the frontend. Must be set using its setter
-    private ArrayList dataToSend;  // The data that is added to the Event to send to the frontend
 
     private boolean runFlag;  // Let the thread run until the connection is closed
 
@@ -39,7 +38,6 @@ public class Backend extends Thread {
 //        this.googleDrive = new GoogleDrive();  // Disabled until fully developed
 
         this.eventToSend = null;
-        this.dataToSend = new ArrayList();
 
         this.runFlag = true;
     }
@@ -58,8 +56,8 @@ public class Backend extends Thread {
                 resetSendData();  // Reset the data to send to the frontend
             }
             Event event = this.communicationHandler.receive();  // Wait for an event from the Frontend
-            processEvent(event);  // Process the operation requested from the frontend
             createEvent(event);  // Create an event to send to the frontend
+            processEvent(event);  // Process the operation requested from the frontend
         }
     }
 
@@ -68,7 +66,6 @@ public class Backend extends Thread {
      */
     public void resetSendData(){
         this.eventToSend = null;
-        this.dataToSend.clear();  // Clear the data
     }
 
     public void processEvent(Event event){
@@ -114,6 +111,10 @@ public class Backend extends Thread {
             case "set-database":
                 setDatabasePath((String) eventData.getFirst());
                 break;
+
+            case "get-database-path":
+                getDatabasePath();
+                break;
         }
     }
 
@@ -122,7 +123,7 @@ public class Backend extends Thread {
      * @param event
      */
     public void createEvent(Event event){
-        this.eventToSend = new Event(event.getNAME()+"-completed", this.dataToSend);
+        this.eventToSend = new Event(event.getNAME()+"-completed");
     }
 
     /**
@@ -183,7 +184,7 @@ public class Backend extends Thread {
             }
         }
 
-        this.dataToSend.add(data);  // Add the data to the data to send
+        this.eventToSend.addData(data);  // Add the data to send
     }
 
     /**
@@ -216,7 +217,7 @@ public class Backend extends Thread {
         String additionalData = decryptData(singleData.getADDITIONAL_DATA());
 
         Data decryptedData = new Data(id, username, emailAddress, password, service, additionalData);
-        this.dataToSend.add(decryptedData);
+        this.eventToSend.addData(decryptedData);
     }
 
     /**
@@ -256,7 +257,7 @@ public class Backend extends Thread {
 
         char[] stringCharacters = generateStringCharacters(letters, numbers, special);  // Generate the characters
 
-        this.dataToSend.add(this.cryptography.generateString(stringLength, stringCharacters).toString());
+        this.eventToSend.addData(this.cryptography.generateString(stringLength, stringCharacters).toString());
     }
 
     /**
@@ -334,6 +335,14 @@ public class Backend extends Thread {
     private void setDatabasePath(String databasePath){
         this.settings.writeSetting("database/path", databasePath);  // Set the path of the database
         this.database.changeDatabase(databasePath);  // Set the new database to be the one used
+    }
+
+    /**
+     * Retrieve the path of the database current in use
+     */
+    private void getDatabasePath(){
+        String databasePath = this.settings.readStringSetting("database/path");  // Read the path from settings
+        this.eventToSend.addData(databasePath);  // Add the path to the data to send
     }
 
 }

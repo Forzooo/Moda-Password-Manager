@@ -133,3 +133,17 @@ caratteri speciali sono abilitati
 * Descrizione: Imposta il database da utilizzare e salvare il path del database nelle impostazioni
 * Dati: -
 * Evento di risposta: -
+
+### get-database-path
+* Nome: `get-database-path`
+* Mittente: Frontend
+* Descrizione: Richiedi il path del database in uso
+* Dati: -
+* Evento di risposta: `get-database-path-completed`
+
+### get-database-path-completed
+* Nome: `get-database-path-completed`
+* Mittente: Frontend
+* Descrizione: Invia il path del database in uso
+* Dati: _String_ path del database
+* Evento di risposta: -
