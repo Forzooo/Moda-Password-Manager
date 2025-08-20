@@ -9,7 +9,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -113,8 +112,12 @@ public class Frontend extends JPanel implements ActionListener {
                                                this.sidebarPanel.getWidth());
         this.dynamicState = GUIState.SHOW_DATA;  // Set the default dynamic state to be the Show Data panel
 
+        // Retrieve the path of the current database to add it to the settings panel
+        this.communicationHandler.send(new Event("get-database-path"));
+        String currentDatabasePath = (String) this.communicationHandler.receive().getData().getFirst();
+
         this.settingsPanel = new SettingsPanel(this.communicationHandler, this.MIN_CONTENT_WIDTH, this.windowSize,
-                                               this.sidebarPanel.getWidth());
+                                               this.sidebarPanel.getWidth(), currentDatabasePath);
 
         // Add the Show All Panel to the Board as it's the default panel at the start
         this.currentPanel = this.showDataPanel;

@@ -4,7 +4,7 @@ import moda.passwordManager.backend.Data;
 import moda.passwordManager.communicationHandler.CommunicationHandler;
 import moda.passwordManager.communicationHandler.Event;
 import moda.passwordManager.frontend.components.Placeholder;
-import moda.passwordManager.frontend.dialogs.GeneratePasswordDialog;
+import moda.passwordManager.frontend.dialogs.ConfigureGenerationPasswordDialog;
 
 import javax.swing.*;
 import java.awt.*;
@@ -201,8 +201,8 @@ public class AddDataPanel extends JPanel {
         this.configurePasswordGeneration.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                GeneratePasswordDialog generatePasswordDialog = new GeneratePasswordDialog(communicationHandler);
-                generatePasswordDialog.setVisible(true);
+                ConfigureGenerationPasswordDialog configureGenerationPasswordDialog = new ConfigureGenerationPasswordDialog(communicationHandler);
+                configureGenerationPasswordDialog.setVisible(true);
             }
         });
     }
@@ -236,11 +236,9 @@ public class AddDataPanel extends JPanel {
         // Create the Data object with the user data to send to the backend
         Data userData = new Data(username, emailAddress, password, service, additionalData);
 
-        ArrayList dataToSend = new ArrayList();
-        dataToSend.add(userData);
-
         // Create the Event to send to the backend
-        Event saveData = new Event("save-data", dataToSend);
+        Event saveData = new Event("save-data", userData);
+
         this.communicationHandler.send(saveData);
         this.communicationHandler.receive();
 //        notifyUser();  // Example method to show the user a messagebox with the operation status

@@ -18,8 +18,8 @@ public class Application extends JFrame {
     private void initUI(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
         Dimension screen = getToolkit().getScreenSize();
 
-        int width = (int) (screen.getWidth() * 3/4);
-        int height = (int) (screen.getHeight() * 3/4);
+        int width = (int) (screen.getWidth() * 4/5);
+        int height = (int) (screen.getHeight() * 4/5);
 
         add(new Frontend(backendQueue, frontendQueue, width, height));
         pack();

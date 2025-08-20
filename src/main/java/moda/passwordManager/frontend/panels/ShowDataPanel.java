@@ -163,10 +163,7 @@ public class ShowDataPanel extends JPanel {
      */
     private Data getData(int id){
         // Create the event to send to the backend
-        ArrayList dataToSend = new ArrayList();
-        dataToSend.add(id);
-
-        Event getData = new Event("get-data", dataToSend);
+        Event getData = new Event("get-data", id);
         this.communicationHandler.send(getData);
 
         Event getSingleDataCompletd = this.communicationHandler.receive();  // Wait for the response
@@ -181,7 +178,7 @@ public class ShowDataPanel extends JPanel {
      */
     public void updateUserData(){
         // Create and send the event to the backend asking for the user data
-        Event updateUserData = new Event("get-service-fields", new ArrayList());
+        Event updateUserData = new Event("get-service-fields");
         this.communicationHandler.send(updateUserData);
 
         // Wait for the response of the backend and update the data with the new one

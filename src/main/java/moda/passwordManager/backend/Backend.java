@@ -13,19 +13,13 @@ public class Backend extends Thread {
     // Objects of the backend classes
     private Cryptography cryptography;
     private Database database;
-    private GoogleDrive googleDrive;
-
-    // Until the settings of the software are developed, the length and the set of characters to use
-    // are initialized at the initialization of the backend and remain the same if the user does not change
-    // them in the frontend
-    private int stringLength;
-    private char[] stringCharacters;
+//    private GoogleDrive googleDrive;  // Disabled until it's fully developed
+    private Settings settings;
 
     // The CommunicationHandler object used to communicate with the Frontend thread
     private CommunicationHandler communicationHandler;
 
     private Event eventToSend;  // The event that is sent to the frontend. Must be set using its setter
-    private ArrayList dataToSend;  // The data that is added to the Event to send to the frontend
 
     private boolean runFlag;  // Let the thread run until the connection is closed
 
@@ -34,23 +28,16 @@ public class Backend extends Thread {
         this.communicationHandler = new CommunicationHandler(backendQueue, frontendQueue);
 
         // Initialize all the backend components
-        this.cryptography = new Cryptography();
-        this.database = new Database();
-        this.googleDrive = new GoogleDrive();
+        this.settings = new Settings();
 
-        this.stringLength = 32;
-        this.stringCharacters = new char[]{
-                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-                'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-                'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-                'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-                '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-                '!', '?', '.', ',', '#', '$', '%', '&', '\'', '"', '(', ')', '+',
-                '-', '*', ':', ';', '@', '^', '_', '[', ']', '{', '}', '<', '>'
-        };
+        this.cryptography = new Cryptography();
+
+        // The path of the database is retrieved from the settings
+        this.database = new Database(this.settings.readStringSetting("database/path"));
+
+//        this.googleDrive = new GoogleDrive();  // Disabled until fully developed
 
         this.eventToSend = null;
-        this.dataToSend = new ArrayList();
 
         this.runFlag = true;
     }
@@ -69,8 +56,8 @@ public class Backend extends Thread {
                 resetSendData();  // Reset the data to send to the frontend
             }
             Event event = this.communicationHandler.receive();  // Wait for an event from the Frontend
-            processEvent(event);  // Process the operation requested from the frontend
             createEvent(event);  // Create an event to send to the frontend
+            processEvent(event);  // Process the operation requested from the frontend
         }
     }
 
@@ -79,7 +66,6 @@ public class Backend extends Thread {
      */
     public void resetSendData(){
         this.eventToSend = null;
-        this.dataToSend.clear();  // Clear the data
     }
 
     public void processEvent(Event event){
@@ -118,7 +104,16 @@ public class Backend extends Thread {
                 break;
 
             case "configure-string-generation":
-                configureStringGeneration((int) eventData.getFirst(), (char[]) eventData.get(1));
+                configureStringGeneration((int) eventData.getFirst(), (boolean) eventData.get(1),
+                        (boolean) eventData.get(2), (boolean) eventData.get(3));
+                break;
+
+            case "set-database":
+                setDatabasePath((String) eventData.getFirst());
+                break;
+
+            case "get-database-path":
+                getDatabasePath();
                 break;
         }
     }
@@ -128,7 +123,7 @@ public class Backend extends Thread {
      * @param event
      */
     public void createEvent(Event event){
-        this.eventToSend = new Event(event.getNAME()+"-completed", this.dataToSend);
+        this.eventToSend = new Event(event.getNAME()+"-completed");
     }
 
     /**
@@ -189,7 +184,7 @@ public class Backend extends Thread {
             }
         }
 
-        this.dataToSend.add(data);  // Add the data to the data to send
+        this.eventToSend.addData(data);  // Add the data to send
     }
 
     /**
@@ -222,7 +217,7 @@ public class Backend extends Thread {
         String additionalData = decryptData(singleData.getADDITIONAL_DATA());
 
         Data decryptedData = new Data(id, username, emailAddress, password, service, additionalData);
-        this.dataToSend.add(decryptedData);
+        this.eventToSend.addData(decryptedData);
     }
 
     /**
@@ -254,12 +249,100 @@ public class Backend extends Thread {
      * Randomically generate a string of a certain length
      */
     private void generateString(){
-        this.dataToSend.add(this.cryptography.generateString(this.stringLength, this.stringCharacters).toString());
+        // Read all the properties from the settings file
+        int stringLength = this.settings.readIntSetting("string_generation/length");
+        boolean letters = this.settings.readBooleanSetting("string_generation/letters");
+        boolean numbers = this.settings.readBooleanSetting("string_generation/numbers");
+        boolean special = this.settings.readBooleanSetting("string_generation/special");
+
+        char[] stringCharacters = generateStringCharacters(letters, numbers, special);  // Generate the characters
+
+        this.eventToSend.addData(this.cryptography.generateString(stringLength, stringCharacters).toString());
     }
 
-    private void configureStringGeneration(int stringLength, char[] stringSet){
-        this.stringLength = stringLength;
-        this.stringCharacters = stringSet;
+    /**
+     * Generate the string characters used for the string generation
+     * @param letters Flag to indicate whether letters are generated
+     * @param numbers Flag to indicate whether numbers are generated
+     * @param special Flag to indicate whether special characters are generated
+     * @return A char array that contains all the characters chosen for the string generation
+     */
+    private char[] generateStringCharacters(boolean letters, boolean numbers, boolean special){
+        // Initialize the arrays with the different options of the characters
+        char[] lettersArray = {
+                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+                'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+                'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+                'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
+        };
+
+        char[] numbersArray = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+
+        char[] specialArray = {
+                '!', '?', '.', ',', '#', '$', '%', '&', '\'', '"', '(', ')', '+',
+                '-', '*', ':', ';', '@', '^', '_', '[', ']', '{', '}', '<', '>'
+        };
+
+        // Define the set as an ArrayList as it's easier to handle
+        ArrayList<Character> stringCharactersArrayList = new ArrayList<>();
+
+        if (letters){
+            for (char letter : lettersArray){
+                stringCharactersArrayList.add(letter);
+            }
+        }
+
+        if (numbers){
+            for (char number : numbersArray){
+                stringCharactersArrayList.add(number);
+            }
+        }
+
+        if (special){
+            for (char specialCharacter : specialArray){
+                stringCharactersArrayList.add(specialCharacter);
+            }
+        }
+
+        // Convert the ArrayList to a char array for compatibility with string generation
+        char[] stringCharacters = new char[stringCharactersArrayList.size()];
+
+        for (int i = 0; i < stringCharacters.length; i++){
+            stringCharacters[i] = stringCharactersArrayList.get(i);
+        }
+
+        return stringCharacters;
+    }
+
+    /**
+     * Set in the settings file the user preferences for the generation of strings
+     * @param length The length of the string
+     * @param letters Flag to indicate whether letters are generated
+     * @param numbers Flag to indicate whether numbers are generated
+     * @param special Flag to indicate whether special characters are generated
+     */
+    private void configureStringGeneration(int length, boolean letters, boolean numbers, boolean special){
+        this.settings.writeSetting("string_generation/length", length);
+        this.settings.writeSetting("string_generation/letters", letters);
+        this.settings.writeSetting("string_generation/numbers", numbers);
+        this.settings.writeSetting("string_generation/special", special);
+    }
+
+    /**
+     * Set the database to use and save the path into the settings
+     * @param databasePath The path of the database chosen
+     */
+    private void setDatabasePath(String databasePath){
+        this.settings.writeSetting("database/path", databasePath);  // Set the path of the database
+        this.database.changeDatabase(databasePath);  // Set the new database to be the one used
+    }
+
+    /**
+     * Retrieve the path of the database current in use
+     */
+    private void getDatabasePath(){
+        String databasePath = this.settings.readStringSetting("database/path");  // Read the path from settings
+        this.eventToSend.addData(databasePath);  // Add the path to the data to send
     }
 
 }
