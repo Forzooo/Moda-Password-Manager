@@ -214,11 +214,8 @@ public class ShowDataDialog extends JDialog {
         // Create the data to send with the event
         Data data = new Data(this.data.getID(), username, emailAddress, password, service, additional);
 
-        ArrayList dataToSend = new ArrayList();
-        dataToSend.add(data);
-
         // Create and send the event
-        Event event = new Event("change-data", dataToSend);
+        Event event = new Event("change-data", data);
         this.communicationHandler.send(event);
         this.communicationHandler.receive();
 //        notifyUser();  // Example method to show the user a messagebox with the operation status
@@ -228,11 +225,8 @@ public class ShowDataDialog extends JDialog {
      * Send an event to the backend to delete this data record
      */
     private void deleteData(){
-        // Create the data to send with the event
-        ArrayList dataToSend = new ArrayList();
-        dataToSend.add(this.data.getID());
-
-        Event event = new Event("delete-data", dataToSend);
+        // Create the event to send
+        Event event = new Event("delete-data", this.data.getID());
         this.communicationHandler.send(event);
         this.communicationHandler.receive();
 //        notifyUser();  // Example method to show the user a messagebox with the operation status

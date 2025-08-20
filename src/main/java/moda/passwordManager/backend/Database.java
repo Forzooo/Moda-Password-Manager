@@ -4,20 +4,16 @@ import java.sql.*;
 
 public class Database {
 
-    private final String DB_PATH;  // Path of the database
+    private String databasePath;  // Path of the database current in use
     private static final String TABLE_NAME = "moda";  // Name of the table of the database
 
     private Connection connection;  // Attribute used to handle all the database queries
 
-    public Database(String dbPath){
-        this.DB_PATH = dbPath;  // Set the path of the database
+    public Database(String databasePath){
+        this.databasePath = databasePath;  // Set the path of the database
 
         initConnection();  // Connect to the database
         createTable();  // Create the table of the database if it does not already exist
-    }
-
-    public String getDbPath() {
-        return this.DB_PATH;
     }
 
     /**
@@ -25,7 +21,7 @@ public class Database {
      */
     private void initConnection(){
         try {
-            this.connection = DriverManager.getConnection("jdbc:sqlite:"+DB_PATH);
+            this.connection = DriverManager.getConnection("jdbc:sqlite:"+this.databasePath);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -49,6 +45,12 @@ public class Database {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void changeDatabase(String databasePath){
+        this.databasePath = databasePath; // Set the new path of the database
+        initConnection();  // Reinitialize the connection
+        createTable();  // Create the table inside the database
     }
 
     /**

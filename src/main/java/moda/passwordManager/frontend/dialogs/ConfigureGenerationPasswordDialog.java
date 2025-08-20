@@ -8,7 +8,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 
 /**
  * A JDialog used to retrieve the parameters of the generation of the password
@@ -122,15 +121,13 @@ public class ConfigureGenerationPasswordDialog extends JDialog {
                 boolean numbersSelected = numbersCheckBox.isSelected();
                 boolean specialCharactersSelected = specialCharactersCheckBox.isSelected();
 
-                // Add the data to send with the Event
-                ArrayList dataToSend = new ArrayList();
-                dataToSend.add(stringLength);
-                dataToSend.add(lettersSelected);
-                dataToSend.add(numbersSelected);
-                dataToSend.add(specialCharactersSelected);
+                // Create the Event with the data
+                Event event = new Event("configure-string-generation");
+                event.addData(stringLength);
+                event.addData(lettersSelected);
+                event.addData(numbersSelected);
+                event.addData(specialCharactersSelected);
 
-                // Create the Event
-                Event event = new Event("configure-string-generation", dataToSend);
                 communicationHandler.send(event);  // Send the event
                 communicationHandler.receive();  // Wait for the event to be completed
 //                notifyUser();  // Example method to show the user a messagebox with the operation status

@@ -7,7 +7,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 
 /**
  * A JDialog used to retrieve the parameters of the generation of the password
@@ -110,9 +109,7 @@ public class MasterPasswordDialog extends JDialog {
      */
     private void sendMasterPassword(char[] masterPassword){
         // Create and send the event to the backend telling to set the master password
-        ArrayList dataToSend = new ArrayList();  // The communication requires using an ArrayList for the data
-        dataToSend.add(new String(masterPassword));  // Convert the char array to a string
-        Event setMasterPassword = new Event("set-master-password", dataToSend);
+        Event setMasterPassword = new Event("set-master-password", new String(masterPassword));
 
         this.communicationHandler.send(setMasterPassword);
 

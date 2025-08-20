@@ -110,6 +110,10 @@ public class Backend extends Thread {
                 configureStringGeneration((int) eventData.getFirst(), (boolean) eventData.get(1),
                         (boolean) eventData.get(2), (boolean) eventData.get(3));
                 break;
+
+            case "set-database":
+                setDatabasePath((String) eventData.getFirst());
+                break;
         }
     }
 
@@ -321,6 +325,15 @@ public class Backend extends Thread {
         this.settings.writeSetting("string_generation/letters", letters);
         this.settings.writeSetting("string_generation/numbers", numbers);
         this.settings.writeSetting("string_generation/special", special);
+    }
+
+    /**
+     * Set the database to use and save the path into the settings
+     * @param databasePath The path of the database chosen
+     */
+    private void setDatabasePath(String databasePath){
+        this.settings.writeSetting("database/path", databasePath);  // Set the path of the database
+        this.database.changeDatabase(databasePath);  // Set the new database to be the one used
     }
 
 }

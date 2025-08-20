@@ -108,7 +108,7 @@
 ### configure-string-generation
 * Nome: `configure-string-generation`
 * Mittente: Frontend
-* Descrizione: Salva nelle impostazioni i parametri per la generazione delle stringhe
+* Descrizione: Invia i parametri per la generazione delle stringhe da salvare nelle impostazioni
 * Dati: _int_ numero di caratteri, _bool_ se le lettere sono abilitate, _bool_ se i numeri sono abilitati, _bool_ se i
 caratteri speciali sono abilitati
 * Evento di risposta: `configure-string-generation-completed`
@@ -119,3 +119,17 @@ caratteri speciali sono abilitati
 * Descrizione: Salva nelle impostazioni i parametri ricevuti
 * Dati: -
 * Evento di risposta: `-`
+
+### set-database
+* Nome: `set-database`
+* Mittente: Frontend
+* Descrizione: Invia il database da utilizzare
+* Dati: _String_ path del database
+* Evento di risposta: `set-database-path-completed`
+
+### set-database-completed
+* Nome: `set-database-completed`
+* Mittente: Backend
+* Descrizione: Imposta il database da utilizzare e salvare il path del database nelle impostazioni
+* Dati: -
+* Evento di risposta: -
