@@ -138,6 +138,10 @@ public class Backend extends Thread {
             case "get-database-path":
                 getDatabasePath();
                 break;
+
+            case "get-string-generation-configuration":
+                getStringGenerationConfiguration();
+                break;
         }
     }
 
@@ -366,6 +370,22 @@ public class Backend extends Thread {
     private void getDatabasePath(){
         String databasePath = this.settings.readStringSetting("database/path");  // Read the path from settings
         this.eventToSend.addData(databasePath);  // Add the path to the data to send
+    }
+
+    /**
+     * Retrieve from the settings file all the parameters of the string generation
+     */
+    private void getStringGenerationConfiguration(){
+        // Read all the properties from the settings file
+        int stringLength = this.settings.readIntSetting("string_generation/length");
+        boolean letters = this.settings.readBooleanSetting("string_generation/letters");
+        boolean numbers = this.settings.readBooleanSetting("string_generation/numbers");
+        boolean special = this.settings.readBooleanSetting("string_generation/special");
+
+        this.eventToSend.addData(stringLength);
+        this.eventToSend.addData(letters);
+        this.eventToSend.addData(numbers);
+        this.eventToSend.addData(special);
     }
 
 }

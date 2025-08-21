@@ -95,7 +95,7 @@
 * Nome: `generate-string-completed`
 * Mittente: Backend
 * Descrizione: Invia la stringa generata casualmente utilizzando i parametri configurati
-* Dati: _String_
+* Dati: _String_ stringa generata casualmente
 * Evento di risposta: -
 
 ### configure-string-generation
@@ -139,6 +139,21 @@ caratteri speciali sono abilitati
 * Mittente: Frontend
 * Descrizione: Invia il path del database in uso
 * Dati: _String_ path del database
+* Evento di risposta: -
+
+### get-string-generation-configuration
+* Nome: `get-database-path`
+* Mittente: Frontend
+* Descrizione: Richiedi i parametri della generazione delle stringhe
+* Dati: -
+* Evento di risposta: `get-string-generation-configuration-completed`
+
+### get-string-generation-configuration-completed
+* Nome: `get-string-generation-configuration-completed`
+* Mittente: Frontend
+* Descrizione: Invia i parametri letti dal file settings, della generazione delle stringhe
+* Dati: _int_ numero di caratteri, _bool_ se le lettere sono abilitate, _bool_ se i numeri sono abilitati, _bool_ se i
+  caratteri speciali sono abilitati
 * Evento di risposta: -
 
 ### exception-raised

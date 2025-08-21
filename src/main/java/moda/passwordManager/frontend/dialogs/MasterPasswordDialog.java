@@ -7,6 +7,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 /**
  * A JDialog used to retrieve the parameters of the generation of the password
@@ -44,6 +46,7 @@ public class MasterPasswordDialog extends JDialog {
      * Set the configuration of the Dialog
      */
     private void initDialog(){
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);  // We handle how the dialog closes
         setLayout(getDialogLayout());  // Set its layout
 
         setTitle("Enter the Master Password");
@@ -85,6 +88,14 @@ public class MasterPasswordDialog extends JDialog {
      * Initialize all the listeners on the components
      */
     private void initListeners(){
+        // If the user closes the dialog himself, then close the application
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                System.exit(0);  // Stop the process
+            }
+        });
+
         // Action Listener for the 'Enter' key pressed
         this.masterPassword.addActionListener(new ActionListener() {
             @Override

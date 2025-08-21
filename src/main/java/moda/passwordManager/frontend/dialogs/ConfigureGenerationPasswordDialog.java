@@ -8,6 +8,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
 /**
  * A JDialog used to retrieve the parameters of the generation of the password
@@ -33,6 +34,7 @@ public class ConfigureGenerationPasswordDialog extends JDialog {
 
         initDialog();
         initComponents();
+        setCurrentParameters();
         initListeners();
     }
 
@@ -136,5 +138,23 @@ public class ConfigureGenerationPasswordDialog extends JDialog {
         });
     }
 
+    /**
+     * Ask the backend for the parameters currently being used by the user to set them in the components
+     */
+    private void setCurrentParameters(){
+        // Create the event and wait for the data
+        Event event = new Event("get-string-generation-configuration");
+        this.communicationHandler.send(event);
+        Event backendResponse = this.communicationHandler.receive();
+
+        ArrayList data = backendResponse.getData();  // Retrieve the data
+
+        // Set the data to the components
+        this.passwordLengthPlaceholder.hide();  // Hide the placeholder first
+        this.passwordLengthTextField.setText(String.valueOf(data.getFirst()));
+        this.lettersCheckBox.setSelected((boolean) data.get(1));
+        this.numbersCheckBox.setSelected((boolean) data.get(2));
+        this.specialCharactersCheckBox.setSelected((boolean) data.get(3));
+    }
 
 }
