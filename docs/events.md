@@ -102,7 +102,7 @@
 * Nome: `generate-string-completed`
 * Mittente: Backend
 * Descrizione: Invia la stringa generata casualmente utilizzando i parametri configurati
-* Dati: _String_
+* Dati: _String_ stringa generata casualmente
 * Evento di risposta: -
 
 ### configure-string-generation
