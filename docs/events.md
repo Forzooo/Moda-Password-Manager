@@ -13,13 +13,6 @@
 * Dati: -
 * Evento di risposta: -
 
-### close-connection
-* Nome: `close-connection`
-* Mittente: Frontend
-* Descrizione: Comunica al backend che la comunicazione viene chiusa e che quindi si può interrompere l'esecuzione
-* Dati: -
-* Evento di risposta: -
-
 ### get-service-fields
 * Nome: `get-service-fields`
 * Mittente: Frontend
@@ -146,4 +139,26 @@ caratteri speciali sono abilitati
 * Mittente: Frontend
 * Descrizione: Invia il path del database in uso
 * Dati: _String_ path del database
+* Evento di risposta: -
+
+### exception-raised
+* Nome: `exception-raised`
+* Mittente: Backend
+* Descrizione: Invia al frontend l'eccezione che è accaduta sul backend
+* Dati: _String_ messaggio dell'eccezione
+* Evento di risposta: `close-connection`
+
+### close-connection
+* Nome: `close-connection`
+* Mittente: Frontend
+* Descrizione: Il frontend indica al backend che la comunicazione viene chiusa e che quindi si può interrompere
+l'esecuzione
+* Dati: -
+* Evento di risposta: `close-connection-confirm`
+
+### close-connection-confirm
+* Nome: `close-connection-confirm`
+* Mittente: Backend
+* Descrizione: Conferma la chiusura della comunicazione e interrompe l'esecuzione del thread del backend
+* Dati: -
 * Evento di risposta: -

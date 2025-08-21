@@ -18,18 +18,20 @@ public class Backend extends Thread {
 
     // The CommunicationHandler object used to communicate with the Frontend thread
     private CommunicationHandler communicationHandler;
+    private CommunicationHandler exceptionsCommunicationHandler;
 
     private Event eventToSend;  // The event that is sent to the frontend. Must be set using its setter
 
     private boolean runFlag;  // Let the thread run until the connection is closed
 
-    public Backend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
+    public Backend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
+                   LinkedBlockingQueue<Event> backendExceptionQueue, LinkedBlockingQueue<Event> frontendExceptionQueue){
         // Create the communication handler with the two queues
         this.communicationHandler = new CommunicationHandler(backendQueue, frontendQueue);
+        this.exceptionsCommunicationHandler = new CommunicationHandler(backendExceptionQueue, frontendExceptionQueue);
 
         // Initialize all the backend components
         this.settings = new Settings();
-
         this.cryptography = new Cryptography();
 
         // The path of the database is retrieved from the settings
@@ -38,14 +40,35 @@ public class Backend extends Thread {
 //        this.googleDrive = new GoogleDrive();  // Disabled until fully developed
 
         this.eventToSend = null;
-
         this.runFlag = true;
+    }
+
+    // TODO: Find a better way to handle the exceptions without having to rely on a public method that exposes an API
+    // TODO: of the Backend
+    /**
+     * Provide the method used for uncaught exceptions. It must be public otherwise the thread object
+     * that is inside the main method, cannot access it
+     */
+    public void uncaughtException(Thread t, Throwable e) {
+        // Send the event to the frontend with the exception communication
+        Event event = new Event("exception-raised", e.toString());
+        exceptionsCommunicationHandler.send(event);
+
+        // Receive the response from the frontend
+        Event frontendResponse = exceptionsCommunicationHandler.receive();
+
+        // Check whether the event response is close-connection to stop the execution
+        if (frontendResponse.getNAME().equals("close-connection")){
+            event = new Event("close-connection-confirm");  // Create the event to confirm the stop
+            exceptionsCommunicationHandler.send(event);  // Send the event
+            runFlag = false;  // Set the run flag to false to stop the thread
+        }
     }
 
     @Override
     public void run() {
         while (this.runFlag){
-            /**
+            /*
              * If there's an even to send, send it
              * It does not make the thread to stop forever because if an event is read from the Frontend, it's
              * processed and the data will be sent in another event before checking for new events.
@@ -64,11 +87,11 @@ public class Backend extends Thread {
     /**
      * Reset the data to be sent after it has been sent to the frontend.
      */
-    public void resetSendData(){
+    private void resetSendData(){
         this.eventToSend = null;
     }
 
-    public void processEvent(Event event){
+    private void processEvent(Event event){
         ArrayList eventData = event.getData();
         switch (event.getNAME()){
             case "set-master-password":
@@ -122,7 +145,7 @@ public class Backend extends Thread {
      * Create the event that will be sent to the Frontend
      * @param event
      */
-    public void createEvent(Event event){
+    private void createEvent(Event event){
         this.eventToSend = new Event(event.getNAME()+"-completed");
     }
 
