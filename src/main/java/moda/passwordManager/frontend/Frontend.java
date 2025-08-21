@@ -18,17 +18,25 @@ public class Frontend extends JPanel implements ActionListener {
 
     private final static String VERSION = "0.2.0";  // The current version of the software
 
+    // The CommunicationHandler objects used to communicate with the Backend thread
+    private CommunicationHandler communicationHandler;
+    private CommunicationHandler exceptionsCommunicationHandler;
+
     // Define the Scheduled Executor Service and its delay used to perform background tasks
     private ScheduledExecutorService executorService;
     private final static int INITIAL_DELAY = 1500;  // The delay before starting to execute any task
-    private final static int DELAY = 10000;  // The delay between each cycle of tasks to perform
+    private final static int EXECUTOR_DELAY = 10000;  // The delay between each cycle of tasks to perform
+
+    // The Exception handler that performs tasks about exceptions
+    private ScheduledExecutorService exceptionsExecutorService;
+    private final static int EXCEPTIONS_EXECUTOR_DELAY = 1000;
 
     // The dynamicState indicates which Panel needs to be switched to from the current one selected
     private GUIState dynamicState;
     private JPanel currentPanel;  // The current selected JPanel
 
     private Timer swingTimer;  // The timer used to show the JPanel chosen by the user
-    private final static int TIMER_DELAY = 500;  // Repeat each timer action every second
+    private final static int SWING_TIMER_DELAY = 500;  // Repeat each timer action every second
 
     /**
     * A Dimension attribute, retrieved from getToolkit().getScreenSize(), used to dynamically resize
@@ -44,13 +52,13 @@ public class Frontend extends JPanel implements ActionListener {
     private ShowDataPanel showDataPanel;
     private SettingsPanel settingsPanel;
 
-    // The CommunicationHandler object used to communicate with the Backend thread
-    private CommunicationHandler communicationHandler;
-
-    public Frontend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue, int width, int height){
+    public Frontend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
+                    LinkedBlockingQueue<Event> backendExceptionQueue, LinkedBlockingQueue<Event> frontendExceptionQueue,
+                    int width, int height){
         setSize(width, height);  // Set the initial dimension of the Frame
 
         initCommunication(backendQueue, frontendQueue);  // Start the communication between the backend and the frontend
+        initExceptionListener(backendExceptionQueue, frontendExceptionQueue);  // Start the exception listener
 
         // Ask the user for the master password before starting to use the password manager
         MasterPasswordDialog masterPasswordDialog = new MasterPasswordDialog(this.communicationHandler);
@@ -87,15 +95,37 @@ public class Frontend extends JPanel implements ActionListener {
     private void initExecutorService(){
         // Create a single thread for the periodic execution of methods
         this.executorService = Executors.newSingleThreadScheduledExecutor();
-        this.executorService.scheduleAtFixedRate(this::updateUserData, INITIAL_DELAY, DELAY, TimeUnit.MILLISECONDS);
+        this.executorService.scheduleAtFixedRate(this::updateUserData, INITIAL_DELAY, EXECUTOR_DELAY, TimeUnit.MILLISECONDS);
     }
 
     /**
-     * Initialize the Swing timer used to perform graphical tasks in the frontend
+     * Initialize the Swing timer used to perform graphical background tasks in the frontend
      */
     private void initSwingTimer(){
-        this.swingTimer = new Timer(TIMER_DELAY, this::actionPerformed);
+        this.swingTimer = new Timer(SWING_TIMER_DELAY, this::actionPerformed);
         this.swingTimer.start();
+    }
+
+    /**
+     * Initialize the Executor Service used to handle communications about the exceptions
+     */
+    private void initExceptionListener(LinkedBlockingQueue<Event> backendExceptionQueue,
+                                       LinkedBlockingQueue<Event> frontendExceptionQueue){
+        // Initialize the Communication Handler object
+        this.exceptionsCommunicationHandler = new CommunicationHandler(frontendExceptionQueue, backendExceptionQueue);
+
+        // Initialize the Executor Service
+        this.exceptionsExecutorService = Executors.newSingleThreadScheduledExecutor();
+        this.exceptionsExecutorService.scheduleAtFixedRate(this::backendExceptionHandler, 0, EXCEPTIONS_EXECUTOR_DELAY,
+                                                           TimeUnit.MILLISECONDS);
+
+//        // Set the default exception handler for the Frontend thread
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                exceptionHandler(e);
+            }
+        });
     }
 
     /**
@@ -164,4 +194,35 @@ public class Frontend extends JPanel implements ActionListener {
         this.showDataPanel.updateUserData();
     }
 
+    /**
+     * Handle the unhandled exception in the frontend by showing a messagebox about it
+     * @param e The exception that has occurred
+     */
+    private void exceptionHandler(Throwable e){
+        // Show the exception as a Message Dialog with the type of error message
+        JOptionPane.showMessageDialog(this, e.toString(), "An exception occurred in the Frontend",
+                JOptionPane.ERROR_MESSAGE);
+    }
+
+    /**
+     * Wait for unhandled exceptions in the backend and then close the connection with the backend and stop
+     * the execution
+     */
+    private void backendExceptionHandler(){
+        Event backendException = this.exceptionsCommunicationHandler.receive();  // Wait for an exception in the backend
+        String exception = (String) backendException.getData().getFirst();  // Retrive the exception
+
+        // Show the exception as a Message Dialog with the type of error message
+        JOptionPane.showMessageDialog(this, exception, "An exception occurred in the Backend",
+                JOptionPane.ERROR_MESSAGE);
+
+        // Send a "close-connection" event to the backend to tell it to stop its execution
+        Event closeConnection = new Event("close-connection");
+        this.exceptionsCommunicationHandler.send(closeConnection);
+
+        // Check that the backend has confirmed the connection to be closed and stop the execution
+        if (this.exceptionsCommunicationHandler.receive().getNAME().equals("close-connection-confirm")){
+            System.exit(0);
+        }
+    }
 }
