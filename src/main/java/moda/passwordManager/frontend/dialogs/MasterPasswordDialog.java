@@ -2,6 +2,7 @@ package moda.passwordManager.frontend.dialogs;
 
 import moda.passwordManager.communicationHandler.CommunicationHandler;
 import moda.passwordManager.communicationHandler.Event;
+import moda.passwordManager.frontend.Frontend;
 
 import javax.swing.*;
 import java.awt.*;
@@ -59,7 +60,7 @@ public class MasterPasswordDialog extends JDialog {
 
         setBackground(Color.WHITE);
 
-        setIcon();
+        setIconImage(Frontend.getIcon());
     }
 
     /**

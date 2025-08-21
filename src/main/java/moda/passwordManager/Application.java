@@ -29,19 +29,11 @@ public class Application extends JFrame {
         setTitle("MODA - Password Manager");
         setSize(width, height);
 
-        initIcon();
+        setIconImage(Frontend.getIcon());  // Get the icon and set it
 
         setVisible(true);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-    }
-
-    /**
-     * Set the icon of the application
-     */
-    private void initIcon(){
-        ImageIcon imageIcon = new ImageIcon(getClass().getResource("/icon.png"));  // Get the image from the resources
-        setIconImage(imageIcon.getImage());  // Get the image from the ImageIcon and set it to the application
     }
 
     public static void main(String[] args) {

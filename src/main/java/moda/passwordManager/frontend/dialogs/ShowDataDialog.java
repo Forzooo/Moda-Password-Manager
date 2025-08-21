@@ -3,6 +3,7 @@ package moda.passwordManager.frontend.dialogs;
 import moda.passwordManager.backend.Data;
 import moda.passwordManager.communicationHandler.CommunicationHandler;
 import moda.passwordManager.communicationHandler.Event;
+import moda.passwordManager.frontend.Frontend;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -50,6 +51,7 @@ public class ShowDataDialog extends JDialog {
         setResizable(false);
         setLocationRelativeTo(null);
         setAlwaysOnTop(true);
+        setIconImage(Frontend.getIcon());
     }
 
     /**
