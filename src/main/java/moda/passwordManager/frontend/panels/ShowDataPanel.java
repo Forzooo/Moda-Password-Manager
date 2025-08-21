@@ -30,7 +30,7 @@ public class ShowDataPanel extends JPanel {
      * The service_data shown in the JList of "Show Data" panel <br/>
      * It's updated automatically by the timer
      */
-    private ArrayList<Data> userData;  // A Data object is required as each service shown needs to be associated with its ID
+    private ArrayList<Data> userData; // A Data object is required as each service shown needs to be associated with its ID
     private DefaultListModel<String> userDataModel;
 
     // Swing components
