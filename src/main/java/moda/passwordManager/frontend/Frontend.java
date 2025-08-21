@@ -1,5 +1,6 @@
 package moda.passwordManager.frontend;
 
+import moda.passwordManager.Application;
 import moda.passwordManager.communicationHandler.CommunicationHandler;
 import moda.passwordManager.communicationHandler.Event;
 import moda.passwordManager.frontend.dialogs.MasterPasswordDialog;
@@ -55,24 +56,44 @@ public class Frontend extends JPanel implements ActionListener {
     public Frontend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
                     LinkedBlockingQueue<Event> backendExceptionQueue, LinkedBlockingQueue<Event> frontendExceptionQueue,
                     int width, int height){
-        setSize(width, height);  // Set the initial dimension of the Frame
 
         initCommunication(backendQueue, frontendQueue);  // Start the communication between the backend and the frontend
         initExceptionListener(backendExceptionQueue, frontendExceptionQueue);  // Start the exception listener
 
-        // Ask the user for the master password before starting to use the password manager
-        MasterPasswordDialog masterPasswordDialog = new MasterPasswordDialog(this.communicationHandler);
-        masterPasswordDialog.setVisible(true);
+        initMasterPassword();
 
         // The Executor Service must be init after the masterPasswordDialog as it requires the master password to operate
         initExecutorService();
 
-        initFrame();  // Set the properties of the JFrame
+        initPanel(width, height);  // Set the properties of the panel
         initPanels();  // Initialize all the JPanels
         initSwingTimer();  // Initialize the Swing timer only after all the frontend components have been created
     }
 
-    private void initFrame(){
+    /**
+     * Retrieve the icon of the password manager from the resources folder
+     * @return Icon of the password manager
+     */
+    public static Image getIcon(){
+        ImageIcon imageIcon = new ImageIcon(Frontend.class.getResource("/icon.png"));  // Get the image from the resources
+        return imageIcon.getImage();
+    }
+
+    /**
+     * Ask the user for the master password before starting to use the password manager
+     */
+    private void initMasterPassword(){
+        MasterPasswordDialog masterPasswordDialog = new MasterPasswordDialog(this.communicationHandler);
+        masterPasswordDialog.setVisible(true);
+    }
+
+    /**
+     * Initialize the panel
+     * @param width The width of the panel
+     * @param height The height of the panel
+     */
+    private void initPanel(int width, int height){
+        setSize(width, height);  // Set the initial dimension of the Frame
 
         setFocusable(true);  // Set the focus on the frame to get the keyboard inputs
         setLayout(new BorderLayout());  // The layout for the Board is the Border one

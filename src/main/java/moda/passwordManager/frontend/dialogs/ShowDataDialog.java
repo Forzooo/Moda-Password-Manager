@@ -3,6 +3,7 @@ package moda.passwordManager.frontend.dialogs;
 import moda.passwordManager.backend.Data;
 import moda.passwordManager.communicationHandler.CommunicationHandler;
 import moda.passwordManager.communicationHandler.Event;
+import moda.passwordManager.frontend.Frontend;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -50,6 +51,7 @@ public class ShowDataDialog extends JDialog {
         setResizable(false);
         setLocationRelativeTo(null);
         setAlwaysOnTop(true);
+        setIconImage(Frontend.getIcon());
     }
 
     /**
@@ -122,19 +124,7 @@ public class ShowDataDialog extends JDialog {
         this.modifyButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Set the JTextFields to be editable to allow changes
-                for (JTextField fields : dataFields){
-                    fields.setEditable(true);
-                }
-
-                // Set the copy buttons to not be enabled while the data is being changed
-                for (JButton copyButton : copyButtons){
-                    copyButton.setEnabled(false);
-                }
-
-                modifyButton.setEnabled(false);  // Disable the JButton as it's already being used
-                deleteButton.setVisible(false); // HIde the delete button
-                saveChangesButton.setVisible(true);  // Show the JButton used to apply changes
+                enableChanges();
             }
         });
 
@@ -160,6 +150,12 @@ public class ShowDataDialog extends JDialog {
                     copyButton.setEnabled(true);
                 }
 
+                // Ensure that the service field is not empty
+                if (updatedData[3].isEmpty()){
+                    enableChanges();  // Enable to make changes again as they were disabled in the previous for loop
+                    return;
+                }
+
                 // Send the data to the backend
                 changeData(updatedData[0], updatedData[1], updatedData[2], updatedData[3], updatedData[4]);
 
@@ -173,7 +169,8 @@ public class ShowDataDialog extends JDialog {
         this.deleteButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                int result = JOptionPane.showConfirmDialog(getDialog(), "Delete the data?");
+                int result = JOptionPane.showConfirmDialog(getDialog(), "Delete the data?",
+                        "Moda Password Manager", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 
                 // If the result is 0 (Yes) delete the data by sending an event to the backend
                 if (result == 0) {
@@ -182,6 +179,25 @@ public class ShowDataDialog extends JDialog {
                 }
             }
         });
+    }
+
+    /**
+     * Enable the JTextFields to be modified
+     */
+    private void enableChanges(){
+        // Set the JTextFields to be editable to allow changes
+        for (JTextField fields : dataFields){
+            fields.setEditable(true);
+        }
+
+        // Set the copy buttons to not be enabled while the data is being changed
+        for (JButton copyButton : copyButtons){
+            copyButton.setEnabled(false);
+        }
+
+        modifyButton.setEnabled(false);  // Disable the JButton as it's already being used
+        deleteButton.setVisible(false); // HIde the delete button
+        saveChangesButton.setVisible(true);  // Show the JButton used to apply changes
     }
 
     /**

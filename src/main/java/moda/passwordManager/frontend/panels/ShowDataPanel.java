@@ -120,17 +120,6 @@ public class ShowDataPanel extends JPanel {
                     // Create a Show Data Dialog to display the data retrieved
                     ShowDataDialog showDataDialog = new ShowDataDialog(communicationHandler, userSingleData);
                     showDataDialog.setVisible(true);
-
-                    // Create a JDialog where the data will be shown
-//                    JDialog showData = new JDialog();
-//                    showData.setSize(new Dimension(600, 400));
-//
-//                    showData.setResizable(false);
-//                    showData.setLocationRelativeTo(null);
-//                    showData.setAlwaysOnTop(true);
-//
-//                    showData.add(new SingleDataPanel(communicationHandler, userSingleData));
-//                    showData.setVisible(true);
                 }
             }
         });
