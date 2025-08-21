@@ -7,6 +7,10 @@ public class CommunicationHandler {
     private LinkedBlockingQueue<Event> sender;  // Send Event from this queue to the other thread
     private LinkedBlockingQueue<Event> receiver;  // Receive Event from this queue from the other thread
 
+    /**
+     * @param sender The Queue that sends the Event objects
+     * @param receiver The Queue that receives the Event objects
+     */
     public CommunicationHandler(LinkedBlockingQueue<Event> sender, LinkedBlockingQueue<Event> receiver){
         super();
 
