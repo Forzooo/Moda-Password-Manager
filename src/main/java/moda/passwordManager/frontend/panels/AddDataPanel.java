@@ -4,7 +4,7 @@ import moda.passwordManager.backend.Data;
 import moda.passwordManager.communicationHandler.CommunicationHandler;
 import moda.passwordManager.communicationHandler.Event;
 import moda.passwordManager.frontend.components.Placeholder;
-import moda.passwordManager.frontend.dialogs.GeneratePasswordDialog;
+import moda.passwordManager.frontend.dialogs.ConfigureGenerationPasswordDialog;
 
 import javax.swing.*;
 import java.awt.*;
@@ -49,7 +49,7 @@ public class AddDataPanel extends JPanel {
 
         initPanel(sidebarPanelWidth);
         initComponents();
-        initActionListener();
+        initListeners();
     }
 
     /**
@@ -96,7 +96,7 @@ public class AddDataPanel extends JPanel {
 
         this.emailAddressTextField = new JTextField();
         this.emailAddressTextField.setMaximumSize(textFieldDimension);
-        this.emailAddressPlaceholder = new Placeholder(this.emailAddressTextField, "Email Address");
+        this.emailAddressPlaceholder = new Placeholder(this.emailAddressTextField, "Email Address (email@example.com)");
 
         // The password field is not a JPasswordField because the user needs to know the password being entered in the database
         this.passwordTextField = new JTextField();
@@ -105,11 +105,12 @@ public class AddDataPanel extends JPanel {
 
         this.serviceTextField = new JTextField();
         this.serviceTextField.setMaximumSize(textFieldDimension);
-        this.servicePlaceholder = new Placeholder(this.serviceTextField, "Service");
+        this.servicePlaceholder = new Placeholder(this.serviceTextField, "Service (Google, Microsoft, ...)");
 
         this.additionalDataTextField = new JTextField();
         this.additionalDataTextField.setMaximumSize(textFieldDimension);
-        this.additionalDataPlaceholder = new Placeholder(this.additionalDataTextField, "Additional Data");
+        this.additionalDataPlaceholder = new Placeholder(this.additionalDataTextField, "Additional Data (Data " +
+                "not covered by the other fields)");
 
         // Create the JButton for Reset and Confirm operations
         Dimension buttonDimension = new Dimension(250, 20);  // Define the dimension of any JButton
@@ -154,9 +155,9 @@ public class AddDataPanel extends JPanel {
     }
 
     /**
-     * Initialize all the action listeners
+     * Initialize all the listeners on the components
      */
-    private void initActionListener() {
+    private void initListeners() {
         // When the Reset JButton is clicked then all the JTextField placeholders are reset
         this.resetButton.addActionListener(
                 new ActionListener() {
@@ -172,10 +173,8 @@ public class AddDataPanel extends JPanel {
         this.saveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // If at least one placeholder is enabled then don't allow the data to be saved
-                if (usernamePlaceholder.isShown() || emailAddressPlaceholder.isShown() ||
-                        passwordPlaceholder.isShown() || servicePlaceholder.isShown() ||
-                        additionalDataPlaceholder.isShown()) {
+                // Only the service placeholder is required to be set before saving some data
+                if (servicePlaceholder.isShown()) {
                     return;
                 }
 
@@ -202,8 +201,8 @@ public class AddDataPanel extends JPanel {
         this.configurePasswordGeneration.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                GeneratePasswordDialog generatePasswordDialog = new GeneratePasswordDialog(communicationHandler);
-                generatePasswordDialog.setVisible(true);
+                ConfigureGenerationPasswordDialog configureGenerationPasswordDialog = new ConfigureGenerationPasswordDialog(communicationHandler);
+                configureGenerationPasswordDialog.setVisible(true);
             }
         });
     }
@@ -229,14 +228,17 @@ public class AddDataPanel extends JPanel {
      * @param additionalData
      */
     private void saveData(String username, String emailAddress, String password, String service, String additionalData) {
+        // Check whether additionalData has been set, otherwise set it to blank instead of the placeholder text
+        if (additionalDataPlaceholder.isShown()){
+            additionalData = "";
+        }
+
         // Create the Data object with the user data to send to the backend
         Data userData = new Data(username, emailAddress, password, service, additionalData);
 
-        ArrayList dataToSend = new ArrayList();
-        dataToSend.add(userData);
-
         // Create the Event to send to the backend
-        Event saveData = new Event("save-data", dataToSend);
+        Event saveData = new Event("save-data", userData);
+
         this.communicationHandler.send(saveData);
         this.communicationHandler.receive();
 //        notifyUser();  // Example method to show the user a messagebox with the operation status

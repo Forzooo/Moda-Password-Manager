@@ -3,6 +3,7 @@ package moda.passwordManager.frontend.panels;
 import moda.passwordManager.backend.Data;
 import moda.passwordManager.communicationHandler.CommunicationHandler;
 import moda.passwordManager.communicationHandler.Event;
+import moda.passwordManager.frontend.dialogs.ShowDataDialog;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -49,7 +50,7 @@ public class ShowDataPanel extends JPanel {
 
         initPanel(sidebarPanelWidth);
         initComponents();
-        initActionListener();
+        initListeners();
     }
 
     /**
@@ -92,7 +93,38 @@ public class ShowDataPanel extends JPanel {
         dataList.setSelectionBackground(Color.black);
         dataList.setSelectionForeground(Color.white);
 
-        dataList.setCellRenderer(new DefaultListCellRenderer(){ //imposto un metodo per far renderizzare le celle della lista come mi pare
+        JScrollPane scrollPane = new JScrollPane(this.dataList);
+        scrollPane.setPreferredSize(new Dimension(1000, 750));
+
+        scrollPane.setBorder(new EmptyBorder(10,30,10,30));
+        add(scrollPane, BorderLayout.CENTER);  // Add the ScrollPane with the JList to the panel
+    }
+
+    /**
+     * Initialize all the listeners on the components
+     */
+    private void initListeners(){
+        this.dataList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                // Only allow double clicks
+                if (e.getClickCount() == 2) {
+                    // Retrieve the ID from the selected data
+                    Data dataSelected = userData.get(dataList.getSelectedIndex());
+                    int id = dataSelected.getID();
+
+                    // Retrieve the data with the ID from the database
+                    Data userSingleData = getData(id);
+
+                    // Create a Show Data Dialog to display the data retrieved
+                    ShowDataDialog showDataDialog = new ShowDataDialog(communicationHandler, userSingleData);
+                    showDataDialog.setVisible(true);
+                }
+            }
+        });
+
+        this.dataList.setCellRenderer(new DefaultListCellRenderer(){ //imposto un metodo per far renderizzare le celle della lista come mi pare
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) { //questo non so bene cosa sia, ma nell'esempio che ho spudoratamente copiato era così
                 Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
@@ -111,44 +143,6 @@ public class ShowDataPanel extends JPanel {
 
             }
         });
-
-        JScrollPane scrollPane = new JScrollPane(this.dataList);
-        scrollPane.setPreferredSize(new Dimension(1000, 750));
-
-        scrollPane.setBorder(new EmptyBorder(10,30,10,30));
-        add(scrollPane, BorderLayout.CENTER);  // Add the ScrollPane with the JList to the panel
-    }
-
-    /**
-     * Initialize all the action listeners
-     */
-    private void initActionListener(){
-        this.dataList.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                super.mouseClicked(e);
-                // Only allow double clicks
-                if (e.getClickCount() == 2) {
-                    // Retrieve the ID from the selected data
-                    Data dataSelected = userData.get(dataList.getSelectedIndex());
-                    int id = dataSelected.getID();
-
-                    // Retrieve the data with the ID from the database
-                    Data userSingleData = getData(id);
-
-                    // Create a JDialog where the data will be shown
-                    JDialog showData = new JDialog();
-                    showData.setSize(new Dimension(600, 400));
-
-                    showData.setResizable(false);
-                    showData.setLocationRelativeTo(null);
-                    showData.setAlwaysOnTop(true);
-
-                    showData.add(new SingleDataPanel(communicationHandler, userSingleData));
-                    showData.setVisible(true);
-                }
-            }
-        });
     }
 
     /**
@@ -158,10 +152,7 @@ public class ShowDataPanel extends JPanel {
      */
     private Data getData(int id){
         // Create the event to send to the backend
-        ArrayList dataToSend = new ArrayList();
-        dataToSend.add(id);
-
-        Event getData = new Event("get-data", dataToSend);
+        Event getData = new Event("get-data", id);
         this.communicationHandler.send(getData);
 
         Event getSingleDataCompletd = this.communicationHandler.receive();  // Wait for the response
@@ -176,7 +167,7 @@ public class ShowDataPanel extends JPanel {
      */
     public void updateUserData(){
         // Create and send the event to the backend asking for the user data
-        Event updateUserData = new Event("get-service-fields", new ArrayList());
+        Event updateUserData = new Event("get-service-fields");
         this.communicationHandler.send(updateUserData);
 
         // Wait for the response of the backend and update the data with the new one

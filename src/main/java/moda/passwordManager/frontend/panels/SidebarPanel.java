@@ -35,7 +35,7 @@ public class SidebarPanel extends JPanel {
 
         initPanel();
         initComponents();
-        initActionListener();
+        initListeners();
     }
 
     @Override public Dimension getPreferredSize() {
@@ -86,7 +86,6 @@ public class SidebarPanel extends JPanel {
         this.settingsButton = new JButton();  // TODO: Use the settings icon instead of the text
         this.settingsButton.setText("Settings");
         this.settingsButton.setMaximumSize(buttonDimension);
-        this.settingsButton.setEnabled(false);  // The Settings panel has not been developed yet
 
         // Add the components to the Sidebar
         add(Box.createRigidArea(new Dimension(0, 20))); // Add RigidArea to add spacing between components
@@ -104,9 +103,9 @@ public class SidebarPanel extends JPanel {
     }
 
     /**
-     * Initialize all the action listeners
+     * Initialize all the listeners on the components
      */
-    private void initActionListener(){
+    private void initListeners(){
         this.addDataButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

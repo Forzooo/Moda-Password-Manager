@@ -11,35 +11,29 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class Application extends JFrame {
 
-    public Application(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
-        initUI(backendQueue, frontendQueue);
+    public Application(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
+                       LinkedBlockingQueue<Event> backendExceptionQueue, LinkedBlockingQueue<Event> frontendExceptionQueue){
+        initUI(backendQueue, frontendQueue, backendExceptionQueue, frontendExceptionQueue);
     }
 
-    private void initUI(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
+    private void initUI(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
+                        LinkedBlockingQueue<Event> backendExceptionQueue, LinkedBlockingQueue<Event> frontendExceptionQueue){
         Dimension screen = getToolkit().getScreenSize();
 
-        int width = (int) (screen.getWidth() * 3/4);
-        int height = (int) (screen.getHeight() * 3/4);
+        int width = (int) (screen.getWidth() * 4/5);
+        int height = (int) (screen.getHeight() * 4/5);
 
-        add(new Frontend(backendQueue, frontendQueue, width, height));
+        add(new Frontend(backendQueue, frontendQueue, backendExceptionQueue, frontendExceptionQueue, width, height));
         pack();
 
         setTitle("MODA - Password Manager");
         setSize(width, height);
 
-        initIcon();
+        setIconImage(Frontend.getIcon());  // Get the icon and set it
 
         setVisible(true);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-    }
-
-    /**
-     * Set the icon of the application
-     */
-    private void initIcon(){
-        ImageIcon imageIcon = new ImageIcon(getClass().getResource("/icon.png"));  // Get the image from the resources
-        setIconImage(imageIcon.getImage());  // Get the image from the ImageIcon and set it to the application
     }
 
     public static void main(String[] args) {
@@ -47,12 +41,24 @@ public class Application extends JFrame {
         LinkedBlockingQueue<Event> backendQueue = new LinkedBlockingQueue<>();
         LinkedBlockingQueue<Event> frontendQueue = new LinkedBlockingQueue<>();
 
+        // The queues that communicate exceptions
+        LinkedBlockingQueue<Event> backendExceptionQueue = new LinkedBlockingQueue<>();
+        LinkedBlockingQueue<Event> frontendExceptionQueue = new LinkedBlockingQueue<>();
+
         EventQueue.invokeLater(() -> {
-            Application ex = new Application(backendQueue, frontendQueue);
+            Application ex = new Application(backendQueue, frontendQueue, backendExceptionQueue, frontendExceptionQueue);
             ex.setVisible(true);
         });
 
-        Backend backend = new Backend(backendQueue, frontendQueue);
+        Backend backend = new Backend(backendQueue, frontendQueue, backendExceptionQueue, frontendExceptionQueue);
+        // Set the handler from the object itself otherwise it would use the one from the Frontend
+        // TODO: Find a better way to set it: from inside the Backend class itself
+        backend.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                backend.uncaughtException(t, e);
+            }
+        });
         backend.start();
     }
 }

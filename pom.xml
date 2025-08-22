@@ -12,7 +12,7 @@
 
     <groupId>moda</groupId>
     <artifactId>moda-password-manager</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
     <name>Moda Password Manager</name>
     <description>Il Moda Password Manager</description>
     <url>https://github.com/Forzooo/Moda-Password-Manager/</url>
@@ -123,6 +123,18 @@
             <groupId>com.google.oauth-client</groupId>
             <artifactId>google-oauth-client-jetty</artifactId>
             <version>1.38.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.19.2</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.19.2</version>
         </dependency>
     </dependencies>
 
