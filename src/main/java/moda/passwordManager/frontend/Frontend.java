@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Frontend extends JPanel implements ActionListener {
 
-    private final static String VERSION = "0.2.0";  // The current version of the software
+    private final static String VERSION = "0.3.0";  // The current version of the software
 
     // The CommunicationHandler objects used to communicate with the Backend thread
     private CommunicationHandler communicationHandler;
