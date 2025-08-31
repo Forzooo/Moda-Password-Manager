@@ -2,6 +2,7 @@ package moda.passwordManager.frontend.panels;
 
 import moda.passwordManager.communicationHandler.CommunicationHandler;
 import moda.passwordManager.communicationHandler.Event;
+import moda.passwordManager.frontend.dialogs.MasterPasswordDialog;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -23,6 +24,7 @@ public class SettingsPanel extends JPanel {
     private JTextField databasePathTextField;  // Read-only state to show the state of the database
     private JButton changeDatabaseButton;  // Change to another database, already existing
     private JButton newDatabaseButton;  // Create a new database in a directory
+    private JButton changeMasterPasswordButton;  // Change the master password of the current database
 
     public SettingsPanel(CommunicationHandler communicationHandler, int MIN_CONTENT_WIDTH, Dimension windowSize,
                          int sidebarPanelWidth, String currentDatabasePath) {
@@ -104,12 +106,17 @@ public class SettingsPanel extends JPanel {
         this.changeDatabaseButton.setText("Change database");
         this.changeDatabaseButton.setMaximumSize(buttonDimension);
 
+        this.changeMasterPasswordButton = new JButton();
+        this.changeMasterPasswordButton.setText("Change the master password");
+        this.changeMasterPasswordButton.setMaximumSize(buttonDimension);
+
         databasePanel.add(databaseInUseLabel);
         databasePanel.add(this.databasePathTextField);
         databasePanel.add(this.newDatabaseButton);
         databasePanel.add(this.changeDatabaseButton);
 
         add(databasePanel);
+        add(this.changeMasterPasswordButton);
     }
 
     /**
@@ -169,6 +176,20 @@ public class SettingsPanel extends JPanel {
                 }
             }
         });
+
+        this.changeMasterPasswordButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String masterPassword = JOptionPane.showInputDialog(getPanel(), "Enter the new master password",
+                        "");
+                // Perform some initial conditions check on the master password
+                if (!MasterPasswordDialog.checkMasterPassword(masterPassword.toCharArray())){
+                    return;
+                }
+
+                changeMasterPassword(masterPassword);
+            }
+        });
     }
 
     /**
@@ -181,5 +202,15 @@ public class SettingsPanel extends JPanel {
         this.communicationHandler.receive();
         this.databasePathTextField.setText(databasePath);  // Set the new path of the database into the Text Field
 //        notifyUser()
+    }
+
+    /**
+     * Change the current master password of the database to a new one
+     * @param masterPassword The new master password
+     */
+    private void changeMasterPassword(String masterPassword){
+        Event event = new Event("change-master-password", masterPassword);
+        this.communicationHandler.send(event);
+        this.communicationHandler.receive();  // Wait for the end of the operations in the backend
     }
 }

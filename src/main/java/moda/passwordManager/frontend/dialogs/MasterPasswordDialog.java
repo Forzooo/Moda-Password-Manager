@@ -52,11 +52,12 @@ public class MasterPasswordDialog extends JDialog {
      * Set the configuration of the Dialog
      */
     private void initDialog(){
-        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);  // We handle how the dialog closes
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);  // We handle on our own how the dialog closes
         setLayout(getDialogLayout());  // Set its layout
 
         setTitle("MODA - Password Manager");
         setModal(true);
+        setIcon();
 
         // Set the preferred size
         setSize(new Dimension(700, 150));
@@ -160,7 +161,7 @@ public class MasterPasswordDialog extends JDialog {
      * @param masterPassword The master password the user entered
      * @return Boolean to indicate whether the checks have been passed
      */
-    private boolean checkMasterPassword(char[] masterPassword){
+    public static boolean checkMasterPassword(char[] masterPassword){
         if (masterPassword.length == 0){
             return false;
         }
