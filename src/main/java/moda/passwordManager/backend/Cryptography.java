@@ -6,11 +6,12 @@ import org.bouncycastle.crypto.params.Argon2Parameters;
 import javax.crypto.*;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Arrays;
 
 public class Cryptography {
 
@@ -23,24 +24,42 @@ public class Cryptography {
     // AES-GCM Settings
     private final static int AES_KEY_SIZE = 32;  // The length is set to bytes for better compatibility
     private final static int AES_IV_SIZE = 12;
-    private final static int AES_GMC_TAG_SIZE = 16;
+    private final static int AES_GMC_TAG_SIZE = 128;  // The length is set to bytes
 
-    // Attributes
-    private byte[] salt;
-    private byte[] iv;
-    private byte[] gmcTag;
-    private byte[] masterPassword;  // The master password that allows for encryption/decryption
+    // Class attributes
+    private byte[] masterPassword;  // The master password that allows encryption/decryption
+    private SecureRandom secureRandom;
+    private Argon2Parameters.Builder hashBuilder;  // The builder for hash generation
+    private Argon2BytesGenerator hashGenerator;  // The generator for the hash
+    private Cipher aes;  // Used to compute AES
 
     public Cryptography(){
-        this.salt = new byte[Cryptography.ARGON_SALT_SIZE];
-        this.iv = new byte[Cryptography.AES_IV_SIZE];
-        this.gmcTag = new byte[Cryptography.AES_GMC_TAG_SIZE];
+        this.masterPassword = null;  // The master password is set only with the set method
+        this.secureRandom = new SecureRandom();
 
-        // The master password is set only with the set method
-        this.masterPassword = null;
+        initCryptography();
     }
 
-    // Set the master password as it's deleted every time the hash method is called
+    private void initCryptography(){
+        // Set the Argon2 builder with the settings specified in the attributes of the class
+        this.hashBuilder = new Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
+                .withIterations(Cryptography.ARGON_ITERATIONS)  // Set the number of iterations
+                .withMemoryAsKB(Cryptography.ARGON_MEMORY*1000)  // Set the RAM usage of Argon in KiloBytes
+                .withParallelism(Cryptography.ARGON_PARALLELISM);  // Set the number of threads
+
+        this.hashGenerator = new Argon2BytesGenerator();  // Create an Argon2 generator to create the hashes
+
+        try {
+            this.aes = Cipher.getInstance("AES/GCM/NoPadding");  // Define that the cipher used is AES-GCM
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Set the master password for encryption and decryption
+     * @param masterPassword The master password the user has provided
+     */
     public void setMasterPassword(byte[] masterPassword) {
         this.masterPassword = masterPassword.clone();
     }
@@ -54,176 +73,152 @@ public class Cryptography {
     *     <li>Salt, used to compute the Encryption Key for the decryption (16 bytes)</li>
     * </ul>
     */
-     public byte[] encrypt(String plaintextData){
-          // Generate a new hash and IV for each encryption
-          byte[] plaintextBytes = plaintextData.getBytes();
-          generateHash();
-          generateIV();
+    public byte[] encrypt(String plaintext){
+        reseed();  // Reseed the Random Generator before any operations
 
-          byte[] hash = hash();  // Generate a hash, which will be the Encryption Key for AES, using Argon2id
-          SecretKeySpec encryptionKey = new SecretKeySpec(hash, "AES");  // Create a Secret Key from the hash
+        byte[] plaintextBytes = plaintext.getBytes();  // Convert the plaintext string to bytes
 
-          byte[] ciphertext = computeAES(plaintextBytes, encryptionKey, Cipher.ENCRYPT_MODE);
+        // Generate a random salt for the hash and an IV for AES
+        byte[] salt = new byte[ARGON_SALT_SIZE];
+        byte[] iv = new byte[AES_IV_SIZE];
+        generateBytes(salt);
+        generateBytes(iv);
 
-          byte[] encryptedData = addIV(ciphertext);  // Create a byte array and add the IV as an header
+        byte[] hash = hash(salt);  // Generate a hash, which will be the Encryption Key for AES, using Argon2id
 
-          encryptedData = addSalt(encryptedData);  // Add the salt to the encrypted data
+        byte[] ciphertext = computeAES(plaintextBytes, hash, iv, Cipher.ENCRYPT_MODE);
 
-          return encryptedData;  // Return the encrypted data
+        // Add the Initialization Vector and the Salt to the ciphertext byte array
+        ciphertext = addData(ciphertext, iv);
+        ciphertext = addData(ciphertext, salt);
+
+        return ciphertext;  // Return the encrypted data
     }
 
     // Removes all the headers from the ciphertext and decrypts it
     public byte[] decrypt(byte[] encryptedData){
 
-        encryptedData = extractSalt(encryptedData);  // Remove the Salt from the encrypted data
-        encryptedData = extractIV(encryptedData);  // Remove the IV from the encrypted data
+        byte[] salt = readHeader(encryptedData, ARGON_SALT_SIZE);
+        encryptedData = removeHeader(encryptedData, ARGON_SALT_SIZE);
 
-        byte[] hash = hash(); // Regenerate the hash, which will be the Decryption Key for AES, using Argon2id
-        SecretKeySpec encryptionKey = new SecretKeySpec(hash, "AES");  // Create a Secret Key from the hash
+        byte[] iv = readHeader(encryptedData, AES_IV_SIZE);
+        encryptedData = removeHeader(encryptedData, AES_IV_SIZE);
 
-        byte[] plaintextData = computeAES(encryptedData, encryptionKey, Cipher.DECRYPT_MODE);
+        byte[] hash = hash(salt); // Regenerate the hash, which will be the Decryption Key for AES, using Argon2id
+
+        byte[] plaintextData = computeAES(encryptedData, hash, iv, Cipher.DECRYPT_MODE);
 
         return plaintextData;
     }
 
-    // Generate a secure hash for the hash function
-    private void generateHash(){
-        SecureRandom secureRandom = new SecureRandom();
-        secureRandom.nextBytes(this.salt);
+    /**
+     * Generate random bytes for a variable
+     * @param array The byte array which bytes are generated
+     */
+    private void generateBytes(byte[] array){
+         this.secureRandom.nextBytes(array);
     }
 
-    // Generate a secure Initialization Vector for the AES function
-    private void generateIV(){
-        SecureRandom secureRandom = new SecureRandom();
-        secureRandom.nextBytes(this.iv);
+    /**
+     * Reseed the secure random generator
+     */
+    private void reseed(){
+        this.secureRandom.reseed();
     }
 
     // Hash the master password with a salt using Argon2id with the above settings
-    private byte[] hash(){
 
-        // Check whether the master password hasn't been set before calling an encryption/decryption
-        if (Arrays.equals(this.masterPassword, new byte[this.masterPassword.length])){
-            try {
-                throw new Exception("The Master Password needs to be set before requesting an encryption/decryption.");
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
+    /**
+     * Generate an Hash using the Argon2id algorithm
+     * @param salt A randomically generated salt
+     * @return Random hash generated with Argon2id
+     */
+    private byte[] hash(byte[] salt){
+        this.hashBuilder.withSalt(salt);  // Set the salt of the hash generator
 
-        // Set the Argon2 builder with the settings specified in the attributes of the class
-        Argon2Parameters.Builder builder = new Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
-                .withSalt(this.salt)  // Set the salt to the hash function
-                .withIterations(Cryptography.ARGON_ITERATIONS)  // Set the number of iterations
-                .withMemoryAsKB(Cryptography.ARGON_MEMORY*1000)  // Set the RAM usage of Argon in KiloBytes
-                .withParallelism(Cryptography.ARGON_PARALLELISM);  // Set the number of threads
-
-        // Create an Argon2 generator and set it with the parameters specified in the other Argon 2 object
-        Argon2BytesGenerator generator = new Argon2BytesGenerator();
-        generator.init(builder.build());
+        this.hashGenerator.init(this.hashBuilder.build());
 
         byte[] hash = new byte[Cryptography.AES_KEY_SIZE];  // Create the array of bytes where the hash will be stored
-        generator.generateBytes(this.masterPassword, hash);  // Compute the hashes using the master password
-
-        // To prevent memory dump attacks the master password is deleted every time the hash method is called
-//        Arrays.fill(this.masterPassword, (byte) 0);
+        this.hashGenerator.generateBytes(this.masterPassword, hash);  // Compute the hashes using the master password
 
         return hash;
     }
 
-    // Compute the ciphertext/plaintext data using AES
-    private byte[] computeAES(byte[] password, SecretKey encryptionKey, int cipherMode){
-        Cipher aes;
-        try {
-            aes = Cipher.getInstance("AES/GCM/NoPadding");  // Define that the cipher used is AES-GCM
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        } catch (NoSuchPaddingException e) {
-            throw new RuntimeException(e);
-        }
+    /**
+     * Encrypt or decrypt a byte array using AES-GCM
+     * @param data The data to be encrypted/decrypted
+     * @param hash The hash used to create the encryption key
+     * @param iv The Initialization Vector used to compute the AES
+     * @param cipherMode Specifies whether to encrypt or decrypt
+     * @return The encrypted/decrypted data encoded in a byte array
+     */
+    private byte[] computeAES(byte[] data, byte[] hash, byte[] iv, int cipherMode){
+        SecretKeySpec encryptionKey = new SecretKeySpec(hash, "AES");  // Create a Secret Key from the hash
 
         // Define the parameters of the AES GCM cipher
-        // The TAG needs to be converted to bit from bytes
-        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(Cryptography.AES_GMC_TAG_SIZE*8, this.iv);
+        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(AES_GMC_TAG_SIZE, iv);
         try {
-            // Init the AES in encryption/decryption mode with the encryption key generated
-            // and the settings specified in the GCMParamterSpec object
-            aes.init(cipherMode, encryptionKey, gcmParameterSpec);
-        } catch (InvalidKeyException e) {
-            throw new RuntimeException(e);
-        } catch (InvalidAlgorithmParameterException e) {
+            // Initialize the AES in encryption/decryption mode with the encryption key (the hash) generated from
+            // Argon2id and the parameters specified in the GCMParamterSpec object
+            this.aes.init(cipherMode, encryptionKey, gcmParameterSpec);
+
+            return this.aes.doFinal(data);  // Encrypt/decrypt the data
+        } catch (IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException |
+                 InvalidKeyException e) {
             throw new RuntimeException(e);
         }
+    }
 
+    /**
+     * Add data in byte array to another one
+     * @param array The array which data will be copied to
+     * @param data The data to copy
+     * @return A new byte array with both the arrays
+     */
+    private byte[] addData(byte[] array, byte[] data){
+        // The ByteArrayOutputStream allows to write each array into its stream before getting back a byte array
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream(array.length + data.length);  // Set the len
         try {
-            return aes.doFinal(password);  // Finally encrypt/decrypt the data
-        } catch (IllegalBlockSizeException e) {
+            // Write the arrays into the stream
+            outputStream.write(array);
+            outputStream.write(data);
+        } catch (IOException e) {
             throw new RuntimeException(e);
-        } catch (BadPaddingException e) {
-            throw new RuntimeException(e);
         }
+
+        return outputStream.toByteArray();
     }
 
-    // Add the Salt to the ciphertext data
-    private byte[] addSalt(byte[] ciphertext){
+    /**
+     * Read a header from the encrypted data
+     * @param data The encrypted data
+     * @param headerLength The length of the header
+     * @return The header read from the last byte to the (last byte - length)
+     */
+    private byte[] readHeader(byte[] data, int headerLength){
+        byte[] header = new byte[headerLength];
 
-        byte[] data = new byte[ciphertext.length + Cryptography.ARGON_SALT_SIZE];
-
-        for (int i = 0; i < ciphertext.length; i++){
-            data[i] = ciphertext[i];
+        for (int i = 0; i < headerLength; i++){
+            header[i] = data[data.length-headerLength+i];
         }
 
-        for (int i = 0; i < Cryptography.ARGON_SALT_SIZE; i++){
-            data[ciphertext.length+i] = this.salt[i];
-        }
-
-        return data;
+        return header;
     }
 
-    // Add the IV to the ciphertext data
-    private byte[] addIV(byte[] ciphertext){
+    /**
+     * Remove a header from the data
+     * @param data The encrypted data
+     * @param headerLength The length of the header to be removed
+     * @return The data without the header which is removed from the last byte to the (last byte - length)
+     */
+    private byte[] removeHeader(byte[] data, int headerLength){
+        byte[] newData = new byte[data.length - headerLength];
 
-        byte[] data = new byte[ciphertext.length + Cryptography.AES_IV_SIZE];
-
-        for (int i = 0; i < ciphertext.length; i++){
-            data[i] = ciphertext[i];
+        for (int i = 0; i < newData.length; i++){
+            newData[i] = data[i];
         }
 
-        for (int i = 0; i < Cryptography.AES_IV_SIZE; i++){
-            data[ciphertext.length+i] = this.iv[i];
-        }
-
-        return data;
-    }
-
-    // Extract the salt from the encrypted data
-    private byte[] extractSalt(byte[] encryptedData){
-        for (int i = 0; i < Cryptography.ARGON_SALT_SIZE; i++){
-            this.salt[i] = encryptedData[encryptedData.length - Cryptography.ARGON_SALT_SIZE+i];
-        }
-
-        encryptedData = updateEncryptedData(encryptedData, Cryptography.ARGON_SALT_SIZE);
-        return encryptedData;
-    }
-
-    // Extract the IV from the encrypted data
-    private byte[] extractIV(byte[] encryptedData){
-        for (int i = 0; i < Cryptography.AES_IV_SIZE; i++){
-            this.iv[i] = encryptedData[encryptedData.length-Cryptography.AES_IV_SIZE+i];
-        }
-
-        encryptedData = updateEncryptedData(encryptedData, Cryptography.AES_IV_SIZE);
-        return encryptedData;
-    }
-
-    // Update the encrypted data removing an header: hash or IV
-    private byte[] updateEncryptedData(byte[] encryptedData, int lenght){
-        byte[] temporaryData = new byte[encryptedData.length - lenght];  // Recreate the encrypted data array without an header
-
-        for (int i = 0; i < temporaryData.length; i++){
-            temporaryData[i] = encryptedData[i];
-        }
-
-        return temporaryData;
+        return newData;
     }
 
     /**
@@ -232,11 +227,11 @@ public class Cryptography {
      * @param charSet The set of the characters to use
      */
     public StringBuilder generateString(int charNum, char[] charSet){
+        reseed();  // Reseed the secure random generator before generating random characters
         StringBuilder stringBuilder = new StringBuilder();  // Create a StringBuilder object to append characters better
-        SecureRandom secureRandom = new SecureRandom();  // Used for the random character to pick
 
         for (int i = 0; i < charNum; i++){
-            int index = secureRandom.nextInt(charSet.length);  // Generate an index between 0, and the length of the set
+            int index = this.secureRandom.nextInt(charSet.length);  // Generate an index between 0, and the length of the set
             stringBuilder.append(charSet[index]);  // Append the character at the random index to the string builder
         }
 
