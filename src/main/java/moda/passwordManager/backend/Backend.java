@@ -3,12 +3,12 @@ package moda.passwordManager.backend;
 import moda.passwordManager.communicationHandler.CommunicationHandler;
 import moda.passwordManager.communicationHandler.Event;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class Backend extends Thread {
+
+    private BackendHelper helper;
 
     // Objects of the backend classes
     private Cryptography cryptography;
@@ -26,6 +26,7 @@ public class Backend extends Thread {
 
     public Backend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
                    LinkedBlockingQueue<Event> backendExceptionQueue, LinkedBlockingQueue<Event> frontendExceptionQueue){
+
         // Create the communication handler with the two queues
         this.communicationHandler = new CommunicationHandler(backendQueue, frontendQueue);
         this.exceptionsCommunicationHandler = new CommunicationHandler(backendExceptionQueue, frontendExceptionQueue);
@@ -37,14 +38,14 @@ public class Backend extends Thread {
         // The path of the database is retrieved from the settings
         this.database = new Database(this.settings.readStringSetting("database/path"));
 
+        this.helper = new BackendHelper(this.cryptography, this.settings);
+
 //        this.googleDrive = new GoogleDrive();  // Disabled until fully developed
 
         this.eventToSend = null;
         this.runFlag = true;
     }
 
-    // TODO: Find a better way to handle the exceptions without having to rely on a public method that exposes an API
-    // TODO: of the Backend
     /**
      * Provide the method used for uncaught exceptions. It must be public otherwise the thread object
      * that is inside the main method, cannot access it
@@ -68,12 +69,7 @@ public class Backend extends Thread {
     @Override
     public void run() {
         while (this.runFlag){
-            /*
-             * If there's an even to send, send it
-             * It does not make the thread to stop forever because if an event is read from the Frontend, it's
-             * processed and the data will be sent in another event before checking for new events.
-             * Lastly, Backend does not send Event on its own so waiting for events it's not a problem.
-             */
+            // Check whether there is an Event to send to the Frontend
             if (this.eventToSend != null){
                 this.communicationHandler.send(this.eventToSend);
                 resetSendData();  // Reset the data to send to the frontend
@@ -154,27 +150,8 @@ public class Backend extends Thread {
     }
 
     /**
-     * Decrypts any string that was encrypted and decodes it
-     * @param encryptedString
-     * @return Decrypted string
-     */
-    private String decryptData(String encryptedString){
-        return new String(this.cryptography.decrypt(Data.decode(encryptedString)));
-    }
-
-    /**
-     * Encrypts any plaintext string and encodes it to base64
-     * @param plaintextData
-     * @return
-     */
-    private String encryptData(String plaintextData){
-        return Data.encodeToBase64(this.cryptography.encrypt(plaintextData));
-    }
-
-    /**
-     * Internally set the master password. <br/>
-     * Can be called only from event: "set-master-password"
-     * @param masterPassword
+     * Set the master password of the cryptography object
+     * @param masterPassword The master password provided by the user
      */
     private void setMasterPassword(String masterPassword){
         this.cryptography.setMasterPassword(masterPassword.getBytes());
@@ -185,71 +162,45 @@ public class Backend extends Thread {
      */
     private void closeConnection(){
         this.communicationHandler = null;
+        this.exceptionsCommunicationHandler = null;
         this.runFlag = false;
     }
 
     /**
-     * Retrieve all the service fields with their IDs from the database
+     * Retrieve all the service fields with their IDs from the database, and decrypt them
      */
     private void getServiceFields(){
-        ResultSet resultSet = this.database.getServiceFields();
+        ArrayList<Data> serviceFields = this.database.getServiceFields();
+        ArrayList<Data> decryptedFields = new ArrayList<>();  // The service fields are decrypted and stored here
 
-        ArrayList<Data> data = new ArrayList<>();  // The IDs and service are stored inside a Data object
-
-        while (true){
-            try {
-                if (!resultSet.next()){
-                    resultSet.close();  // Close the ResultSet, and implicitly the query, as it has completed its purpose
-                    break;
-                }
-                int id = resultSet.getInt("id");
-                String serviceData = decryptData(resultSet.getString("service"));
-                data.add(new Data(id, serviceData));
-
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
+        for (Data field : serviceFields){
+            decryptedFields.add(this.helper.decryptData(field));  // Decrypt the data in the helper and add it
         }
 
-        this.eventToSend.addData(data);  // Add the data to send
+        this.eventToSend.addData(decryptedFields);
     }
 
     /**
      * Save the user data, after encrypting it, inside the database
-     * @param data
+     * @param data The data to save inside the database
      */
     private void saveData(Data data){
-        String username = encryptData(data.getUSERNAME());
-        String emailAddress = encryptData(data.getEMAIL_ADDRESS());
-        String password = encryptData(data.getPASSWORD());
-        String service = encryptData(data.getSERVICE());
-        String additionalData = encryptData(data.getADDITIONAL_DATA());
-
-        Data dataEncrypted = new Data(data.getID(), username, emailAddress, password, service, additionalData);
-        this.database.addRecord(dataEncrypted);
+        this.database.addRecord(this.helper.encryptData(data));  // Encrypt the data with the helper, then add it
     }
 
     /**
-     * Retrieve the data with the associated id from the database <br/>
-     * Moreover decrypt it
-     * @param id
+     * Retrieve the data with the associated id from the database and decrypt it
+     * @param id The ID of the record to read
      */
-    private void getData(int id){
-        Data singleData = this.database.getRecord(id);
+    private void getData(int id) {
+        Data singleData = this.database.getRecord(id);  // Retrive the data associated with the ID
 
-        String username = decryptData(singleData.getUSERNAME());
-        String emailAddress = decryptData(singleData.getEMAIL_ADDRESS());
-        String password = decryptData(singleData.getPASSWORD());
-        String service = decryptData(singleData.getSERVICE());
-        String additionalData = decryptData(singleData.getADDITIONAL_DATA());
-
-        Data decryptedData = new Data(id, username, emailAddress, password, service, additionalData);
-        this.eventToSend.addData(decryptedData);
+        this.eventToSend.addData(this.helper.decryptData(singleData));  // Decrypt the data with the helper
     }
 
     /**
      * Delete the record of the database with a specific ID
-     * @param id
+     * @param id The ID of the record to delete
      */
     private void deleteSingleData(int id){
         this.database.deleteRecord(id);
@@ -257,34 +208,23 @@ public class Backend extends Thread {
 
     /**
      * Change the data of a record inside the database
-     * @param data
+     * @param data The updated data to save
      */
     private void changeData(Data data){
-        // Encrypt the data before saving it into the database
-        Data encryptedData = new Data(
-                data.getID(),
-                encryptData(data.getUSERNAME()),
-                encryptData(data.getEMAIL_ADDRESS()),
-                encryptData(data.getPASSWORD()),
-                encryptData(data.getSERVICE()),
-                encryptData(data.getADDITIONAL_DATA())
-        );
-        this.database.changeRecord(encryptedData);
+        this.database.changeRecord(this.helper.encryptData(data));  // Encrypt the data with the helper before saving it
     }
 
     /**
      * Randomically generate a string of a certain length
      */
     private void generateString(){
-        // Read all the properties from the settings file
-        int stringLength = this.settings.readIntSetting("string_generation/length");
-        boolean letters = this.settings.readBooleanSetting("string_generation/letters");
-        boolean numbers = this.settings.readBooleanSetting("string_generation/numbers");
-        boolean special = this.settings.readBooleanSetting("string_generation/special");
+        // Retrieve the properties from the helper
+        ArrayList<Object> configuration = this.helper.getStringGenerationConfiguration();
 
-        char[] stringCharacters = generateStringCharacters(letters, numbers, special);  // Generate the characters
+        char[] stringCharacters = generateStringCharacters((Boolean) configuration.get(1), (Boolean) configuration.get(2),
+                (Boolean) configuration.get(3));  // Generate the characters
 
-        this.eventToSend.addData(this.cryptography.generateString(stringLength, stringCharacters).toString());
+        this.eventToSend.addData(this.cryptography.generateString((int) configuration.getFirst(), stringCharacters).toString());
     }
 
     /**
@@ -376,16 +316,13 @@ public class Backend extends Thread {
      * Retrieve from the settings file all the parameters of the string generation
      */
     private void getStringGenerationConfiguration(){
-        // Read all the properties from the settings file
-        int stringLength = this.settings.readIntSetting("string_generation/length");
-        boolean letters = this.settings.readBooleanSetting("string_generation/letters");
-        boolean numbers = this.settings.readBooleanSetting("string_generation/numbers");
-        boolean special = this.settings.readBooleanSetting("string_generation/special");
+        // Retrieve the properties from the helper
+        ArrayList<Object> configuration = this.helper.getStringGenerationConfiguration();
 
-        this.eventToSend.addData(stringLength);
-        this.eventToSend.addData(letters);
-        this.eventToSend.addData(numbers);
-        this.eventToSend.addData(special);
+        this.eventToSend.addData(configuration.getFirst());
+        this.eventToSend.addData(configuration.get(1));
+        this.eventToSend.addData(configuration.get(2));
+        this.eventToSend.addData(configuration.get(3));
     }
 
 }
