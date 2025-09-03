@@ -198,4 +198,72 @@ public class Database {
 
         return serviceFields;
     }
+
+    /**
+     * Retrieve all the records inside the database
+     * @return ArrayList containing all the data
+     */
+    public ArrayList<Data> getRecords(){
+        ArrayList<Data> records = new ArrayList<>();
+
+        try {
+            // Read all the records
+            PreparedStatement query = this.connection.prepareStatement("SELECT * FROM "+ Database.TABLE_NAME);
+
+            ResultSet queryResult = query.executeQuery();  // Execute the query and retrive all the data
+
+            // Iterate over all the records
+            while (queryResult.next()){
+                int id = queryResult.getInt("id");
+                String username = queryResult.getString("username");
+                String emailAddress = queryResult.getString("email_address");
+                String password = queryResult.getString("password");
+                String service = queryResult.getString("service");
+                String additionalData = queryResult.getString("additional_data");
+
+                // Create a data per record and save it inside the ArrayList
+                Data data = new Data(id, username, emailAddress, password, service, additionalData);
+                records.add(data);
+            }
+
+            // Close the queries
+            query.close();
+            queryResult.close();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return records;
+    }
+
+    /**
+     * Change all the records inside the database
+     * @param records The new records
+     */
+    public void changeRecords(ArrayList<Data> records){
+        try {
+            PreparedStatement query = this.connection.prepareStatement(
+                    "UPDATE "+Database.TABLE_NAME+" SET username=?, email_address=?, password=?, service=?," +
+                            " additional_data=? WHERE id=?"
+            );
+
+            // Iterate over all the data to commit them together
+            for (Data data : records){
+                query.setString(1, data.getUSERNAME());
+                query.setString(2, data.getEMAIL_ADDRESS());
+                query.setString(3, data.getPASSWORD());
+                query.setString(4, data.getSERVICE());
+                query.setString(5, data.getADDITIONAL_DATA());
+                query.setInt(6, data.getID());
+                query.addBatch();  // Add the data to the set of the query
+            }
+
+            query.executeQuery();  // Execute the query
+            query.close();  // Close the query after the execution
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

@@ -88,7 +88,7 @@ public class Backend extends Thread {
     }
 
     private void processEvent(Event event){
-        ArrayList eventData = event.getData();
+        ArrayList<Object> eventData = event.getData();  // Get the data associated with the event
         switch (event.getNAME()){
             case "set-master-password":
                 setMasterPassword((String) eventData.getFirst());
@@ -137,6 +137,10 @@ public class Backend extends Thread {
 
             case "get-string-generation-configuration":
                 getStringGenerationConfiguration();
+                break;
+
+            case "change-master-password":
+                changeMasterPassword((String) eventData.getFirst());
                 break;
         }
     }
@@ -323,6 +327,31 @@ public class Backend extends Thread {
         this.eventToSend.addData(configuration.get(1));
         this.eventToSend.addData(configuration.get(2));
         this.eventToSend.addData(configuration.get(3));
+    }
+
+    /**
+     * Change the current master password by generating again the encrypted data with the new password
+     * @param masterPassword The new master password
+     */
+    private void changeMasterPassword(String masterPassword){
+        ArrayList<Data> oldData = this.database.getRecords();  // Get all the data from the database
+        ArrayList<Data> newData = new ArrayList<>();  // The data re-encrypted with the new master password
+
+        // Decrypt all the data and add it to newData
+        for (Data data : oldData){
+            newData.add(this.helper.decryptData(data));
+        }
+
+        setMasterPassword(masterPassword);  // Set the new master password before re-encrypting the data
+
+        // Iterate over the decrypted data while removing it, and re-adding them as the last element per cycle
+        for (int i = 0; i < newData.size(); i++){
+            Data data = newData.getFirst();  // Always get the first element
+            newData.removeFirst();  // Remove it from the ArrayList
+            newData.addLast(this.helper.encryptData(data));  // Re-encrypt the data and add it as the last element
+        }
+
+        this.database.changeRecords(newData);  // Change all the records of the database with the new ones
     }
 
 }

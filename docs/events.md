@@ -177,3 +177,18 @@ l'esecuzione
 * Descrizione: Conferma la chiusura della comunicazione e interrompe l'esecuzione del thread del backend
 * Dati: -
 * Evento di risposta: -
+
+### change-master-password
+* Nome: `change-master-password`
+* Mittente: Frontend
+* Descrizione: Il frontend richiede di cambiare la master password in uso
+  l'esecuzione
+* Dati: _String_ nuova master password
+* Evento di risposta: `change-master-password-confirm`
+
+### change-master-password-confirm
+* Nome: `change-master-password-confirm`
+* Mittente: Backend
+* Descrizione: Il backend rigenera tutti i dati con la nuova master password
+* Dati: -
+* Evento di risposta: -
