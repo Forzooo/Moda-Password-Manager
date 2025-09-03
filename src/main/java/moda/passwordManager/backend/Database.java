@@ -248,6 +248,9 @@ public class Database {
                             " additional_data=? WHERE id=?"
             );
 
+            // Temporarily set the auto commit to false as we want to execute in a batch group
+            this.connection.setAutoCommit(false);
+
             // Iterate over all the data to commit them together
             for (Data data : records){
                 query.setString(1, data.getUSERNAME());
@@ -259,8 +262,10 @@ public class Database {
                 query.addBatch();  // Add the data to the set of the query
             }
 
-            query.executeQuery();  // Execute the query
+            query.executeBatch();  // Execute the query as a batch to group all the updates
             query.close();  // Close the query after the execution
+
+            this.connection.setAutoCommit(true);  // Set again the auto commit to true
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
