@@ -1,6 +1,7 @@
 package moda.passwordManager.backend;
 
 import java.sql.*;
+import java.util.ArrayList;
 
 public class Database {
 
@@ -34,12 +35,12 @@ public class Database {
 
             query.execute(
                 "CREATE TABLE IF NOT EXISTS "+Database.TABLE_NAME+" (" +
-                        "     id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                        "     username TEXT," +
-                        "     email_address TEXT," +
-                        "     password TEXT," +
-                        "     service TEXT," +
-                        "     additional_data TEXT" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                        "username TEXT," +
+                        "email_address TEXT," +
+                        "password TEXT," +
+                        "service TEXT," +
+                        "additional_data TEXT" +
                         ");"
             );
         } catch (SQLException e) {
@@ -62,10 +63,8 @@ public class Database {
         try {
             // Create an INSERT INTO query
             PreparedStatement query = this.connection.prepareStatement(
-                    "INSERT INTO " + Database.TABLE_NAME + " " +
-                            "(username, email_address, password," +
-                            "service, additional_data)" +
-                            " VALUES (?, ?, ?, ?, ?)"
+                    "INSERT INTO " + Database.TABLE_NAME + " " + "(username, email_address, password, service," +
+                            " additional_data) VALUES (?, ?, ?, ?, ?)"
             );
 
             // Add all the data to the query
@@ -116,7 +115,8 @@ public class Database {
 
         try {
             // Read all the data from a row based on its ID
-            PreparedStatement query = this.connection.prepareStatement("SELECT * FROM "+Database.TABLE_NAME+" WHERE id=?");
+            PreparedStatement query = this.connection.prepareStatement("SELECT * FROM "+Database.TABLE_NAME+
+                    " WHERE id=?");
             query.setInt(1, id);
 
             // Execute the query and retrive the data from the row
@@ -148,7 +148,8 @@ public class Database {
         try {
             // Create the UPDATE query and set its parameters
             PreparedStatement query = this.connection.prepareStatement(
-                    "UPDATE "+Database.TABLE_NAME+" SET username=?, email_address=?, password=?, service=?, additional_data=? WHERE id=?"
+                    "UPDATE "+Database.TABLE_NAME+" SET username=?, email_address=?, password=?, service=?," +
+                            " additional_data=? WHERE id=?"
             );
             query.setString(1, data.getUSERNAME());
             query.setString(2, data.getEMAIL_ADDRESS());
@@ -168,46 +169,26 @@ public class Database {
     }
 
     /**
-     * Get each ID and service field from the table
-     * @return ResultSet Return the result of the query
+     * Retrieve each service field with its ID from the table
+     * @return An ArrayList of Data object
      */
-    public ResultSet getServiceFields(){
-
-        ResultSet queryResult; // The set where are stored the records found in the database
+    public ArrayList<Data> getServiceFields(){
+        ArrayList<Data> serviceFields = new ArrayList<>();  // The service fields are stored here
 
         try {
             PreparedStatement query = this.connection.prepareStatement(
                     "SELECT id, service FROM "+Database.TABLE_NAME
             );
-            queryResult = query.executeQuery();
+            ResultSet queryResult = query.executeQuery();  // The set where are stored the records found in the database
 
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+            while (queryResult.next()){
+                // Retrieve the data for each record and save it inside the ArrayList
+                int id = queryResult.getInt("id");
+                String service = queryResult.getString("service");
 
-        return queryResult;
-    }
-    
-    /**
-     * Return the number of records inside the table
-     * @return Number of records
-     */
-    public int getRecordsNumber(){
-        int rowsNumber = 0;  // Initialize the number of rows to 0
-
-        try {
-            // Create the SELECT query to get the number of rows
-            PreparedStatement query = this.connection.prepareStatement(
-                    "SELECT COUNT(id) FROM " + Database.TABLE_NAME
-            );
-            ResultSet queryResult = query.executeQuery();  // Execute the query
-
-            // If the number of rows exist then move to the next row and read it from the first column
-            if (queryResult.next()){
-                rowsNumber = queryResult.getInt(1);
+                serviceFields.add(new Data(id, service));
             }
 
-            // Close the query
             query.close();
             queryResult.close();
 
@@ -215,6 +196,6 @@ public class Database {
             throw new RuntimeException(e);
         }
 
-        return rowsNumber;
+        return serviceFields;
     }
 }

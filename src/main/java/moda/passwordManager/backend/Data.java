@@ -28,10 +28,10 @@ public class Data {
      */
     public Data(int id, String service){
         this.ID = id;
-        this.SERVICE = service;
         this.USERNAME = null;
         this.EMAIL_ADDRESS = null;
         this.PASSWORD = null;
+        this.SERVICE = service;
         this.ADDITIONAL_DATA = null;
 
     }
@@ -46,7 +46,7 @@ public class Data {
     }
 
     public Data(String username, String emailAddress, String password, String service, String additional){
-        this.ID = -1;
+        this.ID = -1;  // Set the ID as -1 as it won't be used when this constructor is called
         this.USERNAME = username;
         this.EMAIL_ADDRESS = emailAddress;
         this.PASSWORD = password;
