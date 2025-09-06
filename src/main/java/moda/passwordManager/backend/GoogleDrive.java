@@ -24,7 +24,7 @@ import java.util.List;
 public class GoogleDrive {
 
     // The name of the Drive service
-    private static final String APPLICATION_NAME = "Moda Password Manager Drive API";
+    private static final String APPLICATION_NAME = "Moda Password Manager - Google Drive API";
 
     // Path of the directory where the authentication token is stored
     // Authentication tokens are used to not authenticate each time the software is opened
@@ -54,11 +54,13 @@ public class GoogleDrive {
     // Initialize the Drive service
     private void initDriveService(){
         try {
-            NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();  // Create an HTTP transport object to handle all the HTTP operations
+            // Create an HTTP transport object to handle all the HTTP operations
+            NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
             Credential credentials = authentication(httpTransport);  // Retrieve the credentials from the authentication
 
             // Create the Drive object based on the HTTP transport and the credentials retrieved
-            this.drive = new Drive.Builder(httpTransport, this.jsonFactory, credentials).setApplicationName(GoogleDrive.APPLICATION_NAME).build();
+            this.drive = new Drive.Builder(httpTransport, this.jsonFactory, credentials)
+                    .setApplicationName(GoogleDrive.APPLICATION_NAME).build();
 
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
@@ -119,9 +121,7 @@ public class GoogleDrive {
     // Retrieve the ID of the folder of the password manager
     // Returns null only if the directory does not exist
     private String getDirectoryID(){
-
         List<File> folders;  // Define the list of the folders before the try-catch block
-
         try {
             // Look only for folders and with the same name of the directory we are searching the ID, in the root directory
             FileList result = this.drive.files().list()
@@ -147,40 +147,37 @@ public class GoogleDrive {
 
     // Retrieve the ID of the database of the password manager
     // Returns null only if the database does not exist
-//    private String getDatabaseID(){
-//
-//         List<File> files;
-//
-//        try {
-//            FileList result = this.drive.files().list()
-//                    .setQ("name='"+Database.getDbName()+"' and '"+getDirectoryID()+"' in parents")
-//                    .setSpaces("drive")
-//                    .setFields("files(id)")
-//                    .execute();
-//
-//            files = result.getFiles();
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-//
-//        // If the file does not exist return null
-//        if (files.isEmpty()){
-//            return null;
-//        }
-//
-//        return files.getFirst().getId();  // Return the ID of the file
-//
-//    }
+    private String getDatabaseID(String databaseName){
+         List<File> files;
+        try {
+            FileList result = this.drive.files().list()
+                    .setQ("name='"+databaseName+"' and '"+getDirectoryID()+"' in parents")
+                    .setSpaces("drive")
+                    .setFields("files(id)")
+                    .execute();
 
-    /*
+            files = result.getFiles();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // If the file does not exist return null
+        if (files.isEmpty()){
+            return null;
+        }
+
+        return files.getFirst().getId();  // Return the ID of the file
+
+    }
+
     // Upload the database to Drive
-    private void uploadDatabase(){
+    private void uploadDatabase(String databasePath, String databaseName){
         // Create a Java File object with the path of the database
-        java.io.File database = new java.io.File(Database.getDbPath());
+        java.io.File database = new java.io.File(databasePath);
 
         // Create the metadata of the database for the Drive upload
         File databaseMetadata = new File();
-        databaseMetadata.setName(Database.getDbName());
+        databaseMetadata.setName(databaseName);
 
         // Specify that the database has to be uploaded inside the database directory
         databaseMetadata.setParents(Collections.singletonList(getDirectoryID()));
@@ -190,9 +187,9 @@ public class GoogleDrive {
 
         try {
             // Delete the previous database file inside the directory only if the database exists
-            String databaseID = getDatabaseID();
+            String databaseID = getDatabaseID(databaseName);
             if (databaseID != null){
-                this.drive.files().delete(getDatabaseID()).execute();
+                this.drive.files().delete(getDatabaseID(databaseName)).execute();
             }
 
 
@@ -202,20 +199,18 @@ public class GoogleDrive {
             throw new RuntimeException(e);
         }
     }
-    */
 
-    /*
     // Download the database from Drive
-    private void downloadDatabase(){
+    private void downloadDatabase(String databasePath, String databaseName){
         OutputStream outputStream;
         try {
-            outputStream = new FileOutputStream(Database.getDbPath());  // Define the path where the DB will be saved
+            outputStream = new FileOutputStream(databasePath);  // Define the path where the DB will be saved
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
         try {
             // Retrieve the database based on its ID and download it to the local path
-            this.drive.files().get(getDatabaseID()).executeMediaAndDownloadTo(outputStream);
+            this.drive.files().get(getDatabaseID(databaseName)).executeMediaAndDownloadTo(outputStream);
 
             outputStream.flush();  // Clean the buffer of the download
             outputStream.close();  // Close the file to save the changes
@@ -223,35 +218,33 @@ public class GoogleDrive {
             throw new RuntimeException(e);
         }
     }
-     */
 
     // Return the last change made to the database inside the drive
-//    public long getLastChangeDrive(){
-//        File database;
-//
-//        String databaseID = getDatabaseID();  // Get the ID of the database
-//
-//        // If the database does not exist then return 0
-//        if (databaseID == null){
-//            return 0L;
-//        }
-//
-//        try {
-//            // Retrieve from the drive file the last change made to it
-//            database = this.drive.files().get(databaseID)
-//                    .setFields("id, name, modifiedTime")
-//                    .execute();
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-//
-//        return database.getModifiedTime().getValue();  // Return the last change as a long value
-//    }
+    public long getLastChangeDrive(String databaseName){
+        File database;
 
-    /*
+        String databaseID = getDatabaseID(databaseName);  // Get the ID of the database
+
+        // If the database does not exist then return 0
+        if (databaseID == null){
+            return 0L;
+        }
+
+        try {
+            // Retrieve from the drive file the last change made to it
+            database = this.drive.files().get(databaseID)
+                    .setFields("id, name, modifiedTime")
+                    .execute();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return database.getModifiedTime().getValue();  // Return the last change as a long value
+    }
+
     // Return the last change made to the local database file
-    public long getLastChangeLocal(){
-        java.io.File database = new java.io.File(Database.getDbPath());
+    public long getLastChangeLocal(String databasePath){
+        java.io.File database = new java.io.File(databasePath);
 
         long lastChange = database.lastModified();
 
@@ -259,14 +252,13 @@ public class GoogleDrive {
     }
 
     // Check whether the local database is newer than the drive version and synchronize it based on the result obtained
-    public void sync(){
+    public void sync(String databasePath, String databaseName){
 
         // Check if the local database is newer than the drive version
-        if (getLastChangeLocal() > getLastChangeDrive()){
-            uploadDatabase();
+        if (getLastChangeLocal(databasePath) > getLastChangeDrive(databaseName)){
+            uploadDatabase(databasePath, databaseName);
         }else{
-            downloadDatabase();  // Download the database because the drive version is newer
+            downloadDatabase(databasePath, databaseName);  // Download the database because the drive version is newer
         }
     }
-     */
 }

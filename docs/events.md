@@ -192,3 +192,45 @@ l'esecuzione
 * Descrizione: Il backend rigenera tutti i dati con la nuova master password
 * Dati: -
 * Evento di risposta: -
+
+### google-drive-authenticate
+* Nome: `google-drive-authenticate`
+* Mittente: Frontend
+* Descrizione: Invia al Backend il path del file richiesto per l'autenticazione
+* Dati: _String_ path del file "credentials.json"
+* Evento di risposta: `google-drive-authenticate-confirm`
+
+### google-drive-authenticate-confirm
+* Nome: `google-drive-authenticate-confirm`
+* Mittente: Backend
+* Descrizione: Salva il path del file nel file di settings e fa autenticare l'utente
+* Dati: -
+* Evento di risposta: -
+
+### google-drive-synchronize
+* Nome: `google-drive-synchronize`
+* Mittente: Frontend
+* Descrizione: Indica al backend che deve effettuare un sincronizzazione con Google Drive
+* Dati: -
+* Evento di risposta: `google-drive-synchronize-confirm`
+
+### google-drive-synchronize-confirm
+* Nome: `google-drive-synchronize-confirm`
+* Mittente: Backend
+* Descrizione: Viene effettuata una sincronizzazione con Google Drive
+* Dati: -
+* Evento di risposta: -
+
+### enable-google-drive-synchronization
+* Nome: `enable-google-drive-synchronization`
+* Mittente: Frontend
+* Descrizione: Indica al backend che viene abilitata la sincronizzazione automatica ogni 60 secondi
+* Dati: -
+* Evento di risposta: `enable-google-drive-synchronization-confirm`
+
+### enable-google-drive-synchronization-confirm
+* Nome: `enable-google-drive-synchronization-confirm`
+* Mittente: Backend
+* Descrizione: Il backend salva nel file di settings che la sincronizzazione automatica è abilitata
+* Dati: -
+* Evento di risposta: -

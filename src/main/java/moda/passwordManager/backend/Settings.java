@@ -17,7 +17,7 @@ public class Settings {
     private ObjectMapper objectMapper;
 
     public Settings(){
-        this.APPDATA_DIRECTORY_PATH = System.getenv("APPDATA")+"\\Moda\\PasswordManager\\";  // Windows only
+        this.APPDATA_DIRECTORY_PATH = System.getenv("APPDATA")+"\\Moda\\Password-Manager\\";  // Windows only
         this.objectMapper = new ObjectMapper();  // Create the object mapper used to write/read from the settings file
 
         initSettings();
@@ -72,9 +72,15 @@ public class Settings {
             stringGeneration.put("numbers", true);
             stringGeneration.put("special", true);
 
+            // Set the Google Drive properties
+            ObjectNode googleDrive = this.objectMapper.createObjectNode();
+            googleDrive.put("enabled", false);
+            googleDrive.put("automatic_synchronization", false);
+
             // Define the hierarchy of the JSON
             rootNode.put("database", databaseNode);
             rootNode.put("string_generation", stringGeneration);
+            rootNode.put("google_drive", googleDrive);
 
             // Write the default data inside the settings file
             this.objectMapper.writeValue(this.settingsFile, rootNode);
