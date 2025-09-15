@@ -26,12 +26,15 @@ public class GoogleDrive {
     // The name of the Drive service
     private static final String APPLICATION_NAME = "Moda Password Manager - Google Drive API";
 
+    // The absolute path of the directory where all the files related to drive are stored
+    private final String API_DIRECTORY;
+
     // Path of the directory where the authentication token is stored
     // Authentication tokens are used to not authenticate each time the software is opened
-    private static final String TOEKENS_PATH = "tokens";
+    private static final String TOKENS_DIRECTORY_NAME = "tokens";
 
     // Path of the JSON file where there is the API key (inside "/resources")
-    private static final String API_CREDENTIALS_PATH = "/credentials.json";
+    private static final String API_FILE_NAME = "credentials.json";
 
     // Define the scopes of the API
     private static final List<String> SCOPES = Collections.singletonList(DriveScopes.DRIVE_FILE);
@@ -39,20 +42,35 @@ public class GoogleDrive {
     // Define the name of the directory used to store the database inside Drive
     private static final String DIRECTORY_DRIVE_NAME = ".moda";
 
+    private final String API_FILE_PATH;  // The absolute path of the credentials.json file
+    private final String TOKENS_DIRECTORY_PATH;  // The absolute path of the tokes directory
+
     private Drive drive;  // The Google Drive service
     private JsonFactory jsonFactory;  // Used to handle all the data of the JSON
 
-    public GoogleDrive(){
+    public GoogleDrive(String appDataDirectory){
         this.jsonFactory = GsonFactory.getDefaultInstance();
 
-        // TODO: Temporary disabled until proper backend event are defined
-//        initDriveService();
-//
-//        createDirectory();
+        // Set the absolutes paths based on the path of the AppData directory retrieved from the Settings class
+        this.API_DIRECTORY = appDataDirectory+"google-drive\\";
+        this.API_FILE_PATH = API_DIRECTORY+API_FILE_NAME;
+        this.TOKENS_DIRECTORY_PATH = API_DIRECTORY+TOKENS_DIRECTORY_NAME;
+    }
+
+    public String getAPI_DIRECTORY() {
+        return API_DIRECTORY;
+    }
+
+    public String getTOKENS_DIRECTORY_PATH() {
+        return TOKENS_DIRECTORY_PATH;
+    }
+
+    public String getAPI_FILE_PATH() {
+        return this.API_FILE_PATH;
     }
 
     // Initialize the Drive service
-    private void initDriveService(){
+    public void initDriveService(){
         try {
             // Create an HTTP transport object to handle all the HTTP operations
             NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
@@ -74,31 +92,34 @@ public class GoogleDrive {
 
         Credential credential; // Define the credential to be returned before the try-catch block
 
-        // Read the API key from the file
-        InputStream inputStream = getClass().getResourceAsStream(GoogleDrive.API_CREDENTIALS_PATH);
-
         try {
+            // Read the API key from the file
+            InputStream inputStream = new FileInputStream(this.API_FILE_PATH);
+
             // Create the client secrets from the API key
             GoogleClientSecrets googleClientSecrets = GoogleClientSecrets.load(this.jsonFactory, new InputStreamReader(inputStream));
 
             // Create the Authorization Flow used to exchange the authorization code for a token
             GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
                     httpTransport, this.jsonFactory, googleClientSecrets, SCOPES)
-                    .setDataStoreFactory(new FileDataStoreFactory(new java.io.File(GoogleDrive.TOEKENS_PATH)))  // Set the directory where the token will be stored
+                    // Set the directory where the token will be stored
+                    .setDataStoreFactory(new FileDataStoreFactory(new java.io.File(this.TOKENS_DIRECTORY_PATH)))
                     .setAccessType("offline")  // Set the Access Type to offline to have a token that lasts longer
                     .build();
-            LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8888).build();  // Create a local server used for the authentication
+
+            // Create a local server used for the authentication
+            LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8888).build();
             credential = new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
 
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return credential;  // Return the credential given by the OAuth
+        return credential;  // Return the credentials given by the OAuth
 
     }
 
     // Create the Drive directory where the database will be stored
-    private void createDirectory(){
+    public void createDirectory(){
         // If the directory already exist we can skip the creation of it
         if (getDirectoryID() != null){
             return;
@@ -220,7 +241,7 @@ public class GoogleDrive {
     }
 
     // Return the last change made to the database inside the drive
-    public long getLastChangeDrive(String databaseName){
+    private long getLastChangeDrive(String databaseName){
         File database;
 
         String databaseID = getDatabaseID(databaseName);  // Get the ID of the database

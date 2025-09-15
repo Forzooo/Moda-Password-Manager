@@ -2,7 +2,12 @@ package moda.passwordManager.backend;
 
 import moda.passwordManager.communicationHandler.CommunicationHandler;
 import moda.passwordManager.communicationHandler.Event;
+import org.apache.commons.io.FileUtils;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -13,7 +18,7 @@ public class Backend extends Thread {
     // Objects of the backend classes
     private Cryptography cryptography;
     private Database database;
-//    private GoogleDrive googleDrive;  // Disabled until it's fully developed
+    private GoogleDrive googleDrive;
     private Settings settings;
 
     // The CommunicationHandler object used to communicate with the Frontend thread
@@ -34,13 +39,14 @@ public class Backend extends Thread {
         // Initialize all the backend components
         this.settings = new Settings();
         this.cryptography = new Cryptography();
+        this.googleDrive = new GoogleDrive(this.settings.getAPPDATA_DIRECTORY_PATH());
 
         // The path of the database is retrieved from the settings
         this.database = new Database(this.settings.readStringSetting("database/path"));
 
-        this.helper = new BackendHelper(this.cryptography, this.settings);
+        this.helper = new BackendHelper(this.cryptography, this.settings, this.googleDrive);
 
-//        this.googleDrive = new GoogleDrive();  // Disabled until fully developed
+        startGoogleDrive();  // Initialize the connection with Google Drive only if enabled by the user
 
         this.eventToSend = null;
         this.runFlag = true;
@@ -141,6 +147,22 @@ public class Backend extends Thread {
 
             case "change-master-password":
                 changeMasterPassword((String) eventData.getFirst());
+                break;
+
+            case "get-google-drive":
+                getGoogleDrive();
+                break;
+
+            case "get-google-drive-synchronization":
+                getGoogleDriveSynchronization();
+                break;
+
+            case "google-drive-authenticate":
+                authenticateGoogleDrive((String) eventData.getFirst());
+                break;
+
+            case "google-drive-unauthenticate":
+                unauthenticate();
                 break;
         }
     }
@@ -352,6 +374,65 @@ public class Backend extends Thread {
         }
 
         this.database.changeRecords(newData);  // Change all the records of the database with the new ones
+    }
+
+    /**
+     * Retrieve from the settings file whether Google Drive is enabled
+     */
+    private void getGoogleDrive(){
+        // Retrieve from the helper whether Google Drive is enabled
+       this.eventToSend.addData(this.helper.isGoogleDriveEnabled());
+    }
+
+    /**
+     * Retrieve from the settings file whether the automatic synchronization is enabled
+     */
+    private void getGoogleDriveSynchronization(){
+        boolean synchronizationEnabled = this.settings.readBooleanSetting("google_drive/automatic_synchronization");
+        this.eventToSend.addData(synchronizationEnabled);
+    }
+
+    /**
+     * Start the Google Drive communication only if it's enabled in the settings file
+     */
+    private void startGoogleDrive(){
+        if (this.helper.isGoogleDriveEnabled()){
+            this.googleDrive.initDriveService();
+        }
+    }
+
+    /**
+     * Enable in the settings file the Google Drive synchronization and move the user credentials.json into the local
+     * appdata folder, then authenticate the user
+     * @param credentialsPath The path of the credentials.json file
+     */
+    private void authenticateGoogleDrive(String credentialsPath){
+        try {
+            new File(this.googleDrive.getAPI_DIRECTORY()).mkdirs();  // Create the Google Drive dir (skipped if it already exists)
+
+            // Move the file to the directory
+            Files.move(Path.of(credentialsPath), Path.of(this.googleDrive.getAPI_FILE_PATH()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Start the Google Drive communication
+        this.googleDrive.initDriveService();
+        this.googleDrive.createDirectory();
+
+        this.settings.writeSetting("google_drive/enabled", true);  // Set Google Drive to enabled
+    }
+
+    /**
+     * Disable in the settings file the Google Drive synchronization and delete the stored credentials, if there's any
+     */
+    private void unauthenticate(){
+        try {
+            FileUtils.deleteDirectory(new File(this.googleDrive.getTOKENS_DIRECTORY_PATH()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        this.settings.writeSetting("google_drive/enabled", false);
     }
 
 }

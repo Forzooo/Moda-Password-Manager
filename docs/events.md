@@ -193,6 +193,34 @@ l'esecuzione
 * Dati: -
 * Evento di risposta: -
 
+### get-google-drive
+* Nome: `get-google-drive`
+* Mittente: Frontend
+* Descrizione: Richiede al backend la configurazione attuale di google drive
+* Dati: -
+* Evento di risposta: `get-google-drive-confirm`
+
+### get-google-drive-confirm
+* Nome: `get-google-drive-confirm`
+* Mittente: Backend
+* Descrizione: Il backend invia al frontend la configurazione di google drive letta dal file di settings
+* Dati: _boolean_ Stato di google drive
+* Evento di risposta: -
+
+### get-google-drive-synchronization
+* Nome: `get-google-drive-synchronization`
+* Mittente: Frontend
+* Descrizione: Richiede al backend se la sincronizzazione automatica è abilitata
+* Dati: -
+* Evento di risposta: `get-google-drive-synchronization-confirm`
+
+### get-google-drive-synchronization-confirm
+* Nome: `get-google-drive-synchronization-confirm`
+* Mittente: Backend
+* Descrizione: Il backend invia al frontend lo stato della sincronizzazione automatica letto dal file di settings
+* Dati: _boolean_ Stato della sincronizzazione automatica di google drive
+* Evento di risposta: -
+
 ### google-drive-authenticate
 * Nome: `google-drive-authenticate`
 * Mittente: Frontend
@@ -204,6 +232,20 @@ l'esecuzione
 * Nome: `google-drive-authenticate-confirm`
 * Mittente: Backend
 * Descrizione: Salva il path del file nel file di settings e fa autenticare l'utente
+* Dati: -
+* Evento di risposta: -
+
+### google-drive-unauthenticate
+* Nome: `google-drive-unauthenticate`
+* Mittente: Frontend
+* Descrizione: Indica al backend che google drive è da disabilitare
+* Dati: -
+* Evento di risposta: `google-drive-unauthenticate-confirm`
+
+### google-drive-unauthenticate-confirm
+* Nome: `google-drive-unauthenticate-confirm`
+* Mittente: Backend
+* Descrizione: Imposta nel file di settings che google drive è disabilitato
 * Dati: -
 * Evento di risposta: -
 
