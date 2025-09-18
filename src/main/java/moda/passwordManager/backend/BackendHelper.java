@@ -100,4 +100,12 @@ public class BackendHelper {
     public boolean isGoogleDriveEnabled(){
         return this.settings.readBooleanSetting("google_drive/enabled");
     }
+
+    /**
+     * Retrieve from the settings file the path of the database
+     * @return String that indicates the path of the database
+     */
+    public String getDatabasePath(){
+        return this.settings.readStringSetting("database/path");  // Read the path from settings
+    }
 }

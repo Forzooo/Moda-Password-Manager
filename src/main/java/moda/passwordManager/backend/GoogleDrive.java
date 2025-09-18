@@ -40,7 +40,8 @@ public class GoogleDrive {
     private static final List<String> SCOPES = Collections.singletonList(DriveScopes.DRIVE_FILE);
 
     // Define the name of the directory used to store the database inside Drive
-    private static final String DIRECTORY_DRIVE_NAME = ".moda";
+    private static final String ROOT_DIRECTORY = ".moda";
+    private static final String PASSWORD_MANAGER_DIRECTORY = "password-manager";
 
     private final String API_FILE_PATH;  // The absolute path of the credentials.json file
     private final String TOKENS_DIRECTORY_PATH;  // The absolute path of the tokes directory
@@ -69,8 +70,17 @@ public class GoogleDrive {
         return this.API_FILE_PATH;
     }
 
+    /**
+     * Initialize the Google Drive operations
+     */
+    public void init(){
+        initDriveService();
+        createRootDirectory();
+        createPasswordManagerDirectory();
+    }
+
     // Initialize the Drive service
-    public void initDriveService(){
+    private void initDriveService(){
         try {
             // Create an HTTP transport object to handle all the HTTP operations
             NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
@@ -119,15 +129,15 @@ public class GoogleDrive {
     }
 
     // Create the Drive directory where the database will be stored
-    public void createDirectory(){
+    private void createRootDirectory(){
         // If the directory already exist we can skip the creation of it
-        if (getDirectoryID() != null){
+        if (getRootDirectoryID() != null){
             return;
         }
 
         // Define the new directory
         File directoryMetadata = new File();
-        directoryMetadata.setName(GoogleDrive.DIRECTORY_DRIVE_NAME);
+        directoryMetadata.setName(ROOT_DIRECTORY);
         directoryMetadata.setMimeType("application/vnd.google-apps.folder");
 
         // Create the directory
@@ -139,14 +149,62 @@ public class GoogleDrive {
 
     }
 
-    // Retrieve the ID of the folder of the password manager
-    // Returns null only if the directory does not exist
-    private String getDirectoryID(){
+    private void createPasswordManagerDirectory(){
+        // If the directory already exist we can skip the creation of it
+        if (getPasswordManagerDirectoryID() != null){
+            return;
+        }
+
+        // Define the new directory
+        File directoryMetadata = new File();
+        directoryMetadata.setName(PASSWORD_MANAGER_DIRECTORY);
+        directoryMetadata.setMimeType("application/vnd.google-apps.folder");
+        directoryMetadata.setParents(Collections.singletonList(getRootDirectoryID()));
+
+        // Create the directory
+        try {
+            this.drive.files().create(directoryMetadata).setFields("id").execute();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    /**
+     * Retrieve the ID of the root directory (".moda") from Google Drive
+     * @return String containing the ID if exists, null otherwise
+     */
+    private String getRootDirectoryID(){
         List<File> folders;  // Define the list of the folders before the try-catch block
         try {
             // Look only for folders and with the same name of the directory we are searching the ID, in the root directory
             FileList result = this.drive.files().list()
-                    .setQ("mimeType='application/vnd.google-apps.folder' and name='" + GoogleDrive.DIRECTORY_DRIVE_NAME + "'")
+                    .setQ("mimeType='application/vnd.google-apps.folder' and name='" + ROOT_DIRECTORY + "'")
+                    .setSpaces("drive")
+                    .setFields("files(id, name)")
+                    .execute();
+
+            folders = result.getFiles();  // Get the folders from the result
+
+            // If the folder does not exist return null
+            if (folders.isEmpty()){
+                return null;
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Return the ID of the directory
+        return folders.getFirst().getId();
+    }
+
+    private String getPasswordManagerDirectoryID(){
+        List<File> folders;  // Define the list of the folders before the try-catch block
+        try {
+            // Look only for folders and with the same name of the directory we are searching the ID, in the .moda
+            FileList result = this.drive.files().list()
+                    .setQ("mimeType='application/vnd.google-apps.folder' and name='" + PASSWORD_MANAGER_DIRECTORY+ "'")
                     .setSpaces("drive")
                     .setFields("files(id, name)")
                     .execute();
@@ -172,7 +230,7 @@ public class GoogleDrive {
          List<File> files;
         try {
             FileList result = this.drive.files().list()
-                    .setQ("name='"+databaseName+"' and '"+getDirectoryID()+"' in parents")
+                    .setQ("name='"+databaseName+"' and '"+getPasswordManagerDirectoryID()+"' in parents")
                     .setSpaces("drive")
                     .setFields("files(id)")
                     .execute();
@@ -201,7 +259,7 @@ public class GoogleDrive {
         databaseMetadata.setName(databaseName);
 
         // Specify that the database has to be uploaded inside the database directory
-        databaseMetadata.setParents(Collections.singletonList(getDirectoryID()));
+        databaseMetadata.setParents(Collections.singletonList(getPasswordManagerDirectoryID()));
 
         // Specify how the file should be sent
         FileContent fileContent = new FileContent("application/octet-stream", database);
@@ -264,7 +322,7 @@ public class GoogleDrive {
     }
 
     // Return the last change made to the local database file
-    public long getLastChangeLocal(String databasePath){
+    private long getLastChangeLocal(String databasePath){
         java.io.File database = new java.io.File(databasePath);
 
         long lastChange = database.lastModified();
@@ -274,7 +332,6 @@ public class GoogleDrive {
 
     // Check whether the local database is newer than the drive version and synchronize it based on the result obtained
     public void sync(String databasePath, String databaseName){
-
         // Check if the local database is newer than the drive version
         if (getLastChangeLocal(databasePath) > getLastChangeDrive(databaseName)){
             uploadDatabase(databasePath, databaseName);

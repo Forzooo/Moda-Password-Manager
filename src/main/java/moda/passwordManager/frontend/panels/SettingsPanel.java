@@ -280,6 +280,13 @@ public class SettingsPanel extends JPanel {
                 disableGoogleDrive();
             }
         });
+
+        this.synchronizeGoogleDriveButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                synchronizeGoogleDrive();
+            }
+        });
     }
 
     /**
@@ -366,4 +373,11 @@ public class SettingsPanel extends JPanel {
         this.enableGoogleDriveButton.setVisible(true);  // Enable the button to allow the user to authenticate
         this.disableGoogleDriveButton.setVisible(false);  // Disable the button to as the user is already unauthenticated
     }
+
+    private void synchronizeGoogleDrive(){
+        Event event = new Event("google-drive-synchronize");
+        this.communicationHandler.send(event);
+        this.communicationHandler.receive();  // Wait for the end of the synchronization
+    }
+
 }

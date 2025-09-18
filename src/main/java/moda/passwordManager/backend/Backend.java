@@ -162,7 +162,11 @@ public class Backend extends Thread {
                 break;
 
             case "google-drive-unauthenticate":
-                unauthenticate();
+                unauthenticateGoogleDrive();
+                break;
+
+            case "google-drive-synchronize":
+                synchronizeGoogleDrive();
                 break;
         }
     }
@@ -334,8 +338,7 @@ public class Backend extends Thread {
      * Retrieve the path of the database current in use
      */
     private void getDatabasePath(){
-        String databasePath = this.settings.readStringSetting("database/path");  // Read the path from settings
-        this.eventToSend.addData(databasePath);  // Add the path to the data to send
+        this.eventToSend.addData(this.helper.getDatabasePath());  // Add the path to the data to send
     }
 
     /**
@@ -397,7 +400,7 @@ public class Backend extends Thread {
      */
     private void startGoogleDrive(){
         if (this.helper.isGoogleDriveEnabled()){
-            this.googleDrive.initDriveService();
+            this.googleDrive.init();
         }
     }
 
@@ -416,23 +419,27 @@ public class Backend extends Thread {
             throw new RuntimeException(e);
         }
 
-        // Start the Google Drive communication
-        this.googleDrive.initDriveService();
-        this.googleDrive.createDirectory();
-
+        this.googleDrive.init();  // Start the Google Drive communication
         this.settings.writeSetting("google_drive/enabled", true);  // Set Google Drive to enabled
     }
 
     /**
      * Disable in the settings file the Google Drive synchronization and delete the stored credentials, if there's any
      */
-    private void unauthenticate(){
+    private void unauthenticateGoogleDrive(){
         try {
             FileUtils.deleteDirectory(new File(this.googleDrive.getTOKENS_DIRECTORY_PATH()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         this.settings.writeSetting("google_drive/enabled", false);
+    }
+
+    /**
+     * Synchronize the database with Google Drive
+     */
+    private void synchronizeGoogleDrive(){
+        this.googleDrive.sync(this.helper.getDatabasePath(), this.database.getDatabaseName());
     }
 
 }
