@@ -48,6 +48,16 @@ public class Database {
         }
     }
 
+    /**
+     * Retrieve the name of the database, including the file extension, from the database path
+     * @return String containing the name of the current database
+     */
+    public String getDatabaseName(){
+        // The name of the database is gotten from the last slash of the path, and the +1 is required to
+        // remove the slash from the name
+        return this.databasePath.substring(this.databasePath.lastIndexOf("\\")+1);
+    }
+
     public void changeDatabase(String databasePath){
         this.databasePath = databasePath; // Set the new path of the database
         initConnection();  // Reinitialize the connection

@@ -9,10 +9,12 @@ public class BackendHelper {
 
     private Cryptography cryptography;
     private Settings settings;
+    private GoogleDrive googleDrive;
 
-    public BackendHelper(Cryptography cryptography, Settings settings){
+    public BackendHelper(Cryptography cryptography, Settings settings, GoogleDrive googleDrive){
         this.cryptography = cryptography;
         this.settings = settings;
+        this.googleDrive = googleDrive;
     }
 
     /**
@@ -91,4 +93,19 @@ public class BackendHelper {
         return stringGeneration;
     }
 
+    /**
+     * Retrieve from the settings file whether Google Drive has been enabled
+     * @return Boolean that indicates the state of Google Drive
+     */
+    public boolean isGoogleDriveEnabled(){
+        return this.settings.readBooleanSetting("google_drive/enabled");
+    }
+
+    /**
+     * Retrieve from the settings file the path of the database
+     * @return String that indicates the path of the database
+     */
+    public String getDatabasePath(){
+        return this.settings.readStringSetting("database/path");  // Read the path from settings
+    }
 }

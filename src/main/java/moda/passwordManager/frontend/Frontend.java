@@ -25,8 +25,7 @@ public class Frontend extends JPanel implements ActionListener {
 
     // Define the Scheduled Executor Service and its delay used to perform background tasks
     private ScheduledExecutorService executorService;
-    private final static int INITIAL_DELAY = 1500;  // The delay before starting to execute any task
-    private final static int EXECUTOR_DELAY = 10000;  // The delay between each cycle of tasks to perform
+    private final static int INITIAL_DELAY = 5;  // The delay, in seconds, before starting to execute any task
 
     // The Exception handler that performs tasks about exceptions
     private ScheduledExecutorService exceptionsExecutorService;
@@ -116,7 +115,8 @@ public class Frontend extends JPanel implements ActionListener {
     private void initExecutorService(){
         // Create a single thread for the periodic execution of methods
         this.executorService = Executors.newSingleThreadScheduledExecutor();
-        this.executorService.scheduleAtFixedRate(this::updateUserData, INITIAL_DELAY, EXECUTOR_DELAY, TimeUnit.MILLISECONDS);
+        this.executorService.scheduleAtFixedRate(this::updateUserData, INITIAL_DELAY, 10, TimeUnit.SECONDS);
+        this.executorService.scheduleAtFixedRate(this::synchronizeGoogleDrive, INITIAL_DELAY, 60, TimeUnit.SECONDS);
     }
 
     /**
@@ -213,6 +213,24 @@ public class Frontend extends JPanel implements ActionListener {
      */
     private void updateUserData(){
         this.showDataPanel.updateUserData();
+    }
+
+    private void synchronizeGoogleDrive(){
+        // Check each time whether the automatic synchronization is enabled before synchronizing
+        Event getSynchronization = new Event("get-google-drive-synchronization");
+        this.communicationHandler.send(getSynchronization);
+        getSynchronization = this.communicationHandler.receive();  // Wait for the response from the backend
+        boolean enabled = (boolean) getSynchronization.getData().getFirst();
+
+        // Don't synchronize if the automatic synchronization it's not enabled
+        if (!enabled){
+            return;
+        }
+
+        // Synchronize with Google Drive
+        Event synchronize = new Event("google-drive-synchronize");
+        this.communicationHandler.send(synchronize);
+        this.communicationHandler.receive();
     }
 
     /**

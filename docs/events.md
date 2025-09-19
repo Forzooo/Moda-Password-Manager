@@ -192,3 +192,101 @@ l'esecuzione
 * Descrizione: Il backend rigenera tutti i dati con la nuova master password
 * Dati: -
 * Evento di risposta: -
+
+### get-google-drive
+* Nome: `get-google-drive`
+* Mittente: Frontend
+* Descrizione: Richiede al backend la configurazione attuale di google drive
+* Dati: -
+* Evento di risposta: `get-google-drive-confirm`
+
+### get-google-drive-confirm
+* Nome: `get-google-drive-confirm`
+* Mittente: Backend
+* Descrizione: Il backend invia al frontend la configurazione di google drive letta dal file di settings
+* Dati: _boolean_ Stato di google drive
+* Evento di risposta: -
+
+### get-google-drive-synchronization
+* Nome: `get-google-drive-synchronization`
+* Mittente: Frontend
+* Descrizione: Richiede al backend se la sincronizzazione automatica è abilitata
+* Dati: -
+* Evento di risposta: `get-google-drive-synchronization-confirm`
+
+### get-google-drive-synchronization-confirm
+* Nome: `get-google-drive-synchronization-confirm`
+* Mittente: Backend
+* Descrizione: Il backend invia al frontend lo stato della sincronizzazione automatica letto dal file di settings
+* Dati: _boolean_ Stato della sincronizzazione automatica di google drive
+* Evento di risposta: -
+
+### google-drive-authenticate
+* Nome: `google-drive-authenticate`
+* Mittente: Frontend
+* Descrizione: Invia al Backend il path del file richiesto per l'autenticazione
+* Dati: _String_ path del file "credentials.json"
+* Evento di risposta: `google-drive-authenticate-confirm`
+
+### google-drive-authenticate-confirm
+* Nome: `google-drive-authenticate-confirm`
+* Mittente: Backend
+* Descrizione: Salva il path del file nel file di settings e fa autenticare l'utente
+* Dati: -
+* Evento di risposta: -
+
+### google-drive-unauthenticate
+* Nome: `google-drive-unauthenticate`
+* Mittente: Frontend
+* Descrizione: Indica al backend che google drive è da disabilitare
+* Dati: -
+* Evento di risposta: `google-drive-unauthenticate-confirm`
+
+### google-drive-unauthenticate-confirm
+* Nome: `google-drive-unauthenticate-confirm`
+* Mittente: Backend
+* Descrizione: Imposta nel file di settings che google drive è disabilitato
+* Dati: -
+* Evento di risposta: -
+
+### google-drive-synchronize
+* Nome: `google-drive-synchronize`
+* Mittente: Frontend
+* Descrizione: Indica al backend che deve effettuare un sincronizzazione con Google Drive
+* Dati: -
+* Evento di risposta: `google-drive-synchronize-confirm`
+
+### google-drive-synchronize-confirm
+* Nome: `google-drive-synchronize-confirm`
+* Mittente: Backend
+* Descrizione: Viene effettuata una sincronizzazione con Google Drive
+* Dati: -
+* Evento di risposta: -
+
+### enable-google-drive-synchronization
+* Nome: `enable-google-drive-synchronization`
+* Mittente: Frontend
+* Descrizione: Indica al backend che viene abilitata la sincronizzazione automatica ogni 60 secondi
+* Dati: -
+* Evento di risposta: `enable-google-drive-synchronization-confirm`
+
+### enable-google-drive-synchronization-confirm
+* Nome: `enable-google-drive-synchronization-confirm`
+* Mittente: Backend
+* Descrizione: Il backend salva nel file di settings che la sincronizzazione automatica è abilitata
+* Dati: -
+* Evento di risposta: -
+
+### disable-google-drive-synchronization
+* Nome: `disable-google-drive-synchronization`
+* Mittente: Frontend
+* Descrizione: Indica al backend che viene disabilitata la sincronizzazione automatica
+* Dati: -
+* Evento di risposta: `disable-google-drive-synchronization-confirm`
+
+### disable-google-drive-synchronization-confirm
+* Nome: `disable-google-drive-synchronization-confirm`
+* Mittente: Backend
+* Descrizione: Il backend salva nel file di settings che la sincronizzazione automatica è disabilitata
+* Dati: -
+* Evento di risposta: -
