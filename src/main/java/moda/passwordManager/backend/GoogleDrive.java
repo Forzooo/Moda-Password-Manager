@@ -49,8 +49,16 @@ public class GoogleDrive {
     private Drive drive;  // The Google Drive service
     private JsonFactory jsonFactory;  // Used to handle all the data of the JSON
 
+    // The IDs are set as attributes to reduce the number of requests made to the API
+    private String rootDirectoryID;
+    private String passwordManagerDirectoryID;
+
     public GoogleDrive(String appDataDirectory){
         this.jsonFactory = GsonFactory.getDefaultInstance();
+
+        // The ID of the directories are set in the init method
+        this.rootDirectoryID = null;
+        this.passwordManagerDirectoryID = null;
 
         // Set the absolutes paths based on the path of the AppData directory retrieved from the Settings class
         this.API_DIRECTORY = appDataDirectory+"google-drive\\";
@@ -71,15 +79,19 @@ public class GoogleDrive {
     }
 
     /**
-     * Initialize the Google Drive operations
+     * Initialize the Google Drive modules
      */
     public void init(){
         initDriveService();
+        this.rootDirectoryID = retrieveRootDirectoryID();
+        this.passwordManagerDirectoryID = retrievePasswordManagerDirectoryID();
         createRootDirectory();
         createPasswordManagerDirectory();
     }
 
-    // Initialize the Drive service
+    /**
+     * Initialize the connection with the Drive API
+     */
     private void initDriveService(){
         try {
             // Create an HTTP transport object to handle all the HTTP operations
@@ -90,14 +102,15 @@ public class GoogleDrive {
             this.drive = new Drive.Builder(httpTransport, this.jsonFactory, credentials)
                     .setApplicationName(GoogleDrive.APPLICATION_NAME).build();
 
-        } catch (GeneralSecurityException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
+        } catch (GeneralSecurityException | IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    // Authorize the Password Manager using OAuth 2.0 and return the credentials
+    /**
+     * Authorize the Password Manager using OAuth and return the credentials
+     * @return User credentials
+     */
     private Credential authentication(NetHttpTransport httpTransport){
 
         Credential credential; // Define the credential to be returned before the try-catch block
@@ -128,10 +141,12 @@ public class GoogleDrive {
 
     }
 
-    // Create the Drive directory where the database will be stored
+    /**
+     * Create the ".moda" directory inside the root of Drive
+     */
     private void createRootDirectory(){
         // If the directory already exist we can skip the creation of it
-        if (getRootDirectoryID() != null){
+        if (this.rootDirectoryID != null){
             return;
         }
 
@@ -147,11 +162,15 @@ public class GoogleDrive {
             throw new RuntimeException(e);
         }
 
+        this.rootDirectoryID = retrieveRootDirectoryID();  // Retrieve the ID of the root directory
     }
 
+    /**
+     * Create the "Password-Manager" directory inside the ".moda" directory
+     */
     private void createPasswordManagerDirectory(){
         // If the directory already exist we can skip the creation of it
-        if (getPasswordManagerDirectoryID() != null){
+        if (this.passwordManagerDirectoryID != null){
             return;
         }
 
@@ -159,7 +178,7 @@ public class GoogleDrive {
         File directoryMetadata = new File();
         directoryMetadata.setName(PASSWORD_MANAGER_DIRECTORY);
         directoryMetadata.setMimeType("application/vnd.google-apps.folder");
-        directoryMetadata.setParents(Collections.singletonList(getRootDirectoryID()));
+        directoryMetadata.setParents(Collections.singletonList(this.rootDirectoryID));
 
         // Create the directory
         try {
@@ -168,13 +187,15 @@ public class GoogleDrive {
             throw new RuntimeException(e);
         }
 
+        this.passwordManagerDirectoryID = this.retrievePasswordManagerDirectoryID();  // Retrieve the ID of the dir
+
     }
 
     /**
      * Retrieve the ID of the root directory (".moda") from Google Drive
      * @return String containing the ID if exists, null otherwise
      */
-    private String getRootDirectoryID(){
+    private String retrieveRootDirectoryID(){
         List<File> folders;  // Define the list of the folders before the try-catch block
         try {
             // Look only for folders and with the same name of the directory we are searching the ID, in the root directory
@@ -199,7 +220,11 @@ public class GoogleDrive {
         return folders.getFirst().getId();
     }
 
-    private String getPasswordManagerDirectoryID(){
+    /**
+     * Retrieve the ID of the "Password-Manager" from Google Drive
+     * @return String containing the ID if exists, null otherwise
+     */
+    private String retrievePasswordManagerDirectoryID(){
         List<File> folders;  // Define the list of the folders before the try-catch block
         try {
             // Look only for folders and with the same name of the directory we are searching the ID, in the .moda
@@ -224,13 +249,16 @@ public class GoogleDrive {
         return folders.getFirst().getId();
     }
 
-    // Retrieve the ID of the database of the password manager
-    // Returns null only if the database does not exist
+    /**
+     * Retrieve the ID of the current database in use
+     * @param databaseName The name of the database in use
+     * @return ID of the database if it exists, null otherwise
+     */
     private String getDatabaseID(String databaseName){
          List<File> files;
         try {
             FileList result = this.drive.files().list()
-                    .setQ("name='"+databaseName+"' and '"+getPasswordManagerDirectoryID()+"' in parents")
+                    .setQ("name='"+databaseName+"' and '"+this.passwordManagerDirectoryID+"' in parents")
                     .setSpaces("drive")
                     .setFields("files(id)")
                     .execute();
@@ -249,7 +277,11 @@ public class GoogleDrive {
 
     }
 
-    // Upload the database to Drive
+    /**
+     * Upload the current database in use to the Drive folder
+     * @param databasePath The path of the database in use
+     * @param databaseName The name of the database in use
+     */
     private void uploadDatabase(String databasePath, String databaseName){
         // Create a Java File object with the path of the database
         java.io.File database = new java.io.File(databasePath);
@@ -259,7 +291,7 @@ public class GoogleDrive {
         databaseMetadata.setName(databaseName);
 
         // Specify that the database has to be uploaded inside the database directory
-        databaseMetadata.setParents(Collections.singletonList(getPasswordManagerDirectoryID()));
+        databaseMetadata.setParents(Collections.singletonList(this.passwordManagerDirectoryID));
 
         // Specify how the file should be sent
         FileContent fileContent = new FileContent("application/octet-stream", database);
@@ -279,7 +311,11 @@ public class GoogleDrive {
         }
     }
 
-    // Download the database from Drive
+    /**
+     * Download the database from Drive by its name
+     * @param databasePath The path where the database will be saved
+     * @param databaseName The name of the database that will be downloaded
+     */
     private void downloadDatabase(String databasePath, String databaseName){
         OutputStream outputStream;
         try {
@@ -299,6 +335,12 @@ public class GoogleDrive {
     }
 
     // Return the last change made to the database inside the drive
+
+    /**
+     * Get the last change of the database in Google Drive
+     * @param databaseName The name of the database
+     * @return The last change to the database encoded in long unit
+     */
     private long getLastChangeDrive(String databaseName){
         File database;
 
@@ -321,16 +363,23 @@ public class GoogleDrive {
         return database.getModifiedTime().getValue();  // Return the last change as a long value
     }
 
-    // Return the last change made to the local database file
+    /**
+     * Get the latest change made to the local database
+     * @param databasePath The path of the database
+     * @return The last change to the database encoded in long unit
+     */
     private long getLastChangeLocal(String databasePath){
         java.io.File database = new java.io.File(databasePath);
-
-        long lastChange = database.lastModified();
-
-        return lastChange;  // Return the last change as a long value
+        return database.lastModified();  // Return the last change as a long value
     }
 
     // Check whether the local database is newer than the drive version and synchronize it based on the result obtained
+
+    /**
+     * Synchronize the current database and download/upload it based on the last change made
+     * @param databasePath The path of the database in use
+     * @param databaseName The name of the database in use
+     */
     public void sync(String databasePath, String databaseName){
         // Check if the local database is newer than the drive version
         if (getLastChangeLocal(databasePath) > getLastChangeDrive(databaseName)){

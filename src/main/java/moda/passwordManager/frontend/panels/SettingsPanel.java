@@ -133,9 +133,9 @@ public class SettingsPanel extends JPanel {
 
         // Google Drive section
         JPanel googleDrivePanel = new JPanel();
-        masterPasswordPanel.setBackground(Color.white);
-        masterPasswordPanel.setPreferredSize(new Dimension(500, 100));
-        masterPasswordPanel.setLayout(new FlowLayout());
+        googleDrivePanel.setBackground(Color.white);
+        googleDrivePanel.setPreferredSize(new Dimension(500, 100));
+        googleDrivePanel.setLayout(new FlowLayout());
 
         this.enableGoogleDriveButton = new JButton();
         this.enableGoogleDriveButton.setText("Enable Google Drive");
@@ -150,16 +150,19 @@ public class SettingsPanel extends JPanel {
         this.synchronizeGoogleDriveButton = new JButton();
         this.synchronizeGoogleDriveButton.setText("Synchronize");
         this.synchronizeGoogleDriveButton.setMaximumSize(buttonDimension);
+        this.synchronizeGoogleDriveButton.setEnabled(false);  // The sync is allowed only when Google Drive is enabled
 
         this.enableAutomaticSynchronizationButton = new JButton();
         this.enableAutomaticSynchronizationButton.setText("Enable automatic synchronization");
         this.enableAutomaticSynchronizationButton.setMaximumSize(buttonDimension);
         this.enableAutomaticSynchronizationButton.setVisible(false);  // The visibility it's decided later
+        this.enableAutomaticSynchronizationButton.setEnabled(false);  // The sync is allowed only when Google Drive is enabled
 
         this.disableAutomaticSynchronizationButton = new JButton();
         this.disableAutomaticSynchronizationButton.setText("Disable automatic synchronization");
         this.disableAutomaticSynchronizationButton.setMaximumSize(buttonDimension);
         this.disableAutomaticSynchronizationButton.setVisible(false);  // The visibility it's decided later
+        this.disableAutomaticSynchronizationButton.setEnabled(false);  // The sync is allowed only when Google Drive is enabled
 
         // Set the initial visibilities of the buttons that depend on the settings file
         setGoogleDriveVisibility();
@@ -269,6 +272,7 @@ public class SettingsPanel extends JPanel {
                     // Check whether the database has been chosen
                     if (!path.isEmpty()){
                         enableGoogleDrive(path);
+                        setGoogleDriveVisibility();
                     }
                 }
             }
@@ -278,6 +282,7 @@ public class SettingsPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 disableGoogleDrive();
+                setGoogleDriveVisibility();
             }
         });
 
@@ -285,6 +290,22 @@ public class SettingsPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 synchronizeGoogleDrive();
+            }
+        });
+
+        this.enableAutomaticSynchronizationButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                enableAutomaticSynchronization();
+                setGoogleDriveAutomaticSynchronizationVisibility();
+            }
+        });
+
+        this.disableAutomaticSynchronizationButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                disableAutomaticSynchronization();
+                setGoogleDriveAutomaticSynchronizationVisibility();
             }
         });
     }
@@ -313,9 +334,9 @@ public class SettingsPanel extends JPanel {
 
     /**
      * Retrieve from the settings file the current configuration of Google Drive to set the visibilities of the
-     * buttons that enable and disable it
+     * buttons that enable and disable it, and enable/disable the buttons for the synchronization
      */
-   private void setGoogleDriveVisibility(){
+    private void setGoogleDriveVisibility(){
        // Retrieve from the settings file the configuration of Google Drive visibility
         Event event = new Event("get-google-drive");
         this.communicationHandler.send(event);
@@ -325,9 +346,16 @@ public class SettingsPanel extends JPanel {
         if (!visibility){
             this.enableGoogleDriveButton.setVisible(true);
             this.disableGoogleDriveButton.setVisible(false);
+            this.synchronizeGoogleDriveButton.setEnabled(false);
+            this.enableAutomaticSynchronizationButton.setEnabled(false);
+            this.disableAutomaticSynchronizationButton.setEnabled(false);
         }else{
             this.enableGoogleDriveButton.setVisible(false);
             this.disableGoogleDriveButton.setVisible(true);
+            this.synchronizeGoogleDriveButton.setEnabled(true);
+            this.enableAutomaticSynchronizationButton.setEnabled(true);
+            this.disableAutomaticSynchronizationButton.setEnabled(true);
+
         }
    }
 
@@ -359,8 +387,6 @@ public class SettingsPanel extends JPanel {
         Event event = new Event("google-drive-authenticate", credentialsPath);
         this.communicationHandler.send(event);
         this.communicationHandler.receive();  // Wait for the end of the operations before disabling the button
-        this.enableGoogleDriveButton.setVisible(false);  // Disable the button as the user is already authenticated
-        this.disableGoogleDriveButton.setVisible(true);  // Enable the button to allow the user to unauthenticate
     }
 
     /**
@@ -370,14 +396,33 @@ public class SettingsPanel extends JPanel {
         Event event = new Event("google-drive-unauthenticate");
         this.communicationHandler.send(event);
         this.communicationHandler.receive();  // Wait for the end of operations before disabling the button
-        this.enableGoogleDriveButton.setVisible(true);  // Enable the button to allow the user to authenticate
-        this.disableGoogleDriveButton.setVisible(false);  // Disable the button to as the user is already unauthenticated
     }
 
+    /**
+     * Perform a synchronization with Google Drive
+     */
     private void synchronizeGoogleDrive(){
         Event event = new Event("google-drive-synchronize");
         this.communicationHandler.send(event);
         this.communicationHandler.receive();  // Wait for the end of the synchronization
+    }
+
+    /**
+     * Enable the automatic synchronization of Google Drive
+     */
+    private void enableAutomaticSynchronization(){
+        Event event = new Event("enable-google-drive-synchronization");
+        this.communicationHandler.send(event);
+        this.communicationHandler.receive();
+    }
+
+    /**
+     * Disable the automatic synchronization of Google Drive
+     */
+    private void disableAutomaticSynchronization(){
+        Event event = new Event("disable-google-drive-synchronization");
+        this.communicationHandler.send(event);
+        this.communicationHandler.receive();
     }
 
 }

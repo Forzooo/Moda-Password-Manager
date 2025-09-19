@@ -168,6 +168,14 @@ public class Backend extends Thread {
             case "google-drive-synchronize":
                 synchronizeGoogleDrive();
                 break;
+
+            case "enable-google-drive-synchronization":
+                enableGoogleDriveSynchronization();
+                break;
+
+            case "disable-google-drive-synchronization":
+                disableGoogleDriveSynchronization();
+                break;
         }
     }
 
@@ -442,4 +450,17 @@ public class Backend extends Thread {
         this.googleDrive.sync(this.helper.getDatabasePath(), this.database.getDatabaseName());
     }
 
+    /**
+     * Enable the Google Drive automatic synchronization
+     */
+    private void enableGoogleDriveSynchronization(){
+        this.settings.writeSetting("google_drive/automatic_synchronization", true);
+    }
+
+    /**
+     * Disable the Google Drive automatic synchronization
+     */
+    private void disableGoogleDriveSynchronization(){
+        this.settings.writeSetting("google_drive/automatic_synchronization", false);
+    }
 }

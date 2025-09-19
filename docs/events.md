@@ -276,3 +276,17 @@ l'esecuzione
 * Descrizione: Il backend salva nel file di settings che la sincronizzazione automatica è abilitata
 * Dati: -
 * Evento di risposta: -
+
+### disable-google-drive-synchronization
+* Nome: `disable-google-drive-synchronization`
+* Mittente: Frontend
+* Descrizione: Indica al backend che viene disabilitata la sincronizzazione automatica
+* Dati: -
+* Evento di risposta: `disable-google-drive-synchronization-confirm`
+
+### disable-google-drive-synchronization-confirm
+* Nome: `disable-google-drive-synchronization-confirm`
+* Mittente: Backend
+* Descrizione: Il backend salva nel file di settings che la sincronizzazione automatica è disabilitata
+* Dati: -
+* Evento di risposta: -
