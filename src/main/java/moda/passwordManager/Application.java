@@ -52,7 +52,6 @@ public class Application extends JFrame {
 
         Backend backend = new Backend(backendQueue, frontendQueue, backendExceptionQueue, frontendExceptionQueue);
         // Set the handler from the object itself otherwise it would use the one from the Frontend
-        // TODO: Find a better way to set it: from inside the Backend class itself
         backend.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread t, Throwable e) {

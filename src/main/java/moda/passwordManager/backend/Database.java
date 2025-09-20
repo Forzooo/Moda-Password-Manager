@@ -1,6 +1,7 @@
 package moda.passwordManager.backend;
 
 import java.sql.*;
+import java.util.ArrayList;
 
 public class Database {
 
@@ -34,17 +35,27 @@ public class Database {
 
             query.execute(
                 "CREATE TABLE IF NOT EXISTS "+Database.TABLE_NAME+" (" +
-                        "     id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                        "     username TEXT," +
-                        "     email_address TEXT," +
-                        "     password TEXT," +
-                        "     service TEXT," +
-                        "     additional_data TEXT" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                        "username TEXT," +
+                        "email_address TEXT," +
+                        "password TEXT," +
+                        "service TEXT," +
+                        "additional_data TEXT" +
                         ");"
             );
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Retrieve the name of the database, including the file extension, from the database path
+     * @return String containing the name of the current database
+     */
+    public String getDatabaseName(){
+        // The name of the database is gotten from the last slash of the path, and the +1 is required to
+        // remove the slash from the name
+        return this.databasePath.substring(this.databasePath.lastIndexOf("\\")+1);
     }
 
     public void changeDatabase(String databasePath){
@@ -62,10 +73,8 @@ public class Database {
         try {
             // Create an INSERT INTO query
             PreparedStatement query = this.connection.prepareStatement(
-                    "INSERT INTO " + Database.TABLE_NAME + " " +
-                            "(username, email_address, password," +
-                            "service, additional_data)" +
-                            " VALUES (?, ?, ?, ?, ?)"
+                    "INSERT INTO " + Database.TABLE_NAME + " " + "(username, email_address, password, service," +
+                            " additional_data) VALUES (?, ?, ?, ?, ?)"
             );
 
             // Add all the data to the query
@@ -116,7 +125,8 @@ public class Database {
 
         try {
             // Read all the data from a row based on its ID
-            PreparedStatement query = this.connection.prepareStatement("SELECT * FROM "+Database.TABLE_NAME+" WHERE id=?");
+            PreparedStatement query = this.connection.prepareStatement("SELECT * FROM "+Database.TABLE_NAME+
+                    " WHERE id=?");
             query.setInt(1, id);
 
             // Execute the query and retrive the data from the row
@@ -148,7 +158,8 @@ public class Database {
         try {
             // Create the UPDATE query and set its parameters
             PreparedStatement query = this.connection.prepareStatement(
-                    "UPDATE "+Database.TABLE_NAME+" SET username=?, email_address=?, password=?, service=?, additional_data=? WHERE id=?"
+                    "UPDATE "+Database.TABLE_NAME+" SET username=?, email_address=?, password=?, service=?," +
+                            " additional_data=? WHERE id=?"
             );
             query.setString(1, data.getUSERNAME());
             query.setString(2, data.getEMAIL_ADDRESS());
@@ -168,46 +179,53 @@ public class Database {
     }
 
     /**
-     * Get each ID and service field from the table
-     * @return ResultSet Return the result of the query
+     * Retrieve the first service field from the table
+     * @return Data containing the encrypted service field
      */
-    public ResultSet getServiceFields(){
-
-        ResultSet queryResult; // The set where are stored the records found in the database
-
-        try {
+    public Data getFirstServiceField(){
+        try{
+            // Create the query to retrieve the service
             PreparedStatement query = this.connection.prepareStatement(
-                    "SELECT id, service FROM "+Database.TABLE_NAME
+                    "SELECT id, service FROM "+TABLE_NAME
             );
-            queryResult = query.executeQuery();
+            ResultSet result = query.executeQuery();  // Execute the query and retrieve the result
 
-        } catch (SQLException e) {
+            result.next();  // Set the cursor to the first row
+            int serviceID = result.getInt("id");  // Get the ID
+            String service = result.getString("service");  // Get the service
+
+            // Close the query after the end of the operations
+            query.close();
+            result.close();
+
+            return new Data(serviceID, service);
+        } catch (SQLException e){
             throw new RuntimeException(e);
         }
-
-        return queryResult;
     }
-    
+
+
     /**
-     * Return the number of records inside the table
-     * @return Number of records
+     * Retrieve each service field with its ID from the table
+     * @return An ArrayList of Data object
      */
-    public int getRecordsNumber(){
-        int rowsNumber = 0;  // Initialize the number of rows to 0
+    public ArrayList<Data> getServiceFields(){
+        ArrayList<Data> serviceFields = new ArrayList<>();  // The service fields are stored here
 
         try {
-            // Create the SELECT query to get the number of rows
             PreparedStatement query = this.connection.prepareStatement(
-                    "SELECT COUNT(id) FROM " + Database.TABLE_NAME
+                    "SELECT id, service FROM "+TABLE_NAME
             );
-            ResultSet queryResult = query.executeQuery();  // Execute the query
+            ResultSet queryResult = query.executeQuery();  // The set where are stored the records found in the database
 
-            // If the number of rows exist then move to the next row and read it from the first column
-            if (queryResult.next()){
-                rowsNumber = queryResult.getInt(1);
+            while (queryResult.next()){
+                // Retrieve the data for each record and save it inside the ArrayList
+                int id = queryResult.getInt("id");
+                String service = queryResult.getString("service");
+
+                serviceFields.add(new Data(id, service));
             }
 
-            // Close the query
             query.close();
             queryResult.close();
 
@@ -215,6 +233,79 @@ public class Database {
             throw new RuntimeException(e);
         }
 
-        return rowsNumber;
+        return serviceFields;
+    }
+
+    /**
+     * Retrieve all the records inside the database
+     * @return ArrayList containing all the data
+     */
+    public ArrayList<Data> getRecords(){
+        ArrayList<Data> records = new ArrayList<>();
+
+        try {
+            // Read all the records
+            PreparedStatement query = this.connection.prepareStatement("SELECT * FROM "+ Database.TABLE_NAME);
+
+            ResultSet queryResult = query.executeQuery();  // Execute the query and retrive all the data
+
+            // Iterate over all the records
+            while (queryResult.next()){
+                int id = queryResult.getInt("id");
+                String username = queryResult.getString("username");
+                String emailAddress = queryResult.getString("email_address");
+                String password = queryResult.getString("password");
+                String service = queryResult.getString("service");
+                String additionalData = queryResult.getString("additional_data");
+
+                // Create a data per record and save it inside the ArrayList
+                Data data = new Data(id, username, emailAddress, password, service, additionalData);
+                records.add(data);
+            }
+
+            // Close the queries
+            query.close();
+            queryResult.close();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return records;
+    }
+
+    /**
+     * Change all the records inside the database
+     * @param records The new records
+     */
+    public void changeRecords(ArrayList<Data> records){
+        try {
+            PreparedStatement query = this.connection.prepareStatement(
+                    "UPDATE "+Database.TABLE_NAME+" SET username=?, email_address=?, password=?, service=?," +
+                            " additional_data=? WHERE id=?"
+            );
+
+            // Temporarily set the auto commit to false as we want to execute in a batch group
+            this.connection.setAutoCommit(false);
+
+            // Iterate over all the data to commit them together
+            for (Data data : records){
+                query.setString(1, data.getUSERNAME());
+                query.setString(2, data.getEMAIL_ADDRESS());
+                query.setString(3, data.getPASSWORD());
+                query.setString(4, data.getSERVICE());
+                query.setString(5, data.getADDITIONAL_DATA());
+                query.setInt(6, data.getID());
+                query.addBatch();  // Add the data to the set of the query
+            }
+
+            query.executeBatch();  // Execute the query as a batch to group all the updates
+            query.close();  // Close the query after the execution
+
+            this.connection.setAutoCommit(true);  // Set again the auto commit to true
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

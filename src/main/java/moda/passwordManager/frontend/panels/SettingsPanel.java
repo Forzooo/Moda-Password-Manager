@@ -2,6 +2,8 @@ package moda.passwordManager.frontend.panels;
 
 import moda.passwordManager.communicationHandler.CommunicationHandler;
 import moda.passwordManager.communicationHandler.Event;
+import moda.passwordManager.frontend.dialogs.MasterPasswordDialog;
+import org.checkerframework.checker.units.qual.C;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -9,6 +11,7 @@ import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
 public class SettingsPanel extends JPanel {
 
@@ -23,6 +26,12 @@ public class SettingsPanel extends JPanel {
     private JTextField databasePathTextField;  // Read-only state to show the state of the database
     private JButton changeDatabaseButton;  // Change to another database, already existing
     private JButton newDatabaseButton;  // Create a new database in a directory
+    private JButton changeMasterPasswordButton;  // Change the master password of the current database
+    private JButton enableGoogleDriveButton;  // Enable the Google Drive synchronization
+    private JButton disableGoogleDriveButton;  // Disable the Google Drive synchronization
+    private JButton synchronizeGoogleDriveButton;  // Manual synchronization with Google Drive
+    private JButton enableAutomaticSynchronizationButton;  // Enable the automatic synchronization
+    private JButton disableAutomaticSynchronizationButton;  // Disable the automatic synchronization
 
     public SettingsPanel(CommunicationHandler communicationHandler, int MIN_CONTENT_WIDTH, Dimension windowSize,
                          int sidebarPanelWidth, String currentDatabasePath) {
@@ -83,6 +92,7 @@ public class SettingsPanel extends JPanel {
         Dimension textFieldDimension = new Dimension(1600, 30);  // Define the dimension of any JTextField
         Dimension buttonDimension = new Dimension(250, 20);  // Define the dimension of any JButton
 
+        // Database settings section
         JPanel databasePanel = new JPanel();  // The JPanel used for all the components related to the database
         databasePanel.setBackground(Color.white);
         databasePanel.setPreferredSize(new Dimension(500, 100));
@@ -109,7 +119,64 @@ public class SettingsPanel extends JPanel {
         databasePanel.add(this.newDatabaseButton);
         databasePanel.add(this.changeDatabaseButton);
 
+        // Master password section
+        JPanel masterPasswordPanel = new JPanel();
+        masterPasswordPanel.setBackground(Color.white);
+        masterPasswordPanel.setPreferredSize(new Dimension(500, 100));
+        masterPasswordPanel.setLayout(new FlowLayout());
+
+        this.changeMasterPasswordButton = new JButton();
+        this.changeMasterPasswordButton.setText("Change the master password");
+        this.changeMasterPasswordButton.setMaximumSize(buttonDimension);
+
+        masterPasswordPanel.add(this.changeMasterPasswordButton);
+
+        // Google Drive section
+        JPanel googleDrivePanel = new JPanel();
+        googleDrivePanel.setBackground(Color.white);
+        googleDrivePanel.setPreferredSize(new Dimension(500, 100));
+        googleDrivePanel.setLayout(new FlowLayout());
+
+        this.enableGoogleDriveButton = new JButton();
+        this.enableGoogleDriveButton.setText("Enable Google Drive");
+        this.enableGoogleDriveButton.setMaximumSize(buttonDimension);
+        this.enableGoogleDriveButton.setVisible(false);  // The visibility it's decided later
+
+        this.disableGoogleDriveButton = new JButton();
+        this.disableGoogleDriveButton.setText("Disable Google Drive");
+        this.disableGoogleDriveButton.setMaximumSize(buttonDimension);
+        this.disableGoogleDriveButton.setVisible(false);  // The visibility it's decided later
+
+        this.synchronizeGoogleDriveButton = new JButton();
+        this.synchronizeGoogleDriveButton.setText("Synchronize");
+        this.synchronizeGoogleDriveButton.setMaximumSize(buttonDimension);
+        this.synchronizeGoogleDriveButton.setEnabled(false);  // The sync is allowed only when Google Drive is enabled
+
+        this.enableAutomaticSynchronizationButton = new JButton();
+        this.enableAutomaticSynchronizationButton.setText("Enable automatic synchronization");
+        this.enableAutomaticSynchronizationButton.setMaximumSize(buttonDimension);
+        this.enableAutomaticSynchronizationButton.setVisible(false);  // The visibility it's decided later
+        this.enableAutomaticSynchronizationButton.setEnabled(false);  // The sync is allowed only when Google Drive is enabled
+
+        this.disableAutomaticSynchronizationButton = new JButton();
+        this.disableAutomaticSynchronizationButton.setText("Disable automatic synchronization");
+        this.disableAutomaticSynchronizationButton.setMaximumSize(buttonDimension);
+        this.disableAutomaticSynchronizationButton.setVisible(false);  // The visibility it's decided later
+        this.disableAutomaticSynchronizationButton.setEnabled(false);  // The sync is allowed only when Google Drive is enabled
+
+        // Set the initial visibilities of the buttons that depend on the settings file
+        setGoogleDriveVisibility();
+        setGoogleDriveAutomaticSynchronizationVisibility();
+
+        googleDrivePanel.add(this.enableGoogleDriveButton);
+        googleDrivePanel.add(this.disableGoogleDriveButton);
+        googleDrivePanel.add(this.synchronizeGoogleDriveButton);
+        googleDrivePanel.add(this.enableAutomaticSynchronizationButton);
+        googleDrivePanel.add(this.disableAutomaticSynchronizationButton);
+
         add(databasePanel);
+        add(masterPasswordPanel);
+        add(googleDrivePanel);
     }
 
     /**
@@ -169,6 +236,78 @@ public class SettingsPanel extends JPanel {
                 }
             }
         });
+
+        this.changeMasterPasswordButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String masterPassword = JOptionPane.showInputDialog(getPanel(), "Enter the new master password",
+                        "");
+                // Perform some initial conditions check on the master password
+                if (!MasterPasswordDialog.checkMasterPassword(masterPassword.toCharArray())){
+                    return;
+                }
+
+                changeMasterPassword(masterPassword);
+            }
+        });
+
+        // Let the user choose its credential.json file for the authentication, then send an Event to the backend
+        this.enableGoogleDriveButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Create the File Chooser to allow user to select the credentials.json file
+                JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+                fileChooser.setDialogTitle("Choose the OAuth credentials file");
+                fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
+
+                // Create the filter to choose only .db files
+                FileNameExtensionFilter filter = new FileNameExtensionFilter("OAuth Credentials (.json)",
+                        "json");
+                fileChooser.setFileFilter(filter);
+
+                // Open the file chooser
+                if (fileChooser.showOpenDialog(getPanel()) == JFileChooser.APPROVE_OPTION){
+                    String path = fileChooser.getSelectedFile().getAbsolutePath();  // Retrieve the path chosen
+
+                    // Check whether the database has been chosen
+                    if (!path.isEmpty()){
+                        enableGoogleDrive(path);
+                        setGoogleDriveVisibility();
+                    }
+                }
+            }
+        });
+
+        this.disableGoogleDriveButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                disableGoogleDrive();
+                setGoogleDriveVisibility();
+            }
+        });
+
+        this.synchronizeGoogleDriveButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                synchronizeGoogleDrive();
+            }
+        });
+
+        this.enableAutomaticSynchronizationButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                enableAutomaticSynchronization();
+                setGoogleDriveAutomaticSynchronizationVisibility();
+            }
+        });
+
+        this.disableAutomaticSynchronizationButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                disableAutomaticSynchronization();
+                setGoogleDriveAutomaticSynchronizationVisibility();
+            }
+        });
     }
 
     /**
@@ -182,4 +321,108 @@ public class SettingsPanel extends JPanel {
         this.databasePathTextField.setText(databasePath);  // Set the new path of the database into the Text Field
 //        notifyUser()
     }
+
+    /**
+     * Change the current master password of the database to a new one
+     * @param masterPassword The new master password
+     */
+    private void changeMasterPassword(String masterPassword){
+        Event event = new Event("change-master-password", masterPassword.toCharArray());
+        this.communicationHandler.send(event);
+        this.communicationHandler.receive();  // Wait for the end of the operations in the backend
+    }
+
+    /**
+     * Retrieve from the settings file the current configuration of Google Drive to set the visibilities of the
+     * buttons that enable and disable it, and enable/disable the buttons for the synchronization
+     */
+    private void setGoogleDriveVisibility(){
+       // Retrieve from the settings file the configuration of Google Drive visibility
+        Event event = new Event("get-google-drive");
+        this.communicationHandler.send(event);
+        Event response = this.communicationHandler.receive();
+        boolean visibility = (boolean) response.getData().getFirst();
+
+        if (!visibility){
+            this.enableGoogleDriveButton.setVisible(true);
+            this.disableGoogleDriveButton.setVisible(false);
+            this.synchronizeGoogleDriveButton.setEnabled(false);
+            this.enableAutomaticSynchronizationButton.setEnabled(false);
+            this.disableAutomaticSynchronizationButton.setEnabled(false);
+        }else{
+            this.enableGoogleDriveButton.setVisible(false);
+            this.disableGoogleDriveButton.setVisible(true);
+            this.synchronizeGoogleDriveButton.setEnabled(true);
+            this.enableAutomaticSynchronizationButton.setEnabled(true);
+            this.disableAutomaticSynchronizationButton.setEnabled(true);
+
+        }
+   }
+
+    /**
+     * Retrieve from the settings file the current configuration of Google Drive synchronization to set the visibilities
+     * of the buttons that enable and disable it
+     */
+    private void setGoogleDriveAutomaticSynchronizationVisibility(){
+        // Retrieve from the settings file the configuration of Google Drive synchronization visibility
+        Event event = new Event("get-google-drive-synchronization");
+        this.communicationHandler.send(event);
+        Event response = this.communicationHandler.receive();
+        boolean visibility = (boolean) response.getData().getFirst();
+
+        if (!visibility){
+            this.enableAutomaticSynchronizationButton.setVisible(true);
+            this.disableAutomaticSynchronizationButton.setVisible(false);
+        }else{
+            this.enableAutomaticSynchronizationButton.setVisible(false);
+            this.disableAutomaticSynchronizationButton.setVisible(true);
+        }
+    }
+
+    /**
+     * Enable the Google Drive synchronization
+     * @param credentialsPath The path of the OAuth credentials used for the authentication
+     */
+    private void enableGoogleDrive(String credentialsPath){
+        Event event = new Event("google-drive-authenticate", credentialsPath);
+        this.communicationHandler.send(event);
+        this.communicationHandler.receive();  // Wait for the end of the operations before disabling the button
+    }
+
+    /**
+     * Disable the Google Drive synchronization
+     */
+    private void disableGoogleDrive(){
+        Event event = new Event("google-drive-unauthenticate");
+        this.communicationHandler.send(event);
+        this.communicationHandler.receive();  // Wait for the end of operations before disabling the button
+    }
+
+    /**
+     * Perform a synchronization with Google Drive
+     */
+    private void synchronizeGoogleDrive(){
+        Event event = new Event("google-drive-synchronize");
+        this.communicationHandler.send(event);
+        this.communicationHandler.receive();  // Wait for the end of the synchronization
+    }
+
+    /**
+     * Enable the automatic synchronization of Google Drive
+     */
+    private void enableAutomaticSynchronization(){
+        Event event = new Event("enable-google-drive-synchronization");
+        this.communicationHandler.send(event);
+        this.communicationHandler.receive();
+    }
+
+    /**
+     * Disable the automatic synchronization of Google Drive
+     */
+    private void disableAutomaticSynchronization(){
+        Event event = new Event("disable-google-drive-synchronization");
+        this.communicationHandler.send(event);
+        this.communicationHandler.receive();
+    }
+
 }

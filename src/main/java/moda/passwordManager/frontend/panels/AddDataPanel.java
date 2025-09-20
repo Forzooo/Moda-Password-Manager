@@ -178,6 +178,10 @@ public class AddDataPanel extends JPanel {
                     return;
                 }
 
+                // Since some Text Fields are optional, it may happen that some of them are still shown when the
+                // "Save Data" button is clicked
+                hidePlaceholders();
+
                 // Call the save data function to tell the backend to save the data into the database
                 saveData(usernameTextField.getText(), emailAddressTextField.getText(),
                         passwordTextField.getText(), serviceTextField.getText(),
@@ -216,6 +220,31 @@ public class AddDataPanel extends JPanel {
         this.passwordPlaceholder.show();
         this.servicePlaceholder.show();
         this.additionalDataPlaceholder.show();
+    }
+
+    /**
+     * Check whether placeholders are shown, then hide them
+     */
+    private void hidePlaceholders(){
+        if (usernamePlaceholder.isShown()){
+            usernamePlaceholder.hide();
+        }
+
+        if (emailAddressPlaceholder.isShown()){
+            emailAddressPlaceholder.hide();
+        }
+
+        if (passwordPlaceholder.isShown()){
+            passwordPlaceholder.hide();
+        }
+
+        if (servicePlaceholder.isShown()){
+            servicePlaceholder.hide();
+        }
+
+        if (additionalDataPlaceholder.isShown()){
+            additionalDataPlaceholder.hide();
+        }
     }
 
     /**
