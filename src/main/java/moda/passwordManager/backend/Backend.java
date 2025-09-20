@@ -97,7 +97,8 @@ public class Backend extends Thread {
         ArrayList<Object> eventData = event.getData();  // Get the data associated with the event
         switch (event.getNAME()){
             case "set-master-password":
-                setMasterPassword((String) eventData.getFirst());
+                setMasterPassword((char[]) eventData.getFirst());
+                testMasterPassword();
                 break;
 
             case "close-connection":
@@ -146,7 +147,7 @@ public class Backend extends Thread {
                 break;
 
             case "change-master-password":
-                changeMasterPassword((String) eventData.getFirst());
+                changeMasterPassword((char[]) eventData.getFirst());
                 break;
 
             case "get-google-drive":
@@ -191,8 +192,24 @@ public class Backend extends Thread {
      * Set the master password of the cryptography object
      * @param masterPassword The master password provided by the user
      */
-    private void setMasterPassword(String masterPassword){
-        this.cryptography.setMasterPassword(masterPassword.getBytes());
+    private void setMasterPassword(char[] masterPassword){
+        this.cryptography.setMasterPassword(new String(masterPassword).getBytes());
+    }
+
+    /**
+     * Test the master password the user has entered at the login to know whether is wrong
+     */
+    private void testMasterPassword(){
+        Data testData = this.database.getFirstServiceField();  // Get the first service to try to decrypt it
+        byte[] service = Data.decode(testData.getSERVICE());  // Decode from base64
+
+        // Try to decrypt it and add the data to the event based on whether an exception has been thrown
+        try{
+            this.cryptography.decrypt(service);
+            this.eventToSend.addData(true);
+        } catch (RuntimeException e){
+            this.eventToSend.addData(false);
+        }
     }
 
     /**
@@ -366,7 +383,7 @@ public class Backend extends Thread {
      * Change the current master password by generating again the encrypted data with the new password
      * @param masterPassword The new master password
      */
-    private void changeMasterPassword(String masterPassword){
+    private void changeMasterPassword(char[] masterPassword){
         ArrayList<Data> oldData = this.database.getRecords();  // Get all the data from the database
         ArrayList<Data> newData = new ArrayList<>();  // The data re-encrypted with the new master password
 

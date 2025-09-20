@@ -3,14 +3,14 @@
 * Nome: `set-master-password`
 * Mittente: Frontend
 * Descrizione: Invia al backend la master password inserita dall'utente.
-* Dati: _String_ masterPassword
+* Dati: _char[]_ masterPassword
 * Evento di risposta: `set-master-password-completed`
 
 ### set-master-password-completed
 * Nome: `set-master-password-completed`
 * Mittente: Backend
-* Descrizione: Notifica il frontend indicando che la master password è stata salvata correttamente.
-* Dati: -
+* Descrizione: Notifica il frontend se la master password inserita sia corretta
+* Dati: _boolean_ Flag che indica il risultato del test
 * Evento di risposta: -
 
 ### get-service-fields
@@ -183,7 +183,7 @@ l'esecuzione
 * Mittente: Frontend
 * Descrizione: Il frontend richiede di cambiare la master password in uso
   l'esecuzione
-* Dati: _String_ nuova master password
+* Dati: _char[]_ nuova master password
 * Evento di risposta: `change-master-password-confirm`
 
 ### change-master-password-confirm

@@ -171,17 +171,24 @@ public class MasterPasswordDialog extends JDialog {
 
     /**
      * Send the master password the user has entered to the backend thread
-     * @param masterPassword
+     * @param masterPassword The master password the user has entered
      */
     private void sendMasterPassword(char[] masterPassword){
         // Create and send the event to the backend telling to set the master password
-        Event setMasterPassword = new Event("set-master-password", new String(masterPassword));
+        Event setMasterPassword = new Event("set-master-password", masterPassword);
 
         this.communicationHandler.send(setMasterPassword);
 
-        // Wait for the confirm event and notify the user about it
+        // Get the event from the backend to know whether the master password the user entered is correct
         Event confirmEvent = this.communicationHandler.receive();
-//        notifyUser();  // Example method to show the user a messagebox with the operation status
+        boolean masterPasswordFlag = (Boolean) confirmEvent.getData().getFirst();
+
+        // Show an Error message and terminate the execution if the master password entered is wrong
+        if (!masterPasswordFlag){
+            JOptionPane.showMessageDialog(this, "The master password entered is wrong.",
+                    "Login Error", JOptionPane.ERROR_MESSAGE);
+            System.exit(0);
+        }
     }
 
     /**
