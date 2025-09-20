@@ -169,6 +169,33 @@ public class Database {
     }
 
     /**
+     * Retrieve the first service field from the table
+     * @return Data containing the encrypted service field
+     */
+    public Data getFirstServiceField(){
+        try{
+            // Create the query to retrieve the service
+            PreparedStatement query = this.connection.prepareStatement(
+                    "SELECT id, service FROM "+TABLE_NAME
+            );
+            ResultSet result = query.executeQuery();  // Execute the query and retrieve the result
+
+            result.next();  // Set the cursor to the first row
+            int serviceID = result.getInt("id");  // Get the ID
+            String service = result.getString("service");  // Get the service
+
+            // Close the query after the end of the operations
+            query.close();
+            result.close();
+
+            return new Data(serviceID, service);
+        } catch (SQLException e){
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    /**
      * Retrieve each service field with its ID from the table
      * @return An ArrayList of Data object
      */
@@ -177,7 +204,7 @@ public class Database {
 
         try {
             PreparedStatement query = this.connection.prepareStatement(
-                    "SELECT id, service FROM "+Database.TABLE_NAME
+                    "SELECT id, service FROM "+TABLE_NAME
             );
             ResultSet queryResult = query.executeQuery();  // The set where are stored the records found in the database
 

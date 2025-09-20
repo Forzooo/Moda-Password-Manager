@@ -209,7 +209,7 @@ public class SettingsPanel extends JPanel {
      * @param masterPassword The new master password
      */
     private void changeMasterPassword(String masterPassword){
-        Event event = new Event("change-master-password", masterPassword);
+        Event event = new Event("change-master-password", masterPassword.toCharArray());
         this.communicationHandler.send(event);
         this.communicationHandler.receive();  // Wait for the end of the operations in the backend
     }
