@@ -201,6 +201,13 @@ public class Backend extends Thread {
      */
     private void testMasterPassword(){
         Data testData = this.database.getFirstServiceField();  // Get the first service to try to decrypt it
+
+        // If the service is null, it means there isn't data in it yet, thus the master password is always correct
+        if (testData.getSERVICE() == null){
+            this.eventToSend.addData(true);
+            return;
+        }
+
         byte[] service = Data.decode(testData.getSERVICE());  // Decode from base64
 
         // Try to decrypt it and add the data to the event based on whether an exception has been thrown
