@@ -1,6 +1,6 @@
-package moda.passwordManager.frontend.panels;
+package moda.passwordmanager.frontend.panels;
 
-import moda.passwordManager.frontend.GUIState;
+import moda.passwordmanager.frontend.GUIState;
 
 import javax.swing.*;
 import java.awt.*;

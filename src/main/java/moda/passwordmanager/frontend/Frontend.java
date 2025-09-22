@@ -1,10 +1,9 @@
-package moda.passwordManager.frontend;
+package moda.passwordmanager.frontend;
 
-import moda.passwordManager.Application;
-import moda.passwordManager.communicationHandler.CommunicationHandler;
-import moda.passwordManager.communicationHandler.Event;
-import moda.passwordManager.frontend.dialogs.MasterPasswordDialog;
-import moda.passwordManager.frontend.panels.*;
+import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
+import moda.passwordmanager.interthreadcommunication.Event;
+import moda.passwordmanager.frontend.dialogs.MasterPasswordDialog;
+import moda.passwordmanager.frontend.panels.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,11 +16,11 @@ import java.util.concurrent.TimeUnit;
 
 public class Frontend extends JPanel implements ActionListener {
 
-    private final static String VERSION = "0.3.1";  // The current version of the software
+    private final static String VERSION = "0.4.0";  // The current version of the software
 
-    // The CommunicationHandler objects used to communicate with the Backend thread
-    private CommunicationHandler communicationHandler;
-    private CommunicationHandler exceptionsCommunicationHandler;
+    // The InterThreadCommunication objects used to communicate with the Backend thread
+    private InterThreadCommunication interThreadCommunication;
+    private InterThreadCommunication exceptionsInterThreadCommunication;
 
     // Define the Scheduled Executor Service and its delay used to perform background tasks
     private ScheduledExecutorService executorService;
@@ -82,7 +81,7 @@ public class Frontend extends JPanel implements ActionListener {
      * Ask the user for the master password before starting to use the password manager
      */
     private void initMasterPassword(){
-        MasterPasswordDialog masterPasswordDialog = new MasterPasswordDialog(this.communicationHandler);
+        MasterPasswordDialog masterPasswordDialog = new MasterPasswordDialog(this.interThreadCommunication);
         masterPasswordDialog.setVisible(true);
     }
 
@@ -106,7 +105,7 @@ public class Frontend extends JPanel implements ActionListener {
      * @param frontendQueue The queue that events are sent from
      */
     private void initCommunication(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
-        this.communicationHandler = new CommunicationHandler(frontendQueue, backendQueue);
+        this.interThreadCommunication = new InterThreadCommunication(frontendQueue, backendQueue);
     }
 
     /**
@@ -133,7 +132,7 @@ public class Frontend extends JPanel implements ActionListener {
     private void initExceptionListener(LinkedBlockingQueue<Event> backendExceptionQueue,
                                        LinkedBlockingQueue<Event> frontendExceptionQueue){
         // Initialize the Communication Handler object
-        this.exceptionsCommunicationHandler = new CommunicationHandler(frontendExceptionQueue, backendExceptionQueue);
+        this.exceptionsInterThreadCommunication = new InterThreadCommunication(frontendExceptionQueue, backendExceptionQueue);
 
         // Initialize the Executor Service
         this.exceptionsExecutorService = Executors.newSingleThreadScheduledExecutor();
@@ -156,18 +155,18 @@ public class Frontend extends JPanel implements ActionListener {
         this.sidebarPanel = new SidebarPanel(this.windowSize, VERSION);
         add(this.sidebarPanel, BorderLayout.WEST);  // Add the Sidebar to the Frame
 
-        this.addDataPanel = new AddDataPanel(this.communicationHandler, this.MIN_CONTENT_WIDTH, this.windowSize,
+        this.addDataPanel = new AddDataPanel(this.interThreadCommunication, this.MIN_CONTENT_WIDTH, this.windowSize,
                                              this.sidebarPanel.getWidth());
 
-        this.showDataPanel = new ShowDataPanel(this.communicationHandler, this.MIN_CONTENT_WIDTH, this.windowSize,
+        this.showDataPanel = new ShowDataPanel(this.interThreadCommunication, this.MIN_CONTENT_WIDTH, this.windowSize,
                                                this.sidebarPanel.getWidth());
         this.dynamicState = GUIState.SHOW_DATA;  // Set the default dynamic state to be the Show Data panel
 
         // Retrieve the path of the current database to add it to the settings panel
-        this.communicationHandler.send(new Event("get-database-path"));
-        String currentDatabasePath = (String) this.communicationHandler.receive().getData().getFirst();
+        this.interThreadCommunication.send(new Event("get-database"));
+        String currentDatabasePath = (String) this.interThreadCommunication.receive().getData().getFirst();
 
-        this.settingsPanel = new SettingsPanel(this.communicationHandler, this.MIN_CONTENT_WIDTH, this.windowSize,
+        this.settingsPanel = new SettingsPanel(this.interThreadCommunication, this.MIN_CONTENT_WIDTH, this.windowSize,
                                                this.sidebarPanel.getWidth(), currentDatabasePath);
 
         // Add the Show All Panel to the Board as it's the default panel at the start
@@ -218,8 +217,8 @@ public class Frontend extends JPanel implements ActionListener {
     private void synchronizeGoogleDrive(){
         // Check each time whether the automatic synchronization is enabled before synchronizing
         Event getSynchronization = new Event("get-google-drive-synchronization");
-        this.communicationHandler.send(getSynchronization);
-        getSynchronization = this.communicationHandler.receive();  // Wait for the response from the backend
+        this.interThreadCommunication.send(getSynchronization);
+        getSynchronization = this.interThreadCommunication.receive();  // Wait for the response from the backend
         boolean enabled = (boolean) getSynchronization.getData().getFirst();
 
         // Don't synchronize if the automatic synchronization it's not enabled
@@ -229,8 +228,8 @@ public class Frontend extends JPanel implements ActionListener {
 
         // Synchronize with Google Drive
         Event synchronize = new Event("google-drive-synchronize");
-        this.communicationHandler.send(synchronize);
-        this.communicationHandler.receive();
+        this.interThreadCommunication.send(synchronize);
+        this.interThreadCommunication.receive();
     }
 
     /**
@@ -248,7 +247,7 @@ public class Frontend extends JPanel implements ActionListener {
      * the execution
      */
     private void backendExceptionHandler(){
-        Event backendException = this.exceptionsCommunicationHandler.receive();  // Wait for an exception in the backend
+        Event backendException = this.exceptionsInterThreadCommunication.receive();  // Wait for an exception in the backend
         String exception = (String) backendException.getData().getFirst();  // Retrive the exception
 
         // Show the exception as a Message Dialog with the type of error message
@@ -257,10 +256,10 @@ public class Frontend extends JPanel implements ActionListener {
 
         // Send a "close-connection" event to the backend to tell it to stop its execution
         Event closeConnection = new Event("close-connection");
-        this.exceptionsCommunicationHandler.send(closeConnection);
+        this.exceptionsInterThreadCommunication.send(closeConnection);
 
         // Check that the backend has confirmed the connection to be closed and stop the execution
-        if (this.exceptionsCommunicationHandler.receive().getNAME().equals("close-connection-confirm")){
+        if (this.exceptionsInterThreadCommunication.receive().getNAME().equals("close-connection")){
             System.exit(0);
         }
     }

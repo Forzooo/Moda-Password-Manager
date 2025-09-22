@@ -1,8 +1,8 @@
-package moda.passwordManager;
+package moda.passwordmanager;
 
-import moda.passwordManager.backend.Backend;
-import moda.passwordManager.communicationHandler.Event;
-import moda.passwordManager.frontend.Frontend;
+import moda.passwordmanager.backend.Backend;
+import moda.passwordmanager.interthreadcommunication.Event;
+import moda.passwordmanager.frontend.Frontend;
 
 import javax.swing.*;
 import java.awt.*;

@@ -1,9 +1,8 @@
-package moda.passwordManager.frontend.panels;
+package moda.passwordmanager.frontend.panels;
 
-import moda.passwordManager.communicationHandler.CommunicationHandler;
-import moda.passwordManager.communicationHandler.Event;
-import moda.passwordManager.frontend.dialogs.MasterPasswordDialog;
-import org.checkerframework.checker.units.qual.C;
+import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
+import moda.passwordmanager.interthreadcommunication.Event;
+import moda.passwordmanager.frontend.dialogs.MasterPasswordDialog;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -11,12 +10,11 @@ import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 
 public class SettingsPanel extends JPanel {
 
     // Attribute to communicate with the backend
-    private CommunicationHandler communicationHandler;
+    private InterThreadCommunication interThreadCommunication;
 
     // Attributes for the configuration of the panel
     private final int MIN_CONTENT_WIDTH;
@@ -33,12 +31,12 @@ public class SettingsPanel extends JPanel {
     private JButton enableAutomaticSynchronizationButton;  // Enable the automatic synchronization
     private JButton disableAutomaticSynchronizationButton;  // Disable the automatic synchronization
 
-    public SettingsPanel(CommunicationHandler communicationHandler, int MIN_CONTENT_WIDTH, Dimension windowSize,
+    public SettingsPanel(InterThreadCommunication interThreadCommunication, int MIN_CONTENT_WIDTH, Dimension windowSize,
                          int sidebarPanelWidth, String currentDatabasePath) {
         super();  // Initialize the Panel
 
         // Set the attributes given by the JFrame
-        this.communicationHandler = communicationHandler;
+        this.interThreadCommunication = interThreadCommunication;
         this.MIN_CONTENT_WIDTH = MIN_CONTENT_WIDTH;
         this.windowSize = windowSize;
 
@@ -316,8 +314,8 @@ public class SettingsPanel extends JPanel {
      */
     private void setNewDatabase(String databasePath){
         Event event = new Event("set-database", databasePath);
-        this.communicationHandler.send(event);
-        this.communicationHandler.receive();
+        this.interThreadCommunication.send(event);
+        this.interThreadCommunication.receive();
         this.databasePathTextField.setText(databasePath);  // Set the new path of the database into the Text Field
 //        notifyUser()
     }
@@ -328,8 +326,8 @@ public class SettingsPanel extends JPanel {
      */
     private void changeMasterPassword(String masterPassword){
         Event event = new Event("change-master-password", masterPassword.toCharArray());
-        this.communicationHandler.send(event);
-        this.communicationHandler.receive();  // Wait for the end of the operations in the backend
+        this.interThreadCommunication.send(event);
+        this.interThreadCommunication.receive();  // Wait for the end of the operations in the backend
     }
 
     /**
@@ -339,8 +337,8 @@ public class SettingsPanel extends JPanel {
     private void setGoogleDriveVisibility(){
        // Retrieve from the settings file the configuration of Google Drive visibility
         Event event = new Event("get-google-drive");
-        this.communicationHandler.send(event);
-        Event response = this.communicationHandler.receive();
+        this.interThreadCommunication.send(event);
+        Event response = this.interThreadCommunication.receive();
         boolean visibility = (boolean) response.getData().getFirst();
 
         if (!visibility){
@@ -366,8 +364,8 @@ public class SettingsPanel extends JPanel {
     private void setGoogleDriveAutomaticSynchronizationVisibility(){
         // Retrieve from the settings file the configuration of Google Drive synchronization visibility
         Event event = new Event("get-google-drive-synchronization");
-        this.communicationHandler.send(event);
-        Event response = this.communicationHandler.receive();
+        this.interThreadCommunication.send(event);
+        Event response = this.interThreadCommunication.receive();
         boolean visibility = (boolean) response.getData().getFirst();
 
         if (!visibility){
@@ -385,8 +383,8 @@ public class SettingsPanel extends JPanel {
      */
     private void enableGoogleDrive(String credentialsPath){
         Event event = new Event("google-drive-authenticate", credentialsPath);
-        this.communicationHandler.send(event);
-        this.communicationHandler.receive();  // Wait for the end of the operations before disabling the button
+        this.interThreadCommunication.send(event);
+        this.interThreadCommunication.receive();  // Wait for the end of the operations before disabling the button
     }
 
     /**
@@ -394,8 +392,8 @@ public class SettingsPanel extends JPanel {
      */
     private void disableGoogleDrive(){
         Event event = new Event("google-drive-unauthenticate");
-        this.communicationHandler.send(event);
-        this.communicationHandler.receive();  // Wait for the end of operations before disabling the button
+        this.interThreadCommunication.send(event);
+        this.interThreadCommunication.receive();  // Wait for the end of operations before disabling the button
     }
 
     /**
@@ -403,8 +401,8 @@ public class SettingsPanel extends JPanel {
      */
     private void synchronizeGoogleDrive(){
         Event event = new Event("google-drive-synchronize");
-        this.communicationHandler.send(event);
-        this.communicationHandler.receive();  // Wait for the end of the synchronization
+        this.interThreadCommunication.send(event);
+        this.interThreadCommunication.receive();  // Wait for the end of the synchronization
     }
 
     /**
@@ -412,8 +410,8 @@ public class SettingsPanel extends JPanel {
      */
     private void enableAutomaticSynchronization(){
         Event event = new Event("enable-google-drive-synchronization");
-        this.communicationHandler.send(event);
-        this.communicationHandler.receive();
+        this.interThreadCommunication.send(event);
+        this.interThreadCommunication.receive();
     }
 
     /**
@@ -421,8 +419,8 @@ public class SettingsPanel extends JPanel {
      */
     private void disableAutomaticSynchronization(){
         Event event = new Event("disable-google-drive-synchronization");
-        this.communicationHandler.send(event);
-        this.communicationHandler.receive();
+        this.interThreadCommunication.send(event);
+        this.interThreadCommunication.receive();
     }
 
 }

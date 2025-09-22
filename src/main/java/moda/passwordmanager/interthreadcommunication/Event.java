@@ -1,4 +1,4 @@
-package moda.passwordManager.communicationHandler;
+package moda.passwordmanager.interthreadcommunication;
 
 import java.util.ArrayList;
 

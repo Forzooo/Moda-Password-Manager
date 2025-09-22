@@ -1,26 +1,21 @@
-package moda.passwordManager.frontend.panels;
+package moda.passwordmanager.frontend.panels;
 
-import moda.passwordManager.backend.Data;
-import moda.passwordManager.communicationHandler.CommunicationHandler;
-import moda.passwordManager.communicationHandler.Event;
-import moda.passwordManager.frontend.dialogs.ShowDataDialog;
+import moda.passwordmanager.backend.Data;
+import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
+import moda.passwordmanager.interthreadcommunication.Event;
+import moda.passwordmanager.frontend.dialogs.ShowDataDialog;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.List;
 
 public class ShowDataPanel extends JPanel {
 
     // Attribute to communicate with the backend
-    private CommunicationHandler communicationHandler;
+    private InterThreadCommunication interThreadCommunication;
 
     // Attributes for the configuration of the panel
     private final int MIN_CONTENT_WIDTH;
@@ -36,11 +31,11 @@ public class ShowDataPanel extends JPanel {
     // Swing components
     private JList dataList;
 
-    public ShowDataPanel(CommunicationHandler communicationHandler, int MIN_CONTENT_WIDTH, Dimension windowSize, int sidebarPanelWidth) {
+    public ShowDataPanel(InterThreadCommunication interThreadCommunication, int MIN_CONTENT_WIDTH, Dimension windowSize, int sidebarPanelWidth) {
         super();  // Initialize the Panel
 
         // Set the attributes given by the JFrame
-        this.communicationHandler = communicationHandler;
+        this.interThreadCommunication = interThreadCommunication;
         this.MIN_CONTENT_WIDTH = MIN_CONTENT_WIDTH;
         this.windowSize = windowSize;
 
@@ -118,7 +113,7 @@ public class ShowDataPanel extends JPanel {
                     Data userSingleData = getData(id);
 
                     // Create a Show Data Dialog to display the data retrieved
-                    ShowDataDialog showDataDialog = new ShowDataDialog(communicationHandler, userSingleData);
+                    ShowDataDialog showDataDialog = new ShowDataDialog(interThreadCommunication, userSingleData);
                     showDataDialog.setVisible(true);
                 }
             }
@@ -153,9 +148,9 @@ public class ShowDataPanel extends JPanel {
     private Data getData(int id){
         // Create the event to send to the backend
         Event getData = new Event("get-data", id);
-        this.communicationHandler.send(getData);
+        this.interThreadCommunication.send(getData);
 
-        Event getSingleDataCompletd = this.communicationHandler.receive();  // Wait for the response
+        Event getSingleDataCompletd = this.interThreadCommunication.receive();  // Wait for the response
 
         Data userData = (Data) getSingleDataCompletd.getData().getFirst();  // Get the user data
 
@@ -168,10 +163,10 @@ public class ShowDataPanel extends JPanel {
     public void updateUserData(){
         // Create and send the event to the backend asking for the user data
         Event updateUserData = new Event("get-service-fields");
-        this.communicationHandler.send(updateUserData);
+        this.interThreadCommunication.send(updateUserData);
 
         // Wait for the response of the backend and update the data with the new one
-        Event updatedDataEvent = this.communicationHandler.receive();
+        Event updatedDataEvent = this.interThreadCommunication.receive();
         ArrayList<Data> updatedData = (ArrayList<Data>) updatedDataEvent.getData().getFirst();
 
         this.userData.clear();  // Clear the ArrayList from the previous data

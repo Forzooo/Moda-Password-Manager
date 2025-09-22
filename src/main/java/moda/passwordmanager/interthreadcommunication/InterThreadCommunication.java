@@ -1,8 +1,8 @@
-package moda.passwordManager.communicationHandler;
+package moda.passwordmanager.interthreadcommunication;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class CommunicationHandler {
+public class InterThreadCommunication {
 
     private LinkedBlockingQueue<Event> sender;  // Send Event from this queue to the other thread
     private LinkedBlockingQueue<Event> receiver;  // Receive Event from this queue from the other thread
@@ -11,7 +11,7 @@ public class CommunicationHandler {
      * @param sender The Queue that sends the Event objects
      * @param receiver The Queue that receives the Event objects
      */
-    public CommunicationHandler(LinkedBlockingQueue<Event> sender, LinkedBlockingQueue<Event> receiver){
+    public InterThreadCommunication(LinkedBlockingQueue<Event> sender, LinkedBlockingQueue<Event> receiver){
         super();
 
         this.sender = sender;
