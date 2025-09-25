@@ -1,5 +1,6 @@
 package moda.passwordmanager.backend;
 
+import moda.passwordmanager.interthreadcommunication.EventType;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import org.apache.commons.io.FileUtils;
@@ -9,7 +10,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 
 public class Backend extends Thread {
 
@@ -57,15 +60,15 @@ public class Backend extends Thread {
      */
     public void uncaughtException(Thread t, Throwable e) {
         // Send the event to the frontend with the exception communication
-        Event event = new Event("exception-raised", e.toString());
+        Event event = new Event("exception-raised", e.toString(), EventType.REQUEST);
         exceptionsInterThreadCommunication.send(event);
 
         // Receive the response from the frontend
-        Event frontendResponse = exceptionsInterThreadCommunication.receive();
+        Event frontendResponse = exceptionsInterThreadCommunication.receive(EventType.RESPONSE);
 
         // Check whether the event response is close-connection to stop the execution
         if (frontendResponse.getNAME().equals("close-connection")){
-            event = new Event("close-connection");  // Create the event to confirm the stop
+            event = new Event("close-connection", EventType.REQUEST);  // Create the event to confirm the stop
             exceptionsInterThreadCommunication.send(event);  // Send the event
             runFlag = false;  // Set the run flag to false to stop the thread
         }
@@ -79,7 +82,7 @@ public class Backend extends Thread {
                 this.interThreadCommunication.send(this.eventToSend);
                 resetSendData();  // Reset the data to send to the frontend
             }
-            Event event = this.interThreadCommunication.receive();  // Wait for an event from the Frontend
+            Event event = this.interThreadCommunication.receive(EventType.REQUEST);  // Wait for an event from the Frontend
             createEvent(event);  // Create an event to send to the frontend
             processEvent(event);  // Process the operation requested from the frontend
         }
@@ -104,9 +107,9 @@ public class Backend extends Thread {
                 closeConnection();
                 break;
 
-            case "get-service-fields":
-                updateServiceFields();
-                break;
+//            case "get-service-fields":
+//                getServiceFields();
+//                break;
 
             case "save-data":
                 saveData((Data) eventData.getFirst());
@@ -184,7 +187,7 @@ public class Backend extends Thread {
      * @param event
      */
     private void createEvent(Event event){
-        this.eventToSend = new Event(event.getNAME());
+        this.eventToSend = new Event(event.getNAME(), EventType.RESPONSE);
     }
 
     /**

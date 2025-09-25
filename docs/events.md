@@ -10,22 +10,6 @@ Sezioni:
 risposta, e viceversa.**
 
 ## Generali
-### set-master-password
-* Nome: `set-master-password`
-* Mittente: Frontend
-* Descrizione: Invia al backend la master password inserita dall'utente.
-* Dati: _char[]_ masterPassword
-* Dati risposta: _boolean_ Flag che indica se la master password è corretta
-* Evento di risposta: -
-
-### change-master-password
-* Nome: `change-master-password`
-* Mittente: Frontend
-* Descrizione: Il frontend richiede di cambiare la master password per il database in uso
-* Dati inviati: _char[]_ nuova master password
-* Dati risposta: -
-* Evento di risposta: -
-
 ### exception-raised
 * Nome: `exception-raised`
 * Mittente: Backend
@@ -51,9 +35,35 @@ risposta, e viceversa.**
 * Dati risposta: -
 * Evento di risposta: -
 
+### notify-listener
+* Nome: `notify-listener`
+* Mittente: Backend/Frontend
+* Descrizione: Uno dei due thread in ricezione sul Backend/Frontend notifica l'altro, sulla coda di ricezione, che un
+evento di un EventType diverso dal suo è stato ricevuto
+* Dati inviati: -
+* Dati risposta: -
+* Evento di risposta: -
+
+
 ***
 
 ## Gestione dei dati
+### set-master-password
+* Nome: `set-master-password`
+* Mittente: Frontend
+* Descrizione: Invia al backend la master password inserita dall'utente.
+* Dati: _char[]_ masterPassword
+* Dati risposta: _boolean_ Flag che indica se la master password è corretta
+* Evento di risposta: -
+
+### change-master-password
+* Nome: `change-master-password`
+* Mittente: Frontend
+* Descrizione: Il frontend richiede di cambiare la master password per il database in uso
+* Dati inviati: _char[]_ nuova master password
+* Dati risposta: -
+* Evento di risposta: -
+
 ### get-service-fields
 * Nome: `get-service-fields`
 * Mittente: Frontend

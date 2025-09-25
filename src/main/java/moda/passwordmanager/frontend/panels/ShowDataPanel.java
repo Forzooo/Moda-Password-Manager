@@ -1,6 +1,7 @@
 package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.backend.Data;
+import moda.passwordmanager.interthreadcommunication.EventType;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.dialogs.ShowDataDialog;
@@ -147,10 +148,10 @@ public class ShowDataPanel extends JPanel {
      */
     private Data getData(int id){
         // Create the event to send to the backend
-        Event getData = new Event("get-data", id);
+        Event getData = new Event("get-data", id, EventType.REQUEST);
         this.interThreadCommunication.send(getData);
 
-        Event getSingleDataCompletd = this.interThreadCommunication.receive();  // Wait for the response
+        Event getSingleDataCompletd = this.interThreadCommunication.receive(EventType.RESPONSE);  // Wait for the response
 
         Data userData = (Data) getSingleDataCompletd.getData().getFirst();  // Get the user data
 
@@ -162,11 +163,11 @@ public class ShowDataPanel extends JPanel {
      */
     public void updateUserData(){
         // Create and send the event to the backend asking for the user data
-        Event updateUserData = new Event("get-service-fields");
+        Event updateUserData = new Event("get-service-fields", EventType.REQUEST);
         this.interThreadCommunication.send(updateUserData);
 
         // Wait for the response of the backend and update the data with the new one
-        Event updatedDataEvent = this.interThreadCommunication.receive();
+        Event updatedDataEvent = this.interThreadCommunication.receive(EventType.RESPONSE);
         ArrayList<Data> updatedData = (ArrayList<Data>) updatedDataEvent.getData().getFirst();
 
         this.userData.clear();  // Clear the ArrayList from the previous data

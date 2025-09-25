@@ -1,5 +1,6 @@
 package moda.passwordmanager.frontend.dialogs;
 
+import moda.passwordmanager.interthreadcommunication.EventType;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.Frontend;
@@ -174,12 +175,12 @@ public class MasterPasswordDialog extends JDialog {
      */
     private void sendMasterPassword(char[] masterPassword){
         // Create and send the event to the backend telling to set the master password
-        Event setMasterPassword = new Event("set-master-password", masterPassword);
+        Event setMasterPassword = new Event("set-master-password", masterPassword, EventType.REQUEST);
 
         this.interThreadCommunication.send(setMasterPassword);
 
         // Get the event from the backend to know whether the master password the user entered is correct
-        Event confirmEvent = this.interThreadCommunication.receive();
+        Event confirmEvent = this.interThreadCommunication.receive(Frontend.getBackendEventResponse());
         boolean masterPasswordFlag = (Boolean) confirmEvent.getData().getFirst();
 
         // Show an Error message and terminate the execution if the master password entered is wrong
@@ -196,11 +197,11 @@ public class MasterPasswordDialog extends JDialog {
      */
     private String getCurrentDatabase(){
         // Create the event and send it to the backend
-        Event event = new Event("get-database");
+        Event event = new Event("get-database", EventType.REQUEST);
         this.interThreadCommunication.send(event);
 
         // Receive the path of the database from the backend
-        Event databasePathEvent = this.interThreadCommunication.receive();
+        Event databasePathEvent = this.interThreadCommunication.receive(Frontend.getBackendEventResponse());
         String databasePath = (String) databasePathEvent.getData().getFirst();
 
         return databasePath;
@@ -236,9 +237,9 @@ public class MasterPasswordDialog extends JDialog {
      * @param databasePath The path of the database to use
      */
     private void changeDatabase(String databasePath){
-        Event event = new Event("set-database", databasePath);
+        Event event = new Event("set-database", databasePath, EventType.REQUEST);
         this.interThreadCommunication.send(event);
-        this.interThreadCommunication.receive();
+        this.interThreadCommunication.receive(Frontend.getBackendEventResponse());
         this.currentDatabaseLabel.setText(databasePath);  // Set the new path of the database into the label
     }
 

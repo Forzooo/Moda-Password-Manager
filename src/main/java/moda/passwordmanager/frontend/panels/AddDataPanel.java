@@ -1,6 +1,8 @@
 package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.backend.Data;
+import moda.passwordmanager.frontend.Frontend;
+import moda.passwordmanager.interthreadcommunication.EventType;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.components.Placeholder;
@@ -266,20 +268,20 @@ public class AddDataPanel extends JPanel {
         Data userData = new Data(username, emailAddress, password, service, additionalData);
 
         // Create the Event to send to the backend
-        Event saveData = new Event("save-data", userData);
+        Event saveData = new Event("save-data", userData, EventType.REQUEST);
 
         this.interThreadCommunication.send(saveData);
-        this.interThreadCommunication.receive();
+        this.interThreadCommunication.receive(Frontend.getBackendEventResponse());
 //        notifyUser();  // Example method to show the user a messagebox with the operation status
     }
 
     private void generatePassword() {
 
         // Create the Event to send to the backend
-        Event generatePassword = new Event("generate-string", new ArrayList());
+        Event generatePassword = new Event("generate-string", EventType.REQUEST);
         this.interThreadCommunication.send(generatePassword);
 
-        Event response = this.interThreadCommunication.receive();  // Wait for the result
+        Event response = this.interThreadCommunication.receive(Frontend.getBackendEventResponse());  // Wait for the result
 
         String password = (String) response.getData().getFirst();  // Get the password from the backend
         this.passwordTextField.setText(password);  // Set the password to the TextField

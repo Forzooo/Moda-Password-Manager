@@ -1,5 +1,6 @@
 package moda.passwordmanager.frontend.dialogs;
 
+import moda.passwordmanager.interthreadcommunication.EventType;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.Frontend;
@@ -122,14 +123,14 @@ public class ConfigureGenerationPasswordDialog extends JDialog {
                 boolean specialCharactersSelected = specialCharactersCheckBox.isSelected();
 
                 // Create the Event with the data
-                Event event = new Event("configure-string-generation");
+                Event event = new Event("configure-string-generation", EventType.REQUEST);
                 event.addData(stringLength);
                 event.addData(lettersSelected);
                 event.addData(numbersSelected);
                 event.addData(specialCharactersSelected);
 
                 interThreadCommunication.send(event);  // Send the event
-                interThreadCommunication.receive();  // Wait for the event to be completed
+                interThreadCommunication.receive(Frontend.getBackendEventResponse());  // Wait for the event to be completed
 //                notifyUser();  // Example method to show the user a messagebox with the operation status
                 dispose();  // Destroy the JDialog after the configuration has been saved
             }
@@ -141,9 +142,9 @@ public class ConfigureGenerationPasswordDialog extends JDialog {
      */
     private void setCurrentParameters(){
         // Create the event and wait for the data
-        Event event = new Event("get-string-generation-configuration");
+        Event event = new Event("get-string-generation-configuration", EventType.REQUEST);
         this.interThreadCommunication.send(event);
-        Event backendResponse = this.interThreadCommunication.receive();
+        Event backendResponse = this.interThreadCommunication.receive(Frontend.getBackendEventResponse());
 
         ArrayList data = backendResponse.getData();  // Retrieve the data
 

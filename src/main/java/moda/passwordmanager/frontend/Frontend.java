@@ -1,5 +1,6 @@
 package moda.passwordmanager.frontend;
 
+import moda.passwordmanager.interthreadcommunication.EventType;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.dialogs.MasterPasswordDialog;
@@ -21,6 +22,7 @@ public class Frontend extends JPanel implements ActionListener {
     // The InterThreadCommunication objects used to communicate with the Backend thread
     private InterThreadCommunication interThreadCommunication;
     private InterThreadCommunication exceptionsInterThreadCommunication;
+    private final static EventType BACKEND_EVENT_RESPONSE = EventType.RESPONSE;
 
     // Define the Scheduled Executor Service and its delay used to perform background tasks
     private ScheduledExecutorService executorService;
@@ -75,6 +77,10 @@ public class Frontend extends JPanel implements ActionListener {
     public static Image getIcon(){
         ImageIcon imageIcon = new ImageIcon(Frontend.class.getResource("/icon.png"));  // Get the image from the resources
         return imageIcon.getImage();
+    }
+
+    public static EventType getBackendEventResponse() {
+        return BACKEND_EVENT_RESPONSE;
     }
 
     /**
@@ -163,8 +169,8 @@ public class Frontend extends JPanel implements ActionListener {
         this.dynamicState = GUIState.SHOW_DATA;  // Set the default dynamic state to be the Show Data panel
 
         // Retrieve the path of the current database to add it to the settings panel
-        this.interThreadCommunication.send(new Event("get-database"));
-        String currentDatabasePath = (String) this.interThreadCommunication.receive().getData().getFirst();
+        this.interThreadCommunication.send(new Event("get-database", EventType.REQUEST));
+        String currentDatabasePath = (String) this.interThreadCommunication.receive(BACKEND_EVENT_RESPONSE).getData().getFirst();
 
         this.settingsPanel = new SettingsPanel(this.interThreadCommunication, this.MIN_CONTENT_WIDTH, this.windowSize,
                                                this.sidebarPanel.getWidth(), currentDatabasePath);
@@ -216,9 +222,9 @@ public class Frontend extends JPanel implements ActionListener {
 
     private void synchronizeGoogleDrive(){
         // Check each time whether the automatic synchronization is enabled before synchronizing
-        Event getSynchronization = new Event("get-google-drive-synchronization");
+        Event getSynchronization = new Event("get-google-drive-synchronization", EventType.REQUEST);
         this.interThreadCommunication.send(getSynchronization);
-        getSynchronization = this.interThreadCommunication.receive();  // Wait for the response from the backend
+        getSynchronization = this.interThreadCommunication.receive(BACKEND_EVENT_RESPONSE);  // Wait for the response from the backend
         boolean enabled = (boolean) getSynchronization.getData().getFirst();
 
         // Don't synchronize if the automatic synchronization it's not enabled
@@ -227,9 +233,9 @@ public class Frontend extends JPanel implements ActionListener {
         }
 
         // Synchronize with Google Drive
-        Event synchronize = new Event("google-drive-synchronize");
+        Event synchronize = new Event("google-drive-synchronize", EventType.REQUEST);
         this.interThreadCommunication.send(synchronize);
-        this.interThreadCommunication.receive();
+        this.interThreadCommunication.receive(BACKEND_EVENT_RESPONSE);
     }
 
     /**
@@ -247,7 +253,7 @@ public class Frontend extends JPanel implements ActionListener {
      * the execution
      */
     private void backendExceptionHandler(){
-        Event backendException = this.exceptionsInterThreadCommunication.receive();  // Wait for an exception in the backend
+        Event backendException = this.exceptionsInterThreadCommunication.receive(BACKEND_EVENT_RESPONSE);  // Wait for an exception in the backend
         String exception = (String) backendException.getData().getFirst();  // Retrive the exception
 
         // Show the exception as a Message Dialog with the type of error message
@@ -255,11 +261,11 @@ public class Frontend extends JPanel implements ActionListener {
                 JOptionPane.ERROR_MESSAGE);
 
         // Send a "close-connection" event to the backend to tell it to stop its execution
-        Event closeConnection = new Event("close-connection");
+        Event closeConnection = new Event("close-connection", EventType.REQUEST);
         this.exceptionsInterThreadCommunication.send(closeConnection);
 
         // Check that the backend has confirmed the connection to be closed and stop the execution
-        if (this.exceptionsInterThreadCommunication.receive().getNAME().equals("close-connection")){
+        if (this.exceptionsInterThreadCommunication.receive(BACKEND_EVENT_RESPONSE).getNAME().equals("close-connection")){
             System.exit(0);
         }
     }
