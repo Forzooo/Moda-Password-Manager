@@ -1,4 +1,4 @@
-package moda.passwordManager.backend;
+package moda.passwordmanager.backend;
 
 import org.bouncycastle.crypto.generators.Argon2BytesGenerator;
 import org.bouncycastle.crypto.params.Argon2Parameters;

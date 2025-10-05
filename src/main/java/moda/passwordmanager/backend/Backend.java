@@ -1,7 +1,7 @@
-package moda.passwordManager.backend;
+package moda.passwordmanager.backend;
 
-import moda.passwordManager.communicationHandler.CommunicationHandler;
-import moda.passwordManager.communicationHandler.Event;
+import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
+import moda.passwordmanager.interthreadcommunication.Event;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -21,20 +21,16 @@ public class Backend extends Thread {
     private GoogleDrive googleDrive;
     private Settings settings;
 
-    // The CommunicationHandler object used to communicate with the Frontend thread
-    private CommunicationHandler communicationHandler;
-    private CommunicationHandler exceptionsCommunicationHandler;
+    // The InterThreadCommunication object used to communicate with the Frontend thread
+    private InterThreadCommunication interThreadCommunication;
 
-    private Event eventToSend;  // The event that is sent to the frontend. Must be set using its setter
+    private Event eventToSend;  // The event that is sent to the frontend
+    private boolean runFlag;  // Let the backend run until the connection is closed by the frontend
 
-    private boolean runFlag;  // Let the thread run until the connection is closed
-
-    public Backend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
-                   LinkedBlockingQueue<Event> backendExceptionQueue, LinkedBlockingQueue<Event> frontendExceptionQueue){
+    public Backend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
 
         // Create the communication handler with the two queues
-        this.communicationHandler = new CommunicationHandler(backendQueue, frontendQueue);
-        this.exceptionsCommunicationHandler = new CommunicationHandler(backendExceptionQueue, frontendExceptionQueue);
+        this.interThreadCommunication = new InterThreadCommunication(backendQueue, frontendQueue);
 
         // Initialize all the backend components
         this.settings = new Settings();
@@ -59,30 +55,31 @@ public class Backend extends Thread {
     public void uncaughtException(Thread t, Throwable e) {
         // Send the event to the frontend with the exception communication
         Event event = new Event("exception-raised", e.toString());
-        exceptionsCommunicationHandler.send(event);
 
         // Receive the response from the frontend
-        Event frontendResponse = exceptionsCommunicationHandler.receive();
+        Event frontendResponse = this.interThreadCommunication.requestAndReceive(event);
 
         // Check whether the event response is close-connection to stop the execution
         if (frontendResponse.getNAME().equals("close-connection")){
-            event = new Event("close-connection-confirm");  // Create the event to confirm the stop
-            exceptionsCommunicationHandler.send(event);  // Send the event
-            runFlag = false;  // Set the run flag to false to stop the thread
+            event = new Event("close-connection");  // Create the event to confirm the stop
+            this.interThreadCommunication.request(event);  // Send the event
+            this.runFlag = false;  // Set the run flag to false to stop the thread
         }
     }
 
     @Override
     public void run() {
         while (this.runFlag){
+            Event event = this.interThreadCommunication.receive();  // Wait for an event from the Frontend
+
+            createEvent(event);  // Create an event to send to the frontend
+            handleEvent(event);  // Handle the operation requested from the frontend
+
             // Check whether there is an Event to send to the Frontend
             if (this.eventToSend != null){
-                this.communicationHandler.send(this.eventToSend);
+                this.interThreadCommunication.reply(event, this.eventToSend);
                 resetSendData();  // Reset the data to send to the frontend
             }
-            Event event = this.communicationHandler.receive();  // Wait for an event from the Frontend
-            createEvent(event);  // Create an event to send to the frontend
-            processEvent(event);  // Process the operation requested from the frontend
         }
     }
 
@@ -93,7 +90,7 @@ public class Backend extends Thread {
         this.eventToSend = null;
     }
 
-    private void processEvent(Event event){
+    private void handleEvent(Event event){
         ArrayList<Object> eventData = event.getData();  // Get the data associated with the event
         switch (event.getNAME()){
             case "set-master-password":
@@ -138,7 +135,7 @@ public class Backend extends Thread {
                 setDatabasePath((String) eventData.getFirst());
                 break;
 
-            case "get-database-path":
+            case "get-database":
                 getDatabasePath();
                 break;
 
@@ -185,7 +182,7 @@ public class Backend extends Thread {
      * @param event
      */
     private void createEvent(Event event){
-        this.eventToSend = new Event(event.getNAME()+"-completed");
+        this.eventToSend = new Event(event.getNAME());
     }
 
     /**
@@ -223,13 +220,13 @@ public class Backend extends Thread {
      * Close the connection with the Frontend and stop the execution of the thread
      */
     private void closeConnection(){
-        this.communicationHandler = null;
-        this.exceptionsCommunicationHandler = null;
+        this.interThreadCommunication = null;
         this.runFlag = false;
     }
 
     /**
-     * Retrieve all the service fields with their IDs from the database, and decrypt them
+     * Retrieve all the service fields with their IDs from the database, decrypt them and check whether they should be
+     * updated in the frontend
      */
     private void getServiceFields(){
         ArrayList<Data> serviceFields = this.database.getServiceFields();

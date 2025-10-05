@@ -1,9 +1,9 @@
-package moda.passwordManager.frontend.dialogs;
+package moda.passwordmanager.frontend.dialogs;
 
-import moda.passwordManager.communicationHandler.CommunicationHandler;
-import moda.passwordManager.communicationHandler.Event;
-import moda.passwordManager.frontend.Frontend;
-import moda.passwordManager.frontend.components.Placeholder;
+import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
+import moda.passwordmanager.interthreadcommunication.Event;
+import moda.passwordmanager.frontend.Frontend;
+import moda.passwordmanager.frontend.components.Placeholder;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,7 +16,7 @@ import java.util.ArrayList;
  */
 public class ConfigureGenerationPasswordDialog extends JDialog {
 
-    private CommunicationHandler communicationHandler;
+    private InterThreadCommunication interThreadCommunication;
 
     // Dialog components
     private JTextField passwordLengthTextField;
@@ -28,10 +28,10 @@ public class ConfigureGenerationPasswordDialog extends JDialog {
 
     private JButton saveConfigurationButton;
 
-    public ConfigureGenerationPasswordDialog(CommunicationHandler communicationHandler){
+    public ConfigureGenerationPasswordDialog(InterThreadCommunication interThreadCommunication){
         super();
 
-        this.communicationHandler = communicationHandler;
+        this.interThreadCommunication = interThreadCommunication;
 
         initDialog();
         initComponents();
@@ -128,9 +128,7 @@ public class ConfigureGenerationPasswordDialog extends JDialog {
                 event.addData(numbersSelected);
                 event.addData(specialCharactersSelected);
 
-                communicationHandler.send(event);  // Send the event
-                communicationHandler.receive();  // Wait for the event to be completed
-//                notifyUser();  // Example method to show the user a messagebox with the operation status
+                interThreadCommunication.request(event);  // Send the event
                 dispose();  // Destroy the JDialog after the configuration has been saved
             }
         });
@@ -142,10 +140,9 @@ public class ConfigureGenerationPasswordDialog extends JDialog {
     private void setCurrentParameters(){
         // Create the event and wait for the data
         Event event = new Event("get-string-generation-configuration");
-        this.communicationHandler.send(event);
-        Event backendResponse = this.communicationHandler.receive();
+        Event backendResponse = this.interThreadCommunication.requestAndReceive(event);
 
-        ArrayList data = backendResponse.getData();  // Retrieve the data
+        ArrayList<Object> data = backendResponse.getData();  // Retrieve the data
 
         // Set the data to the components
         this.passwordLengthPlaceholder.hide();  // Hide the placeholder first

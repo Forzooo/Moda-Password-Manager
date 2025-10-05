@@ -1,9 +1,8 @@
-package moda.passwordManager.frontend.dialogs;
+package moda.passwordmanager.frontend.dialogs;
 
-import moda.passwordManager.communicationHandler.CommunicationHandler;
-import moda.passwordManager.communicationHandler.Event;
-import moda.passwordManager.frontend.Frontend;
-import moda.passwordManager.frontend.components.Placeholder;
+import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
+import moda.passwordmanager.interthreadcommunication.Event;
+import moda.passwordmanager.frontend.Frontend;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -19,7 +18,7 @@ import java.awt.event.WindowEvent;
  */
 public class MasterPasswordDialog extends JDialog {
 
-    private CommunicationHandler communicationHandler;
+    private InterThreadCommunication interThreadCommunication;
 
     // Dialog components
     private JPasswordField masterPassword;
@@ -27,10 +26,10 @@ public class MasterPasswordDialog extends JDialog {
     private JLabel currentDatabaseLabel;
     private JButton changeDatabaseButton;
 
-    public MasterPasswordDialog(CommunicationHandler communicationHandler){
+    public MasterPasswordDialog(InterThreadCommunication interThreadCommunication){
         super();
 
-        this.communicationHandler = communicationHandler;
+        this.interThreadCommunication = interThreadCommunication;
 
         initDialog();
         initComponents();
@@ -57,7 +56,6 @@ public class MasterPasswordDialog extends JDialog {
 
         setTitle("MODA - Password Manager");
         setModal(true);
-        setIcon();
 
         // Set the preferred size
         setSize(new Dimension(700, 150));
@@ -67,14 +65,6 @@ public class MasterPasswordDialog extends JDialog {
         setBackground(Color.WHITE);
 
         setIconImage(Frontend.getIcon());
-    }
-
-    /**
-     * Set the icon of the dialog
-     */
-    private void setIcon(){
-        ImageIcon imageIcon = new ImageIcon(getClass().getResource("/icon.png"));  // Get the image from the resources
-        setIconImage(imageIcon.getImage());  // Get the image from the ImageIcon and set it to the application
     }
 
     /**
@@ -177,10 +167,8 @@ public class MasterPasswordDialog extends JDialog {
         // Create and send the event to the backend telling to set the master password
         Event setMasterPassword = new Event("set-master-password", masterPassword);
 
-        this.communicationHandler.send(setMasterPassword);
-
         // Get the event from the backend to know whether the master password the user entered is correct
-        Event confirmEvent = this.communicationHandler.receive();
+        Event confirmEvent = this.interThreadCommunication.requestAndReceive(setMasterPassword);
         boolean masterPasswordFlag = (Boolean) confirmEvent.getData().getFirst();
 
         // Show an Error message and terminate the execution if the master password entered is wrong
@@ -197,11 +185,10 @@ public class MasterPasswordDialog extends JDialog {
      */
     private String getCurrentDatabase(){
         // Create the event and send it to the backend
-        Event event = new Event("get-database-path");
-        this.communicationHandler.send(event);
+        Event event = new Event("get-database");
 
         // Receive the path of the database from the backend
-        Event databasePathEvent = this.communicationHandler.receive();
+        Event databasePathEvent = this.interThreadCommunication.requestAndReceive(event);
         String databasePath = (String) databasePathEvent.getData().getFirst();
 
         return databasePath;
@@ -238,8 +225,7 @@ public class MasterPasswordDialog extends JDialog {
      */
     private void changeDatabase(String databasePath){
         Event event = new Event("set-database", databasePath);
-        this.communicationHandler.send(event);
-        this.communicationHandler.receive();
+        this.interThreadCommunication.requestAndReceive(event);
         this.currentDatabaseLabel.setText(databasePath);  // Set the new path of the database into the label
     }
 

@@ -1,0 +1,52 @@
+package moda.passwordmanager;
+
+import moda.passwordmanager.backend.Backend;
+import moda.passwordmanager.interthreadcommunication.Event;
+import moda.passwordmanager.frontend.Frontend;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.concurrent.LinkedBlockingQueue;
+
+
+public class Application extends JFrame {
+
+    public Application(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
+        initUI(backendQueue, frontendQueue);
+    }
+
+    private void initUI(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
+        Dimension screen = getToolkit().getScreenSize();
+
+        int width = (int) (screen.getWidth() * 4/5);
+        int height = (int) (screen.getHeight() * 4/5);
+
+        add(new Frontend(backendQueue, frontendQueue, width, height));
+        pack();
+
+        setTitle("MODA - Password Manager");
+        setSize(width, height);
+
+        setIconImage(Frontend.getIcon());  // Get the icon and set it
+
+        setVisible(true);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+    }
+
+    public static void main(String[] args) {
+        // Create the two LinkedBlockingQueue objects here to pass them to the Backend and the Frontend
+        LinkedBlockingQueue<Event> backendQueue = new LinkedBlockingQueue<>();
+        LinkedBlockingQueue<Event> frontendQueue = new LinkedBlockingQueue<>();
+
+        EventQueue.invokeLater(() -> {
+            Application ex = new Application(backendQueue, frontendQueue);
+            ex.setVisible(true);
+        });
+
+        Backend backend = new Backend(backendQueue, frontendQueue);
+        // Set the handler from the object itself otherwise it would use the one from the Frontend
+        backend.setUncaughtExceptionHandler(backend::uncaughtException);
+        backend.start();
+    }
+}

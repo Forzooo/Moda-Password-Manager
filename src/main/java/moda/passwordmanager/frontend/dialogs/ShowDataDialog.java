@@ -1,9 +1,9 @@
-package moda.passwordManager.frontend.dialogs;
+package moda.passwordmanager.frontend.dialogs;
 
-import moda.passwordManager.backend.Data;
-import moda.passwordManager.communicationHandler.CommunicationHandler;
-import moda.passwordManager.communicationHandler.Event;
-import moda.passwordManager.frontend.Frontend;
+import moda.passwordmanager.backend.Data;
+import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
+import moda.passwordmanager.interthreadcommunication.Event;
+import moda.passwordmanager.frontend.Frontend;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -21,7 +21,7 @@ import java.util.List;
 public class ShowDataDialog extends JDialog {
 
     // Attribute to communicate with the backend
-    private CommunicationHandler communicationHandler;
+    private InterThreadCommunication interThreadCommunication;
 
     private Data data;  // The user data retried from the backend
     private List<JTextField> dataFields;  // The data field contain the user data
@@ -32,10 +32,10 @@ public class ShowDataDialog extends JDialog {
     private JButton saveChangesButton;
     private JButton deleteButton;
 
-    public ShowDataDialog(CommunicationHandler communicationHandler, Data data) {
+    public ShowDataDialog(InterThreadCommunication interThreadCommunication, Data data) {
         super();  // Initialize the Panel
 
-        this.communicationHandler = communicationHandler;
+        this.interThreadCommunication = interThreadCommunication;
         this.data = data;
 
         initDialog();
@@ -232,19 +232,14 @@ public class ShowDataDialog extends JDialog {
 
         // Create and send the event
         Event event = new Event("change-data", data);
-        this.communicationHandler.send(event);
-        this.communicationHandler.receive();
-//        notifyUser();  // Example method to show the user a messagebox with the operation status
+        this.interThreadCommunication.requestAndReceive(event);  // Wait for the response of the backend
     }
 
     /**
      * Send an event to the backend to delete this data record
      */
     private void deleteData(){
-        // Create the event to send
         Event event = new Event("delete-data", this.data.getID());
-        this.communicationHandler.send(event);
-        this.communicationHandler.receive();
-//        notifyUser();  // Example method to show the user a messagebox with the operation status
+        this.interThreadCommunication.request(event);
     }
 }
