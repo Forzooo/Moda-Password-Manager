@@ -1,7 +1,6 @@
 package moda.passwordmanager.frontend.dialogs;
 
 import moda.passwordmanager.backend.Data;
-import moda.passwordmanager.interthreadcommunication.EventType;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.Frontend;
@@ -232,20 +231,15 @@ public class ShowDataDialog extends JDialog {
         Data data = new Data(this.data.getID(), username, emailAddress, password, service, additional);
 
         // Create and send the event
-        Event event = new Event("change-data", data, EventType.REQUEST);
-        this.interThreadCommunication.send(event);
-        this.interThreadCommunication.receive(Frontend.getBackendEventResponse());
-//        notifyUser();  // Example method to show the user a messagebox with the operation status
+        Event event = new Event("change-data", data);
+        this.interThreadCommunication.requestAndReceive(event);  // Wait for the response of the backend
     }
 
     /**
      * Send an event to the backend to delete this data record
      */
     private void deleteData(){
-        // Create the event to send
-        Event event = new Event("delete-data", this.data.getID(), EventType.REQUEST);
-        this.interThreadCommunication.send(event);
-        this.interThreadCommunication.receive(Frontend.getBackendEventResponse());
-//        notifyUser();  // Example method to show the user a messagebox with the operation status
+        Event event = new Event("delete-data", this.data.getID());
+        this.interThreadCommunication.request(event);
     }
 }

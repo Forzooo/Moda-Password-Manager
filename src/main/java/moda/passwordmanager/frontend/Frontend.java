@@ -1,6 +1,5 @@
 package moda.passwordmanager.frontend;
 
-import moda.passwordmanager.interthreadcommunication.EventType;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.dialogs.MasterPasswordDialog;
@@ -21,16 +20,13 @@ public class Frontend extends JPanel implements ActionListener {
 
     // The InterThreadCommunication objects used to communicate with the Backend thread
     private InterThreadCommunication interThreadCommunication;
-    private InterThreadCommunication exceptionsInterThreadCommunication;
-    private final static EventType BACKEND_EVENT_RESPONSE = EventType.RESPONSE;
 
     // Define the Scheduled Executor Service and its delay used to perform background tasks
     private ScheduledExecutorService executorService;
     private final static int INITIAL_DELAY = 5;  // The delay, in seconds, before starting to execute any task
 
-    // The Exception handler that performs tasks about exceptions
-    private ScheduledExecutorService exceptionsExecutorService;
-    private final static int EXCEPTIONS_EXECUTOR_DELAY = 1000;
+    // The Frontend Event Listener used to receive and handle requests from the backend
+    private FrontendEventListener eventListener;
 
     // The dynamicState indicates which Panel needs to be switched to from the current one selected
     private GUIState dynamicState;
@@ -53,14 +49,16 @@ public class Frontend extends JPanel implements ActionListener {
     private ShowDataPanel showDataPanel;
     private SettingsPanel settingsPanel;
 
-    public Frontend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
-                    LinkedBlockingQueue<Event> backendExceptionQueue, LinkedBlockingQueue<Event> frontendExceptionQueue,
-                    int width, int height){
+    public Frontend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue, int width,
+                    int height){
 
         initCommunication(backendQueue, frontendQueue);  // Start the communication between the backend and the frontend
-        initExceptionListener(backendExceptionQueue, frontendExceptionQueue);  // Start the exception listener
+
+        // Set the default exception handler for the Frontend thread
+        Thread.setDefaultUncaughtExceptionHandler(this::exceptionHandler);
 
         initMasterPassword();
+        this.eventListener = new FrontendEventListener(this.interThreadCommunication);
 
         // The Executor Service must be init after the masterPasswordDialog as it requires the master password to operate
         initExecutorService();
@@ -77,10 +75,6 @@ public class Frontend extends JPanel implements ActionListener {
     public static Image getIcon(){
         ImageIcon imageIcon = new ImageIcon(Frontend.class.getResource("/icon.png"));  // Get the image from the resources
         return imageIcon.getImage();
-    }
-
-    public static EventType getBackendEventResponse() {
-        return BACKEND_EVENT_RESPONSE;
     }
 
     /**
@@ -112,6 +106,8 @@ public class Frontend extends JPanel implements ActionListener {
      */
     private void initCommunication(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
         this.interThreadCommunication = new InterThreadCommunication(frontendQueue, backendQueue);
+        this.eventListener = new FrontendEventListener(this.interThreadCommunication);
+        this.eventListener.start();
     }
 
     /**
@@ -133,28 +129,6 @@ public class Frontend extends JPanel implements ActionListener {
     }
 
     /**
-     * Initialize the Executor Service used to handle communications about the exceptions
-     */
-    private void initExceptionListener(LinkedBlockingQueue<Event> backendExceptionQueue,
-                                       LinkedBlockingQueue<Event> frontendExceptionQueue){
-        // Initialize the Communication Handler object
-        this.exceptionsInterThreadCommunication = new InterThreadCommunication(frontendExceptionQueue, backendExceptionQueue);
-
-        // Initialize the Executor Service
-        this.exceptionsExecutorService = Executors.newSingleThreadScheduledExecutor();
-        this.exceptionsExecutorService.scheduleAtFixedRate(this::backendExceptionHandler, 0, EXCEPTIONS_EXECUTOR_DELAY,
-                                                           TimeUnit.MILLISECONDS);
-
-//        // Set the default exception handler for the Frontend thread
-        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(Thread t, Throwable e) {
-                exceptionHandler(e);
-            }
-        });
-    }
-
-    /**
      * Initialize all the panels
      */
     private void initPanels(){
@@ -168,12 +142,8 @@ public class Frontend extends JPanel implements ActionListener {
                                                this.sidebarPanel.getWidth());
         this.dynamicState = GUIState.SHOW_DATA;  // Set the default dynamic state to be the Show Data panel
 
-        // Retrieve the path of the current database to add it to the settings panel
-        this.interThreadCommunication.send(new Event("get-database", EventType.REQUEST));
-        String currentDatabasePath = (String) this.interThreadCommunication.receive(BACKEND_EVENT_RESPONSE).getData().getFirst();
-
         this.settingsPanel = new SettingsPanel(this.interThreadCommunication, this.MIN_CONTENT_WIDTH, this.windowSize,
-                                               this.sidebarPanel.getWidth(), currentDatabasePath);
+                                               this.sidebarPanel.getWidth());
 
         // Add the Show All Panel to the Board as it's the default panel at the start
         this.currentPanel = this.showDataPanel;
@@ -222,9 +192,10 @@ public class Frontend extends JPanel implements ActionListener {
 
     private void synchronizeGoogleDrive(){
         // Check each time whether the automatic synchronization is enabled before synchronizing
-        Event getSynchronization = new Event("get-google-drive-synchronization", EventType.REQUEST);
-        this.interThreadCommunication.send(getSynchronization);
-        getSynchronization = this.interThreadCommunication.receive(BACKEND_EVENT_RESPONSE);  // Wait for the response from the backend
+        Event getSynchronization = new Event("get-google-drive-synchronization");
+
+        // Wait for the response from the backend
+        getSynchronization = this.interThreadCommunication.requestAndReceive(getSynchronization);
         boolean enabled = (boolean) getSynchronization.getData().getFirst();
 
         // Don't synchronize if the automatic synchronization it's not enabled
@@ -233,16 +204,15 @@ public class Frontend extends JPanel implements ActionListener {
         }
 
         // Synchronize with Google Drive
-        Event synchronize = new Event("google-drive-synchronize", EventType.REQUEST);
-        this.interThreadCommunication.send(synchronize);
-        this.interThreadCommunication.receive(BACKEND_EVENT_RESPONSE);
+        Event synchronize = new Event("google-drive-synchronize");
+        this.interThreadCommunication.request(synchronize);
     }
 
     /**
      * Handle the unhandled exception in the frontend by showing a messagebox about it
      * @param e The exception that has occurred
      */
-    private void exceptionHandler(Throwable e){
+    private void exceptionHandler(Thread t, Throwable e){
         // Show the exception as a Message Dialog with the type of error message
         JOptionPane.showMessageDialog(this, e.toString(), "An exception occurred in the Frontend",
                 JOptionPane.ERROR_MESSAGE);
@@ -252,21 +222,5 @@ public class Frontend extends JPanel implements ActionListener {
      * Wait for unhandled exceptions in the backend and then close the connection with the backend and stop
      * the execution
      */
-    private void backendExceptionHandler(){
-        Event backendException = this.exceptionsInterThreadCommunication.receive(BACKEND_EVENT_RESPONSE);  // Wait for an exception in the backend
-        String exception = (String) backendException.getData().getFirst();  // Retrive the exception
 
-        // Show the exception as a Message Dialog with the type of error message
-        JOptionPane.showMessageDialog(this, exception, "An exception occurred in the Backend",
-                JOptionPane.ERROR_MESSAGE);
-
-        // Send a "close-connection" event to the backend to tell it to stop its execution
-        Event closeConnection = new Event("close-connection", EventType.REQUEST);
-        this.exceptionsInterThreadCommunication.send(closeConnection);
-
-        // Check that the backend has confirmed the connection to be closed and stop the execution
-        if (this.exceptionsInterThreadCommunication.receive(BACKEND_EVENT_RESPONSE).getNAME().equals("close-connection")){
-            System.exit(0);
-        }
-    }
 }

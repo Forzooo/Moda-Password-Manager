@@ -1,7 +1,6 @@
 package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.backend.Data;
-import moda.passwordmanager.interthreadcommunication.EventType;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.dialogs.ShowDataDialog;
@@ -23,8 +22,7 @@ public class ShowDataPanel extends JPanel {
     private Dimension windowSize;
 
     /**
-     * The service_data shown in the JList of "Show Data" panel <br/>
-     * It's updated automatically by the timer
+     * The service data shown in the JList of "Show Data" panel which it's updated automatically by the timer
      */
     private ArrayList<Data> userData;  // A Data object is required as each service shown needs to be associated with its ID
     private DefaultListModel<String> userDataModel;
@@ -32,7 +30,8 @@ public class ShowDataPanel extends JPanel {
     // Swing components
     private JList dataList;
 
-    public ShowDataPanel(InterThreadCommunication interThreadCommunication, int MIN_CONTENT_WIDTH, Dimension windowSize, int sidebarPanelWidth) {
+    public ShowDataPanel(InterThreadCommunication interThreadCommunication, int MIN_CONTENT_WIDTH, Dimension windowSize,
+                         int sidebarPanelWidth) {
         super();  // Initialize the Panel
 
         // Set the attributes given by the JFrame
@@ -148,12 +147,12 @@ public class ShowDataPanel extends JPanel {
      */
     private Data getData(int id){
         // Create the event to send to the backend
-        Event getData = new Event("get-data", id, EventType.REQUEST);
-        this.interThreadCommunication.send(getData);
+        Event getData = new Event("get-data", id);
 
-        Event getSingleDataCompletd = this.interThreadCommunication.receive(EventType.RESPONSE);  // Wait for the response
+        // Wait for the response
+        Event getSingleDataCompleted = this.interThreadCommunication.requestAndReceive(getData);
 
-        Data userData = (Data) getSingleDataCompletd.getData().getFirst();  // Get the user data
+        Data userData = (Data) getSingleDataCompleted.getData().getFirst();  // Get the user data
 
         return userData;
     }
@@ -163,11 +162,10 @@ public class ShowDataPanel extends JPanel {
      */
     public void updateUserData(){
         // Create and send the event to the backend asking for the user data
-        Event updateUserData = new Event("get-service-fields", EventType.REQUEST);
-        this.interThreadCommunication.send(updateUserData);
+        Event updateUserData = new Event("get-service-fields");
 
         // Wait for the response of the backend and update the data with the new one
-        Event updatedDataEvent = this.interThreadCommunication.receive(EventType.RESPONSE);
+        Event updatedDataEvent = this.interThreadCommunication.requestAndReceive(updateUserData);
         ArrayList<Data> updatedData = (ArrayList<Data>) updatedDataEvent.getData().getFirst();
 
         this.userData.clear();  // Clear the ArrayList from the previous data

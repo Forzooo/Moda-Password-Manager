@@ -11,19 +11,17 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class Application extends JFrame {
 
-    public Application(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
-                       LinkedBlockingQueue<Event> backendExceptionQueue, LinkedBlockingQueue<Event> frontendExceptionQueue){
-        initUI(backendQueue, frontendQueue, backendExceptionQueue, frontendExceptionQueue);
+    public Application(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
+        initUI(backendQueue, frontendQueue);
     }
 
-    private void initUI(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
-                        LinkedBlockingQueue<Event> backendExceptionQueue, LinkedBlockingQueue<Event> frontendExceptionQueue){
+    private void initUI(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
         Dimension screen = getToolkit().getScreenSize();
 
         int width = (int) (screen.getWidth() * 4/5);
         int height = (int) (screen.getHeight() * 4/5);
 
-        add(new Frontend(backendQueue, frontendQueue, backendExceptionQueue, frontendExceptionQueue, width, height));
+        add(new Frontend(backendQueue, frontendQueue, width, height));
         pack();
 
         setTitle("MODA - Password Manager");
@@ -41,23 +39,14 @@ public class Application extends JFrame {
         LinkedBlockingQueue<Event> backendQueue = new LinkedBlockingQueue<>();
         LinkedBlockingQueue<Event> frontendQueue = new LinkedBlockingQueue<>();
 
-        // The queues that communicate exceptions
-        LinkedBlockingQueue<Event> backendExceptionQueue = new LinkedBlockingQueue<>();
-        LinkedBlockingQueue<Event> frontendExceptionQueue = new LinkedBlockingQueue<>();
-
         EventQueue.invokeLater(() -> {
-            Application ex = new Application(backendQueue, frontendQueue, backendExceptionQueue, frontendExceptionQueue);
+            Application ex = new Application(backendQueue, frontendQueue);
             ex.setVisible(true);
         });
 
-        Backend backend = new Backend(backendQueue, frontendQueue, backendExceptionQueue, frontendExceptionQueue);
+        Backend backend = new Backend(backendQueue, frontendQueue);
         // Set the handler from the object itself otherwise it would use the one from the Frontend
-        backend.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(Thread t, Throwable e) {
-                backend.uncaughtException(t, e);
-            }
-        });
+        backend.setUncaughtExceptionHandler(backend::uncaughtException);
         backend.start();
     }
 }

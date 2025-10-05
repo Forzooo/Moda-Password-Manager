@@ -17,6 +17,7 @@ risposta, e viceversa.**
 * Dati: _String_ messaggio dell'eccezione
 * Dati risposta: -
 * Evento di risposta: `close-connection`
+* Altà priorità: true
 
 ### close-connection
 * Nome: `close-connection`
@@ -26,6 +27,7 @@ risposta, e viceversa.**
 * Dati inviati: -
 * Dati risposta: -
 * Evento di risposta: -
+* Altà priorità: true
 
 ### unknown-event
 * Nome: `unknown-event`
@@ -34,16 +36,7 @@ risposta, e viceversa.**
 * Dati inviati: -
 * Dati risposta: -
 * Evento di risposta: -
-
-### notify-listener
-* Nome: `notify-listener`
-* Mittente: Backend/Frontend
-* Descrizione: Uno dei due thread in ricezione sul Backend/Frontend notifica l'altro, sulla coda di ricezione, che un
-evento di un EventType diverso dal suo è stato ricevuto
-* Dati inviati: -
-* Dati risposta: -
-* Evento di risposta: -
-
+* Altà priorità: true
 
 ***
 
@@ -55,6 +48,7 @@ evento di un EventType diverso dal suo è stato ricevuto
 * Dati: _char[]_ masterPassword
 * Dati risposta: _boolean_ Flag che indica se la master password è corretta
 * Evento di risposta: -
+* Altà priorità: true
 
 ### change-master-password
 * Nome: `change-master-password`
@@ -63,6 +57,7 @@ evento di un EventType diverso dal suo è stato ricevuto
 * Dati inviati: _char[]_ nuova master password
 * Dati risposta: -
 * Evento di risposta: -
+* Altà priorità: true
 
 ### get-service-fields
 * Nome: `get-service-fields`
@@ -72,6 +67,7 @@ evento di un EventType diverso dal suo è stato ricevuto
 * Dati inviati: -
 * Dati risposta: _ArrayList\<Data\>_ contente tutti i campi service presenti nella tabella del database
 * Evento di risposta: -
+* Altà priorità: true
 
 ### get-data
 * Nome: `get-data`
@@ -80,6 +76,7 @@ evento di un EventType diverso dal suo è stato ricevuto
 * Dati inviati: _int_ ID associato ai dati richiesti
 * Dati risposta: _Data_ i dati decrittati relativi a quel ID
 * Evento di risposta: -
+* Altà priorità: true
 
 ### save-data
 * Nome: `save-data`
@@ -88,6 +85,7 @@ evento di un EventType diverso dal suo è stato ricevuto
 * Dati inviati: _Data_ contenente i dati inseriti dell'utente
 * Dati risposta: -
 * Evento di risposta: -
+* Altà priorità: false
 
 ### delete-data
 * Nome: `delete-data`
@@ -96,6 +94,7 @@ evento di un EventType diverso dal suo è stato ricevuto
 * Dati inviati: _int_ ID associato al record da eliminare
 * Dati risposta: -
 * Evento di risposta: -
+* Altà priorità: false
 
 ### change-data
 * Nome: `change-data`
@@ -104,6 +103,7 @@ evento di un EventType diverso dal suo è stato ricevuto
 * Dati inviati: _Data_ contenente i dati aggiornati
 * Dati risposta: -
 * Evento di risposta: -
+* Altà priorità: true
 
 ***
 
@@ -115,6 +115,7 @@ evento di un EventType diverso dal suo è stato ricevuto
 * Dati inviati: _String_ path del database da utilizzare
 * Dati risposta: -
 * Evento di risposta: -
+* Altà priorità: true
 
 ### get-database
 * Nome: `get-database`
@@ -123,6 +124,7 @@ evento di un EventType diverso dal suo è stato ricevuto
 * Dati inviati: -
 * Dati risposta: _String_ path del database in uso
 * Evento di risposta: -
+* Altà priorità: true
 
 ***
 
@@ -134,6 +136,7 @@ evento di un EventType diverso dal suo è stato ricevuto
 * Dati inviati: -
 * Dati ricevuti: _String_ stringa generata casualmente
 * Evento di risposta: -
+* Altà priorità: true
 
 ### configure-string-generation
 * Nome: `configure-string-generation`
@@ -143,6 +146,7 @@ evento di un EventType diverso dal suo è stato ricevuto
 caratteri speciali sono abilitati
 * Dati risposta: -
 * Evento di risposta: -
+* Altà priorità: false
 
 ### get-string-generation-configuration
 * Nome: `get-string-generation-configuration`
@@ -152,6 +156,7 @@ caratteri speciali sono abilitati
 * Dati ricevuti: _int_ numero di caratteri, _bool_ se le lettere sono abilitate, _bool_ se i numeri sono abilitati, _bool_ se i
   caratteri speciali sono abilitati
 * Evento di risposta: -
+* Altà priorità: true
 
 ***
 
@@ -163,6 +168,7 @@ caratteri speciali sono abilitati
 * Dati inviati: -
 * Dati risposta:  _boolean_ Stato di google drive
 * Evento di risposta: -
+* Altà priorità: true
 
 ### google-drive-authenticate
 * Nome: `google-drive-authenticate`
@@ -171,6 +177,7 @@ caratteri speciali sono abilitati
 * Dati inviati: _String_ path del file "credentials.json"
 * Dati risposta: -
 * Evento di risposta: -
+* Altà priorità: false
 
 ### google-drive-unauthenticate
 * Nome: `google-drive-unauthenticate`
@@ -179,14 +186,16 @@ caratteri speciali sono abilitati
 * Dati inviati: -
 * Dati risposta: -
 * Evento di risposta: -
+* Altà priorità: false
 
 ### google-drive-synchronize
 * Nome: `google-drive-synchronize`
 * Mittente: Frontend
-* Descrizione: Indica al backend che deve effettuare un sincronizzazione con Google Drive
+* Descrizione: Indica al backend che deve effettuare una sincronizzazione con Google Drive
 * Dati inviati: -
 * Dati risposta: -
 * Evento di risposta: -
+* Altà priorità: true
 
 ### enable-google-drive-synchronization
 * Nome: `enable-google-drive-synchronization`
@@ -195,6 +204,7 @@ caratteri speciali sono abilitati
 * Dati inviati: -
 * Dati risposta: -
 * Evento di risposta: -
+* Altà priorità: false
 
 ### disable-google-drive-synchronization
 * Nome: `disable-google-drive-synchronization`
@@ -203,6 +213,7 @@ caratteri speciali sono abilitati
 * Dati inviati: -
 * Dati risposta: -
 * Evento di risposta: -
+* Altà priorità: false
 
 ### get-google-drive-synchronization
 * Nome: `get-google-drive-synchronization`
@@ -211,3 +222,4 @@ caratteri speciali sono abilitati
 * Dati inviati: -
 * Dati risposta: _boolean_ Stato della sincronizzazione automatica di google drive
 * Evento di risposta: -
+* Altà priorità: true
