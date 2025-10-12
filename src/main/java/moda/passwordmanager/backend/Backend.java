@@ -109,7 +109,13 @@ public class Backend extends Thread {
         switch (event.getNAME()){
             case "set-master-password":
                 setMasterPassword((char[]) eventData.getFirst());
-                testMasterPassword();
+
+                // We need to store the result of testMasterPassword to initialize the ServiceMapping
+                boolean test = testMasterPassword();
+                if (test){
+                    // Initialize the Service Mapping after the Master Password has been set
+                    this.executeInBackground(this::initServiceMapping);
+                }
                 break;
 
             case "close-connection":
@@ -217,14 +223,15 @@ public class Backend extends Thread {
 
     /**
      * Test the master password the user has entered at the login to know whether is wrong
+     * @return Returns a boolean value to locally indicate whether the master password is right
      */
-    private void testMasterPassword(){
+    private boolean testMasterPassword(){
         Data testData = this.database.getFirstServiceField();  // Get the first service to try to decrypt it
 
         // If the service is null, it means there isn't data in it yet, thus the master password is always correct
         if (testData.getSERVICE() == null){
             this.eventToSend.addData(true);
-            return;
+            return true;
         }
 
         byte[] service = Data.decode(testData.getSERVICE());  // Decode from base64
@@ -233,11 +240,10 @@ public class Backend extends Thread {
         try{
             this.cryptography.decrypt(service);
             this.eventToSend.addData(true);
-
-            // Initialize the Service Mapping after the Master Password has been set
-            this.executeInBackground(this::initServiceMapping);
+            return true;
         } catch (RuntimeException e){
             this.eventToSend.addData(false);
+            return false;
         }
     }
 
@@ -267,9 +273,11 @@ public class Backend extends Thread {
             dataToSend.add(new Data(data.getID(), this.helper.decryptString(data.getSERVICE())));
         }
 
-        // Create the Event with the data and send it
-        Event updateService = new Event("update-service-fields", dataToSend);
-        this.itc.request(updateService);
+        // Create the Event with the data and send it only if the data is not empty
+        if (!dataToSend.isEmpty()){
+            Event updateService = new Event("update-service-fields", dataToSend);
+            this.itc.request(updateService);
+        }
     }
 
     /**
