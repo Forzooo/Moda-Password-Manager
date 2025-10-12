@@ -19,7 +19,7 @@ public class Frontend extends JPanel implements ActionListener {
     private final static String VERSION = "0.4.0";  // The current version of the software
 
     // The InterThreadCommunication objects used to communicate with the Backend thread
-    private InterThreadCommunication interThreadCommunication;
+    private InterThreadCommunication itc;
 
     // Define the Scheduled Executor Service and its delay used to perform background tasks
     private ScheduledExecutorService executorService;
@@ -58,7 +58,6 @@ public class Frontend extends JPanel implements ActionListener {
         Thread.setDefaultUncaughtExceptionHandler(this::exceptionHandler);
 
         initMasterPassword();
-        this.eventListener = new FrontendEventListener(this.interThreadCommunication);
 
         // The Executor Service must be init after the masterPasswordDialog as it requires the master password to operate
         initExecutorService();
@@ -66,6 +65,8 @@ public class Frontend extends JPanel implements ActionListener {
         initPanel(width, height);  // Set the properties of the panel
         initPanels();  // Initialize all the JPanels
         initSwingTimer();  // Initialize the Swing timer only after all the frontend components have been created
+        initEventListener();  // Initialize the Event Listener only after all the frontend components have been init
+
     }
 
     /**
@@ -81,7 +82,7 @@ public class Frontend extends JPanel implements ActionListener {
      * Ask the user for the master password before starting to use the password manager
      */
     private void initMasterPassword(){
-        MasterPasswordDialog masterPasswordDialog = new MasterPasswordDialog(this.interThreadCommunication);
+        MasterPasswordDialog masterPasswordDialog = new MasterPasswordDialog(this.itc);
         masterPasswordDialog.setVisible(true);
     }
 
@@ -105,8 +106,14 @@ public class Frontend extends JPanel implements ActionListener {
      * @param frontendQueue The queue that events are sent from
      */
     private void initCommunication(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
-        this.interThreadCommunication = new InterThreadCommunication(frontendQueue, backendQueue);
-        this.eventListener = new FrontendEventListener(this.interThreadCommunication);
+        this.itc = new InterThreadCommunication(frontendQueue, backendQueue);
+    }
+
+    /**
+     * Initialize the Frontend event listener
+     */
+    private void initEventListener(){
+        this.eventListener = new FrontendEventListener(this.itc, this.showDataPanel);
         this.eventListener.start();
     }
 
@@ -116,7 +123,6 @@ public class Frontend extends JPanel implements ActionListener {
     private void initExecutorService(){
         // Create a single thread for the periodic execution of methods
         this.executorService = Executors.newSingleThreadScheduledExecutor();
-        this.executorService.scheduleAtFixedRate(this::updateUserData, INITIAL_DELAY, 10, TimeUnit.SECONDS);
         this.executorService.scheduleAtFixedRate(this::synchronizeGoogleDrive, INITIAL_DELAY, 60, TimeUnit.SECONDS);
     }
 
@@ -135,14 +141,14 @@ public class Frontend extends JPanel implements ActionListener {
         this.sidebarPanel = new SidebarPanel(this.windowSize, VERSION);
         add(this.sidebarPanel, BorderLayout.WEST);  // Add the Sidebar to the Frame
 
-        this.addDataPanel = new AddDataPanel(this.interThreadCommunication, this.MIN_CONTENT_WIDTH, this.windowSize,
+        this.addDataPanel = new AddDataPanel(this.itc, this.MIN_CONTENT_WIDTH, this.windowSize,
                                              this.sidebarPanel.getWidth());
 
-        this.showDataPanel = new ShowDataPanel(this.interThreadCommunication, this.MIN_CONTENT_WIDTH, this.windowSize,
+        this.showDataPanel = new ShowDataPanel(this.itc, this.MIN_CONTENT_WIDTH, this.windowSize,
                                                this.sidebarPanel.getWidth());
         this.dynamicState = GUIState.SHOW_DATA;  // Set the default dynamic state to be the Show Data panel
 
-        this.settingsPanel = new SettingsPanel(this.interThreadCommunication, this.MIN_CONTENT_WIDTH, this.windowSize,
+        this.settingsPanel = new SettingsPanel(this.itc, this.MIN_CONTENT_WIDTH, this.windowSize,
                                                this.sidebarPanel.getWidth());
 
         // Add the Show All Panel to the Board as it's the default panel at the start
@@ -183,19 +189,12 @@ public class Frontend extends JPanel implements ActionListener {
         switchPanel();
     }
 
-    /**
-     * Method used only to call the update user data inside the ShowDataPanel class
-     */
-    private void updateUserData(){
-        this.showDataPanel.updateUserData();
-    }
-
     private void synchronizeGoogleDrive(){
         // Check each time whether the automatic synchronization is enabled before synchronizing
         Event getSynchronization = new Event("get-google-drive-synchronization");
 
         // Wait for the response from the backend
-        getSynchronization = this.interThreadCommunication.requestAndReceive(getSynchronization);
+        getSynchronization = this.itc.requestAndReceive(getSynchronization);
         boolean enabled = (boolean) getSynchronization.getData().getFirst();
 
         // Don't synchronize if the automatic synchronization it's not enabled
@@ -205,7 +204,7 @@ public class Frontend extends JPanel implements ActionListener {
 
         // Synchronize with Google Drive
         Event synchronize = new Event("google-drive-synchronize");
-        this.interThreadCommunication.request(synchronize);
+        this.itc.request(synchronize);
     }
 
     /**

@@ -71,6 +71,14 @@ public class BackendHelper {
     }
 
     /**
+     * Decrypt a ciphertext
+     * @param ciphertext The string to be decrypted
+     */
+    public String decryptString(String ciphertext){
+        return decrypt(ciphertext);
+    }
+
+    /**
      * Read the string generation configuration from the settings file
      * @return An ArrayList containing the properties of the generation in the following order: 0 - String Length,
      * 1 - Boolean Letters, 2 - Boolean Numbers, 3 - Boolean Special
