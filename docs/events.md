@@ -59,15 +59,14 @@ risposta, e viceversa.**
 * Evento di risposta: -
 * Altà priorità: true
 
-### get-service-fields
-* Nome: `get-service-fields`
-* Mittente: Frontend
-* Descrizione: Richiedi dal backend una lista contenente tutti i _service_ con i relativi _ID_ del database
-  selezionato.
-* Dati inviati: -
-* Dati risposta: _ArrayList\<Data\>_ contente tutti i campi service presenti nella tabella del database
+### update-service-fields
+* Nome: `update-service-fields`
+* Mittente: Backend
+* Descrizione: Il backend invia al Frontend i dati aggiornati da mostrare nella sezione "Show Data"
+* Dati inviati: _ArrayList<Data>_ i dati aggiornati
+* Dati risposta: -
 * Evento di risposta: -
-* Altà priorità: true
+* Altà priorità: false
 
 ### get-data
 * Nome: `get-data`

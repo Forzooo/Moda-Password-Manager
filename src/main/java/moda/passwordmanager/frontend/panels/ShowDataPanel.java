@@ -28,7 +28,7 @@ public class ShowDataPanel extends JPanel {
     private DefaultListModel<String> userDataModel;
 
     // Swing components
-    private JList dataList;
+    private JList<String> dataList;
 
     public ShowDataPanel(InterThreadCommunication interThreadCommunication, int MIN_CONTENT_WIDTH, Dimension windowSize,
                          int sidebarPanelWidth) {
@@ -80,7 +80,7 @@ public class ShowDataPanel extends JPanel {
      */
     private void initComponents(){
         // Create the JList used to show all the data saved inside the database
-        this.dataList = new JList();
+        this.dataList = new JList<>();
         this.dataList.setFixedCellHeight(30);
         this.dataList.setModel(this.userDataModel);  // Set the model of the JList (Strings containing service data)
         this.dataList.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 20));
@@ -157,24 +157,24 @@ public class ShowDataPanel extends JPanel {
         return userData;
     }
 
+    public ArrayList<Data> getUserData() {
+        return this.userData;
+    }
+
+    public DefaultListModel<String> getUserDataModel() {
+        return this.userDataModel;
+    }
+
     /**
-     * Update the userData and its model to show the updated data of the database
+     * Return the index of the Data object of UserData that has the same ID. -1 is returned if it does not exist
      */
-    public void updateUserData(){
-        // Create and send the event to the backend asking for the user data
-        Event updateUserData = new Event("get-service-fields");
-
-        // Wait for the response of the backend and update the data with the new one
-        Event updatedDataEvent = this.interThreadCommunication.requestAndReceive(updateUserData);
-        ArrayList<Data> updatedData = (ArrayList<Data>) updatedDataEvent.getData().getFirst();
-
-        this.userData.clear();  // Clear the ArrayList from the previous data
-        this.userData.addAll(updatedData);  // Update the ArrayList with the new data
-
-        this.userDataModel.clear();  // Clear the model from the previous data
-        for (int i = 0; i < updatedData.size(); i++){
-            this.userDataModel.add(i, updatedData.get(i).getSERVICE());
+    public int indexOfUserData(int ID){
+        for (int i = 0; i < this.userData.size(); i++){
+            if (this.userData.get(i).getID() == ID) {
+                return i;
+            }
         }
+        return -1;
     }
 
 }
