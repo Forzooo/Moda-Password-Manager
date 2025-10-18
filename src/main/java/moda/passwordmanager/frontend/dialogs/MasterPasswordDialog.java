@@ -18,7 +18,7 @@ import java.awt.event.WindowEvent;
  */
 public class MasterPasswordDialog extends JDialog {
 
-    private InterThreadCommunication interThreadCommunication;
+    private InterThreadCommunication itc;
 
     // Dialog components
     private JPasswordField masterPassword;
@@ -26,13 +26,27 @@ public class MasterPasswordDialog extends JDialog {
     private JLabel currentDatabaseLabel;
     private JButton changeDatabaseButton;
 
-    public MasterPasswordDialog(InterThreadCommunication interThreadCommunication){
+    public MasterPasswordDialog(InterThreadCommunication itc){
         super();
 
-        this.interThreadCommunication = interThreadCommunication;
-
+        this.itc = itc;
         initDialog();
-        initComponents();
+        initLoginComponents();
+        initDatabaseInformationComponents();
+        initListeners();
+    }
+
+    /**
+     * Initialize the Master Password Dialog with a fixed database: it cannot be changed
+     * @param databaseToUse Path of the database to use
+     */
+    public MasterPasswordDialog(InterThreadCommunication itc, String databaseToUse){
+        super();
+
+        this.itc = itc;
+        initDialog();
+        initLoginComponents();
+        initDatabaseInformationComponents(databaseToUse);
         initListeners();
     }
 
@@ -63,14 +77,13 @@ public class MasterPasswordDialog extends JDialog {
         setAlwaysOnTop(true);
 
         setBackground(Color.WHITE);
-
         setIconImage(Frontend.getIcon());
     }
 
     /**
      * Initialize and add all the Swing components of the Dialog
      */
-    private void initComponents() {
+    private void initLoginComponents() {
         // The panel that contains the master password login
         JPanel masterPasswordPanel = new JPanel();
         masterPasswordPanel.setLayout(new FlowLayout());
@@ -81,6 +94,16 @@ public class MasterPasswordDialog extends JDialog {
         this.sendButton = new JButton();
         this.sendButton.setText("Log In");
 
+        masterPasswordPanel.add(this.masterPassword);
+        masterPasswordPanel.add(this.sendButton);
+
+        add(masterPasswordPanel);
+    }
+
+    /**
+     * Initialize the database information components
+     */
+    private void initDatabaseInformationComponents(){
         // The panel that contains the information about the database
         JPanel databaseInformationPanel = new JPanel();
         databaseInformationPanel.setLayout(new FlowLayout());
@@ -91,13 +114,27 @@ public class MasterPasswordDialog extends JDialog {
         this.changeDatabaseButton = new JButton();
         this.changeDatabaseButton.setText("Change database");
 
-        masterPasswordPanel.add(this.masterPassword);
-        masterPasswordPanel.add(this.sendButton);
+        databaseInformationPanel.add(this.currentDatabaseLabel);
+        databaseInformationPanel.add(this.changeDatabaseButton);
+        add(databaseInformationPanel);
+    }
+
+    /**
+     * Initialize the database information components using a fixed database
+     * @param databaseToUse The path of the database
+     */
+    private void initDatabaseInformationComponents(String databaseToUse){
+        // The panel that contains the information about the database
+        JPanel databaseInformationPanel = new JPanel();
+        databaseInformationPanel.setLayout(new FlowLayout());
+
+        this.currentDatabaseLabel = new JLabel();
+        this.currentDatabaseLabel.setText("Current database: " + databaseToUse);
+
+        // The button is only initialized, without any attribute set, only for consistency
+        this.changeDatabaseButton = new JButton();
 
         databaseInformationPanel.add(this.currentDatabaseLabel);
-        databaseInformationPanel.add(changeDatabaseButton);
-
-        add(masterPasswordPanel);
         add(databaseInformationPanel);
     }
 
@@ -138,12 +175,7 @@ public class MasterPasswordDialog extends JDialog {
             }
         });
 
-        this.changeDatabaseButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                openDatabaseChooser();
-            }
-        });
+        this.changeDatabaseButton.addActionListener(e -> openDatabaseChooser());
     }
 
     /**
@@ -164,11 +196,11 @@ public class MasterPasswordDialog extends JDialog {
      * @param masterPassword The master password the user has entered
      */
     private void sendMasterPassword(char[] masterPassword){
-        // Create and send the event to the backend telling to set the master password
+        // Create and send the event to the backend to set the master password
         Event setMasterPassword = new Event("set-master-password", masterPassword);
 
         // Get the event from the backend to know whether the master password the user entered is correct
-        Event confirmEvent = this.interThreadCommunication.requestAndReceive(setMasterPassword);
+        Event confirmEvent = this.itc.requestAndReceive(setMasterPassword);
         boolean masterPasswordFlag = (Boolean) confirmEvent.getData().getFirst();
 
         // Show an Error message and terminate the execution if the master password entered is wrong
@@ -188,7 +220,7 @@ public class MasterPasswordDialog extends JDialog {
         Event event = new Event("get-database");
 
         // Receive the path of the database from the backend
-        Event databasePathEvent = this.interThreadCommunication.requestAndReceive(event);
+        Event databasePathEvent = this.itc.requestAndReceive(event);
         String databasePath = (String) databasePathEvent.getData().getFirst();
 
         return databasePath;
@@ -225,7 +257,7 @@ public class MasterPasswordDialog extends JDialog {
      */
     private void changeDatabase(String databasePath){
         Event event = new Event("set-database", databasePath);
-        this.interThreadCommunication.requestAndReceive(event);
+        this.itc.requestAndReceive(event);
         this.currentDatabaseLabel.setText(databasePath);  // Set the new path of the database into the label
     }
 
