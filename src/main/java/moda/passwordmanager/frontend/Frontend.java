@@ -49,10 +49,11 @@ public class Frontend extends JPanel implements ActionListener {
     private ShowDataPanel showDataPanel;
     private SettingsPanel settingsPanel;
 
-    public Frontend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue, int width,
-                    int height){
+    public Frontend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
+                    String databasePath, int width, int height){
 
         initCommunication(backendQueue, frontendQueue);  // Start the communication between the backend and the frontend
+        setInitialDatabase(databasePath);  // Set, if not empty, the database to use
 
         // Set the default exception handler for the Frontend thread
         Thread.setDefaultUncaughtExceptionHandler(this::exceptionHandler);
@@ -74,8 +75,22 @@ public class Frontend extends JPanel implements ActionListener {
      * @return Icon of the password manager
      */
     public static Image getIcon(){
-        ImageIcon imageIcon = new ImageIcon(Frontend.class.getResource("/icon.png"));  // Get the image from the resources
+        // Get the image from the resources
+        ImageIcon imageIcon = new ImageIcon(Frontend.class.getResource("/icon.png"));
         return imageIcon.getImage();
+    }
+
+    /**
+     * Set the initial database to use
+     * @param databasePath The path of the database to use
+     */
+    private void setInitialDatabase(String databasePath){
+        // If the path is empty, the user has not chosen a database to open at the execution of the application
+        if (databasePath.isEmpty()){
+            return;
+        }
+        Event event = new Event("set-database", databasePath);
+        this.itc.requestAndReceive(event);
     }
 
     /**

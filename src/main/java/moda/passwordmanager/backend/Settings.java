@@ -63,7 +63,7 @@ public class Settings {
 
             // Set all the database values
             ObjectNode databaseNode = this.objectMapper.createObjectNode();  // Contains all the database values
-            databaseNode.put("path", this.APPDATA_DIRECTORY_PATH+"moda-password-manager.db");
+            databaseNode.put("path", this.APPDATA_DIRECTORY_PATH+"moda-password-manager.modb");
 
             // Set the string generation configuration
             ObjectNode stringGeneration = this.objectMapper.createObjectNode();

@@ -79,13 +79,16 @@
                             <destination>${project.build.directory}/jpackage</destination>
                             <type>EXE</type>
                             <winMenu>true</winMenu>
+                            <winMenuGroup>Moda</winMenuGroup>
                             <winDirChooser>true</winDirChooser>
+                            <winShortcut>true</winShortcut>
                             <winShortcutPrompt>true</winShortcutPrompt>
                             <icon>${project.basedir}/target/classes/icon.ico</icon>
                             <vendor>Moda</vendor>
                             <copyright>GNU General Public License, version 3 (GPLv3)</copyright>
                             <licenseFile>${project.basedir}/target/classes/LICENSE</licenseFile>
                             <aboutUrl>https://github.com/Forzooo/Moda-Password-Manager</aboutUrl>
+                            <fileAssociations>${project.basedir}/target/classes/file-associations.properties</fileAssociations>
                         </configuration>
                     </plugin>
                 </plugins>

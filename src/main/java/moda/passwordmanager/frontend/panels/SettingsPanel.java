@@ -185,14 +185,14 @@ public class SettingsPanel extends JPanel {
         this.newDatabaseButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Create the File Chooser that opens in the desktop, and saves a .db file
+                // Create the File Chooser that opens in the desktop, and saves a .modb file
                 JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
                 fileChooser.setDialogTitle("Create a new database to use");
                 fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
 
-                // Create the filter to save only .db files
-                FileNameExtensionFilter filter = new FileNameExtensionFilter("Moda Password Manager Database (.db)",
-                        ".db");
+                // Create the filter to save only .modb files
+                FileNameExtensionFilter filter = new FileNameExtensionFilter("Moda Password Manager Database (.modb)",
+                        ".modb");
                 fileChooser.setFileFilter(filter);
 
                 // Open the file chooser
@@ -202,8 +202,8 @@ public class SettingsPanel extends JPanel {
                     // Check whether the database has been chosen
                     if (!path.isEmpty()){
                         // If the file has been saved without setting the extension, set it automatically
-                        if (!path.endsWith(".db")){
-                            path = path+".db";
+                        if (!path.endsWith(".modb")){
+                            path = path+".modb";
                         }
                         setNewDatabase(path);
                     }
@@ -214,14 +214,14 @@ public class SettingsPanel extends JPanel {
         this.changeDatabaseButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Create the File Chooser that opens in the desktop view, and selects only .db files
+                // Create the File Chooser that opens in the desktop view, and selects only .modb files
                 JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
                 fileChooser.setDialogTitle("Choose a database to use");
                 fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
 
-                // Create the filter to choose only .db files
-                FileNameExtensionFilter filter = new FileNameExtensionFilter("Moda Password Manager Database (.db)",
-                        "db");
+                // Create the filter to choose only .modb files
+                FileNameExtensionFilter filter = new FileNameExtensionFilter("Moda Password Manager Database (.modb)",
+                        "modb");
                 fileChooser.setFileFilter(filter);
 
                 // Open the file chooser
@@ -259,7 +259,7 @@ public class SettingsPanel extends JPanel {
                 fileChooser.setDialogTitle("Choose the OAuth credentials file");
                 fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
 
-                // Create the filter to choose only .db files
+                // Create the filter to choose only .modb files
                 FileNameExtensionFilter filter = new FileNameExtensionFilter("OAuth Credentials (.json)",
                         "json");
                 fileChooser.setFileFilter(filter);

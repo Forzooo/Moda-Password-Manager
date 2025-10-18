@@ -198,14 +198,14 @@ public class MasterPasswordDialog extends JDialog {
      * Open the Swing File Chooser and let the user select a database to use
      */
     private void openDatabaseChooser(){
-        // Create the File Chooser that opens in the desktop view, and selects only .db files
+        // Create the File Chooser that opens in the desktop view, and selects only .modb files
         JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
         fileChooser.setDialogTitle("Choose a database to use");
         fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
 
-        // Create the filter to choose only .db files
-        FileNameExtensionFilter filter = new FileNameExtensionFilter("Moda Password Manager Database (.db)",
-                "db");
+        // Create the filter to choose only .modb files
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("Moda Password Manager Database (.modb)",
+                "modb");
         fileChooser.setFileFilter(filter);
 
         // Open the file chooser in the current dialog and check that the user has chosen a database file
