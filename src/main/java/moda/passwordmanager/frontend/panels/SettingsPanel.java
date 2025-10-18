@@ -1,6 +1,5 @@
 package moda.passwordmanager.frontend.panels;
 
-import moda.passwordmanager.frontend.Frontend;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.dialogs.MasterPasswordDialog;
@@ -15,7 +14,7 @@ import java.awt.event.ActionListener;
 public class SettingsPanel extends JPanel {
 
     // Attribute to communicate with the backend
-    private InterThreadCommunication interThreadCommunication;
+    private InterThreadCommunication itc;
 
     // Attributes for the configuration of the panel
     private final int MIN_CONTENT_WIDTH;
@@ -32,12 +31,12 @@ public class SettingsPanel extends JPanel {
     private JButton enableAutomaticSynchronizationButton;  // Enable the automatic synchronization
     private JButton disableAutomaticSynchronizationButton;  // Disable the automatic synchronization
 
-    public SettingsPanel(InterThreadCommunication interThreadCommunication, int MIN_CONTENT_WIDTH, Dimension windowSize,
+    public SettingsPanel(InterThreadCommunication itc, int MIN_CONTENT_WIDTH, Dimension windowSize,
                          int sidebarPanelWidth) {
         super();  // Initialize the Panel
 
         // Set the attributes given by the JFrame
-        this.interThreadCommunication = interThreadCommunication;
+        this.itc = itc;
         this.MIN_CONTENT_WIDTH = MIN_CONTENT_WIDTH;
         this.windowSize = windowSize;
 
@@ -314,7 +313,7 @@ public class SettingsPanel extends JPanel {
      * @return
      */
     private String getCurrentDatabasePath(){
-        Event response = this.interThreadCommunication.requestAndReceive(new Event("get-database"));
+        Event response = this.itc.requestAndReceive(new Event("get-database"));
         String databasePath = (String) response.getData().getFirst();  // Retrieve the path of the database
         return databasePath;
     }
@@ -324,10 +323,14 @@ public class SettingsPanel extends JPanel {
      * @param databasePath The path of the new database
      */
     private void setNewDatabase(String databasePath){
+        // Set the path of the database
         Event event = new Event("set-database", databasePath);
-        this.interThreadCommunication.requestAndReceive(event);
+        this.itc.requestAndReceive(event);
         this.databasePathTextField.setText(databasePath);  // Set the new path of the database into the Text Field
-//        notifyUser()
+
+        // Set the master password of the database before using it
+        MasterPasswordDialog masterPasswordDialog = new MasterPasswordDialog(this.itc, databasePath);
+        masterPasswordDialog.setVisible(true);
     }
 
     /**
@@ -336,7 +339,7 @@ public class SettingsPanel extends JPanel {
      */
     private void changeMasterPassword(String masterPassword){
         Event event = new Event("change-master-password", masterPassword.toCharArray());
-        this.interThreadCommunication.requestAndReceive(event);  // Wait for the end of the operations in the backend
+        this.itc.requestAndReceive(event);  // Wait for the end of the operations in the backend
     }
 
     /**
@@ -346,7 +349,7 @@ public class SettingsPanel extends JPanel {
     private void setGoogleDriveVisibility(){
        // Retrieve from the settings file the configuration of Google Drive visibility
         Event event = new Event("get-google-drive");
-        Event response = this.interThreadCommunication.requestAndReceive(event);
+        Event response = this.itc.requestAndReceive(event);
         boolean visibility = (boolean) response.getData().getFirst();
 
         if (!visibility){
@@ -372,7 +375,7 @@ public class SettingsPanel extends JPanel {
     private void setGoogleDriveAutomaticSynchronizationVisibility(){
         // Retrieve from the settings file the configuration of Google Drive synchronization visibility
         Event event = new Event("get-google-drive-synchronization");
-        Event response = this.interThreadCommunication.requestAndReceive(event);
+        Event response = this.itc.requestAndReceive(event);
         boolean visibility = (boolean) response.getData().getFirst();
 
         if (!visibility){
@@ -390,7 +393,7 @@ public class SettingsPanel extends JPanel {
      */
     private void enableGoogleDrive(String credentialsPath){
         Event event = new Event("google-drive-authenticate", credentialsPath);
-        this.interThreadCommunication.request(event);
+        this.itc.request(event);
     }
 
     /**
@@ -398,7 +401,7 @@ public class SettingsPanel extends JPanel {
      */
     private void disableGoogleDrive(){
         Event event = new Event("google-drive-unauthenticate");
-        this.interThreadCommunication.request(event);  // Wait for the end of operations before disabling the button
+        this.itc.request(event);  // Wait for the end of operations before disabling the button
     }
 
     /**
@@ -406,7 +409,7 @@ public class SettingsPanel extends JPanel {
      */
     private void synchronizeGoogleDrive(){
         Event event = new Event("google-drive-synchronize");
-        this.interThreadCommunication.requestAndReceive(event);
+        this.itc.requestAndReceive(event);
     }
 
     /**
@@ -414,7 +417,7 @@ public class SettingsPanel extends JPanel {
      */
     private void enableAutomaticSynchronization(){
         Event event = new Event("enable-google-drive-synchronization");
-        this.interThreadCommunication.request(event);
+        this.itc.request(event);
     }
 
     /**
@@ -422,7 +425,7 @@ public class SettingsPanel extends JPanel {
      */
     private void disableAutomaticSynchronization(){
         Event event = new Event("disable-google-drive-synchronization");
-        this.interThreadCommunication.request(event);
+        this.itc.request(event);
     }
 
 }
