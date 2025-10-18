@@ -16,12 +16,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A JDialog that shows the all the information related to an ID selected by the user.
+ * A JDialog that shows the all the information related to an ID of a record of the database
  */
 public class ShowDataDialog extends JDialog {
 
-    // Attribute to communicate with the backend
-    private InterThreadCommunication interThreadCommunication;
+    private InterThreadCommunication itc;
 
     private Data data;  // The user data retried from the backend
     private List<JTextField> dataFields;  // The data field contain the user data
@@ -31,11 +30,12 @@ public class ShowDataDialog extends JDialog {
     private JButton modifyButton;
     private JButton saveChangesButton;
     private JButton deleteButton;
+    private JButton generatePasswordButton;
 
-    public ShowDataDialog(InterThreadCommunication interThreadCommunication, Data data) {
+    public ShowDataDialog(InterThreadCommunication itc, Data data) {
         super();  // Initialize the Panel
 
-        this.interThreadCommunication = interThreadCommunication;
+        this.itc = itc;
         this.data = data;
 
         initDialog();
@@ -77,6 +77,8 @@ public class ShowDataDialog extends JDialog {
         this.saveChangesButton = new JButton("Save Changes");
         this.saveChangesButton.setVisible(false);  // It's shown only when modifyButton is clicked
         this.deleteButton = new JButton("Delete");
+        this.generatePasswordButton = new JButton("Generate a Password");
+        this.generatePasswordButton.setVisible(false);
 
         // Add dynamically all the data fields
         this.dataFields = new ArrayList<>();  // All the data fields are stored here
@@ -111,6 +113,7 @@ public class ShowDataDialog extends JDialog {
         buttonsPanel.add(this.modifyButton);
         buttonsPanel.add(this.saveChangesButton);
         buttonsPanel.add(this.deleteButton);
+        buttonsPanel.add(this.generatePasswordButton);
 
         panel.add(buttonsPanel);
 
@@ -120,51 +123,11 @@ public class ShowDataDialog extends JDialog {
     /**
      * Initialize all the listeners on the components
      */
-    private void initListeners(){
-        this.modifyButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                enableChanges();
-            }
-        });
+    private void initListeners() {
+        this.modifyButton.addActionListener(e -> enableChanges());
 
         // Save the changes and send the event to the backend
-        this.saveChangesButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Store the updated strings into an array
-                String[] updatedData = new String[5];
-
-                // Iterate over the data fields to get their data and set them not to be editable
-                // Set the new data to the copy button and enable it again
-                for (int i = 0; i < dataFields.size(); i++){
-                    JTextField dataField = dataFields.get(i);
-                    updatedData[i] = dataField.getText();
-                    dataField.setEditable(false);
-
-                    JButton copyButton = copyButtons.get(i);
-
-                    // Remove the old action listener and create a new one with the updated data
-                    copyButton.removeActionListener(copyButton.getActionListeners()[0]);
-                    copyButton.addActionListener(getCopyDataActionListener(dataField.getText()));
-                    copyButton.setEnabled(true);
-                }
-
-                // Ensure that the service field is not empty
-                if (updatedData[3].isEmpty()){
-                    enableChanges();  // Enable to make changes again as they were disabled in the previous for loop
-                    return;
-                }
-
-                // Send the data to the backend
-                changeData(updatedData[0], updatedData[1], updatedData[2], updatedData[3], updatedData[4]);
-
-                // Hide the save JButton, show the Delete button and enable the modify JButton again
-                saveChangesButton.setVisible(false);
-                deleteButton.setVisible(true);
-                modifyButton.setEnabled(true);
-            }
-        });
+        this.saveChangesButton.addActionListener(e -> saveChanges());
 
         this.deleteButton.addActionListener(new ActionListener() {
             @Override
@@ -179,6 +142,8 @@ public class ShowDataDialog extends JDialog {
                 }
             }
         });
+
+        this.generatePasswordButton.addActionListener(e -> generatePassword());
     }
 
     /**
@@ -186,18 +151,54 @@ public class ShowDataDialog extends JDialog {
      */
     private void enableChanges(){
         // Set the JTextFields to be editable to allow changes
-        for (JTextField fields : dataFields){
+        for (JTextField fields : this.dataFields){
             fields.setEditable(true);
         }
 
         // Set the copy buttons to not be enabled while the data is being changed
-        for (JButton copyButton : copyButtons){
+        for (JButton copyButton : this.copyButtons){
             copyButton.setEnabled(false);
         }
 
-        modifyButton.setEnabled(false);  // Disable the JButton as it's already being used
-        deleteButton.setVisible(false); // HIde the delete button
-        saveChangesButton.setVisible(true);  // Show the JButton used to apply changes
+        this.modifyButton.setEnabled(false);  // Disable the JButton as it's already being used
+        this.deleteButton.setVisible(false); // Hide the delete button
+        this.saveChangesButton.setVisible(true);  // Show the JButton used to apply changes
+        this.generatePasswordButton.setVisible(true);  // Show the generate password button
+    }
+
+    private void saveChanges(){
+        // Store the updated strings into an array
+        String[] updatedData = new String[5];
+
+        // Iterate over the data fields to get their data and set them not to be editable
+        // Set the new data to the copy button and enable it again
+        for (int i = 0; i < dataFields.size(); i++){
+            JTextField dataField = dataFields.get(i);
+            updatedData[i] = dataField.getText();
+            dataField.setEditable(false);
+
+            JButton copyButton = copyButtons.get(i);
+
+            // Remove the old action listener and create a new one with the updated data
+            copyButton.removeActionListener(copyButton.getActionListeners()[0]);
+            copyButton.addActionListener(getCopyDataActionListener(dataField.getText()));
+            copyButton.setEnabled(true);
+        }
+
+        // Ensure that the service field is not empty
+        if (updatedData[3].isEmpty()){
+            enableChanges();  // Enable to make changes again as they were disabled in the previous for loop
+            return;
+        }
+
+        // Send the data to the backend
+        changeData(updatedData[0], updatedData[1], updatedData[2], updatedData[3], updatedData[4]);
+
+        // Hide the save JButton and the generate password button, show the Delete button and enable the modify JButton again
+        this.saveChangesButton.setVisible(false);
+        this.deleteButton.setVisible(true);
+        this.modifyButton.setEnabled(true);
+        this.generatePasswordButton.setVisible(false);
     }
 
     /**
@@ -232,7 +233,7 @@ public class ShowDataDialog extends JDialog {
 
         // Create and send the event
         Event event = new Event("change-data", data);
-        this.interThreadCommunication.requestAndReceive(event);  // Wait for the response of the backend
+        this.itc.requestAndReceive(event);  // Wait for the response of the backend
     }
 
     /**
@@ -240,6 +241,15 @@ public class ShowDataDialog extends JDialog {
      */
     private void deleteData(){
         Event event = new Event("delete-data", this.data.getID());
-        this.interThreadCommunication.request(event);
+        this.itc.request(event);
+    }
+
+    /**
+     * Generate a password and set the password text field to it
+     */
+    private void generatePassword(){
+        Event event = this.itc.requestAndReceive(new Event("generate-string"));
+        String password = (String) event.getData().getFirst();
+        this.dataFields.get(2).setText(password);  // Set the password to the third text field (the password one)
     }
 }
