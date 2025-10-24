@@ -54,7 +54,7 @@ public class Backend extends Thread {
         // The path of the database is retrieved from the helper
         this.database = new Database(this.helper.getDatabasePath());
 
-        this.backgroundExecutor = Executors.newSingleThreadScheduledExecutor();  // Initialize the Background Executor
+        this.backgroundExecutor = Executors.newScheduledThreadPool(2);  // Initialize the Background Executor
 
         startGoogleDrive();  // Initialize the connection with Google Drive only if enabled by the user
 
@@ -203,6 +203,15 @@ public class Backend extends Thread {
      */
     private void executeInBackground(Runnable method){
         this.backgroundExecutor.schedule(method, 0, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Schedule a method to be executed in the background
+     * @param method The method to be executed
+     * @param period The period that has to pass before executing again the method
+     */
+    private void executePeriodicallyInBackground(Runnable method, long period){
+        this.backgroundExecutor.scheduleAtFixedRate(method, 0, period, TimeUnit.SECONDS);
     }
 
     /**
@@ -513,12 +522,17 @@ public class Backend extends Thread {
     }
 
     /**
-     * Start the Google Drive communication only if it's enabled in the settings file
+     * Start the Google Drive communication and the automatic synchronization only if they're enabled in the settings
+     * file
      */
     private void startGoogleDrive(){
         if (this.helper.isGoogleDriveEnabled()){
             this.googleDrive.init();
         }
+
+        // We need to schedule the synchronization even if the Google Drive module is not enabled because otherwise
+        // it can happen that the synchronization is scheduled more than one time
+        this.executePeriodicallyInBackground(this::synchronizeGoogleDrive, 60);
     }
 
     /**
@@ -556,7 +570,10 @@ public class Backend extends Thread {
      * Synchronize the database with Google Drive
      */
     private void synchronizeGoogleDrive(){
-        this.googleDrive.sync(this.helper.getDatabasePath(), this.database.getDatabaseName());
+        // Ensure that Google Drive is enabled, and the Synchronization is enabled before synchronizing
+        if (this.helper.isGoogleDriveEnabled() && this.settings.readBooleanSetting("google_drive/automatic_synchronization")){
+            this.googleDrive.sync(this.helper.getDatabasePath(), this.database.getDatabaseName());
+        }
     }
 
     /**
