@@ -247,14 +247,4 @@ public class Frontend extends JPanel implements ActionListener {
         switchPanel();
     }
 
-    /**
-     * Handle the unhandled exception in the frontend by showing a messagebox about it
-     * @param e The exception that has occurred
-     */
-    private void exceptionHandler(Thread t, Throwable e){
-        // Show the exception as a Message Dialog with the type of error message
-        JOptionPane.showMessageDialog(this, e.toString(), "An exception occurred in the Frontend",
-                JOptionPane.ERROR_MESSAGE);
-    }
-
 }
