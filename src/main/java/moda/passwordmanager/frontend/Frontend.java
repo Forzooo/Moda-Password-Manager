@@ -9,6 +9,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -55,7 +57,7 @@ public class Frontend extends JPanel implements ActionListener {
         initCommunication(backendQueue, frontendQueue);  // Start the communication between the backend and the frontend
         setInitialDatabase(databasePath);  // Set, if not empty, the database to use
 
-        // Set the default exception handler for the Frontend thread
+        // Set the default exception handler for the Frontend threads
         Thread.setDefaultUncaughtExceptionHandler(this::exceptionHandler);
 
         initMasterPassword();
@@ -78,6 +80,30 @@ public class Frontend extends JPanel implements ActionListener {
         // Get the image from the resources
         ImageIcon imageIcon = new ImageIcon(Frontend.class.getResource("/icon.png"));
         return imageIcon.getImage();
+    }
+
+    /**
+     * Handle the unhandled exception in the frontend by showing a messagebox about it
+     * @param e The exception that has occurred
+     */
+    private void exceptionHandler(Thread t, Throwable e){
+        // Show the exception as a Message Dialog with the type of error message
+        JOptionPane.showMessageDialog(this, getStackTrace(e),
+                "An exception occurred in the " + t.getName() + " thread", JOptionPane.ERROR_MESSAGE);
+    }
+
+    /**
+     * Get the stack trace of the exception raised
+     * @param e The exception raised
+     * @return The stack trace formatted as a string
+     */
+    public static String getStackTrace(Throwable e){
+        // StringWriter and PrintWriter are used to get the stack trace of the exception into the string format
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter printWriter = new PrintWriter(stringWriter);
+        e.printStackTrace(printWriter);
+
+        return stringWriter.toString();
     }
 
     /**
@@ -221,20 +247,4 @@ public class Frontend extends JPanel implements ActionListener {
         Event synchronize = new Event("google-drive-synchronize");
         this.itc.request(synchronize);
     }
-
-    /**
-     * Handle the unhandled exception in the frontend by showing a messagebox about it
-     * @param e The exception that has occurred
-     */
-    private void exceptionHandler(Thread t, Throwable e){
-        // Show the exception as a Message Dialog with the type of error message
-        JOptionPane.showMessageDialog(this, e.toString(), "An exception occurred in the Frontend",
-                JOptionPane.ERROR_MESSAGE);
-    }
-
-    /**
-     * Wait for unhandled exceptions in the backend and then close the connection with the backend and stop
-     * the execution
-     */
-
 }

@@ -36,10 +36,16 @@ public class Backend extends Thread {
     // Execute operations in the background
     private ScheduledExecutorService backgroundExecutor;
 
+    /**
+     * The event received from the ITC. It's used only when an exception is raised, otherwise the local value
+     * is preferred and this one is ignored.
+     */
+    private Event eventReceived;
     private Event eventToSend;  // The event that is sent as a reply to the frontend
     private boolean runFlag;  // Let the backend run until the connection is closed by the frontend
 
     public Backend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
+        super("Backend");  // Set the name of the thread for debug purposes
 
         // Create the communication handler with the two queues
         this.itc = new InterThreadCommunication(backendQueue, frontendQueue);
@@ -58,6 +64,7 @@ public class Backend extends Thread {
 
         startGoogleDrive();  // Initialize the connection with Google Drive only if enabled by the user
 
+        this.eventReceived = null;
         this.eventToSend = null;
         this.runFlag = true;
     }
@@ -66,9 +73,16 @@ public class Backend extends Thread {
      * Provide the method used for uncaught exceptions. It must be public otherwise the thread object
      * that is inside the main method, cannot access it
      */
-    public void uncaughtException(Thread t, Throwable e) {
+    public void handleException(Thread t, Throwable e) {
+        // Before sending the exception we need to send back the event because if the request one is an high-priority
+        // one, then EDT is waiting for the response before handling the exception
+        this.eventToSend.addData(null);  // Add null as the only element of the event
+        this.itc.reply(this.eventReceived, this.eventToSend);
+
         // Send the event to the frontend with the exception communication
-        Event event = new Event("exception-raised", e.toString());
+        Event event = new Event("exception-raised");
+        event.addData(t.getName());
+        event.addData(e);
 
         // Receive the response from the frontend
         Event frontendResponse = this.itc.requestAndReceive(event);
@@ -85,6 +99,7 @@ public class Backend extends Thread {
     public void run() {
         while (this.runFlag){
             Event event = this.itc.receive();  // Wait for an event from the Frontend
+            this.eventReceived = event;  // Set the eventReceived for the exceptions handler
 
             createEvent(event);  // Create an event to send to the frontend
             handleEvent(event);  // Handle the operation requested from the frontend
@@ -194,6 +209,9 @@ public class Backend extends Thread {
             case "disable-google-drive-synchronization":
                 disableGoogleDriveSynchronization();
                 break;
+
+            default:  // If the event is not handled by one of the cases above, then discard the event
+                resetSendData();
         }
     }
 

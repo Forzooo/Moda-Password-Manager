@@ -69,7 +69,7 @@ public class Application extends JFrame {
 
         Backend backend = new Backend(backendQueue, frontendQueue);
         // Set the handler from the object itself otherwise it would use the one from the Frontend
-        backend.setUncaughtExceptionHandler(backend::uncaughtException);
+        backend.setUncaughtExceptionHandler(backend::handleException);
         backend.start();
     }
 }

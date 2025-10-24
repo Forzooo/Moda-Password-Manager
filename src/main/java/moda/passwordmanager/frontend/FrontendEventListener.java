@@ -7,7 +7,6 @@ import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
 import javax.swing.*;
 import java.util.ArrayList;
-import java.util.Map;
 
 public class FrontendEventListener extends Thread {
 
@@ -17,6 +16,7 @@ public class FrontendEventListener extends Thread {
     private ShowDataPanel showDataPanel;  // The Listener needs the Show Data Panel to call the service fields
 
     public FrontendEventListener(InterThreadCommunication itc, ShowDataPanel showDataPanel){
+        super("Frontend Event Listener");  // Set the name of the thread for debug purposes
         this.itc = itc;
         this.runFlag = true;
         this.showDataPanel = showDataPanel;
@@ -53,13 +53,15 @@ public class FrontendEventListener extends Thread {
 
         switch (event.getNAME()){
             case "exception-raised":
-                exceptionRaised((String) eventData.getFirst());
+                exceptionRaised((String) eventData.getFirst(), (Throwable) eventData.get(1));
+                break;
 
             case "update-service-fields":
                 updateServiceFields((ArrayList<Data>) eventData.getFirst());
+                break;
 
-            default:
-                this.eventToSend = null;
+            default:  // If the event is not handled by one of the cases above, then discard the event3
+                resetSendData();
         }
     }
 
@@ -70,22 +72,30 @@ public class FrontendEventListener extends Thread {
     /**
      * Retrieve an exception raised in the backend and show it with a MessageBox in the EDT Thread before closing
      * the connection and exiting
-     * @param exception
+     * @param threadName The name of the thread where the exception occurred
+     * @param throwable The stackTrace of the exception
      */
-    private void exceptionRaised(String exception){
+    private void exceptionRaised(String threadName, Throwable throwable){
         // Show the exception as a Message Dialog with the type of error message
-//        JOptionPane.showMessageDialog(this, exception, "An exception occurred in the Backend",
-//                JOptionPane.ERROR_MESSAGE);
+        SwingUtilities.invokeLater(() -> {
+            JOptionPane.showMessageDialog(null, Frontend.getStackTrace(throwable),
+                    "An exception occurred in the " + threadName + " thread", JOptionPane.ERROR_MESSAGE);
 
-        System.out.println(exception);
+            closeConnection();  // The "close-connection" event must be sent after the JOptionPane has been closed
+        });
+    }
 
-        // Send a "close-connection" event to the backend to tell it to stop its execution
-        Event closeConnection = new Event("close-connection");
+    /**
+     * Close the connection with the backend, and terminate the execution
+     */
+    private void closeConnection(){
+        moda.passwordmanager.interthreadcommunication.Event closeConnection = new Event("close-connection");
 
-        // Check that the backend has confirmed the connection to be closed and stop the execution
-        if (this.itc.requestAndReceive(closeConnection).getNAME().equals("close-connection")){
-            System.exit(0);
-        }
+        // Wait for the backend before terminating the execution as some operations could still being executed in the
+        // background tasks
+        this.itc.request(closeConnection);
+
+        System.exit(0);
     }
 
     /**
