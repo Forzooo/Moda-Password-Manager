@@ -87,23 +87,56 @@ public class Frontend extends JPanel implements ActionListener {
      * @param e The exception that has occurred
      */
     private void exceptionHandler(Thread t, Throwable e){
+        String stackTrace = getStackTrace(e);  // Get the full stack trace of the throwable
         // Show the exception as a Message Dialog with the type of error message
-        JOptionPane.showMessageDialog(this, getStackTrace(e),
+        JOptionPane.showMessageDialog(this, getLastStackTrace(stackTrace, 5),
                 "An exception occurred in the " + t.getName() + " thread", JOptionPane.ERROR_MESSAGE);
     }
 
     /**
      * Get the stack trace of the exception raised
-     * @param e The exception raised
+     * @param throwable The exception raised
      * @return The stack trace formatted as a string
      */
-    public static String getStackTrace(Throwable e){
+    public static String getStackTrace(Throwable throwable){
         // StringWriter and PrintWriter are used to get the stack trace of the exception into the string format
         StringWriter stringWriter = new StringWriter();
         PrintWriter printWriter = new PrintWriter(stringWriter);
-        e.printStackTrace(printWriter);
+        throwable.printStackTrace(printWriter);
 
         return stringWriter.toString();
+    }
+
+    /**
+     * Get the last n rows of a stack trace
+     * @param stackTrace The stack trace
+     */
+    public static String getLastStackTrace(String stackTrace, int stackRows){
+        String[] stackTraceArray = stackTrace.split("\n");  // Split the string by the \n character
+        StringBuilder newStackTrace = new StringBuilder();
+
+        // We need to include the "Caused by" text in the stack so we need to increment by 1 the stack rows
+        for (int i = 0; i < stackRows+1; i++){
+            // If the length of stackTrace is less than the number of rows, break the for loop
+            if (i == stackTraceArray.length){
+                break;
+            }
+            newStackTrace.append(stackTraceArray[i]).append("\n");
+        }
+
+        // If the stack trace is longer than the number of rows, we show triple dots to indicate that there are more
+        // lines than displayed
+        if (stackRows + 1 < stackTraceArray.length){
+            newStackTrace.append("... (").append(stackTraceArray.length - stackRows).append(" more line");
+
+            // Add the "s" to line if there are multiple lines hidden
+            if (stackTraceArray.length - stackRows - 1 > 1){
+                newStackTrace.append("s");
+            }
+            newStackTrace.append(" hidden)");
+        }
+
+        return newStackTrace.toString();
     }
 
     /**

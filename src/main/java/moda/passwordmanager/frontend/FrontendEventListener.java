@@ -76,9 +76,11 @@ public class FrontendEventListener extends Thread {
      * @param throwable The stackTrace of the exception
      */
     private void exceptionRaised(String threadName, Throwable throwable){
+        String stackTrace = Frontend.getStackTrace(throwable);  // Get the full stack trace of the throwable
+
         // Show the exception as a Message Dialog with the type of error message
         SwingUtilities.invokeLater(() -> {
-            JOptionPane.showMessageDialog(null, Frontend.getStackTrace(throwable),
+            JOptionPane.showMessageDialog(null, Frontend.getLastStackTrace(stackTrace, 5),
                     "An exception occurred in the " + threadName + " thread", JOptionPane.ERROR_MESSAGE);
 
             closeConnection();  // The "close-connection" event must be sent after the JOptionPane has been closed
@@ -89,7 +91,7 @@ public class FrontendEventListener extends Thread {
      * Close the connection with the backend, and terminate the execution
      */
     private void closeConnection(){
-        moda.passwordmanager.interthreadcommunication.Event closeConnection = new Event("close-connection");
+        Event closeConnection = new Event("close-connection");
 
         // Wait for the backend before terminating the execution as some operations could still being executed in the
         // background tasks
