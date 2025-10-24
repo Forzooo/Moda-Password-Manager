@@ -1,4 +1,4 @@
-package moda.passwordManager.frontend;
+package moda.passwordmanager.frontend;
 
 public enum GUIState {
 

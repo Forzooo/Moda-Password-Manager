@@ -12,7 +12,7 @@
 
     <groupId>moda</groupId>
     <artifactId>moda-password-manager</artifactId>
-    <version>0.3.1</version>
+    <version>0.4.0</version>
     <name>Moda Password Manager</name>
     <description>Il Moda Password Manager</description>
     <url>https://github.com/Forzooo/Moda-Password-Manager/</url>
@@ -40,7 +40,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>moda.passwordManager.Application</mainClass>
+                                    <mainClass>moda.passwordmanager.Application</mainClass>
                                 </transformer>
                             </transformers>
                             <filters>
@@ -74,18 +74,21 @@
                         <configuration>
                             <name>Moda Password Manager</name>
                             <input>${project.build.directory}</input>
-                            <mainClass>moda.passwordManager.Application</mainClass>
+                            <mainClass>moda.passwordmanager.Application</mainClass>
                             <mainJar>${project.build.finalName}.jar</mainJar>
                             <destination>${project.build.directory}/jpackage</destination>
                             <type>EXE</type>
                             <winMenu>true</winMenu>
+                            <winMenuGroup>Moda</winMenuGroup>
                             <winDirChooser>true</winDirChooser>
+                            <winShortcut>true</winShortcut>
                             <winShortcutPrompt>true</winShortcutPrompt>
                             <icon>${project.basedir}/target/classes/icon.ico</icon>
                             <vendor>Moda</vendor>
                             <copyright>GNU General Public License, version 3 (GPLv3)</copyright>
                             <licenseFile>${project.basedir}/target/classes/LICENSE</licenseFile>
                             <aboutUrl>https://github.com/Forzooo/Moda-Password-Manager</aboutUrl>
+                            <fileAssociations>${project.basedir}/target/classes/file-associations.properties</fileAssociations>
                         </configuration>
                     </plugin>
                 </plugins>

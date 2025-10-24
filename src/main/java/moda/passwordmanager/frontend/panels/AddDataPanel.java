@@ -1,21 +1,20 @@
-package moda.passwordManager.frontend.panels;
+package moda.passwordmanager.frontend.panels;
 
-import moda.passwordManager.backend.Data;
-import moda.passwordManager.communicationHandler.CommunicationHandler;
-import moda.passwordManager.communicationHandler.Event;
-import moda.passwordManager.frontend.components.Placeholder;
-import moda.passwordManager.frontend.dialogs.ConfigureGenerationPasswordDialog;
+import moda.passwordmanager.backend.Data;
+import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
+import moda.passwordmanager.interthreadcommunication.Event;
+import moda.passwordmanager.frontend.components.Placeholder;
+import moda.passwordmanager.frontend.dialogs.ConfigureGenerationPasswordDialog;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 
 public class AddDataPanel extends JPanel {
 
     // Attribute to communicate with the backend
-    private CommunicationHandler communicationHandler;
+    private InterThreadCommunication interThreadCommunication;
 
     // Attributes for the configuration of the panel
     private final int MIN_CONTENT_WIDTH;
@@ -39,11 +38,11 @@ public class AddDataPanel extends JPanel {
     private JButton generatePasswordButton;
     private JButton configurePasswordGeneration;
 
-    public AddDataPanel(CommunicationHandler communicationHandler, int MIN_CONTENT_WIDTH, Dimension windowSize, int sidebarPanelWidth) {
+    public AddDataPanel(InterThreadCommunication interThreadCommunication, int MIN_CONTENT_WIDTH, Dimension windowSize, int sidebarPanelWidth) {
         super();  // Initialize the Panel
 
         // Set the attributes given by the JFrame
-        this.communicationHandler = communicationHandler;
+        this.interThreadCommunication = interThreadCommunication;
         this.MIN_CONTENT_WIDTH = MIN_CONTENT_WIDTH;
         this.windowSize = windowSize;
 
@@ -205,7 +204,7 @@ public class AddDataPanel extends JPanel {
         this.configurePasswordGeneration.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                ConfigureGenerationPasswordDialog configureGenerationPasswordDialog = new ConfigureGenerationPasswordDialog(communicationHandler);
+                ConfigureGenerationPasswordDialog configureGenerationPasswordDialog = new ConfigureGenerationPasswordDialog(interThreadCommunication);
                 configureGenerationPasswordDialog.setVisible(true);
             }
         });
@@ -268,18 +267,16 @@ public class AddDataPanel extends JPanel {
         // Create the Event to send to the backend
         Event saveData = new Event("save-data", userData);
 
-        this.communicationHandler.send(saveData);
-        this.communicationHandler.receive();
+        this.interThreadCommunication.request(saveData);
 //        notifyUser();  // Example method to show the user a messagebox with the operation status
     }
 
     private void generatePassword() {
 
         // Create the Event to send to the backend
-        Event generatePassword = new Event("generate-string", new ArrayList());
-        this.communicationHandler.send(generatePassword);
+        Event generatePassword = new Event("generate-string");
 
-        Event response = this.communicationHandler.receive();  // Wait for the result
+        Event response = this.interThreadCommunication.requestAndReceive(generatePassword);  // Wait for the result
 
         String password = (String) response.getData().getFirst();  // Get the password from the backend
         this.passwordTextField.setText(password);  // Set the password to the TextField

@@ -1,53 +1,72 @@
-package moda.passwordManager.backend;
+package moda.passwordmanager.backend;
 
-import moda.passwordManager.communicationHandler.CommunicationHandler;
-import moda.passwordManager.communicationHandler.Event;
+import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
+import moda.passwordmanager.interthreadcommunication.Event;
 import org.apache.commons.io.FileUtils;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.TreeMap;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class Backend extends Thread {
 
     private BackendHelper helper;
 
-    // Objects of the backend classes
+    // Main components of the backend classes
     private Cryptography cryptography;
     private Database database;
     private GoogleDrive googleDrive;
     private Settings settings;
 
-    // The CommunicationHandler object used to communicate with the Frontend thread
-    private CommunicationHandler communicationHandler;
-    private CommunicationHandler exceptionsCommunicationHandler;
+    /**
+     * The servicesMap is used to map IDs with the hashCode of the service field
+     */
+    private TreeMap<Integer, Integer> servicesMap;
 
-    private Event eventToSend;  // The event that is sent to the frontend. Must be set using its setter
+    // The InterThreadCommunication object used to communicate with the Frontend thread
+    private InterThreadCommunication itc;
 
-    private boolean runFlag;  // Let the thread run until the connection is closed
+    // Execute operations in the background
+    private ScheduledExecutorService backgroundExecutor;
 
-    public Backend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
-                   LinkedBlockingQueue<Event> backendExceptionQueue, LinkedBlockingQueue<Event> frontendExceptionQueue){
+    /**
+     * The event received from the ITC. It's used only when an exception is raised, otherwise the local value
+     * is preferred and this one is ignored.
+     */
+    private Event eventReceived;
+    private Event eventToSend;  // The event that is sent as a reply to the frontend
+    private boolean runFlag;  // Let the backend run until the connection is closed by the frontend
+
+    public Backend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
+        super("Backend");  // Set the name of the thread for debug purposes
 
         // Create the communication handler with the two queues
-        this.communicationHandler = new CommunicationHandler(backendQueue, frontendQueue);
-        this.exceptionsCommunicationHandler = new CommunicationHandler(backendExceptionQueue, frontendExceptionQueue);
+        this.itc = new InterThreadCommunication(backendQueue, frontendQueue);
 
         // Initialize all the backend components
         this.settings = new Settings();
         this.cryptography = new Cryptography();
         this.googleDrive = new GoogleDrive(this.settings.getAPPDATA_DIRECTORY_PATH());
 
-        // The path of the database is retrieved from the settings
-        this.database = new Database(this.settings.readStringSetting("database/path"));
-
         this.helper = new BackendHelper(this.cryptography, this.settings, this.googleDrive);
+
+        // The path of the database is retrieved from the helper
+        this.database = new Database(this.helper.getDatabasePath());
+
+        this.backgroundExecutor = Executors.newScheduledThreadPool(2);  // Initialize the Background Executor
 
         startGoogleDrive();  // Initialize the connection with Google Drive only if enabled by the user
 
+        this.eventReceived = null;
         this.eventToSend = null;
         this.runFlag = true;
     }
@@ -56,33 +75,44 @@ public class Backend extends Thread {
      * Provide the method used for uncaught exceptions. It must be public otherwise the thread object
      * that is inside the main method, cannot access it
      */
-    public void uncaughtException(Thread t, Throwable e) {
+    public void handleException(Thread t, Throwable e) {
+        // Before sending the exception we need to send back the event because if the request one is an high-priority
+        // one, then EDT is waiting for the response before handling the exception
+        this.eventToSend.addData(null);  // Add null as the only element of the event
+        this.itc.reply(this.eventReceived, this.eventToSend);
+
+        createTracebackFile(t,e);  // Create the traceback file that contains the full stack trace of the exception
+
         // Send the event to the frontend with the exception communication
-        Event event = new Event("exception-raised", e.toString());
-        exceptionsCommunicationHandler.send(event);
+        Event event = new Event("exception-raised");
+        event.addData(t.getName());
+        event.addData(e);
 
         // Receive the response from the frontend
-        Event frontendResponse = exceptionsCommunicationHandler.receive();
+        Event frontendResponse = this.itc.requestAndReceive(event);
 
         // Check whether the event response is close-connection to stop the execution
         if (frontendResponse.getNAME().equals("close-connection")){
-            event = new Event("close-connection-confirm");  // Create the event to confirm the stop
-            exceptionsCommunicationHandler.send(event);  // Send the event
-            runFlag = false;  // Set the run flag to false to stop the thread
+            event = new Event("close-connection");  // Create the event to confirm the stop
+            this.itc.request(event);  // Send the event
+            this.runFlag = false;  // Set the run flag to false to stop the thread
         }
     }
 
     @Override
     public void run() {
         while (this.runFlag){
+            Event event = this.itc.receive();  // Wait for an event from the Frontend
+            this.eventReceived = event;  // Set the eventReceived for the exceptions handler
+
+            createEvent(event);  // Create an event to send to the frontend
+            handleEvent(event);  // Handle the operation requested from the frontend
+
             // Check whether there is an Event to send to the Frontend
             if (this.eventToSend != null){
-                this.communicationHandler.send(this.eventToSend);
+                this.itc.reply(event, this.eventToSend);
                 resetSendData();  // Reset the data to send to the frontend
             }
-            Event event = this.communicationHandler.receive();  // Wait for an event from the Frontend
-            createEvent(event);  // Create an event to send to the frontend
-            processEvent(event);  // Process the operation requested from the frontend
         }
     }
 
@@ -93,24 +123,27 @@ public class Backend extends Thread {
         this.eventToSend = null;
     }
 
-    private void processEvent(Event event){
+    private void handleEvent(Event event){
         ArrayList<Object> eventData = event.getData();  // Get the data associated with the event
         switch (event.getNAME()){
             case "set-master-password":
                 setMasterPassword((char[]) eventData.getFirst());
-                testMasterPassword();
+
+                // We need to store the result of testMasterPassword to initialize the ServiceMapping
+                boolean test = testMasterPassword();
+                if (test){
+                    // Initialize the Service Mapping after the Master Password has been set
+                    this.executeInBackground(this::initServiceMapping);
+                }
                 break;
 
             case "close-connection":
                 closeConnection();
                 break;
 
-            case "get-service-fields":
-                getServiceFields();
-                break;
-
             case "save-data":
                 saveData((Data) eventData.getFirst());
+                executeInBackground(this::updateServiceFields);
                 break;
 
             case "get-data":
@@ -119,10 +152,12 @@ public class Backend extends Thread {
 
             case "delete-data":
                 deleteSingleData((int) eventData.getFirst());
+                executeInBackground(this::updateServiceFields);
                 break;
 
             case "change-data":
                 changeData((Data) eventData.getFirst());
+                executeInBackground(this::updateServiceFields);
                 break;
 
             case "generate-string":
@@ -138,7 +173,7 @@ public class Backend extends Thread {
                 setDatabasePath((String) eventData.getFirst());
                 break;
 
-            case "get-database-path":
+            case "get-database":
                 getDatabasePath();
                 break;
 
@@ -168,6 +203,7 @@ public class Backend extends Thread {
 
             case "google-drive-synchronize":
                 synchronizeGoogleDrive();
+                executeInBackground(this::updateServiceFields);
                 break;
 
             case "enable-google-drive-synchronization":
@@ -177,7 +213,55 @@ public class Backend extends Thread {
             case "disable-google-drive-synchronization":
                 disableGoogleDriveSynchronization();
                 break;
+
+            default:  // If the event is not handled by one of the cases above, then discard the event
+                resetSendData();
         }
+    }
+
+    /**
+     * Schedule a method to be executed in the background
+     * @param method The method to be executed
+     */
+    private void executeInBackground(Runnable method){
+        this.backgroundExecutor.schedule(method, 0, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Create a traceback file containing the full stack trace exception
+     */
+    private void createTracebackFile(Thread thread, Throwable throwable){
+        // StringWriter and PrintWriter are used to get the stack trace of the exception into the string format
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter printWriter = new PrintWriter(stringWriter);
+        throwable.printStackTrace(printWriter);
+
+        // The timestamp is used for the filename, and needs a proper formatter as otherwise would use ":" which
+        // cannot be used in filenames
+        String timestamp = new SimpleDateFormat("yyyy-M-dd-HH-mm-ss").format(new Date());
+
+        try {
+            File traceback = new File(this.settings.getAPPDATA_DIRECTORY_PATH()+"traceback-"+
+                    timestamp+".txt");
+            traceback.createNewFile();  // Create the traceback file
+
+            // Write the stack inside the traceback file
+            FileWriter fileWriter = new FileWriter(traceback);
+            fileWriter.write("The following exception occurred in the " + thread.getName() + " thread\r\n"+
+                    stringWriter);
+            fileWriter.close();
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    } 
+      
+    /** Schedule a method to be executed in the background
+     * @param method The method to be executed
+     * @param period The period that has to pass before executing again the method
+     */
+    private void executePeriodicallyInBackground(Runnable method, long period){
+        this.backgroundExecutor.scheduleAtFixedRate(method, 0, period, TimeUnit.SECONDS);
     }
 
     /**
@@ -185,7 +269,7 @@ public class Backend extends Thread {
      * @param event
      */
     private void createEvent(Event event){
-        this.eventToSend = new Event(event.getNAME()+"-completed");
+        this.eventToSend = new Event(event.getNAME());
     }
 
     /**
@@ -198,14 +282,15 @@ public class Backend extends Thread {
 
     /**
      * Test the master password the user has entered at the login to know whether is wrong
+     * @return Returns a boolean value to locally indicate whether the master password is right
      */
-    private void testMasterPassword(){
+    private boolean testMasterPassword(){
         Data testData = this.database.getFirstServiceField();  // Get the first service to try to decrypt it
 
         // If the service is null, it means there isn't data in it yet, thus the master password is always correct
         if (testData.getSERVICE() == null){
             this.eventToSend.addData(true);
-            return;
+            return true;
         }
 
         byte[] service = Data.decode(testData.getSERVICE());  // Decode from base64
@@ -214,8 +299,10 @@ public class Backend extends Thread {
         try{
             this.cryptography.decrypt(service);
             this.eventToSend.addData(true);
+            return true;
         } catch (RuntimeException e){
             this.eventToSend.addData(false);
+            return false;
         }
     }
 
@@ -223,23 +310,80 @@ public class Backend extends Thread {
      * Close the connection with the Frontend and stop the execution of the thread
      */
     private void closeConnection(){
-        this.communicationHandler = null;
-        this.exceptionsCommunicationHandler = null;
+        this.itc = null;
         this.runFlag = false;
     }
 
     /**
-     * Retrieve all the service fields with their IDs from the database, and decrypt them
+     * Initialize the mapping of the service fields and send the service fields in chunks
      */
-    private void getServiceFields(){
-        ArrayList<Data> serviceFields = this.database.getServiceFields();
-        ArrayList<Data> decryptedFields = new ArrayList<>();  // The service fields are decrypted and stored here
+    private void initServiceMapping(){
+        this.servicesMap = new TreeMap<>();  // Initialize the TreeMap to associate IDs with their hash
 
-        for (Data field : serviceFields){
-            decryptedFields.add(this.helper.decryptData(field));  // Decrypt the data in the helper and add it
+        // Initialize an ArrayList that stores the data objects that are sent to the Frontend
+        ArrayList<Data> dataToSend = new ArrayList<>();
+
+        // Iterate over the service fields
+        for (Data data : this.database.getServiceFields()){
+            // Add the ID and the hash of the service to the map
+            this.servicesMap.put(data.getID(), data.getSERVICE().hashCode());
+
+            // Create a Data object with the ID and the decrypted service string
+            dataToSend.add(new Data(data.getID(), this.helper.decryptString(data.getSERVICE())));
         }
 
-        this.eventToSend.addData(decryptedFields);
+        // Create the Event with the data and send it only if the data is not empty
+        if (!dataToSend.isEmpty()){
+            Event updateService = new Event("update-service-fields", dataToSend);
+            this.itc.request(updateService);
+        }
+    }
+
+    /**
+     * Retrieve all the service fields with their IDs from the database, compare their hashes and decrypt the updated
+     * ones to send them to the frontend
+     */
+    private void updateServiceFields(){
+        ArrayList<Data> serviceFields = this.database.getServiceFields();  // Read the service fields from the DB
+        ArrayList<Data> updatedData = new ArrayList<>();  // The data to send to the frontend is stored here
+
+        // It's required to initialize an ArrayList over the KeySet because otherwise we would have that updating
+        // the keyset, with the removal of IDs, would also update the servicesMap
+        // The ID are stored to remove all the ones that are inside the database, thus if the ArrayList is not empty,
+        // that means at least one ID has been deleted from the DB
+        ArrayList<Integer> servicesMapID = new ArrayList<>(this.servicesMap.keySet());
+
+        // Iterate over the Data of the Database
+        for (Data data : serviceFields){
+            int id = data.getID();
+            int hash = data.getSERVICE().hashCode();
+
+            // Check if the ID already exists or is a new one
+            if (this.servicesMap.containsKey(id)){
+                // If the hashes of the service are different, then it means the service field has been updated
+                if (this.servicesMap.get(id) != hash){
+                    updatedData.add(new Data(id, this.helper.decryptString(data.getSERVICE())));
+                    this.servicesMap.replace(id, hash);
+                }
+                servicesMapID.remove((Integer) id);  // Remove the ID from the list because it has been found
+            }else{  // Because the ID is new we can add it to the servicesMap and add it to the data to send
+                this.servicesMap.put(id, hash);
+                updatedData.add(new Data(id, this.helper.decryptString(data.getSERVICE())));
+            }
+        }
+
+        // Iterate over the IDs that haven't been deleted, and set their service field to be empty to remove them
+        // from the frontend
+        for (Integer id : servicesMapID){
+            updatedData.add(new Data(id, ""));
+            this.servicesMap.remove(id);  // Remove the ID from the service map as it has been deleted
+        }
+
+        // Create the Event with the data and send it only if the data is not empty
+        if (!updatedData.isEmpty()){
+            Event updateService = new Event("update-service-fields", updatedData);
+            this.itc.request(updateService);
+        }
     }
 
     /**
@@ -428,12 +572,17 @@ public class Backend extends Thread {
     }
 
     /**
-     * Start the Google Drive communication only if it's enabled in the settings file
+     * Start the Google Drive communication and the automatic synchronization only if they're enabled in the settings
+     * file
      */
     private void startGoogleDrive(){
         if (this.helper.isGoogleDriveEnabled()){
             this.googleDrive.init();
         }
+
+        // We need to schedule the synchronization even if the Google Drive module is not enabled because otherwise
+        // it can happen that the synchronization is scheduled more than one time
+        this.executePeriodicallyInBackground(this::synchronizeGoogleDrive, 60);
     }
 
     /**
@@ -471,7 +620,10 @@ public class Backend extends Thread {
      * Synchronize the database with Google Drive
      */
     private void synchronizeGoogleDrive(){
-        this.googleDrive.sync(this.helper.getDatabasePath(), this.database.getDatabaseName());
+        // Ensure that Google Drive is enabled, and the Synchronization is enabled before synchronizing
+        if (this.helper.isGoogleDriveEnabled() && this.settings.readBooleanSetting("google_drive/automatic_synchronization")){
+            this.googleDrive.sync(this.helper.getDatabasePath(), this.database.getDatabaseName());
+        }
     }
 
     /**

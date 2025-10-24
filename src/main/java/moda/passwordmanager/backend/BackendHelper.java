@@ -1,4 +1,4 @@
-package moda.passwordManager.backend;
+package moda.passwordmanager.backend;
 
 import java.util.ArrayList;
 
@@ -68,6 +68,14 @@ public class BackendHelper {
         }
 
         return new Data(data.getID(), fields.getFirst(), fields.get(1), fields.get(2), fields.get(3), fields.get(4));
+    }
+
+    /**
+     * Decrypt a ciphertext
+     * @param ciphertext The string to be decrypted
+     */
+    public String decryptString(String ciphertext){
+        return decrypt(ciphertext);
     }
 
     /**

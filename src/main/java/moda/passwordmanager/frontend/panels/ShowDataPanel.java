@@ -1,46 +1,41 @@
-package moda.passwordManager.frontend.panels;
+package moda.passwordmanager.frontend.panels;
 
-import moda.passwordManager.backend.Data;
-import moda.passwordManager.communicationHandler.CommunicationHandler;
-import moda.passwordManager.communicationHandler.Event;
-import moda.passwordManager.frontend.dialogs.ShowDataDialog;
+import moda.passwordmanager.backend.Data;
+import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
+import moda.passwordmanager.interthreadcommunication.Event;
+import moda.passwordmanager.frontend.dialogs.ShowDataDialog;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.List;
 
 public class ShowDataPanel extends JPanel {
 
     // Attribute to communicate with the backend
-    private CommunicationHandler communicationHandler;
+    private InterThreadCommunication interThreadCommunication;
 
     // Attributes for the configuration of the panel
     private final int MIN_CONTENT_WIDTH;
     private Dimension windowSize;
 
     /**
-     * The service_data shown in the JList of "Show Data" panel <br/>
-     * It's updated automatically by the timer
+     * The service data shown in the JList of "Show Data" panel which it's updated automatically by the timer
      */
     private ArrayList<Data> userData;  // A Data object is required as each service shown needs to be associated with its ID
     private DefaultListModel<String> userDataModel;
 
     // Swing components
-    private JList dataList;
+    private JList<String> dataList;
 
-    public ShowDataPanel(CommunicationHandler communicationHandler, int MIN_CONTENT_WIDTH, Dimension windowSize, int sidebarPanelWidth) {
+    public ShowDataPanel(InterThreadCommunication interThreadCommunication, int MIN_CONTENT_WIDTH, Dimension windowSize,
+                         int sidebarPanelWidth) {
         super();  // Initialize the Panel
 
         // Set the attributes given by the JFrame
-        this.communicationHandler = communicationHandler;
+        this.interThreadCommunication = interThreadCommunication;
         this.MIN_CONTENT_WIDTH = MIN_CONTENT_WIDTH;
         this.windowSize = windowSize;
 
@@ -85,7 +80,7 @@ public class ShowDataPanel extends JPanel {
      */
     private void initComponents(){
         // Create the JList used to show all the data saved inside the database
-        this.dataList = new JList();
+        this.dataList = new JList<>();
         this.dataList.setFixedCellHeight(30);
         this.dataList.setModel(this.userDataModel);  // Set the model of the JList (Strings containing service data)
         this.dataList.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 20));
@@ -118,7 +113,7 @@ public class ShowDataPanel extends JPanel {
                     Data userSingleData = getData(id);
 
                     // Create a Show Data Dialog to display the data retrieved
-                    ShowDataDialog showDataDialog = new ShowDataDialog(communicationHandler, userSingleData);
+                    ShowDataDialog showDataDialog = new ShowDataDialog(interThreadCommunication, userSingleData);
                     showDataDialog.setVisible(true);
                 }
             }
@@ -153,34 +148,33 @@ public class ShowDataPanel extends JPanel {
     private Data getData(int id){
         // Create the event to send to the backend
         Event getData = new Event("get-data", id);
-        this.communicationHandler.send(getData);
 
-        Event getSingleDataCompletd = this.communicationHandler.receive();  // Wait for the response
+        // Wait for the response
+        Event getSingleDataCompleted = this.interThreadCommunication.requestAndReceive(getData);
 
-        Data userData = (Data) getSingleDataCompletd.getData().getFirst();  // Get the user data
+        Data userData = (Data) getSingleDataCompleted.getData().getFirst();  // Get the user data
 
         return userData;
     }
 
+    public ArrayList<Data> getUserData() {
+        return this.userData;
+    }
+
+    public DefaultListModel<String> getUserDataModel() {
+        return this.userDataModel;
+    }
+
     /**
-     * Update the userData and its model to show the updated data of the database
+     * Return the index of the Data object of UserData that has the same ID. -1 is returned if it does not exist
      */
-    public void updateUserData(){
-        // Create and send the event to the backend asking for the user data
-        Event updateUserData = new Event("get-service-fields");
-        this.communicationHandler.send(updateUserData);
-
-        // Wait for the response of the backend and update the data with the new one
-        Event updatedDataEvent = this.communicationHandler.receive();
-        ArrayList<Data> updatedData = (ArrayList<Data>) updatedDataEvent.getData().getFirst();
-
-        this.userData.clear();  // Clear the ArrayList from the previous data
-        this.userData.addAll(updatedData);  // Update the ArrayList with the new data
-
-        this.userDataModel.clear();  // Clear the model from the previous data
-        for (int i = 0; i < updatedData.size(); i++){
-            this.userDataModel.add(i, updatedData.get(i).getSERVICE());
+    public int indexOfUserData(int ID){
+        for (int i = 0; i < this.userData.size(); i++){
+            if (this.userData.get(i).getID() == ID) {
+                return i;
+            }
         }
+        return -1;
     }
 
 }

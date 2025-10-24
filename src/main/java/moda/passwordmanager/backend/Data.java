@@ -1,7 +1,8 @@
-package moda.passwordManager.backend;
+package moda.passwordmanager.backend;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Objects;
 
 public class Data {
 
@@ -139,5 +140,11 @@ public class Data {
      */
     public static byte[] decode(String data){
         return Base64.getDecoder().decode(data.getBytes());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.ID, this.USERNAME, this.EMAIL_ADDRESS, this.PASSWORD, this.SERVICE,
+                this.ADDITIONAL_DATA);
     }
 }
