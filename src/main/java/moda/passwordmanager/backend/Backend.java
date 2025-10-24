@@ -256,7 +256,7 @@ public class Backend extends Thread {
         }
     } 
       
-     * Schedule a method to be executed in the background
+    /** Schedule a method to be executed in the background
      * @param method The method to be executed
      * @param period The period that has to pass before executing again the method
      */
