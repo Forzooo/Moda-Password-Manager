@@ -6,18 +6,18 @@ Sezioni:
 * [Generazione delle stringhe](#generazione-delle-stringhe)
 * [Google Drive](#google-drive)
 
-**Per l'implementazione attuale, se dei dati di risposta, dello stesso tipo di evento, sono inclusi, allora non è possibile che esista un evento di
-risposta, e viceversa.**
+**Per l'implementazione attuale, se dei dati di risposta, dello stesso tipo di evento, sono inclusi, allora non è
+possibile che esista un evento di risposta, e viceversa.**
 
 ## Generali
 ### exception-raised
 * Nome: `exception-raised`
 * Mittente: Backend
 * Descrizione: Invia al frontend l'eccezione che è accaduta sul backend
-* Dati: _String_ messaggio dell'eccezione
+* Dati: _String_ nome del thread dove è avvenuta l'eccezione, _Throwable_ l'eccezione provocata
 * Dati risposta: -
 * Evento di risposta: `close-connection`
-* Altà priorità: true
+* Altà priorità: false
 
 ### close-connection
 * Nome: `close-connection`

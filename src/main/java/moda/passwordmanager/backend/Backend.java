@@ -4,11 +4,13 @@ import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import org.apache.commons.io.FileUtils;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.TreeMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -36,10 +38,16 @@ public class Backend extends Thread {
     // Execute operations in the background
     private ScheduledExecutorService backgroundExecutor;
 
+    /**
+     * The event received from the ITC. It's used only when an exception is raised, otherwise the local value
+     * is preferred and this one is ignored.
+     */
+    private Event eventReceived;
     private Event eventToSend;  // The event that is sent as a reply to the frontend
     private boolean runFlag;  // Let the backend run until the connection is closed by the frontend
 
     public Backend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
+        super("Backend");  // Set the name of the thread for debug purposes
 
         // Create the communication handler with the two queues
         this.itc = new InterThreadCommunication(backendQueue, frontendQueue);
@@ -58,6 +66,7 @@ public class Backend extends Thread {
 
         startGoogleDrive();  // Initialize the connection with Google Drive only if enabled by the user
 
+        this.eventReceived = null;
         this.eventToSend = null;
         this.runFlag = true;
     }
@@ -66,9 +75,18 @@ public class Backend extends Thread {
      * Provide the method used for uncaught exceptions. It must be public otherwise the thread object
      * that is inside the main method, cannot access it
      */
-    public void uncaughtException(Thread t, Throwable e) {
+    public void handleException(Thread t, Throwable e) {
+        // Before sending the exception we need to send back the event because if the request one is an high-priority
+        // one, then EDT is waiting for the response before handling the exception
+        this.eventToSend.addData(null);  // Add null as the only element of the event
+        this.itc.reply(this.eventReceived, this.eventToSend);
+
+        createTracebackFile(t,e);  // Create the traceback file that contains the full stack trace of the exception
+
         // Send the event to the frontend with the exception communication
-        Event event = new Event("exception-raised", e.toString());
+        Event event = new Event("exception-raised");
+        event.addData(t.getName());
+        event.addData(e);
 
         // Receive the response from the frontend
         Event frontendResponse = this.itc.requestAndReceive(event);
@@ -85,6 +103,7 @@ public class Backend extends Thread {
     public void run() {
         while (this.runFlag){
             Event event = this.itc.receive();  // Wait for an event from the Frontend
+            this.eventReceived = event;  // Set the eventReceived for the exceptions handler
 
             createEvent(event);  // Create an event to send to the frontend
             handleEvent(event);  // Handle the operation requested from the frontend
@@ -194,6 +213,9 @@ public class Backend extends Thread {
             case "disable-google-drive-synchronization":
                 disableGoogleDriveSynchronization();
                 break;
+
+            default:  // If the event is not handled by one of the cases above, then discard the event
+                resetSendData();
         }
     }
 
@@ -206,6 +228,34 @@ public class Backend extends Thread {
     }
 
     /**
+     * Create a traceback file containing the full stack trace exception
+     */
+    private void createTracebackFile(Thread thread, Throwable throwable){
+        // StringWriter and PrintWriter are used to get the stack trace of the exception into the string format
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter printWriter = new PrintWriter(stringWriter);
+        throwable.printStackTrace(printWriter);
+
+        // The timestamp is used for the filename, and needs a proper formatter as otherwise would use ":" which
+        // cannot be used in filenames
+        String timestamp = new SimpleDateFormat("yyyy-M-dd-HH-mm-ss").format(new Date());
+
+        try {
+            File traceback = new File(this.settings.getAPPDATA_DIRECTORY_PATH()+"traceback-"+
+                    timestamp+".txt");
+            traceback.createNewFile();  // Create the traceback file
+
+            // Write the stack inside the traceback file
+            FileWriter fileWriter = new FileWriter(traceback);
+            fileWriter.write("The following exception occurred in the " + thread.getName() + " thread\r\n"+
+                    stringWriter);
+            fileWriter.close();
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    } 
+      
      * Schedule a method to be executed in the background
      * @param method The method to be executed
      * @param period The period that has to pass before executing again the method
