@@ -21,10 +21,6 @@ public class Frontend extends JPanel implements ActionListener {
     // The InterThreadCommunication objects used to communicate with the Backend thread
     private InterThreadCommunication itc;
 
-    // Define the Scheduled Executor Service and its delay used to perform background tasks
-    private ScheduledExecutorService executorService;
-    private final static int INITIAL_DELAY = 5;  // The delay, in seconds, before starting to execute any task
-
     // The Frontend Event Listener used to receive and handle requests from the backend
     private FrontendEventListener eventListener;
 
@@ -59,9 +55,6 @@ public class Frontend extends JPanel implements ActionListener {
         Thread.setDefaultUncaughtExceptionHandler(this::exceptionHandler);
 
         initMasterPassword();
-
-        // The Executor Service must be init after the masterPasswordDialog as it requires the master password to operate
-        initExecutorService();
 
         initPanel(width, height);  // Set the properties of the panel
         initPanels();  // Initialize all the JPanels
@@ -133,15 +126,6 @@ public class Frontend extends JPanel implements ActionListener {
     }
 
     /**
-     * Initialize the executor service used to perform background tasks in the frontend
-     */
-    private void initExecutorService(){
-        // Create a single thread for the periodic execution of methods
-        this.executorService = Executors.newSingleThreadScheduledExecutor();
-        this.executorService.scheduleAtFixedRate(this::synchronizeGoogleDrive, INITIAL_DELAY, 60, TimeUnit.SECONDS);
-    }
-
-    /**
      * Initialize the Swing timer used to perform graphical background tasks in the frontend
      */
     private void initSwingTimer(){
@@ -202,24 +186,6 @@ public class Frontend extends JPanel implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         switchPanel();
-    }
-
-    private void synchronizeGoogleDrive(){
-        // Check each time whether the automatic synchronization is enabled before synchronizing
-        Event getSynchronization = new Event("get-google-drive-synchronization");
-
-        // Wait for the response from the backend
-        getSynchronization = this.itc.requestAndReceive(getSynchronization);
-        boolean enabled = (boolean) getSynchronization.getData().getFirst();
-
-        // Don't synchronize if the automatic synchronization it's not enabled
-        if (!enabled){
-            return;
-        }
-
-        // Synchronize with Google Drive
-        Event synchronize = new Event("google-drive-synchronize");
-        this.itc.request(synchronize);
     }
 
     /**
