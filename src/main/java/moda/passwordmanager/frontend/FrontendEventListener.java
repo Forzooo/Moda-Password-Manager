@@ -77,11 +77,13 @@ public class FrontendEventListener extends Thread {
      */
     private void exceptionRaised(String threadName, Throwable throwable){
         String stackTrace = Frontend.getStackTrace(throwable);  // Get the full stack trace of the throwable
+        String message = Frontend.getLastStackTrace(stackTrace, 5) +
+                "\r\nThe traceback has been saved to the data folder.";
 
         // Show the exception as a Message Dialog with the type of error message
         SwingUtilities.invokeLater(() -> {
-            JOptionPane.showMessageDialog(null, Frontend.getLastStackTrace(stackTrace, 5),
-                    "An exception occurred in the " + threadName + " thread", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, message,
+                    "The following exception occurred in the " +  threadName + "thread", JOptionPane.ERROR_MESSAGE);
 
             closeConnection();  // The "close-connection" event must be sent after the JOptionPane has been closed
         });

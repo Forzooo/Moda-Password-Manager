@@ -90,7 +90,7 @@ public class Frontend extends JPanel implements ActionListener {
         String stackTrace = getStackTrace(e);  // Get the full stack trace of the throwable
         // Show the exception as a Message Dialog with the type of error message
         JOptionPane.showMessageDialog(this, getLastStackTrace(stackTrace, 5),
-                "An exception occurred in the " + t.getName() + " thread", JOptionPane.ERROR_MESSAGE);
+                "The following exception occurred in the " + t.getName() + " thread", JOptionPane.ERROR_MESSAGE);
     }
 
     /**
