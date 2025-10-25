@@ -13,8 +13,14 @@ public class SidebarPanel extends JPanel {
     // Attributes for the configuration of the panel
     private final static int MAX_SIDEBAR = 300;  // Set the maximum size of the sidebar
     private final String CURRENT_VERSION;  // The current version of the software shown in a JLabel
+    private Dimension windowSize;  // The window size is used when the Frontend is not fully initialized yet
 
-    // Swing components
+    // Sections of the Sidebar
+    private JPanel titleSection;
+    private JPanel componentsSection;
+    private JPanel detailsSection;
+
+//    // Swing components
     private JButton addDataButton;
     private JButton showDataButton;
     private JButton settingsButton;
@@ -22,16 +28,18 @@ public class SidebarPanel extends JPanel {
     // The selectedPanel indicates the JPanel that is selected
     private GUIState selectedPanel;
 
-    public SidebarPanel(String CURRENT_VERSION){
+    public SidebarPanel(String CURRENT_VERSION, Dimension windowSize){
         super();  // Initialize the Panel
 
         // Set the attributes given by the JFrame
         this.CURRENT_VERSION = CURRENT_VERSION;
+        this.windowSize = windowSize;
 
         // Set the initial state of the dynamic part to Show All Panel
         this.selectedPanel = GUIState.SHOW_DATA;
 
         initPanel();
+        initSections();
         initComponents();
         initListeners();
     }
@@ -49,31 +57,59 @@ public class SidebarPanel extends JPanel {
             int width = Math.min(frontend.getWidth() / 3, MAX_SIDEBAR);
             return new Dimension(width, frontend.getHeight());
         }
-        return new Dimension(MAX_SIDEBAR, 0);
+        // It uses the window size in case the Frontend is not entirely initialized yet
+        int width = (int) Math.min(this.windowSize.getWidth() / 3, MAX_SIDEBAR);
+        return new Dimension(width, (int) this.windowSize.getHeight());
     }
 
     /**
      * Set the configuration of the JPanel
      */
     private void initPanel(){
-        setBackground(Color.BLACK);
+        // Use the BoxLayout to display the sections in vertical alignment
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+    }
+
+    /**
+     * Initialize the section panels that are used to divide the sidebar into parts
+     */
+    private void initSections(){
+        Dimension sidebar = getPreferredSize();  // Get the current dimension of the sidebar
+
+        this.titleSection = new JPanel();
+
+        this.componentsSection = new JPanel();
+
+        // We set only the size of the components section because the other two have the same size
+        setSectionSizes(this.componentsSection, new Dimension((int) sidebar.getWidth(), (int) (sidebar.getHeight()/2)));
+
+        this.detailsSection = new JPanel();
+
+        add(this.titleSection);
+        add(this.componentsSection);
+        add(this.detailsSection);
+    }
+
+    /**
+     * Set the all the sizes, requested by the BoxLayout, of a JPanel
+     */
+    private void setSectionSizes(JPanel section, Dimension size){
+        section.setMinimumSize(size);
+        section.setPreferredSize(size);
+        section.setMaximumSize(size);
     }
 
     /**
      * Initialize the components of the panel
      */
     private void initComponents(){
-        // Create the JLabel that displays the name of the Password Manager
-        JLabel passwordManagerLabel = new JLabel();
+
+        // Title Section
+        JLabel passwordManagerLabel = new JLabel();  // Create the JLabel that displays the name of the Password Manager
         passwordManagerLabel.setText("MODA");
-        passwordManagerLabel.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 80));  // Set the font of the label
-        passwordManagerLabel.setForeground(Color.WHITE);  // Set the color of the label
+        passwordManagerLabel.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 80));
 
-        // Add the current version of the software at the bottom of the sidebar
-        JLabel currentVersionLabel = new JLabel();
-        currentVersionLabel.setText("Version: " + CURRENT_VERSION);
-        currentVersionLabel.setForeground(Color.WHITE);  // Set the color of the label
-
+        // Components Section
         JPanel buttonPanel = new JPanel(new GridLayout(3, 1));
 
         // Create the JButtons used to switch between JPanels of the dynamic part
@@ -91,19 +127,19 @@ public class SidebarPanel extends JPanel {
         this.settingsButton.setText("Settings");
         this.settingsButton.setMaximumSize(buttonDimension);
 
-        // Add the components to the Sidebar
-        add(Box.createRigidArea(new Dimension(0, 20))); // Add RigidArea to add spacing between components
-        add(passwordManagerLabel);
-
-        add(currentVersionLabel);
-        add(Box.createRigidArea(new Dimension(220, 20))); // Add RigidArea to add spacing between components
-
         // Add the section buttons to their JPanel
         buttonPanel.add(addDataButton);
         buttonPanel.add(showDataButton);
         buttonPanel.add(settingsButton);
 
-        add(buttonPanel, BorderLayout.SOUTH);
+        // Details section
+        JLabel currentVersionLabel = new JLabel();  // The current version of the software
+        currentVersionLabel.setText("Version: " + CURRENT_VERSION);
+
+        // Add the components to the Sidebar
+        this.titleSection.add(passwordManagerLabel);
+        this.componentsSection.add(buttonPanel, BorderLayout.SOUTH);
+        this.detailsSection.add(currentVersionLabel);
     }
 
     /**

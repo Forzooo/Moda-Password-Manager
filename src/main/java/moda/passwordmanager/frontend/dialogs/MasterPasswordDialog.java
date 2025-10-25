@@ -73,10 +73,9 @@ public class MasterPasswordDialog extends JDialog {
 
         // Set the preferred size
         setSize(new Dimension(700, 150));
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(getParent());  // The dialog is shown at the center of the window
         setAlwaysOnTop(true);
 
-        setBackground(Color.WHITE);
         setIconImage(Frontend.getIcon());
     }
 

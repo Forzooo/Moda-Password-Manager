@@ -57,7 +57,7 @@ public class ConfigureGenerationPasswordDialog extends JDialog {
         setLayout(getDialogLayout());  // Set its layout
         setTitle("Configuration of the password");
         setSize(new Dimension(400, 350));  // Set the preferred size
-        setBackground(Color.WHITE);
+        setLocationRelativeTo(getParent());  // The dialog is shown at the center of the window
         setIconImage(Frontend.getIcon());
     }
 

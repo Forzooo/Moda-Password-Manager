@@ -184,7 +184,7 @@ public class Frontend extends JPanel {
      * Initialize all the panels
      */
     private void initPanels(){
-        this.sidebarPanel = new SidebarPanel(VERSION);
+        this.sidebarPanel = new SidebarPanel(VERSION, this.windowSize);
         add(this.sidebarPanel, BorderLayout.WEST);  // Add the Sidebar to the Frame
 
         this.addDataPanel = new AddDataPanel(this.itc, this.MIN_CONTENT_WIDTH, this.windowSize,

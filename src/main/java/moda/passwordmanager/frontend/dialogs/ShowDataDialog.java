@@ -50,6 +50,7 @@ public class ShowDataDialog extends JDialog {
         setSize(new Dimension(600, 400));
         setResizable(false);
         setAlwaysOnTop(true);
+        setLocationRelativeTo(getParent());  // The dialog is shown at the center of the window
         setIconImage(Frontend.getIcon());
     }
 

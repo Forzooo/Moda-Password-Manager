@@ -23,7 +23,7 @@ public class Application extends JFrame {
      */
     private void initFlatLaf(){
         try {
-            UIManager.setLookAndFeel( new FlatLightLaf() );
+            UIManager.setLookAndFeel(new FlatLightLaf());
         } catch (UnsupportedLookAndFeelException e) {
             throw new RuntimeException(e);
         }
