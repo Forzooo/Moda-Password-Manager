@@ -1,5 +1,6 @@
 package moda.passwordmanager;
 
+import com.formdev.flatlaf.FlatLightLaf;
 import moda.passwordmanager.backend.Backend;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.Frontend;
@@ -13,7 +14,19 @@ public class Application extends JFrame {
 
     public Application(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
                        String databaseToUse){
+        initFlatLaf();  // It has to be called before any Swing component
         initUI(backendQueue, frontendQueue, databaseToUse);
+    }
+
+    /**
+     * Apply the FlatLaf look and feel to the UI
+     */
+    private void initFlatLaf(){
+        try {
+            UIManager.setLookAndFeel( new FlatLightLaf() );
+        } catch (UnsupportedLookAndFeelException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void initUI(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
