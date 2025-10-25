@@ -38,7 +38,8 @@ public class AddDataPanel extends JPanel {
     private JButton generatePasswordButton;
     private JButton configurePasswordGeneration;
 
-    public AddDataPanel(InterThreadCommunication interThreadCommunication, int MIN_CONTENT_WIDTH, Dimension windowSize, int sidebarPanelWidth) {
+    public AddDataPanel(InterThreadCommunication interThreadCommunication, int MIN_CONTENT_WIDTH, Dimension windowSize,
+                        int sidebarPanelWidth) {
         super();  // Initialize the Panel
 
         // Set the attributes given by the JFrame

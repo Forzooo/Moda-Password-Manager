@@ -16,7 +16,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class Frontend extends JPanel implements ActionListener {
+public class Frontend extends JPanel {
 
     private final static String VERSION = "1.0.0";  // The current version of the software
 
@@ -29,9 +29,6 @@ public class Frontend extends JPanel implements ActionListener {
     // The dynamicState indicates which Panel needs to be switched to from the current one selected
     private GUIState dynamicState;
     private JPanel currentPanel;  // The current selected JPanel
-
-    private Timer swingTimer;  // The timer used to show the JPanel chosen by the user
-    private final static int SWING_TIMER_DELAY = 500;  // Repeat each timer action every second
 
     /**
     * A Dimension attribute, retrieved from getToolkit().getScreenSize(), used to dynamically resize
@@ -60,7 +57,6 @@ public class Frontend extends JPanel implements ActionListener {
 
         initPanel(width, height);  // Set the properties of the panel
         initPanels();  // Initialize all the JPanels
-        initSwingTimer();  // Initialize the Swing timer only after all the frontend components have been created
         initEventListener();  // Initialize the Event Listener only after all the frontend components have been init
 
     }
@@ -185,18 +181,10 @@ public class Frontend extends JPanel implements ActionListener {
     }
 
     /**
-     * Initialize the Swing timer used to perform graphical background tasks in the frontend
-     */
-    private void initSwingTimer(){
-        this.swingTimer = new Timer(SWING_TIMER_DELAY, this::actionPerformed);
-        this.swingTimer.start();
-    }
-
-    /**
      * Initialize all the panels
      */
     private void initPanels(){
-        this.sidebarPanel = new SidebarPanel(this.windowSize, VERSION);
+        this.sidebarPanel = new SidebarPanel(VERSION);
         add(this.sidebarPanel, BorderLayout.WEST);  // Add the Sidebar to the Frame
 
         this.addDataPanel = new AddDataPanel(this.itc, this.MIN_CONTENT_WIDTH, this.windowSize,
@@ -217,34 +205,21 @@ public class Frontend extends JPanel implements ActionListener {
     /**
      * Switch to a new JPanel hiding the previous one
      */
-    private void switchPanel(){
-        // Check if the panel has changed, otherwise stop the method to avoid useless operations
-        if (this.dynamicState.equals(this.sidebarPanel.getDynamicState())){
-            return;
-        }
-        this.dynamicState = this.sidebarPanel.getDynamicState();  // Update the dynamic state
-
-        remove(this.currentPanel);  // Remove the current (old) panel from the Board
+    public void switchPanel(GUIState selectedPanel){
+        remove(this.currentPanel);  // Remove the previous panel from the Board
 
         // Based on the section chosen change the current panel to the new one
-        switch (this.dynamicState){
+        switch (selectedPanel){
             case ADD_DATA -> this.currentPanel = this.addDataPanel;
             case SHOW_DATA -> this.currentPanel = this.showDataPanel;
             case SETTINGS -> this.currentPanel = this.settingsPanel;
         }
 
-        add(this.currentPanel, BorderLayout.CENTER);  // Add the new panel to the Board
+        add(this.currentPanel, BorderLayout.CENTER);  // Add the selected panel to the Board
+
+        // Revalidate and repaint the GUI with the graphical changes
         revalidate();
         repaint();
-    }
-
-    /**
-     * The tasks that the Swing Timer performs periodically
-     * @param e the event to be processed
-     */
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        switchPanel();
     }
 
 }

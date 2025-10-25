@@ -1,5 +1,6 @@
 package moda.passwordmanager.frontend.panels;
 
+import moda.passwordmanager.frontend.Frontend;
 import moda.passwordmanager.frontend.GUIState;
 
 import javax.swing.*;
@@ -10,8 +11,7 @@ import java.awt.event.ActionListener;
 public class SidebarPanel extends JPanel {
 
     // Attributes for the configuration of the panel
-    private final int MAX_SIDEBAR;  // Set the maximum size of the sidebar
-    private Dimension windowSize;
+    private final static int MAX_SIDEBAR = 300;  // Set the maximum size of the sidebar
     private final String CURRENT_VERSION;  // The current version of the software shown in a JLabel
 
     // Swing components
@@ -19,34 +19,38 @@ public class SidebarPanel extends JPanel {
     private JButton showDataButton;
     private JButton settingsButton;
 
-    // The dynamicState indicates which Panel needs to be switched to from the current one selected
-    private GUIState dynamicState;
+    // The selectedPanel indicates the JPanel that is selected
+    private GUIState selectedPanel;
 
-    public SidebarPanel(Dimension windowSize, String CURRENT_VERSION) {
+    public SidebarPanel(String CURRENT_VERSION){
         super();  // Initialize the Panel
 
         // Set the attributes given by the JFrame
-        this.MAX_SIDEBAR = 300;
-        this.windowSize = windowSize;
         this.CURRENT_VERSION = CURRENT_VERSION;
 
         // Set the initial state of the dynamic part to Show All Panel
-        this.dynamicState = GUIState.SHOW_DATA;
+        this.selectedPanel = GUIState.SHOW_DATA;
 
         initPanel();
         initComponents();
         initListeners();
     }
 
-    @Override public Dimension getPreferredSize() {
-        Container parent = getParent(); // il Frame
-        if (parent != null) {
-            int larghezza = Math.min(parent.getWidth() / 3, MAX_SIDEBAR);
-            return new Dimension(larghezza, parent.getHeight());
+    /**
+     * Resizes at runtime the panel to adapt it to the new window size
+     */
+    @Override
+    public Dimension getPreferredSize() {
+        Component frontend = getParent(); // Get the Frontend JPanel
+
+        if (frontend != null) {
+            // Calculate dynamically the width of the sidebar based on the current width of the frontend and the maximum
+            // size of the sidebar
+            int width = Math.min(frontend.getWidth() / 3, MAX_SIDEBAR);
+            return new Dimension(width, frontend.getHeight());
         }
         return new Dimension(MAX_SIDEBAR, 0);
     }
-
 
     /**
      * Set the configuration of the JPanel
@@ -109,26 +113,35 @@ public class SidebarPanel extends JPanel {
         this.addDataButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                dynamicState = GUIState.ADD_DATA;
+                selectedPanel = GUIState.ADD_DATA;
+                switchPanel();
             }
         });
 
         this.showDataButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                dynamicState = GUIState.SHOW_DATA;
+                selectedPanel = GUIState.SHOW_DATA;
+                switchPanel();
             }
         });
 
         this.settingsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                dynamicState = GUIState.SETTINGS;
+                selectedPanel = GUIState.SETTINGS;
+                switchPanel();
             }
         });
     }
 
-    public GUIState getDynamicState() {
-        return dynamicState;
+    /**
+     * Switch the JPanel shown to the new one
+     */
+    private void switchPanel(){
+        // To do this, we first have to get the Frontend object by the getParent method, then call the real
+        // switchPanel that is inside the Frontend
+        Frontend frontend = (Frontend) getParent();
+        frontend.switchPanel(this.selectedPanel);
     }
 }

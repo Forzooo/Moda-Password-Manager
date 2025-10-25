@@ -69,8 +69,12 @@ public class ShowDataPanel extends JPanel {
     private void initPanel(int sidebarPanelWidth){
         setLayout(getPanelLayout());  // Set its layout
 
+        // Calculate the preferred width and height
+        int width = (int) (this.windowSize.getWidth() - sidebarPanelWidth);
+        int height = (int) this.windowSize.getHeight();
+
         // Set the preferred size
-        setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - sidebarPanelWidth), (int) this.windowSize.getHeight()));
+        setPreferredSize(new Dimension(width, height));
 
         setBackground(Color.WHITE);
     }
