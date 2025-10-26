@@ -582,7 +582,7 @@ public class Backend extends Thread {
 
         // We need to schedule the synchronization even if the Google Drive module is not enabled because otherwise
         // it can happen that the synchronization is scheduled more than one time
-        this.executePeriodicallyInBackground(this::synchronizeGoogleDrive, 60);
+        this.executePeriodicallyInBackground(this::automaticSynchronizeGoogleDrive, 60);
     }
 
     /**
@@ -620,6 +620,13 @@ public class Backend extends Thread {
      * Synchronize the database with Google Drive
      */
     private void synchronizeGoogleDrive(){
+        this.googleDrive.sync(this.helper.getDatabasePath(), this.database.getDatabaseName());
+    }
+
+    /**
+     * Synchronization performed automatically every 60 seconds
+     */
+    private void automaticSynchronizeGoogleDrive(){
         // Ensure that Google Drive is enabled, and the Synchronization is enabled before synchronizing
         if (this.helper.isGoogleDriveEnabled() && this.settings.readBooleanSetting("google_drive/automatic_synchronization")){
             this.googleDrive.sync(this.helper.getDatabasePath(), this.database.getDatabaseName());
