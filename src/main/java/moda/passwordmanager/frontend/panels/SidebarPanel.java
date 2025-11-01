@@ -7,6 +7,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class SidebarPanel extends JPanel {
 
@@ -20,7 +22,7 @@ public class SidebarPanel extends JPanel {
     private JPanel componentsSection;
     private JPanel detailsSection;
 
-//    // Swing components
+    // Swing components
     private JButton addDataButton;
     private JButton showDataButton;
     private JButton settingsButton;
@@ -68,6 +70,8 @@ public class SidebarPanel extends JPanel {
     private void initPanel(){
         // Use the BoxLayout to display the sections in vertical alignment
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+
+        // TODO: Set a proper background color using FlatLaf themes
     }
 
     /**
@@ -77,7 +81,6 @@ public class SidebarPanel extends JPanel {
         Dimension sidebar = getPreferredSize();  // Get the current dimension of the sidebar
 
         this.titleSection = new JPanel();
-
         this.componentsSection = new JPanel();
 
         // We set only the size of the components section because the other two have the same size
@@ -110,26 +113,36 @@ public class SidebarPanel extends JPanel {
         passwordManagerLabel.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 80));
 
         // Components Section
-        JPanel buttonPanel = new JPanel(new GridLayout(3, 1));
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
 
-        // Create the JButtons used to switch between JPanels of the dynamic part
-        Dimension buttonDimension = new Dimension(350, 50);
+        // Create the JButtons used to switch between JPanels of the dynamic part, where their width is the same as
+        // the sidebar
+        Dimension buttonDimension = new Dimension((int) getPreferredSize().getWidth(), 60);
 
         this.addDataButton = new JButton();
+        this.addDataButton.setBorderPainted(false);  // The buttons should not have the border
         this.addDataButton.setText("Add Data");
+        this.addDataButton.setPreferredSize(buttonDimension);
         this.addDataButton.setMaximumSize(buttonDimension);
 
         this.showDataButton = new JButton();
+        this.showDataButton.setBorderPainted(false);
         this.showDataButton.setText("Show Data");
+        this.showDataButton.setPreferredSize(buttonDimension);
         this.showDataButton.setMaximumSize(buttonDimension);
 
         this.settingsButton = new JButton();  // TODO: Use the settings icon instead of the text
+        this.settingsButton.setBorderPainted(false);
         this.settingsButton.setText("Settings");
+        this.settingsButton.setPreferredSize(buttonDimension);
         this.settingsButton.setMaximumSize(buttonDimension);
 
         // Add the section buttons to their JPanel
         buttonPanel.add(addDataButton);
+        addSpacing(buttonPanel, new Dimension(0, (int) (buttonDimension.getHeight()/6))); // Add spacing
         buttonPanel.add(showDataButton);
+        addSpacing(buttonPanel, new Dimension(0, (int) (buttonDimension.getHeight()/6)));
         buttonPanel.add(settingsButton);
 
         // Details section
@@ -140,6 +153,13 @@ public class SidebarPanel extends JPanel {
         this.titleSection.add(passwordManagerLabel);
         this.componentsSection.add(buttonPanel, BorderLayout.SOUTH);
         this.detailsSection.add(currentVersionLabel);
+    }
+
+    /**
+     * Add some spacing to a panel
+     */
+    private void addSpacing(JPanel panel, Dimension dimension){
+        panel.add(Box.createRigidArea(dimension));
     }
 
     /**
@@ -154,6 +174,8 @@ public class SidebarPanel extends JPanel {
             }
         });
 
+        setHoverEffect(this.addDataButton);
+
         this.showDataButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -162,6 +184,8 @@ public class SidebarPanel extends JPanel {
             }
         });
 
+        setHoverEffect(this.showDataButton);
+
         this.settingsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -169,6 +193,8 @@ public class SidebarPanel extends JPanel {
                 switchPanel();
             }
         });
+
+        setHoverEffect(this.settingsButton);
     }
 
     /**
@@ -179,5 +205,24 @@ public class SidebarPanel extends JPanel {
         // switchPanel that is inside the Frontend
         Frontend frontend = (Frontend) getParent();
         frontend.switchPanel(this.selectedPanel);
+    }
+
+    /**
+     * Set a hover effect on a JButton
+     */
+    private void setHoverEffect(JButton button){
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                super.mouseEntered(e);
+                button.setBackground(Color.gray);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                super.mouseExited(e);
+                button.setBackground(null);
+            }
+        });
     }
 }
