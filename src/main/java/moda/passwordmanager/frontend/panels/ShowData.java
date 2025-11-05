@@ -3,7 +3,6 @@ package moda.passwordmanager.frontend.panels;
 import moda.passwordmanager.backend.Data;
 //import moda.passwordmanager.frontend.components.CloseTab;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
-import moda.passwordmanager.interthreadcommunication.Event;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -108,19 +107,9 @@ public class ShowData extends JPanel {
                 super.mouseClicked(e);
                 // Only allow double clicks
                 if (e.getClickCount() == 2) {
-                    // Retrieve the ID from the selected data
-                    Data dataSelected = userData.get(dataList.getSelectedIndex());
-                    int id = dataSelected.getID();
-
-                    // Retrieve the data with the ID from the database
-//                    Data userSingleData = getData(id);
-
-                    addDataTab(getData(id));
-                    // TODO: Add proper panel
-
-                    // Create a Show Data Dialog to display the data retrieved
-//                    moda.passwordmanager.frontend.dialogs.ShowData showData = new moda.passwordmanager.frontend.dialogs.ShowData(itc, userSingleData);
-//                    showData.setVisible(true);
+                    // Retrieve the ID selected by getting it from the userData attribute, then create the Data Tab
+                    // with that ID
+                    addDataTab(userData.get(dataList.getSelectedIndex()).getID());
                 }
             }
         });
@@ -146,29 +135,18 @@ public class ShowData extends JPanel {
         });
     }
 
-    private void addDataTab(Data userData){
-        UserData userDataTab = new UserData(this.itc, userData, getWidth(), getHeight());
+    /**
+     * Add a tab to the TabbedPane with the service selected by the user
+     */
+    private void addDataTab(int id){
+        UserData userDataTab = new UserData(this.itc, id, getWidth(), getHeight());
 //        CloseTab closeTab = new CloseTab(this.dataTabbedPane, userDataTab);
 
-        this.dataTabbedPane.addTab(userData.getSERVICE(), userDataTab);
+        // Get the tab name from the service field
+        String tabName = this.userData.get(this.dataList.getSelectedIndex()).getSERVICE();
+
+        this.dataTabbedPane.addTab(tabName, userDataTab);
 //        this.dataTabbedPane.setTabComponentAt(this.dataTabbedPane.indexOfComponent(userDataTab), closeTab);
-    }
-
-    /**
-     * Retrieve the data associated with an ID from the database to show it in "Show Data" section
-     * @param id
-     * @return
-     */
-    private Data getData(int id){
-        // Create the event to send to the backend
-        Event getData = new Event("get-data", id);
-
-        // Wait for the response
-        Event getSingleDataCompleted = this.itc.requestAndReceive(getData);
-
-        Data userData = (Data) getSingleDataCompleted.getData().getFirst();  // Get the user data
-
-        return userData;
     }
 
     public ArrayList<Data> getUserData() {

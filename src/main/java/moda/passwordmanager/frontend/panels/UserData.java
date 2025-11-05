@@ -31,14 +31,14 @@ public class UserData extends JPanel {
     private JButton deleteButton;
     private JButton generatePasswordButton;
 
-    public UserData(InterThreadCommunication itc, Data userData, int width, int height) {
+    public UserData(InterThreadCommunication itc, int id, int width, int height) {
         super();  // Initialize the Panel
 
         this.itc = itc;
-        this.ID = userData.getID();
+        this.ID = id;
 
         initPanel(width, height);
-        initComponents(userData);
+        initComponents();
         initListeners();
     }
 
@@ -46,12 +46,12 @@ public class UserData extends JPanel {
      * Set the configuration of the Dialog
      */
     private void initPanel(int width, int height){
-        setLayout(new BorderLayout());  // Set its layout
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));  // Set its layout
+        setBorder(new EmptyBorder(20,20,20,20));
 
         // Set the preferred size
         setPreferredSize(new Dimension(width, height));
 
-        setBackground(Color.WHITE);
     }
 
     /**
@@ -63,15 +63,23 @@ public class UserData extends JPanel {
     }
 
     /**
+     * Retrieve the data associated with the ID given in the constructor
+     */
+    private Data getData(){
+        // Create the event to send to the backend
+        Event getData = new Event("get-data", this.ID);
+
+        // Wait for the response
+        Event getSingleDataCompleted = this.itc.requestAndReceive(getData);
+
+        Data userData = (Data) getSingleDataCompleted.getData().getFirst();  // Get the user data
+        return userData;
+    }
+
+    /**
      * Initialize the components of the panel
      */
-    private void initComponents(Data userData){
-
-        // A panel is used instead of the dialog because it is more customizable
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));  // Set its layout
-        panel.setBorder(new EmptyBorder(20,20,20,20));
-
+    private void initComponents(){
         // Create all the JButton
         this.modifyButton = new JButton("Modify");
         this.saveChangesButton = new JButton("Save Changes");
@@ -85,8 +93,8 @@ public class UserData extends JPanel {
         this.copyButtons = new ArrayList<>();  // All the copy buttons are stored here
 
         // Create the data row for each field
-        for (String dataField : userData.getFullUserData()){
-            panel.add(createDataRowPanel(dataField));
+        for (String dataField : getData().getFullUserData()){
+            add(createDataFieldPanel(dataField));
         }
 
         // A panel for the buttons
@@ -96,18 +104,16 @@ public class UserData extends JPanel {
         buttonsPanel.add(this.deleteButton);
         buttonsPanel.add(this.generatePasswordButton);
 
-        panel.add(buttonsPanel);
-
-        add(panel);
+        add(buttonsPanel);
     }
 
     /**
      * Create the JPanel for each field inside the data
-     * @param dataField The field which the panel will be created for
+     * @param dataField The data field which the panel will be created for
      */
-    private JPanel createDataRowPanel(String dataField){
-        JPanel dataRowPanel = new JPanel(new BorderLayout(5, 0));
-        dataRowPanel.setBorder(new EmptyBorder(5, 0, 5, 0));  // Padding between rows
+    private JPanel createDataFieldPanel(String dataField){
+        JPanel dataFieldPanel = new JPanel(new BorderLayout(5, 0));
+        dataFieldPanel.setBorder(new EmptyBorder(5, 0, 5, 0));  // Padding between rows
 
         JTextField dataTextField = new JTextField();
         dataTextField.setText(dataField);
@@ -122,16 +128,16 @@ public class UserData extends JPanel {
         this.copyButtons.add(copyDataButton);
 
         // Add the JTextField and the JButton to the panel
-        dataRowPanel.add(dataTextField, BorderLayout.CENTER);
-        dataRowPanel.add(copyDataButton, BorderLayout.EAST);
-        return dataRowPanel;
+        dataFieldPanel.add(dataTextField, BorderLayout.CENTER);
+        dataFieldPanel.add(copyDataButton, BorderLayout.EAST);
+        return dataFieldPanel;
     }
 
     /**
      * Initialize all the listeners on the components
      */
     private void initListeners() {
-        this.modifyButton.addActionListener(e -> enableChanges());
+        this.modifyButton.addActionListener(e -> enableEditing());
 
         // Save the changes and send the event to the backend
         this.saveChangesButton.addActionListener(e -> saveChanges());
@@ -155,12 +161,12 @@ public class UserData extends JPanel {
     }
 
     /**
-     * Enable the JTextFields to be modified
+     * Set the data to be edited
      */
-    private void enableChanges(){
+    private void enableEditing(){
         // Set the JTextFields to be editable to allow changes
-        for (JTextField fields : this.dataFields){
-            fields.setEditable(true);
+        for (JTextField dataField : this.dataFields){
+            dataField.setEditable(true);
         }
 
         // Set the copy buttons to not be enabled while the data is being changed
@@ -168,14 +174,48 @@ public class UserData extends JPanel {
             copyButton.setEnabled(false);
         }
 
-        this.modifyButton.setEnabled(false);  // Disable the JButton as it's already being used
-        this.deleteButton.setVisible(false); // Hide the delete button
-        this.saveChangesButton.setVisible(true);  // Show the JButton used to apply changes
-        this.generatePasswordButton.setVisible(true);  // Show the generate password button
+        // Disable and hide the buttons that cannot be used while in Modify state
+        this.modifyButton.setEnabled(false);
+        this.modifyButton.setVisible(false);
+        this.deleteButton.setEnabled(false);
+        this.deleteButton.setVisible(false);
+
+        // Enable and show the buttons that are related to Modify state
+        this.saveChangesButton.setEnabled(true);
+        this.saveChangesButton.setVisible(true);
+        this.generatePasswordButton.setEnabled(true);
+        this.generatePasswordButton.setVisible(true);
+    }
+
+    /**
+     * Set the data to not be edited
+     */
+    private void disableEditing(){
+        // Set the JTextFields to not be editable to disable changes
+        for (JTextField dataField : this.dataFields){
+            dataField.setEditable(false);
+        }
+
+        // Set the copy buttons to be enabled again
+        for (JButton copyButton : this.copyButtons){
+            copyButton.setEnabled(false);
+        }
+
+        // Disable and hide the buttons that cannot be used while in Read-only state
+        this.saveChangesButton.setEnabled(false);
+        this.saveChangesButton.setVisible(false);
+        this.generatePasswordButton.setEnabled(false);
+        this.generatePasswordButton.setVisible(false);
+
+        // Enable and show the buttons that are related to Read-only state
+        this.modifyButton.setEnabled(true);
+        this.modifyButton.setVisible(true);
+        this.deleteButton.setEnabled(true);
+        this.deleteButton.setVisible(true);
     }
 
     private void saveChanges(){
-        // Store the updated strings into an array
+        // The updatedData is used to update the backend with the new data
         String[] updatedData = new String[5];
 
         // Iterate over the data fields to get their data and set them not to be editable
@@ -194,18 +234,13 @@ public class UserData extends JPanel {
 
         // Ensure that the service field is not empty
         if (updatedData[3].isEmpty()){
-            enableChanges();  // Enable to make changes again as they were disabled in the previous for loop
+            enableEditing();  // Enable to make changes again as they were disabled in the previous for loop
             return;
         }
 
         // Send the data to the backend
         changeData(new Data(this.ID, updatedData[0], updatedData[1], updatedData[2], updatedData[3], updatedData[4]));
-
-        // Hide the save JButton and the generate password button, show the Delete button and enable the modify JButton again
-        this.saveChangesButton.setVisible(false);
-        this.deleteButton.setVisible(true);
-        this.modifyButton.setEnabled(true);
-        this.generatePasswordButton.setVisible(false);
+        disableEditing();
     }
 
     /**
@@ -250,6 +285,6 @@ public class UserData extends JPanel {
     private void generatePassword(){
         Event event = this.itc.requestAndReceive(new Event("generate-string"));
         String password = (String) event.getData().getFirst();
-        this.dataFields.get(2).setText(password);  // Set the password to the third text field (the password one)
+        this.dataFields.get(2).setText(password);  // Set the password to the third text field: the password one
     }
 }
