@@ -14,9 +14,9 @@ import java.util.ArrayList;
 /**
  * A JDialog used to retrieve the parameters of the generation of the password
  */
-public class ConfigureGenerationPasswordDialog extends JDialog {
+public class ConfigureGenerationPassword extends JDialog {
 
-    private InterThreadCommunication interThreadCommunication;
+    private InterThreadCommunication itc;
 
     // Dialog components
     private JTextField passwordLengthTextField;
@@ -28,10 +28,10 @@ public class ConfigureGenerationPasswordDialog extends JDialog {
 
     private JButton saveConfigurationButton;
 
-    public ConfigureGenerationPasswordDialog(InterThreadCommunication interThreadCommunication){
+    public ConfigureGenerationPassword(InterThreadCommunication itc){
         super();
 
-        this.interThreadCommunication = interThreadCommunication;
+        this.itc = itc;
 
         initDialog();
         initComponents();
@@ -128,7 +128,7 @@ public class ConfigureGenerationPasswordDialog extends JDialog {
                 event.addData(numbersSelected);
                 event.addData(specialCharactersSelected);
 
-                interThreadCommunication.request(event);  // Send the event
+                itc.request(event);  // Send the event
                 dispose();  // Destroy the JDialog after the configuration has been saved
             }
         });
@@ -140,7 +140,7 @@ public class ConfigureGenerationPasswordDialog extends JDialog {
     private void setCurrentParameters(){
         // Create the event and wait for the data
         Event event = new Event("get-string-generation-configuration");
-        Event backendResponse = this.interThreadCommunication.requestAndReceive(event);
+        Event backendResponse = this.itc.requestAndReceive(event);
 
         ArrayList<Object> data = backendResponse.getData();  // Retrieve the data
 

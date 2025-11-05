@@ -1,7 +1,7 @@
 package moda.passwordmanager.frontend;
 
 import moda.passwordmanager.backend.Data;
-import moda.passwordmanager.frontend.panels.ShowDataPanel;
+import moda.passwordmanager.frontend.panels.ShowData;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
@@ -13,13 +13,13 @@ public class FrontendEventListener extends Thread {
     private InterThreadCommunication itc;
     private boolean runFlag;  // Flag used to indicate when the thread has to stop
     private Event eventToSend;  // The event that is sent to the Backend
-    private ShowDataPanel showDataPanel;  // The Listener needs the Show Data Panel to call the service fields
+    private ShowData showData;  // The Listener needs the Show Data Panel to call the service fields
 
-    public FrontendEventListener(InterThreadCommunication itc, ShowDataPanel showDataPanel){
+    public FrontendEventListener(InterThreadCommunication itc, ShowData showData){
         super("Frontend Event Listener");  // Set the name of the thread for debug purposes
         this.itc = itc;
         this.runFlag = true;
-        this.showDataPanel = showDataPanel;
+        this.showData = showData;
     }
 
     @Override
@@ -108,12 +108,12 @@ public class FrontendEventListener extends Thread {
      */
     private void updateServiceFields(ArrayList<Data> backendData){
         // Get the User Data and its model to update them with the changes
-        ArrayList<Data> userData = this.showDataPanel.getUserData();
-        DefaultListModel<String> userDataModel = this.showDataPanel.getUserDataModel();
+        ArrayList<Data> userData = this.showData.getUserData();
+        DefaultListModel<String> userDataModel = this.showData.getUserDataModel();
 
         for (Data data : backendData){
             // Retrieve the indexes of the Data objects that have the same ID
-            int userDataIndex = this.showDataPanel.indexOfUserData(data.getID());
+            int userDataIndex = this.showData.indexOfUserData(data.getID());
 
             // If the ID has not been found, then add the Data object
             if (userDataIndex == -1){

@@ -1,9 +1,9 @@
 package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.backend.Data;
+//import moda.passwordmanager.frontend.components.CloseTab;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
-import moda.passwordmanager.frontend.dialogs.ShowDataDialog;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -12,14 +12,16 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
-public class ShowDataPanel extends JPanel {
+public class ShowData extends JPanel {
 
     // Attribute to communicate with the backend
-    private InterThreadCommunication interThreadCommunication;
+    private InterThreadCommunication itc;
 
     // Attributes for the configuration of the panel
     private final int MIN_CONTENT_WIDTH;
     private Dimension windowSize;
+
+    private JTabbedPane dataTabbedPane;  // The tabbed pane shows the dataList and the data the user has selected
 
     /**
      * The service data shown in the JList of "Show Data" panel which it's updated automatically by the timer
@@ -30,12 +32,12 @@ public class ShowDataPanel extends JPanel {
     // Swing components
     private JList<String> dataList;
 
-    public ShowDataPanel(InterThreadCommunication interThreadCommunication, int MIN_CONTENT_WIDTH, Dimension windowSize,
-                         int sidebarPanelWidth) {
+    public ShowData(InterThreadCommunication itc, int MIN_CONTENT_WIDTH, Dimension windowSize,
+                    int sidebarPanelWidth) {
         super();  // Initialize the Panel
 
         // Set the attributes given by the JFrame
-        this.interThreadCommunication = interThreadCommunication;
+        this.itc = itc;
         this.MIN_CONTENT_WIDTH = MIN_CONTENT_WIDTH;
         this.windowSize = windowSize;
 
@@ -46,14 +48,6 @@ public class ShowDataPanel extends JPanel {
         initPanel(sidebarPanelWidth);
         initComponents();
         initListeners();
-    }
-
-    /**
-     * Get the layout used for the panel
-     * @return BorderLayout
-     */
-    private BorderLayout getPanelLayout() {
-        return new BorderLayout();
     }
 
     @Override
@@ -67,7 +61,7 @@ public class ShowDataPanel extends JPanel {
      * @param sidebarPanelWidth
      */
     private void initPanel(int sidebarPanelWidth){
-        setLayout(getPanelLayout());  // Set its layout
+        setLayout(new BorderLayout());  // Set its layout
 
         // Calculate the preferred width and height
         int width = (int) (this.windowSize.getWidth() - sidebarPanelWidth);
@@ -83,6 +77,8 @@ public class ShowDataPanel extends JPanel {
      * Initialize the components of the panel
      */
     private void initComponents(){
+        this.dataTabbedPane = new JTabbedPane();
+
         // Create the JList used to show all the data saved inside the database
         this.dataList = new JList<>();
         this.dataList.setFixedCellHeight(30);
@@ -94,9 +90,12 @@ public class ShowDataPanel extends JPanel {
 
         JScrollPane scrollPane = new JScrollPane(this.dataList);
         scrollPane.setPreferredSize(new Dimension(1000, 750));
-
         scrollPane.setBorder(new EmptyBorder(10,30,10,30));
-        add(scrollPane, BorderLayout.CENTER);  // Add the ScrollPane with the JList to the panel
+
+        this.dataTabbedPane.addTab("User Data", scrollPane);
+
+        add(this.dataTabbedPane, BorderLayout.CENTER);
+//        add(scrollPane, BorderLayout.CENTER);  // Add the ScrollPane with the JList to the panel
     }
 
     /**
@@ -114,11 +113,14 @@ public class ShowDataPanel extends JPanel {
                     int id = dataSelected.getID();
 
                     // Retrieve the data with the ID from the database
-                    Data userSingleData = getData(id);
+//                    Data userSingleData = getData(id);
+
+                    addDataTab(getData(id));
+                    // TODO: Add proper panel
 
                     // Create a Show Data Dialog to display the data retrieved
-                    ShowDataDialog showDataDialog = new ShowDataDialog(interThreadCommunication, userSingleData);
-                    showDataDialog.setVisible(true);
+//                    moda.passwordmanager.frontend.dialogs.ShowData showData = new moda.passwordmanager.frontend.dialogs.ShowData(itc, userSingleData);
+//                    showData.setVisible(true);
                 }
             }
         });
@@ -144,6 +146,14 @@ public class ShowDataPanel extends JPanel {
         });
     }
 
+    private void addDataTab(Data userData){
+        UserData userDataTab = new UserData(this.itc, userData, getWidth(), getHeight());
+//        CloseTab closeTab = new CloseTab(this.dataTabbedPane, userDataTab);
+
+        this.dataTabbedPane.addTab(userData.getSERVICE(), userDataTab);
+//        this.dataTabbedPane.setTabComponentAt(this.dataTabbedPane.indexOfComponent(userDataTab), closeTab);
+    }
+
     /**
      * Retrieve the data associated with an ID from the database to show it in "Show Data" section
      * @param id
@@ -154,7 +164,7 @@ public class ShowDataPanel extends JPanel {
         Event getData = new Event("get-data", id);
 
         // Wait for the response
-        Event getSingleDataCompleted = this.interThreadCommunication.requestAndReceive(getData);
+        Event getSingleDataCompleted = this.itc.requestAndReceive(getData);
 
         Data userData = (Data) getSingleDataCompleted.getData().getFirst();  // Get the user data
 

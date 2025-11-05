@@ -16,7 +16,7 @@ import java.awt.event.WindowEvent;
 /**
  * A JDialog used to retrieve the parameters of the generation of the password
  */
-public class MasterPasswordDialog extends JDialog {
+public class MasterPassword extends JDialog {
 
     private InterThreadCommunication itc;
 
@@ -26,7 +26,7 @@ public class MasterPasswordDialog extends JDialog {
     private JLabel currentDatabaseLabel;
     private JButton changeDatabaseButton;
 
-    public MasterPasswordDialog(InterThreadCommunication itc){
+    public MasterPassword(InterThreadCommunication itc){
         super();
 
         this.itc = itc;
@@ -40,7 +40,7 @@ public class MasterPasswordDialog extends JDialog {
      * Initialize the Master Password Dialog with a fixed database: it cannot be changed
      * @param databaseToUse Path of the database to use
      */
-    public MasterPasswordDialog(InterThreadCommunication itc, String databaseToUse){
+    public MasterPassword(InterThreadCommunication itc, String databaseToUse){
         super();
 
         this.itc = itc;

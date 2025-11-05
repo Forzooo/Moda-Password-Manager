@@ -2,7 +2,7 @@ package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
-import moda.passwordmanager.frontend.dialogs.MasterPasswordDialog;
+import moda.passwordmanager.frontend.dialogs.MasterPassword;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -11,7 +11,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class SettingsPanel extends JPanel {
+public class Settings extends JPanel {
 
     // Attribute to communicate with the backend
     private InterThreadCommunication itc;
@@ -31,8 +31,8 @@ public class SettingsPanel extends JPanel {
     private JButton enableAutomaticSynchronizationButton;  // Enable the automatic synchronization
     private JButton disableAutomaticSynchronizationButton;  // Disable the automatic synchronization
 
-    public SettingsPanel(InterThreadCommunication itc, int MIN_CONTENT_WIDTH, Dimension windowSize,
-                         int sidebarPanelWidth) {
+    public Settings(InterThreadCommunication itc, int MIN_CONTENT_WIDTH, Dimension windowSize,
+                    int sidebarPanelWidth) {
         super();  // Initialize the Panel
 
         // Set the attributes given by the JFrame
@@ -241,7 +241,7 @@ public class SettingsPanel extends JPanel {
                 String masterPassword = JOptionPane.showInputDialog(getPanel(), "Enter the new master password",
                         "");
                 // Perform some initial conditions check on the master password
-                if (!MasterPasswordDialog.checkMasterPassword(masterPassword.toCharArray())){
+                if (!MasterPassword.checkMasterPassword(masterPassword.toCharArray())){
                     return;
                 }
 
@@ -329,8 +329,8 @@ public class SettingsPanel extends JPanel {
         this.databasePathTextField.setText(databasePath);  // Set the new path of the database into the Text Field
 
         // Set the master password of the database before using it
-        MasterPasswordDialog masterPasswordDialog = new MasterPasswordDialog(this.itc, databasePath);
-        masterPasswordDialog.setVisible(true);
+        MasterPassword masterPassword = new MasterPassword(this.itc, databasePath);
+        masterPassword.setVisible(true);
     }
 
     /**

@@ -1,9 +1,8 @@
-package moda.passwordmanager.frontend.dialogs;
+package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.backend.Data;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
-import moda.passwordmanager.frontend.Frontend;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -16,9 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A JDialog that shows the all the information related to an ID of a record of the database
+ * A JPanel that shows the all the information related to an ID of a record of the database
  */
-public class ShowDataDialog extends JDialog {
+public class UserData extends JPanel {
 
     private InterThreadCommunication itc;
 
@@ -32,13 +31,13 @@ public class ShowDataDialog extends JDialog {
     private JButton deleteButton;
     private JButton generatePasswordButton;
 
-    public ShowDataDialog(InterThreadCommunication itc, Data userData) {
+    public UserData(InterThreadCommunication itc, Data userData, int width, int height) {
         super();  // Initialize the Panel
 
         this.itc = itc;
         this.ID = userData.getID();
 
-        initDialog();
+        initPanel(width, height);
         initComponents(userData);
         initListeners();
     }
@@ -46,19 +45,20 @@ public class ShowDataDialog extends JDialog {
     /**
      * Set the configuration of the Dialog
      */
-    private void initDialog(){
-        setSize(new Dimension(600, 400));
-        setResizable(false);
-        setAlwaysOnTop(true);
-        setLocationRelativeTo(getParent());  // The dialog is shown at the center of the window
-        setIconImage(Frontend.getIcon());
+    private void initPanel(int width, int height){
+        setLayout(new BorderLayout());  // Set its layout
+
+        // Set the preferred size
+        setPreferredSize(new Dimension(width, height));
+
+        setBackground(Color.WHITE);
     }
 
     /**
      * Get the panel of this class as some action listener require it
      * @return JPanel of the class
      */
-    private JDialog getDialog(){
+    private JPanel getPanel(){
         return this;
     }
 
@@ -139,13 +139,14 @@ public class ShowDataDialog extends JDialog {
         this.deleteButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                int result = JOptionPane.showConfirmDialog(getDialog(), "Delete the data?",
+                int result = JOptionPane.showConfirmDialog(getPanel(), "Delete the data?",
                         "Moda Password Manager", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 
                 // If the result is 0 (Yes) delete the data by sending an event to the backend
                 if (result == 0) {
                     deleteData();
-                    dispose();  // Destroy the dialog as the data shown has been deleted
+//                    dispose();  // Destroy the dialog as the data shown has been deleted
+                    // TODO: Find a way to delete the JPanel
                 }
             }
         });
@@ -220,7 +221,7 @@ public class ShowDataDialog extends JDialog {
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 StringSelection dataToCopy = new StringSelection(dataField);  // Create a Transferable
                 clipboard.setContents(dataToCopy, dataToCopy);  // Copy the transferable
-                JOptionPane.showMessageDialog(getDialog(), "Copied the data to the clipboard.");
+                JOptionPane.showMessageDialog(getPanel(), "Copied the data to the clipboard.");
             }
         };
     }

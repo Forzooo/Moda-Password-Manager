@@ -2,19 +2,14 @@ package moda.passwordmanager.frontend;
 
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
-import moda.passwordmanager.frontend.dialogs.MasterPasswordDialog;
+import moda.passwordmanager.frontend.dialogs.MasterPassword;
 import moda.passwordmanager.frontend.panels.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class Frontend extends JPanel {
 
@@ -39,10 +34,10 @@ public class Frontend extends JPanel {
     private final int MIN_CONTENT_WIDTH = 500;
 
     // All the JPanel of the GUI, defined as class attributes
-    private SidebarPanel sidebarPanel;
-    private AddDataPanel addDataPanel;
-    private ShowDataPanel showDataPanel;
-    private SettingsPanel settingsPanel;
+    private Sidebar sidebar;
+    private AddData addData;
+    private ShowData showData;
+    private Settings settings;
 
     public Frontend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
                     String databasePath, int width, int height){
@@ -145,8 +140,8 @@ public class Frontend extends JPanel {
      * Ask the user for the master password before starting to use the password manager
      */
     private void initMasterPassword(){
-        MasterPasswordDialog masterPasswordDialog = new MasterPasswordDialog(this.itc);
-        masterPasswordDialog.setVisible(true);
+        MasterPassword masterPassword = new MasterPassword(this.itc);
+        masterPassword.setVisible(true);
     }
 
     /**
@@ -176,7 +171,7 @@ public class Frontend extends JPanel {
      * Initialize the Frontend event listener
      */
     private void initEventListener(){
-        this.eventListener = new FrontendEventListener(this.itc, this.showDataPanel);
+        this.eventListener = new FrontendEventListener(this.itc, this.showData);
         this.eventListener.start();
     }
 
@@ -184,22 +179,22 @@ public class Frontend extends JPanel {
      * Initialize all the panels
      */
     private void initPanels(){
-        this.sidebarPanel = new SidebarPanel(VERSION, this.windowSize);
-        add(this.sidebarPanel, BorderLayout.WEST);  // Add the Sidebar to the Frame
+        this.sidebar = new Sidebar(VERSION, this.windowSize);
+        add(this.sidebar, BorderLayout.WEST);  // Add the Sidebar to the Frame
 
-        this.addDataPanel = new AddDataPanel(this.itc, this.MIN_CONTENT_WIDTH, this.windowSize,
-                                             this.sidebarPanel.getWidth());
+        this.addData = new AddData(this.itc, this.MIN_CONTENT_WIDTH, this.windowSize,
+                                             this.sidebar.getWidth());
 
-        this.showDataPanel = new ShowDataPanel(this.itc, this.MIN_CONTENT_WIDTH, this.windowSize,
-                                               this.sidebarPanel.getWidth());
+        this.showData = new ShowData(this.itc, this.MIN_CONTENT_WIDTH, this.windowSize,
+                                               this.sidebar.getWidth());
         this.dynamicState = GUIState.SHOW_DATA;  // Set the default dynamic state to be the Show Data panel
 
-        this.settingsPanel = new SettingsPanel(this.itc, this.MIN_CONTENT_WIDTH, this.windowSize,
-                                               this.sidebarPanel.getWidth());
+        this.settings = new Settings(this.itc, this.MIN_CONTENT_WIDTH, this.windowSize,
+                                               this.sidebar.getWidth());
 
         // Add the Show All Panel to the Board as it's the default panel at the start
-        this.currentPanel = this.showDataPanel;
-        add(this.showDataPanel, BorderLayout.CENTER);
+        this.currentPanel = this.showData;
+        add(this.showData, BorderLayout.CENTER);
     }
 
     /**
@@ -210,9 +205,9 @@ public class Frontend extends JPanel {
 
         // Based on the section chosen change the current panel to the new one
         switch (selectedPanel){
-            case ADD_DATA -> this.currentPanel = this.addDataPanel;
-            case SHOW_DATA -> this.currentPanel = this.showDataPanel;
-            case SETTINGS -> this.currentPanel = this.settingsPanel;
+            case ADD_DATA -> this.currentPanel = this.addData;
+            case SHOW_DATA -> this.currentPanel = this.showData;
+            case SETTINGS -> this.currentPanel = this.settings;
         }
 
         add(this.currentPanel, BorderLayout.CENTER);  // Add the selected panel to the Board

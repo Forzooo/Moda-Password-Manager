@@ -10,7 +10,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-public class SidebarPanel extends JPanel {
+public class Sidebar extends JPanel {
 
     // Attributes for the configuration of the panel
     private final static int MAX_SIDEBAR = 300;  // Set the maximum size of the sidebar
@@ -30,7 +30,7 @@ public class SidebarPanel extends JPanel {
     // The selectedPanel indicates the JPanel that is selected
     private GUIState selectedPanel;
 
-    public SidebarPanel(String CURRENT_VERSION, Dimension windowSize){
+    public Sidebar(String CURRENT_VERSION, Dimension windowSize){
         super();  // Initialize the Panel
 
         // Set the attributes given by the JFrame
