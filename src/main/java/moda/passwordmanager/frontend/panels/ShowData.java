@@ -106,8 +106,16 @@ public class ShowData extends JPanel {
                 super.mouseClicked(e);
                 // Only allow double clicks
                 if (e.getClickCount() == 2) {
-                    // Retrieve the ID selected by getting it from the userData attribute, then create the Data Tab
-                    // with that ID
+                    // Retrieve the ID selected by getting it from the userData attribute and check if a tab with that
+                    // ID already exists
+                    int id = userData.get(dataList.getSelectedIndex()).getID();
+
+                    // If the tab exists, then set it to be the selected one instead of creating a new tab for it
+                    if (checkDataTabExist(id)){
+                        dataTabbedPane.setSelectedIndex(indexOfDataTab(id));
+                        return;
+                    }
+
                     addDataTab(userData.get(dataList.getSelectedIndex()).getID());
                 }
             }
@@ -135,13 +143,30 @@ public class ShowData extends JPanel {
     }
 
     /**
+     * Check whether the service selected, thus its ID, has already a tab
+     */
+    private boolean checkDataTabExist(int id){
+        // Iterate over all the UserData tabs and check if their ID is the same as the one given
+        for (int i = 1; i < this.dataTabbedPane.getTabCount(); i++){
+            Component tab = this.dataTabbedPane.getComponentAt(i);
+            if (tab.getClass() == UserData.class){  // Ensure that the tab is a UserData one
+                if (((UserData) tab).getID() == id){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Add a tab to the TabbedPane with the service selected by the user
      */
     private void addDataTab(int id){
         UserData userDataTab = new UserData(this.itc, id, getWidth(), getHeight());
         String tabName = this.userData.get(this.dataList.getSelectedIndex()).getSERVICE();  // Get the tab name from the service field
         CloseTab closeTab = new CloseTab(this.dataTabbedPane, userDataTab, tabName);
-        closeTab.showTab();  // Show the tab
+        closeTab.add();  // Add the tab to the TabbedPane
+        this.dataTabbedPane.setSelectedComponent(userDataTab);  // Set the tab to be shown to be the one created
     }
 
     public ArrayList<Data> getUserData() {
@@ -155,10 +180,26 @@ public class ShowData extends JPanel {
     /**
      * Return the index of the Data object of UserData that has the same ID. -1 is returned if it does not exist
      */
-    public int indexOfUserData(int ID){
+    public int indexOfUserData(int id){
         for (int i = 0; i < this.userData.size(); i++){
-            if (this.userData.get(i).getID() == ID) {
+            if (this.userData.get(i).getID() == id) {
                 return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Return the index of the UserData tab that has the same ID. -1 is returned if it does not exist
+     */
+    private int indexOfDataTab(int id){
+        // Iterate over all the UserData tabs and check if their ID is the same as the one given
+        for (int i = 0; i < this.dataTabbedPane.getTabCount(); i++){
+            Component tab = this.dataTabbedPane.getComponentAt(i);
+            if (tab.getClass() == UserData.class){  // Ensure that the tab is a UserData one
+                if (((UserData) tab).getID() == id){
+                    return i;
+                }
             }
         }
         return -1;

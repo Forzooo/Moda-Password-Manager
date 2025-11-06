@@ -76,6 +76,10 @@ public class UserData extends JPanel {
         return userData;
     }
 
+    public int getID() {
+        return ID;
+    }
+
     /**
      * Initialize the components of the panel
      */

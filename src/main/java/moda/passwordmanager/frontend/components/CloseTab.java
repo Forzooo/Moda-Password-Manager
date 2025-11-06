@@ -59,9 +59,9 @@ public class CloseTab extends JPanel {
     }
 
     /**
-     * Show the Closeable Tab inside the TabbedPane
+     * Add the Closeable Tab to the TabbedPane
      */
-    public void showTab(){
+    public void add(){
         this.TABBED_PANE.addTab(null, this.TAB);  // First add the component to the TabbedPane
         this.TABBED_PANE.setTabComponentAt(this.TABBED_PANE.indexOfComponent(this.TAB), this);
     }
