@@ -151,8 +151,7 @@ public class UserData extends JPanel {
                 // If the result is 0 (Yes) delete the data by sending an event to the backend
                 if (result == 0) {
                     deleteData();
-//                    dispose();  // Destroy the dialog as the data shown has been deleted
-                    // TODO: Find a way to delete the JPanel
+                    closeTab();
                 }
             }
         });
@@ -287,4 +286,15 @@ public class UserData extends JPanel {
         String password = (String) event.getData().getFirst();
         this.dataFields.get(2).setText(password);  // Set the password to the third text field: the password one
     }
+
+    /**
+     * Remove the tab from the ShowData tabbed pane
+     */
+    private void closeTab(){
+        // The parent of the UserData panel is the TabbedPane where the panel is added to, so we can retrieve it
+        // and remove this panel from it
+        JTabbedPane tabbedPane = (JTabbedPane) getParent();
+        tabbedPane.remove(this);
+    }
+
 }

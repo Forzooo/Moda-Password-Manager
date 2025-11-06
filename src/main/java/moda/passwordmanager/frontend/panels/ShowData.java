@@ -1,7 +1,7 @@
 package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.backend.Data;
-//import moda.passwordmanager.frontend.components.CloseTab;
+import moda.passwordmanager.frontend.components.CloseTab;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
 import javax.swing.*;
@@ -94,7 +94,6 @@ public class ShowData extends JPanel {
         this.dataTabbedPane.addTab("User Data", scrollPane);
 
         add(this.dataTabbedPane, BorderLayout.CENTER);
-//        add(scrollPane, BorderLayout.CENTER);  // Add the ScrollPane with the JList to the panel
     }
 
     /**
@@ -140,13 +139,9 @@ public class ShowData extends JPanel {
      */
     private void addDataTab(int id){
         UserData userDataTab = new UserData(this.itc, id, getWidth(), getHeight());
-//        CloseTab closeTab = new CloseTab(this.dataTabbedPane, userDataTab);
-
-        // Get the tab name from the service field
-        String tabName = this.userData.get(this.dataList.getSelectedIndex()).getSERVICE();
-
-        this.dataTabbedPane.addTab(tabName, userDataTab);
-//        this.dataTabbedPane.setTabComponentAt(this.dataTabbedPane.indexOfComponent(userDataTab), closeTab);
+        String tabName = this.userData.get(this.dataList.getSelectedIndex()).getSERVICE();  // Get the tab name from the service field
+        CloseTab closeTab = new CloseTab(this.dataTabbedPane, userDataTab, tabName);
+        closeTab.showTab();  // Show the tab
     }
 
     public ArrayList<Data> getUserData() {
