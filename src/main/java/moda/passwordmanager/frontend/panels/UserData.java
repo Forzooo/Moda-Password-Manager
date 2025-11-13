@@ -24,7 +24,6 @@ public class UserData extends JPanel {
     private JButton modifyButton;
     private JButton saveChangesButton;
     private JButton deleteButton;
-    private JButton generatePasswordButton;
 
     public UserData(InterThreadCommunication itc, int id, int width, int height) {
         super();  // Initialize the Panel
@@ -86,15 +85,20 @@ public class UserData extends JPanel {
         this.saveChangesButton = new JButton("Save Changes");
         this.saveChangesButton.setVisible(false);  // It's shown only when modifyButton is clicked
         this.deleteButton = new JButton("Delete");
-        this.generatePasswordButton = new JButton("Generate a Password");
-        this.generatePasswordButton.setVisible(false);
 
         // Create the panel for each field of the data
         String[] userData = getData().getFullUserData();  // Retrieve the data of the user to know its length
         this.userDataFields = new UserDataField[userData.length];  // Set the size based on the data
 
         for (int i = 0; i < this.userDataFields.length; i++){
-            UserDataField userDataField = new UserDataField(userData[i]);
+            // As the password field requires its own panel, then we need to check each time the value of i to know
+            // the field we are creating
+            UserDataField userDataField;
+            if (i != 2){
+                userDataField = new UserDataField(userData[i]);
+            }else{
+                userDataField = new UserPasswordField(userData[i], this.itc);
+            }
             this.userDataFields[i] = userDataField;  // Set the panel to the array
             add(userDataField);  // Add the panel to the GUI
         }
@@ -104,7 +108,6 @@ public class UserData extends JPanel {
         buttonsPanel.add(this.modifyButton);
         buttonsPanel.add(this.saveChangesButton);
         buttonsPanel.add(this.deleteButton);
-        buttonsPanel.add(this.generatePasswordButton);
 
         add(buttonsPanel);
     }
@@ -131,8 +134,6 @@ public class UserData extends JPanel {
                 }
             }
         });
-
-        this.generatePasswordButton.addActionListener(e -> generatePassword());
     }
 
     /**
@@ -153,8 +154,6 @@ public class UserData extends JPanel {
         // Enable and show the buttons that are related to Modify state
         this.saveChangesButton.setEnabled(true);
         this.saveChangesButton.setVisible(true);
-        this.generatePasswordButton.setEnabled(true);
-        this.generatePasswordButton.setVisible(true);
     }
 
     /**
@@ -169,8 +168,6 @@ public class UserData extends JPanel {
         // Disable and hide the buttons that cannot be used while in Read-only state
         this.saveChangesButton.setEnabled(false);
         this.saveChangesButton.setVisible(false);
-        this.generatePasswordButton.setEnabled(false);
-        this.generatePasswordButton.setVisible(false);
 
         // Enable and show the buttons that are related to Read-only state
         this.modifyButton.setEnabled(true);
@@ -215,16 +212,6 @@ public class UserData extends JPanel {
     private void deleteData(){
         Event event = new Event("delete-data", this.ID);
         this.itc.request(event);
-    }
-
-    @Deprecated
-    /**
-     * Generate a password and set the password text field to it
-     */
-    private void generatePassword(){
-        Event event = this.itc.requestAndReceive(new Event("generate-string"));
-        String password = (String) event.getData().getFirst();
-//        this.userDataFields[2].setText(password);  // Set the password to the third text field: the password one
     }
 
     /**

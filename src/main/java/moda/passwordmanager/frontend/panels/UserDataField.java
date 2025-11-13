@@ -23,7 +23,7 @@ public class UserDataField extends JPanel {
      * Set the configuration of the Panel
      */
     private void initPanel(){
-        setLayout(new BorderLayout(5, 0));
+        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         setBorder(new EmptyBorder(5, 0, 5, 0));  // Padding between each field
     }
 
@@ -34,14 +34,17 @@ public class UserDataField extends JPanel {
         this.dataField = new JTextField();
         this.dataField.setText(dataField);
         this.dataField.setEditable(false);  // The user cannot modify the data unless "Modify" is clicked
+        this.dataField.setPreferredSize(new Dimension(600, 70));
+        this.dataField.setMaximumSize(new Dimension(600, 70));
 
         // Create the JButton to copy the data field
         this.copyButton = new JButton();
         this.copyButton.setText("❏");
-        this.copyButton.setPreferredSize(new Dimension(50, 50));
+        this.copyButton.setPreferredSize(new Dimension(50, 70));
+        this.copyButton.setMaximumSize(new Dimension(50, 70));
 
-        add(this.dataField, BorderLayout.CENTER);
-        add(this.copyButton, BorderLayout.EAST);
+        add(this.dataField);
+        add(this.copyButton);
     }
 
     /**
@@ -99,6 +102,13 @@ public class UserDataField extends JPanel {
      */
     public String getData(){
         return this.dataField.getText();
+    }
+
+    /**
+     * Set the data inside the TextField
+     */
+    protected void setData(String data){
+        this.dataField.setText(data);
     }
 
 }
