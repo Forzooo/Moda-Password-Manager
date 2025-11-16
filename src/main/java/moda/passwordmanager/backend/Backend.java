@@ -8,14 +8,10 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.TreeMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class Backend extends Thread {
 
@@ -34,9 +30,6 @@ public class Backend extends Thread {
 
     // The InterThreadCommunication object used to communicate with the Frontend thread
     private InterThreadCommunication itc;
-
-    // Execute operations in the background
-    private ScheduledExecutorService backgroundExecutor;
 
     /**
      * The event received from the ITC. It's used only when an exception is raised, otherwise the local value
@@ -62,8 +55,6 @@ public class Backend extends Thread {
         // The path of the database is retrieved from the helper
         this.database = new Database(this.helper.getDatabasePath());
 
-        this.backgroundExecutor = Executors.newScheduledThreadPool(2);  // Initialize the Background Executor
-
         startGoogleDrive();  // Initialize the connection with Google Drive only if enabled by the user
 
         this.eventReceived = null;
@@ -76,12 +67,13 @@ public class Backend extends Thread {
      * that is inside the main method, cannot access it
      */
     public void handleException(Thread t, Throwable e) {
+        // Create the traceback file that contains the full stack trace of the exception before anything else
+        createTracebackFile(t,e);
+
         // Before sending the exception we need to send back the event because if the request one is an high-priority
         // one, then EDT is waiting for the response before handling the exception
         this.eventToSend.addData(null);  // Add null as the only element of the event
         this.itc.reply(this.eventReceived, this.eventToSend);
-
-        createTracebackFile(t,e);  // Create the traceback file that contains the full stack trace of the exception
 
         // Send the event to the frontend with the exception communication
         Event event = new Event("exception-raised");
@@ -133,7 +125,7 @@ public class Backend extends Thread {
                 boolean test = testMasterPassword();
                 if (test){
                     // Initialize the Service Mapping after the Master Password has been set
-                    this.executeInBackground(this::initServiceMapping);
+                    this.helper.executeInBackground(this::initServiceMapping);
                 }
                 break;
 
@@ -143,7 +135,7 @@ public class Backend extends Thread {
 
             case "save-data":
                 saveData((Data) eventData.getFirst());
-                executeInBackground(this::updateServiceFields);
+                this.helper.executeInBackground(this::updateServiceFields);
                 break;
 
             case "get-data":
@@ -152,12 +144,12 @@ public class Backend extends Thread {
 
             case "delete-data":
                 deleteSingleData((int) eventData.getFirst());
-                executeInBackground(this::updateServiceFields);
+                this.helper.executeInBackground(this::updateServiceFields);
                 break;
 
             case "change-data":
                 changeData((Data) eventData.getFirst());
-                executeInBackground(this::updateServiceFields);
+                this.helper.executeInBackground(this::updateServiceFields);
                 break;
 
             case "generate-string":
@@ -171,6 +163,10 @@ public class Backend extends Thread {
 
             case "set-database":
                 setDatabasePath((String) eventData.getFirst());
+                // As a new database is set, we need to reset the service fields to update the Frontend with the new
+                // data, but updating with initServiceFields happens after the master password has been set,
+                // otherwise the services would be shown as encrypted
+                this.helper.executeInBackground(this::resetServiceFields);
                 break;
 
             case "get-database":
@@ -203,7 +199,7 @@ public class Backend extends Thread {
 
             case "google-drive-synchronize":
                 synchronizeGoogleDrive();
-                executeInBackground(this::updateServiceFields);
+                this.helper.executeInBackground(this::updateServiceFields);
                 break;
 
             case "enable-google-drive-synchronization":
@@ -217,14 +213,6 @@ public class Backend extends Thread {
             default:  // If the event is not handled by one of the cases above, then discard the event
                 resetSendData();
         }
-    }
-
-    /**
-     * Schedule a method to be executed in the background
-     * @param method The method to be executed
-     */
-    private void executeInBackground(Runnable method){
-        this.backgroundExecutor.schedule(method, 0, TimeUnit.SECONDS);
     }
 
     /**
@@ -254,14 +242,6 @@ public class Backend extends Thread {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    } 
-      
-    /** Schedule a method to be executed in the background
-     * @param method The method to be executed
-     * @param period The period that has to pass before executing again the method
-     */
-    private void executePeriodicallyInBackground(Runnable method, long period){
-        this.backgroundExecutor.scheduleAtFixedRate(method, 0, period, TimeUnit.SECONDS);
     }
 
     /**
@@ -383,6 +363,17 @@ public class Backend extends Thread {
         if (!updatedData.isEmpty()){
             Event updateService = new Event("update-service-fields", updatedData);
             this.itc.request(updateService);
+        }
+    }
+
+    /**
+     * Reset the service fields data shown in the Frontend
+     */
+    private void resetServiceFields(){
+        // Ensure that the services map is not empty, otherwise resetting the service fields is useless
+        if (!this.servicesMap.isEmpty()){
+            Event reset = new Event("reset-service-fields");
+            this.itc.request(reset);
         }
     }
 
@@ -582,7 +573,7 @@ public class Backend extends Thread {
 
         // We need to schedule the synchronization even if the Google Drive module is not enabled because otherwise
         // it can happen that the synchronization is scheduled more than one time
-        this.executePeriodicallyInBackground(this::automaticSynchronizeGoogleDrive, 60);
+        this.helper.executePeriodicallyInBackground(this::automaticSynchronizeGoogleDrive, 60);
     }
 
     /**
@@ -630,6 +621,7 @@ public class Backend extends Thread {
         // Ensure that Google Drive is enabled, and the Synchronization is enabled before synchronizing
         if (this.helper.isGoogleDriveEnabled() && this.settings.readBooleanSetting("google_drive/automatic_synchronization")){
             this.googleDrive.sync(this.helper.getDatabasePath(), this.database.getDatabaseName());
+            this.helper.executeInBackground(this::updateServiceFields);  // Update the service fields in the Frontend
         }
     }
 
