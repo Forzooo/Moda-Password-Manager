@@ -68,6 +68,15 @@ possibile che esista un evento di risposta, e viceversa.**
 * Evento di risposta: -
 * Altà priorità: false
 
+### reset-service-fields
+* Nome: `reset-service-fields`
+* Mittente: Backend
+* Descrizione: Il backend indica al Frontend che i dati da mostrare nella sezione "Show Data" devono essere cancellati
+* Dati inviati: -
+* Dati risposta: -
+* Evento di risposta: -
+* Alta priorità: false
+
 ### get-data
 * Nome: `get-data`
 * Mittente: Frontend

@@ -1,6 +1,9 @@
 package moda.passwordmanager.backend;
 
 import java.util.ArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The BackendHelper class is used to provide methods that can be used by all the APIs of the Backend class.
@@ -11,10 +14,31 @@ public class BackendHelper {
     private Settings settings;
     private GoogleDrive googleDrive;
 
+    // Execute operations in the background
+    private ScheduledExecutorService backgroundExecutor;
+
     public BackendHelper(Cryptography cryptography, Settings settings, GoogleDrive googleDrive){
         this.cryptography = cryptography;
         this.settings = settings;
         this.googleDrive = googleDrive;
+
+        this.backgroundExecutor = Executors.newScheduledThreadPool(2);  // Initialize the Background Executor
+    }
+
+    /**
+     * Schedule a method to be executed in the background
+     * @param method The method to be executed
+     */
+    public void executeInBackground(Runnable method){
+        this.backgroundExecutor.schedule(method, 0, TimeUnit.SECONDS);
+    }
+
+    /** Schedule a method to be executed in the background
+     * @param method The method to be executed
+     * @param period The period that has to pass before executing again the method
+     */
+    public void executePeriodicallyInBackground(Runnable method, long period){
+        this.backgroundExecutor.scheduleAtFixedRate(method, 0, period, TimeUnit.SECONDS);
     }
 
     /**

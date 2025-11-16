@@ -60,6 +60,10 @@ public class FrontendEventListener extends Thread {
                 updateServiceFields((ArrayList<Data>) eventData.getFirst());
                 break;
 
+            case "reset-service-fields":
+                resetServiceFields();
+                break;
+
             default:  // If the event is not handled by one of the cases above, then discard the event3
                 resetSendData();
         }
@@ -128,6 +132,14 @@ public class FrontendEventListener extends Thread {
                 userDataModel.set(userDataIndex, data.getSERVICE());
             }
         }
+    }
+
+    /**
+     * Reset the service data
+     */
+    private void resetServiceFields(){
+        this.showDataPanel.getUserData().clear();
+        this.showDataPanel.getUserDataModel().clear();
     }
 
 }
