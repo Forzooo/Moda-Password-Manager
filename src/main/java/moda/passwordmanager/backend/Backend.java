@@ -43,7 +43,7 @@ public class Backend extends Thread {
         super("Backend");  // Set the name of the thread for debug purposes
 
         // Create the communication handler with the two queues
-        this.itc = new InterThreadCommunication(backendQueue, frontendQueue);
+        this.itc = new InterThreadCommunication(frontendQueue, backendQueue);
 
         // Initialize all the backend components
         this.settings = new Settings();
@@ -73,7 +73,7 @@ public class Backend extends Thread {
         // Before sending the exception we need to send back the event because if the request one is an high-priority
         // one, then EDT is waiting for the response before handling the exception
         this.eventToSend.addData(null);  // Add null as the only element of the event
-        this.itc.reply(this.eventReceived, this.eventToSend);
+        this.itc.makeResponse(this.eventReceived, this.eventToSend);
 
         // Send the event to the frontend with the exception communication
         Event event = new Event("exception-raised");
@@ -81,12 +81,12 @@ public class Backend extends Thread {
         event.addData(e);
 
         // Receive the response from the frontend
-        Event frontendResponse = this.itc.requestAndReceive(event);
+        Event frontendResponse = this.itc.request(event);
 
         // Check whether the event response is close-connection to stop the execution
         if (frontendResponse.getNAME().equals("close-connection")){
             event = new Event("close-connection");  // Create the event to confirm the stop
-            this.itc.request(event);  // Send the event
+            this.itc.send(event);  // Send the event
             this.runFlag = false;  // Set the run flag to false to stop the thread
         }
     }
@@ -102,7 +102,7 @@ public class Backend extends Thread {
 
             // Check whether there is an Event to send to the Frontend
             if (this.eventToSend != null){
-                this.itc.reply(event, this.eventToSend);
+                this.itc.makeResponse(event, this.eventToSend);
                 resetSendData();  // Reset the data to send to the frontend
             }
         }
@@ -315,7 +315,7 @@ public class Backend extends Thread {
         // Create the Event with the data and send it only if the data is not empty
         if (!dataToSend.isEmpty()){
             Event updateService = new Event("update-service-fields", dataToSend);
-            this.itc.request(updateService);
+            this.itc.send(updateService);
         }
     }
 
@@ -362,7 +362,7 @@ public class Backend extends Thread {
         // Create the Event with the data and send it only if the data is not empty
         if (!updatedData.isEmpty()){
             Event updateService = new Event("update-service-fields", updatedData);
-            this.itc.request(updateService);
+            this.itc.send(updateService);
         }
     }
 
@@ -373,7 +373,7 @@ public class Backend extends Thread {
         // Ensure that the services map is not empty, otherwise resetting the service fields is useless
         if (!this.servicesMap.isEmpty()){
             Event reset = new Event("reset-service-fields");
-            this.itc.request(reset);
+            this.itc.send(reset);
         }
     }
 

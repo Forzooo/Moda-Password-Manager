@@ -6,12 +6,12 @@ public class Event {
 
     private final String NAME;  // The name of the event which specifies which operation to perform
     private ArrayList<Object> data;  // The data that is communicated with the other thread
-    private int id;  // The ID, used to identify the Event communication, is unique and randomly generated
 
     /**
-     * Define whether the Event is a High priority one: the thread that started the communication is the one that
-     * needs to receive the reply
+     * The ID, used to identify the Event communication, is unique and randomly generated and can only be accessed
+     * by package classes
      */
+    private int id;
 
     public Event(String name){
         this.NAME = name;
@@ -47,13 +47,13 @@ public class Event {
     /**
      * The ID can be set only the first time, and is considered to be a constant after
      */
-    public void setId(int id){
+    protected void setId(int id){
         if (this.id == -1){
             this.id = id;
         }
     }
 
-    public int getId() {
+    protected int getId() {
         return id;
     }
 }

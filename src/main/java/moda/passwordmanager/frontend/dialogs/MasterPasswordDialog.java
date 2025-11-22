@@ -200,7 +200,7 @@ public class MasterPasswordDialog extends JDialog {
         Event setMasterPassword = new Event("set-master-password", masterPassword);
 
         // Get the event from the backend to know whether the master password the user entered is correct
-        Event confirmEvent = this.itc.requestAndReceive(setMasterPassword);
+        Event confirmEvent = this.itc.request(setMasterPassword);
         boolean masterPasswordFlag = (Boolean) confirmEvent.getData().getFirst();
 
         // Show an Error message and terminate the execution if the master password entered is wrong
@@ -220,7 +220,7 @@ public class MasterPasswordDialog extends JDialog {
         Event event = new Event("get-database");
 
         // Receive the path of the database from the backend
-        Event databasePathEvent = this.itc.requestAndReceive(event);
+        Event databasePathEvent = this.itc.request(event);
         String databasePath = (String) databasePathEvent.getData().getFirst();
 
         return databasePath;
@@ -257,7 +257,7 @@ public class MasterPasswordDialog extends JDialog {
      */
     private void changeDatabase(String databasePath){
         Event event = new Event("set-database", databasePath);
-        this.itc.requestAndReceive(event);
+        this.itc.request(event);
         this.currentDatabaseLabel.setText(databasePath);  // Set the new path of the database into the label
     }
 

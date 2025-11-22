@@ -34,7 +34,7 @@ public class FrontendEventListener extends Thread {
 
             // Check whether there is an Event to send to the Backend
             if (this.eventToSend != null){
-                this.itc.reply(event, this.eventToSend);
+                this.itc.makeResponse(event, this.eventToSend);
                 resetSendData();  // Reset the data to send to the Backend
             }
         }
@@ -101,7 +101,7 @@ public class FrontendEventListener extends Thread {
 
         // Wait for the backend before terminating the execution as some operations could still being executed in the
         // background tasks
-        this.itc.request(closeConnection);
+        this.itc.send(closeConnection);
 
         System.exit(0);
     }

@@ -231,7 +231,7 @@ public class ShowDataDialog extends JDialog {
     private void changeData(Data data){
         // Create and send the event
         Event event = new Event("change-data", data);
-        this.itc.requestAndReceive(event);  // Wait for the response of the backend
+        this.itc.request(event);  // Wait for the response of the backend
     }
 
     /**
@@ -239,14 +239,14 @@ public class ShowDataDialog extends JDialog {
      */
     private void deleteData(){
         Event event = new Event("delete-data", this.ID);
-        this.itc.request(event);
+        this.itc.send(event);
     }
 
     /**
      * Generate a password and set the password text field to it
      */
     private void generatePassword(){
-        Event event = this.itc.requestAndReceive(new Event("generate-string"));
+        Event event = this.itc.request(new Event("generate-string"));
         String password = (String) event.getData().getFirst();
         this.dataFields.get(2).setText(password);  // Set the password to the third text field (the password one)
     }
