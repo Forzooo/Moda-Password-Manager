@@ -9,6 +9,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Arrays;
 
 /**
  * A JPanel that shows the all the information related to an ID of a record of the database
@@ -21,9 +22,15 @@ public class UserData extends JPanel {
 
     // Swing Components
     private UserDataField[] userDataFields;  // The fields of the data
+
+    // The fields before editing state is enabled, thus added only inside "enableEditing"
+    // They are used when "Discard Changes" button is clicked to restore the previous values, and it will clear the array
+    private String[] rollbackDataFields;
+
     private JButton modifyButton;
-    private JButton saveChangesButton;
     private JButton deleteButton;
+    private JButton saveChangesButton;
+    private JButton discardChangesButton;
 
     public UserData(InterThreadCommunication itc, int id, int width, int height) {
         super();  // Initialize the Panel
@@ -81,14 +88,26 @@ public class UserData extends JPanel {
      */
     private void initComponents(){
         // Create all the JButton
-        this.modifyButton = new JButton("Modify");
-        this.saveChangesButton = new JButton("Save Changes");
-        this.saveChangesButton.setVisible(false);  // It's shown only when modifyButton is clicked
-        this.deleteButton = new JButton("Delete");
+        this.modifyButton = new JButton();
+        this.modifyButton.setText("Modify");
+
+        this.deleteButton = new JButton();
+        this.deleteButton.setText("Delete");
+
+        this.saveChangesButton = new JButton();
+        this.saveChangesButton.setText("Save Changes");
+        this.saveChangesButton.setEnabled(false);
+        this.saveChangesButton.setVisible(false);  // It's shown only in the editing state
+
+        this.discardChangesButton = new JButton();
+        this.discardChangesButton.setText("Discard Changes");
+        this.discardChangesButton.setEnabled(false);
+        this.discardChangesButton.setVisible(false);  // It's shown only in the editing state
 
         // Create the panel for each field of the data
         String[] userData = getData().getFullUserData();  // Retrieve the data of the user to know its length
         this.userDataFields = new UserDataField[userData.length];  // Set the size based on the data
+        this.rollbackDataFields = new String[userData.length];  // Create the rollback array based on the data length
 
         for (int i = 0; i < this.userDataFields.length; i++){
             // As the password field requires its own panel, then we need to check each time the value of i to know
@@ -106,8 +125,9 @@ public class UserData extends JPanel {
         // Create a panel for the buttons
         JPanel buttonsPanel = new JPanel();
         buttonsPanel.add(this.modifyButton);
-        buttonsPanel.add(this.saveChangesButton);
         buttonsPanel.add(this.deleteButton);
+        buttonsPanel.add(this.saveChangesButton);
+        buttonsPanel.add(this.discardChangesButton);
 
         add(buttonsPanel);
     }
@@ -117,9 +137,6 @@ public class UserData extends JPanel {
      */
     private void initListeners() {
         this.modifyButton.addActionListener(e -> enableEditing());
-
-        // Save the changes and send the event to the backend
-        this.saveChangesButton.addActionListener(e -> saveChanges());
 
         this.deleteButton.addActionListener(new ActionListener() {
             @Override
@@ -134,6 +151,11 @@ public class UserData extends JPanel {
                 }
             }
         });
+
+        // Save the changes and send the event to the backend
+        this.saveChangesButton.addActionListener(e -> saveChanges());
+
+        this.discardChangesButton.addActionListener(e -> discardChanges());
     }
 
     /**
@@ -141,8 +163,9 @@ public class UserData extends JPanel {
      */
     private void enableEditing(){
         // Set the DataFields to be editable to allow changes
-        for (UserDataField dataField : this.userDataFields){
-            dataField.enableEditing();
+        for (int i = 0; i < this.userDataFields.length; i++){
+            this.rollbackDataFields[i] = this.userDataFields[i].getData();  // Save the data for rollback purposes
+            this.userDataFields[i].enableEditing();
         }
 
         // Disable and hide the buttons that cannot be used while in Modify state
@@ -154,12 +177,16 @@ public class UserData extends JPanel {
         // Enable and show the buttons that are related to Modify state
         this.saveChangesButton.setEnabled(true);
         this.saveChangesButton.setVisible(true);
+        this.discardChangesButton.setEnabled(true);
+        this.discardChangesButton.setVisible(true);
     }
 
     /**
      * Set the data to not be edited
      */
     private void disableEditing(){
+        Arrays.fill(this.rollbackDataFields, "");  // Remove the previous data as it is not required anymore
+
         // Set the DataFields to not be editable to disable changes
         for (UserDataField dataField : this.userDataFields){
             dataField.disableEditing();
@@ -168,6 +195,8 @@ public class UserData extends JPanel {
         // Disable and hide the buttons that cannot be used while in Read-only state
         this.saveChangesButton.setEnabled(false);
         this.saveChangesButton.setVisible(false);
+        this.discardChangesButton.setEnabled(false);
+        this.discardChangesButton.setVisible(false);
 
         // Enable and show the buttons that are related to Read-only state
         this.modifyButton.setEnabled(true);
@@ -194,6 +223,18 @@ public class UserData extends JPanel {
         // Disable the editing and send the data to the backend
         disableEditing();
         changeData(new Data(this.ID, updatedData[0], updatedData[1], updatedData[2], updatedData[3], updatedData[4]));
+    }
+
+    /**
+     * Discard the current changes made and disable editing mode
+     */
+    private void discardChanges(){
+        // Rollback each TextField to its previous value, where their clipboard is automatically updated when editing
+        // mode is disabled
+        for (int i = 0; i < this.userDataFields.length; i++){
+            this.userDataFields[i].setData(this.rollbackDataFields[i]);
+        }
+        disableEditing();  // Disable editing, which also clears the rollback array
     }
 
     /**
