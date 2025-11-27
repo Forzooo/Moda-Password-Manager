@@ -39,10 +39,10 @@ public class Application extends JFrame {
         add(new Frontend(backendQueue, frontendQueue, databaseToUse, width, height));
         pack();
 
-        setTitle("MODA - Password Manager");
+        setTitle(getApplicationTitle());
         setSize(width, height);
 
-        setIconImage(Frontend.getIcon());  // Get the icon and set it
+        setIconImage(getIcon());  // Get the icon and set it
 
         setVisible(true);
         setLocationRelativeTo(null);
@@ -66,6 +66,23 @@ public class Application extends JFrame {
         }
 
         return databasePath;
+    }
+
+    /**
+     * Retrieve the icon of the password manager from the resources folder
+     * @return Icon of the password manager
+     */
+    public static Image getIcon(){
+        // Get the image from the resources
+        ImageIcon imageIcon = new ImageIcon(Application.class.getResource("/icon.png"));
+        return imageIcon.getImage();
+    }
+
+    /**
+     * Retrieve the title of the application
+     */
+    public static String getApplicationTitle(){
+        return "MODA - Password Manager";
     }
 
     public static void main(String[] args) {

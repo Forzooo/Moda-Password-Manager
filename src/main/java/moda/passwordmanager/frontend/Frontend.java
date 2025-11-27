@@ -1,8 +1,8 @@
 package moda.passwordmanager.frontend;
 
+import moda.passwordmanager.frontend.dialogs.Startup;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
-import moda.passwordmanager.frontend.dialogs.MasterPassword;
 import moda.passwordmanager.frontend.panels.*;
 
 import javax.swing.*;
@@ -48,22 +48,12 @@ public class Frontend extends JPanel {
         // Set the default exception handler for the Frontend threads
         Thread.setDefaultUncaughtExceptionHandler(this::exceptionHandler);
 
-        initMasterPassword();
+        initStartup();
 
         initPanel(width, height);  // Set the properties of the panel
         initPanels();  // Initialize all the JPanels
         initEventListener();  // Initialize the Event Listener only after all the frontend components have been init
 
-    }
-
-    /**
-     * Retrieve the icon of the password manager from the resources folder
-     * @return Icon of the password manager
-     */
-    public static Image getIcon(){
-        // Get the image from the resources
-        ImageIcon imageIcon = new ImageIcon(Frontend.class.getResource("/icon.png"));
-        return imageIcon.getImage();
     }
 
     /**
@@ -139,9 +129,9 @@ public class Frontend extends JPanel {
     /**
      * Ask the user for the master password before starting to use the password manager
      */
-    private void initMasterPassword(){
-        MasterPassword masterPassword = new MasterPassword(this.itc);
-        masterPassword.setVisible(true);
+    private void initStartup(){
+        Startup startup = new Startup(this.itc);
+        startup.setVisible(true);
     }
 
     /**

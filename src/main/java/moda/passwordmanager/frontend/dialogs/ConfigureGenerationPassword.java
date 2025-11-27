@@ -1,8 +1,8 @@
 package moda.passwordmanager.frontend.dialogs;
 
+import moda.passwordmanager.Application;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
-import moda.passwordmanager.frontend.Frontend;
 import moda.passwordmanager.frontend.components.Placeholder;
 
 import javax.swing.*;
@@ -55,10 +55,10 @@ public class ConfigureGenerationPassword extends JDialog {
      */
     private void initDialog(){
         setLayout(getDialogLayout());  // Set its layout
-        setTitle("Configuration of the password");
+        setTitle(Application.getApplicationTitle());
         setSize(new Dimension(400, 350));  // Set the preferred size
         setLocationRelativeTo(getParent());  // The dialog is shown at the center of the window
-        setIconImage(Frontend.getIcon());
+        setIconImage(Application.getIcon());
     }
 
     /**

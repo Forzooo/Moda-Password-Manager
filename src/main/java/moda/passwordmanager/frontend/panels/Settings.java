@@ -1,8 +1,8 @@
 package moda.passwordmanager.frontend.panels;
 
+import moda.passwordmanager.frontend.dialogs.Startup;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
-import moda.passwordmanager.frontend.dialogs.MasterPassword;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -238,10 +238,12 @@ public class Settings extends JPanel {
         this.changeMasterPasswordButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String masterPassword = JOptionPane.showInputDialog(getPanel(), "Enter the new master password",
-                        "");
-                // Perform some initial conditions check on the master password
-                if (!MasterPassword.checkMasterPassword(masterPassword.toCharArray())){
+                // Set the master password of the database before using it
+                String masterPassword = JOptionPane.showInputDialog(getRootPane(), "Enter the new master password","");
+
+                // Initial checks on the master password entered to ensure that it is a valid string, otherwise abort the
+                // operation
+                if (masterPassword == null || masterPassword.isBlank()){
                     return;
                 }
 
@@ -323,14 +325,20 @@ public class Settings extends JPanel {
      * @param databasePath The path of the new database
      */
     private void setNewDatabase(String databasePath){
+        // Ask the user for the master password of the database before using it
+        String masterPassword = JOptionPane.showInputDialog(getRootPane(), "Enter the master password","");
+
+        // Initial checks on the master password entered to ensure that it is a valid string, otherwise abort the
+        // operation
+        if (masterPassword == null || masterPassword.isBlank()){
+            return;
+        }
+
         // Set the path of the database
         Event event = new Event("set-database", databasePath);
         this.itc.requestAndReceive(event);
         this.databasePathTextField.setText(databasePath);  // Set the new path of the database into the Text Field
-
-        // Set the master password of the database before using it
-        MasterPassword masterPassword = new MasterPassword(this.itc, databasePath);
-        masterPassword.setVisible(true);
+        changeMasterPassword(masterPassword);
     }
 
     /**
@@ -338,6 +346,11 @@ public class Settings extends JPanel {
      * @param masterPassword The new master password
      */
     private void changeMasterPassword(String masterPassword){
+        // Perform some initial conditions check on the master password
+        if (!Startup.checkMasterPassword(masterPassword.toCharArray())){
+            return;
+        }
+
         Event event = new Event("change-master-password", masterPassword.toCharArray());
         this.itc.requestAndReceive(event);  // Wait for the end of the operations in the backend
     }
