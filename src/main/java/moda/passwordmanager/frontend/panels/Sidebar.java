@@ -2,6 +2,7 @@ package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.frontend.Frontend;
 import moda.passwordmanager.frontend.GUIState;
+import moda.passwordmanager.frontend.dialogs.Settings;
 
 import javax.swing.*;
 import java.awt.*;
@@ -112,6 +113,8 @@ public class Sidebar extends JPanel {
         passwordManagerLabel.setText("MODA");
         passwordManagerLabel.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 80));
 
+        this.titleSection.add(passwordManagerLabel);
+
         // Components Section
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
@@ -132,27 +135,25 @@ public class Sidebar extends JPanel {
         this.showDataButton.setPreferredSize(buttonDimension);
         this.showDataButton.setMaximumSize(buttonDimension);
 
-        this.settingsButton = new JButton();  // TODO: Use the settings icon instead of the text
-        this.settingsButton.setBorderPainted(false);
-        this.settingsButton.setText("Settings");
-        this.settingsButton.setPreferredSize(buttonDimension);
-        this.settingsButton.setMaximumSize(buttonDimension);
-
         // Add the section buttons to their JPanel
         buttonPanel.add(addDataButton);
         addSpacing(buttonPanel, new Dimension(0, (int) (buttonDimension.getHeight()/6))); // Add spacing
         buttonPanel.add(showDataButton);
-        addSpacing(buttonPanel, new Dimension(0, (int) (buttonDimension.getHeight()/6)));
-        buttonPanel.add(settingsButton);
 
-        // Details section
+        this.componentsSection.add(buttonPanel, BorderLayout.SOUTH);
+
+        // Settings + Details section
+        this.settingsButton = new JButton();  // TODO: Use the settings icon instead of the unicode char
+        this.settingsButton.setBorderPainted(false);
+        this.settingsButton.setText("⚙");
+//        this.settingsButton.setPreferredSize(buttonDimension);
+//        this.settingsButton.setMaximumSize(buttonDimension);
+
         JLabel currentVersionLabel = new JLabel();  // The current version of the software
         currentVersionLabel.setText("Version: " + CURRENT_VERSION);
 
-        // Add the components to the Sidebar
-        this.titleSection.add(passwordManagerLabel);
-        this.componentsSection.add(buttonPanel, BorderLayout.SOUTH);
         this.detailsSection.add(currentVersionLabel);
+        this.detailsSection.add(this.settingsButton);
     }
 
     /**
@@ -186,13 +187,7 @@ public class Sidebar extends JPanel {
 
         setHoverEffect(this.showDataButton);
 
-        this.settingsButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                selectedPanel = GUIState.SETTINGS;
-                switchPanel();
-            }
-        });
+        this.settingsButton.addActionListener(e -> openSettings());
 
         setHoverEffect(this.settingsButton);
     }
@@ -205,6 +200,15 @@ public class Sidebar extends JPanel {
         // switchPanel that is inside the Frontend
         Frontend frontend = (Frontend) getParent();
         frontend.switchPanel(this.selectedPanel);
+    }
+
+    /**
+     * Open the settings dialog
+     */
+    private void openSettings(){
+        // Retrieve the Frontend object, then call the openSettings method
+        Frontend frontend = (Frontend) getParent();
+        frontend.openSettings();
     }
 
     /**

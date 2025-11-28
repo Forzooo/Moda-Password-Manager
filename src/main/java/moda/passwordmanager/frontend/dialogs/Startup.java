@@ -16,7 +16,7 @@ import java.awt.event.WindowEvent;
 public class Startup extends JDialog {
 
     private InterThreadCommunication itc;
-    private final static Dimension dialogDimension = new Dimension(500, 600);
+    private final static Dimension DIALOG_DIMENSION = new Dimension(500, 600);
 
     private JPasswordField masterPasswordPasswordField;
     private JButton loginButton;
@@ -39,7 +39,7 @@ public class Startup extends JDialog {
     private void initDialog(){
         setTitle(Application.getApplicationTitle());
         setIconImage(Application.getIcon());
-        setSize(dialogDimension);
+        setSize(DIALOG_DIMENSION);
 
         setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
@@ -52,8 +52,8 @@ public class Startup extends JDialog {
      * Initialize and add all the Swing components of the Dialog
      */
     private void initComponents(){
-        int width = (int) dialogDimension.getWidth();
-        int height = (int) dialogDimension.getHeight();
+        int width = (int) DIALOG_DIMENSION.getWidth();
+        int height = (int) DIALOG_DIMENSION.getHeight();
         JPanel rootPanel = new JPanel();  // We use a root panel as it has a better layout than the JDialog itself
 
         // Title section
