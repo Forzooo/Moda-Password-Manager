@@ -14,8 +14,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class Frontend extends JPanel {
 
-    private final static String VERSION = "1.0.0";  // The current version of the software
-
     // The InterThreadCommunication objects used to communicate with the Backend thread
     private InterThreadCommunication itc;
 
@@ -169,7 +167,7 @@ public class Frontend extends JPanel {
      * Initialize all the panels
      */
     private void initPanels(){
-        this.sidebar = new Sidebar(VERSION, this.windowSize);
+        this.sidebar = new Sidebar(this.windowSize);
         add(this.sidebar, BorderLayout.WEST);  // Add the Sidebar to the Frame
 
         this.addDataPanel = new AddData(this.itc, this.MIN_CONTENT_WIDTH, this.windowSize,

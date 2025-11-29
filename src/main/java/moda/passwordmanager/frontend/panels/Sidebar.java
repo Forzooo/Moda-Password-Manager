@@ -15,7 +15,6 @@ public class Sidebar extends JPanel {
 
     // Attributes for the configuration of the panel
     private final static int MAX_SIDEBAR = 300;  // Set the maximum size of the sidebar
-    private final String CURRENT_VERSION;  // The current version of the software shown in a JLabel
     private Dimension windowSize;  // The window size is used when the Frontend is not fully initialized yet
 
     // Sections of the Sidebar
@@ -31,11 +30,10 @@ public class Sidebar extends JPanel {
     // The selectedPanel indicates the JPanel that is selected
     private GUIState selectedPanel;
 
-    public Sidebar(String CURRENT_VERSION, Dimension windowSize){
+    public Sidebar(Dimension windowSize){
         super();  // Initialize the Panel
 
         // Set the attributes given by the JFrame
-        this.CURRENT_VERSION = CURRENT_VERSION;
         this.windowSize = windowSize;
 
         // Set the initial state of the dynamic part to Show All Panel
@@ -149,10 +147,6 @@ public class Sidebar extends JPanel {
 //        this.settingsButton.setPreferredSize(buttonDimension);
 //        this.settingsButton.setMaximumSize(buttonDimension);
 
-        JLabel currentVersionLabel = new JLabel();  // The current version of the software
-        currentVersionLabel.setText("Version: " + CURRENT_VERSION);
-
-        this.detailsSection.add(currentVersionLabel);
         this.detailsSection.add(this.settingsButton);
     }
 

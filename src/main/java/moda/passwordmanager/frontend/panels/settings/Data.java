@@ -32,7 +32,7 @@ public class Data extends Section {
         this.changeMasterPasswordButton.setText("Change the master password");
         this.changeMasterPasswordButton.setMaximumSize(buttonDimension);
 
-        add(this.changeMasterPasswordButton);
+        addOption(this.changeMasterPasswordButton);
     }
 
     private void initListeners(){

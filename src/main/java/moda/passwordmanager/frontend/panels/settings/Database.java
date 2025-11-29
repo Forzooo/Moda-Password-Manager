@@ -33,6 +33,7 @@ public class Database extends Section {
         Dimension textFieldDimension = new Dimension(1600, 30);  // Define the dimension of any JTextField
         Dimension buttonDimension = new Dimension(250, 20);  // Define the dimension of any JButton
 
+        JPanel databaseInUsePanel = new JPanel();
         JLabel databaseInUseLabel = new JLabel();
         databaseInUseLabel.setText("Database in use: ");
 
@@ -40,6 +41,11 @@ public class Database extends Section {
         this.databasePathTextField.setText(getCurrentDatabasePath());
         this.databasePathTextField.setMaximumSize(textFieldDimension);
         this.databasePathTextField.setEditable(false);
+
+        databaseInUsePanel.add(databaseInUseLabel);
+        databaseInUsePanel.add(this.databasePathTextField);
+
+        JPanel databaseOperations = new JPanel();
 
         this.newDatabaseButton = new JButton();
         this.newDatabaseButton.setText("New database");
@@ -49,10 +55,11 @@ public class Database extends Section {
         this.changeDatabaseButton.setText("Change database");
         this.changeDatabaseButton.setMaximumSize(buttonDimension);
 
-        add(databaseInUseLabel);
-        add(this.databasePathTextField);
-        add(this.newDatabaseButton);
-        add(this.changeDatabaseButton);
+        databaseOperations.add(this.newDatabaseButton);
+        databaseOperations.add(this.changeDatabaseButton);
+
+        addOption(databaseInUsePanel);
+        addOption(databaseOperations);
     }
 
     /**

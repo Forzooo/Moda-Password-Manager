@@ -33,6 +33,7 @@ public class GoogleDrive extends Section {
     private void initComponents(){
         Dimension buttonDimension = new Dimension(250, 20);  // Define the dimension of any JButton
 
+        JPanel statePanel = new JPanel();
         this.enableGoogleDriveButton = new JButton();
         this.enableGoogleDriveButton.setText("Enable Google Drive");
         this.enableGoogleDriveButton.setMaximumSize(buttonDimension);
@@ -42,6 +43,11 @@ public class GoogleDrive extends Section {
         this.disableGoogleDriveButton.setText("Disable Google Drive");
         this.disableGoogleDriveButton.setMaximumSize(buttonDimension);
         this.disableGoogleDriveButton.setVisible(false);  // The visibility it's decided later
+
+        statePanel.add(this.enableGoogleDriveButton);
+        statePanel.add(this.disableGoogleDriveButton);
+
+        JPanel synchronizationPanel = new JPanel();
 
         this.synchronizeGoogleDriveButton = new JButton();
         this.synchronizeGoogleDriveButton.setText("Synchronize");
@@ -60,16 +66,16 @@ public class GoogleDrive extends Section {
         this.disableAutomaticSynchronizationButton.setVisible(false);  // The visibility it's decided later
         this.disableAutomaticSynchronizationButton.setEnabled(false);  // The sync is allowed only when Google Drive is enabled
 
+        synchronizationPanel.add(this.synchronizeGoogleDriveButton);
+        synchronizationPanel.add(this.enableAutomaticSynchronizationButton);
+        synchronizationPanel.add(this.disableAutomaticSynchronizationButton);
+
         // Set the initial visibilities of the buttons that depend on the settings file
         setGoogleDriveVisibility();
         setGoogleDriveAutomaticSynchronizationVisibility();
 
-        add(this.enableGoogleDriveButton);
-        add(this.disableGoogleDriveButton);
-        add(this.synchronizeGoogleDriveButton);
-        add(this.enableAutomaticSynchronizationButton);
-        add(this.disableAutomaticSynchronizationButton);
-
+        addOption(statePanel);
+        addOption(synchronizationPanel);
     }
 
     private void initListeners(){
@@ -108,12 +114,7 @@ public class GoogleDrive extends Section {
             }
         });
 
-        this.synchronizeGoogleDriveButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                synchronizeGoogleDrive();
-            }
-        });
+        this.synchronizeGoogleDriveButton.addActionListener(e -> synchronizeGoogleDrive());
 
         this.enableAutomaticSynchronizationButton.addActionListener(new ActionListener() {
             @Override
