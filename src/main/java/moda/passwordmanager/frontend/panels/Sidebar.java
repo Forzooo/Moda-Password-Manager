@@ -27,18 +27,12 @@ public class Sidebar extends JPanel {
     private JButton showDataButton;
     private JButton settingsButton;
 
-    // The selectedPanel indicates the JPanel that is selected
-    private GUIState selectedPanel;
-
     public Sidebar(String CURRENT_VERSION, Dimension windowSize){
         super();  // Initialize the Panel
 
         // Set the attributes given by the JFrame
         this.CURRENT_VERSION = CURRENT_VERSION;
         this.windowSize = windowSize;
-
-        // Set the initial state of the dynamic part to Show All Panel
-        this.selectedPanel = GUIState.SHOW_DATA;
 
         initPanel();
         initSections();
@@ -166,45 +160,24 @@ public class Sidebar extends JPanel {
      * Initialize all the listeners on the components
      */
     private void initListeners(){
-        this.addDataButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                selectedPanel = GUIState.ADD_DATA;
-                switchPanel();
-            }
-        });
-
+        this.addDataButton.addActionListener(e -> switchPanel(GUIState.ADD_DATA));
         setHoverEffect(this.addDataButton);
 
-        this.showDataButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                selectedPanel = GUIState.SHOW_DATA;
-                switchPanel();
-            }
-        });
-
+        this.showDataButton.addActionListener(e -> switchPanel(GUIState.SHOW_DATA));
         setHoverEffect(this.showDataButton);
 
-        this.settingsButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                selectedPanel = GUIState.SETTINGS;
-                switchPanel();
-            }
-        });
-
+        this.settingsButton.addActionListener(e -> switchPanel(GUIState.SETTINGS));
         setHoverEffect(this.settingsButton);
     }
 
     /**
      * Switch the JPanel shown to the new one
      */
-    private void switchPanel(){
+    private void switchPanel(GUIState guiState){
         // To do this, we first have to get the Frontend object by the getParent method, then call the real
         // switchPanel that is inside the Frontend
         Frontend frontend = (Frontend) getParent();
-        frontend.switchPanel(this.selectedPanel);
+        frontend.switchPanel(guiState);
     }
 
     /**
