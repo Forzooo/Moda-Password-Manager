@@ -33,7 +33,7 @@ class InterThreadCommunicationTests {
     void sendAndReceiveSameThread(){
         this.sender.send(new Event(EVENT_NAME));
         Event event = receiver.receive();
-        assertEquals(EVENT_NAME, event.getNAME());
+        assertEquals(EVENT_NAME, event.getOperation());
     }
 
     /**
@@ -45,7 +45,7 @@ class InterThreadCommunicationTests {
         sender.start();
         Event event = this.receiver.receive();
 
-        assertEquals(EVENT_NAME, event.getNAME());
+        assertEquals(EVENT_NAME, event.getOperation());
     }
 
     /**
@@ -55,12 +55,13 @@ class InterThreadCommunicationTests {
     void requestTwoThreads(){
         Thread receiverThread = new Thread(() -> {
             Event request = this.receiver.receive();
-            this.receiver.makeResponse(request, new Event(request.getNAME()));
+            Event response = this.receiver.makeResponse(request, request.getOperation());
+            this.receiver.send(response);
         });
         receiverThread.start();
         Event response = this.sender.request(new Event(EVENT_NAME));
 
-        assertEquals(EVENT_NAME, response.getNAME());
+        assertEquals(EVENT_NAME, response.getOperation());
     }
 
     /**
@@ -72,8 +73,9 @@ class InterThreadCommunicationTests {
         // Send the response to the request and send another event for the senderThread
         Thread receiverThread = new Thread(() -> {
             Event request = this.receiver.receive();
-            this.receiver.makeResponse(request, new Event(request.getNAME()));
-            this.receiver.send(new Event(request.getNAME()+"-Asynchronous"));
+            Event synchronous = this.receiver.makeResponse(request, request.getOperation());
+            this.receiver.send(synchronous);
+            this.receiver.send(new Event(request.getOperation()+"-Asynchronous"));
         });
         receiverThread.start();
 
@@ -83,7 +85,7 @@ class InterThreadCommunicationTests {
             Event response = this.sender.receive();
 
             // Assert that the event received is not the synchronous one
-            assertNotEquals(EVENT_NAME, response.getNAME());
+            assertNotEquals(EVENT_NAME, response.getOperation());
         });
         senderThread.start();
 
@@ -93,7 +95,7 @@ class InterThreadCommunicationTests {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        assertEquals(EVENT_NAME, request.getNAME());
+        assertEquals(EVENT_NAME, request.getOperation());
     }
 
 }

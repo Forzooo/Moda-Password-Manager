@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class Event {
 
-    private final String NAME;  // The name of the event which specifies which operation to perform
+    private final String OPERATION;  // The operation to perform
     private ArrayList<Object> data;  // The data that is communicated with the other thread
 
     /**
@@ -13,21 +13,21 @@ public class Event {
      */
     private int id;
 
-    public Event(String name){
-        this.NAME = name;
+    public Event(String operation){
+        this.OPERATION = operation;
         this.data = new ArrayList<>();
         this.id = -1;
     }
 
-    public Event(String name, Object data){
-        this.NAME = name;
+    public Event(String operation, Object data){
+        this.OPERATION = operation;
         this.data = new ArrayList<>();
         this.data.add(data);
         this.id = -1;
     }
 
-    public Event(String name, ArrayList<Object> data){
-        this.NAME = name;
+    public Event(String operation, ArrayList<Object> data){
+        this.OPERATION = operation;
         this.data = new ArrayList<>(data);
         this.id = -1;
     }
@@ -36,8 +36,8 @@ public class Event {
         this.data.add(data);
     }
 
-    public String getNAME() {
-        return NAME;
+    public String getOperation() {
+        return OPERATION;
     }
 
     public ArrayList<Object> getData() {
