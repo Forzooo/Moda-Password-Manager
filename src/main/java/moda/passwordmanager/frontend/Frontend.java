@@ -33,7 +33,6 @@ public class Frontend extends JPanel {
     private final int MIN_CONTENT_WIDTH = 500;
 
     // All the JPanel of the GUI, defined as class attributes
-    private Sidebar sidebar;
     private AddData addDataPanel;
     private ShowData showDataPanel;
 
@@ -167,14 +166,12 @@ public class Frontend extends JPanel {
      * Initialize all the panels
      */
     private void initPanels(){
-        this.sidebar = new Sidebar(this.windowSize);
-        add(this.sidebar, BorderLayout.WEST);  // Add the Sidebar to the Frame
+        Sidebar sidebar = new Sidebar(this.windowSize);
+        add(sidebar, BorderLayout.WEST);  // Add the Sidebar to the Frame
 
-        this.addDataPanel = new AddData(this.itc, this.MIN_CONTENT_WIDTH, this.windowSize,
-                                             this.sidebar.getWidth());
+        this.addDataPanel = new AddData(this.itc, this.MIN_CONTENT_WIDTH, this.windowSize, sidebar.getWidth());
 
-        this.showDataPanel = new ShowData(this.itc, this.MIN_CONTENT_WIDTH, this.windowSize,
-                                               this.sidebar.getWidth());
+        this.showDataPanel = new ShowData(this.itc, this.MIN_CONTENT_WIDTH, this.windowSize, sidebar.getWidth());
         this.dynamicState = GUIState.SHOW_DATA;  // Set the default dynamic state to be the Show Data panel
 
         // Add the Show All Panel to the Board as it's the default panel at the start
