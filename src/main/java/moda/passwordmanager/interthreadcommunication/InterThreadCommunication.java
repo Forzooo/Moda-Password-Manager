@@ -46,7 +46,7 @@ public class InterThreadCommunication {
     }
 
     /**
-     * Send an event
+     * Send an event to the other Queue
      */
     public void send(Event event) {
         try {
@@ -55,6 +55,17 @@ public class InterThreadCommunication {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Send a synchronous request and wait for the response
+     * @param request The event to send
+     * @return The response to the request
+     */
+    public Event request(Event request){
+        send(request);
+        addSynchronousEvent(request.getId());
+        return receive(request.getId());
     }
 
     /**
@@ -114,28 +125,15 @@ public class InterThreadCommunication {
     }
 
     /**
-     * Send a synchronous request and wait for the response
-     * @param request The event to send
-     * @return The response to the request
-     */
-    public Event request(Event request){
-        send(request);
-        addSynchronousEvent(request.getId());
-        return receive(request.getId());
-    }
-
-    /**
-     * Reply to a request of the other queue
+     * Configurate an Event as a response
      * @param request The request made by the other queue: its ID is required to use the same communication
-     * @param response The response to the request
+     * @param eventOperation The name of the event that will be created
      */
-    public void makeResponse(Event request, Event response){
-        try{
-            addEventID(response, request.getId());
-            this.OUTPUT_QUEUE.put(response);  // Put the event in the queue to send it to the other thread
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+    protected Event makeResponse(Event request, String eventOperation){
+        Event response = new Event(eventOperation);  // Create the event response with the name of the operation
+        addEventID(response, request.getId());  // Add the ID to the event
+
+        return response;
     }
 
     /**
