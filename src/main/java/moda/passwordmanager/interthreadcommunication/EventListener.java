@@ -32,7 +32,7 @@ public abstract class EventListener extends Thread {
     }
 
     public EventListener(InterThreadCommunication itc, String threadName){
-        super(threadName);
+        super(threadName);  // Set the name of the thread for log purposes
         this.ITC = itc;
         this.runFlag = true;
         this.handlerMap = new HashMap<>();

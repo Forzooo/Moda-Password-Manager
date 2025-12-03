@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class Event {
 
     private final String OPERATION;  // The operation to perform
-    private ArrayList<Object> data;  // The data that is communicated with the other thread
+    private ArrayList<Object> data;  // The data that is communicated
 
     /**
      * The ID, used to identify the Event communication, is unique and randomly generated and can only be accessed

@@ -99,24 +99,24 @@ public class InterThreadCommunication {
     }
 
     /**
-     * Receive a high priority event from the other queue, with a specific ID
-     * @param priorityID The ID of the high priority event
-     * @return The high priority event
+     * Receive a synchronous event from the other queue, with a specific ID
+     * @param id The ID of the synchronous event
+     * @return The synchronous event
      */
-    private Event receive(int priorityID){
+    private Event receive(int id){
         try {
             Event event = this.INPUT_QUEUE.take();  // Wait for an event sent from the receiver queue
 
             // Check whether the ID of the event is the one of the synchronous event we want
-            if (event.getId() == priorityID){
+            if (event.getId() == id){
                 this.synchronousSemaphore.release();
-                this.synchronousEvents.remove((Integer) priorityID);  // Remove the ID from the synchronous events
-                this.activeIDs.remove((Integer) priorityID);  // Remove the ID from the active IDs
+                this.synchronousEvents.remove((Integer) id);  // Remove the ID from the synchronous events
+                this.activeIDs.remove((Integer) id);  // Remove the ID from the active IDs
                 return event;
             }else{
                 this.INPUT_QUEUE.put(event);  // Put the event in the response queue to be found by other threads
                 waitSynchronousEvents();  // Wait until a synchronous event is the first in the queue
-                return receive(priorityID);  // Recall the method until the request event is found
+                return receive(id);  // Recall the method until the request event is found
             }
 
         } catch (InterruptedException e) {
@@ -194,7 +194,7 @@ public class InterThreadCommunication {
     }
 
     /**
-     * Add a high priority event to the list
+     * Add a synchronous event to the list
      * @param ID The ID of the event
      */
     private void addSynchronousEvent(int ID){
