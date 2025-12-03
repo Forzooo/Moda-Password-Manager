@@ -57,22 +57,64 @@ public class Backend extends EventListener {
      * Add all the operations to handle
      */
     private void initHandler(){
-        addOperation("set-master-password", this::setMasterPasswordOperation);
+        // Set the master password and initialize the service mapping
+        addOperation("set-master-password", () -> {
+            setMasterPassword((char[]) getRequestData().getFirst());
+
+            // We need to store the result of testMasterPassword to initialize the ServiceMapping
+            boolean test = testMasterPassword();
+            if (test){
+                // Initialize the Service Mapping after the Master Password has been set
+                this.helper.executeInBackground(this::initServiceMapping);
+            }
+        });
+
         addOperation("close-connection", this::closeConnection);
-        addOperation("save-data", this::saveDataOperation);
+
+        // Save the data and update the service fields
+        addOperation("save-data", () -> {
+            saveData((Data) getRequestData().getFirst());
+            this.helper.executeInBackground(this::updateServiceFields);
+        });
         addOperation("get-data", this::getData);
-        addOperation("delete-data", this::deleteDataOperation);
-        addOperation("change-data", this::changeDataOperation);
+
+        // Delete a record from the database and update the service fields
+        addOperation("delete-data", () -> {
+            deleteSingleData((int) getRequestData().getFirst());
+            this.helper.executeInBackground(this::updateServiceFields);
+        });
+
+        // Change a data and update the service fields
+        addOperation("change-data", () -> {
+            changeData((Data) getRequestData().getFirst());
+            this.helper.executeInBackground(this::updateServiceFields);
+        });
+
         addOperation("generate-string", this::generateString);
         addOperation("configure-string-generation", this::configureStringGeneration);
-        addOperation("set-database", this::setDatabaseOperation);
+
+        // Set a database path and reset the service fields
+        addOperation("set-database", () -> {
+            setDatabasePath((String) getRequestData().getFirst());
+
+            // As a new database is set, we need to reset the service fields to update the Frontend with the new
+            // data, but updating with initServiceFields happens after the master password has been set,
+            // otherwise the services would be shown as encrypted
+            this.helper.executeInBackground(this::resetServiceFields);
+        });
+
         addOperation("get-database", this::getDatabasePath);
         addOperation("get-string-generation-configuration", this::getStringGenerationConfiguration);
         addOperation("change-master-password", this::changeMasterPassword);
         addOperation("get-google-drive", this::getGoogleDrive);
         addOperation("get-google-drive-synchronization", this::getGoogleDriveSynchronization);
         addOperation("google-drive-unauthenticate", this::unauthenticateGoogleDrive);
-        addOperation("google-drive-synchronize", this::synchronizeGoogleDriveOperation);
+
+        // Synchronize with Google Drive and update the service fields
+        addOperation("google-drive-synchronize", () -> {
+            synchronizeGoogleDrive();
+            this.helper.executeInBackground(this::updateServiceFields);
+        });
         addOperation("enable-google-drive-synchronization", this::enableGoogleDriveSynchronization);
         addOperation("disable-google-drive-synchronization", this::disableGoogleDriveSynchronization);
     }
@@ -102,65 +144,6 @@ public class Backend extends EventListener {
             event = new Event("close-connection");  // Create the event to confirm the stop
             this.ITC.send(event);  // Send the event
         }
-    }
-
-    /**
-     * Set the master password and initialize the service mapping
-     */
-    private void setMasterPasswordOperation(){
-        setMasterPassword((char[]) getRequestData().getFirst());
-
-        // We need to store the result of testMasterPassword to initialize the ServiceMapping
-        boolean test = testMasterPassword();
-        if (test){
-            // Initialize the Service Mapping after the Master Password has been set
-            this.helper.executeInBackground(this::initServiceMapping);
-        }
-    }
-
-    /**
-     * Save the data and update the service fields
-     */
-    private void saveDataOperation(){
-        saveData((Data) getRequestData().getFirst());
-        this.helper.executeInBackground(this::updateServiceFields);
-
-    }
-
-    /**
-     * Delete a record from the database and update the service fields
-     */
-    private void deleteDataOperation(){
-        deleteSingleData((int) getRequestData().getFirst());
-        this.helper.executeInBackground(this::updateServiceFields);
-    }
-
-    /**
-     * Change a data and update the service fields
-     */
-    private void changeDataOperation(){
-        changeData((Data) getRequestData().getFirst());
-        this.helper.executeInBackground(this::updateServiceFields);
-    }
-
-    /**
-     * Set a database path and reset the service fields
-     */
-    private void setDatabaseOperation(){
-        setDatabasePath((String) getRequestData().getFirst());
-
-        // As a new database is set, we need to reset the service fields to update the Frontend with the new
-        // data, but updating with initServiceFields happens after the master password has been set,
-        // otherwise the services would be shown as encrypted
-        this.helper.executeInBackground(this::resetServiceFields);
-    }
-
-    /**
-     * Synchronize with Google Drive and update the service fields
-     */
-    private void synchronizeGoogleDriveOperation(){
-        synchronizeGoogleDrive();
-        this.helper.executeInBackground(this::updateServiceFields);
     }
 
     /**
