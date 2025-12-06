@@ -54,6 +54,6 @@ public class Event {
     }
 
     protected int getId() {
-        return id;
+        return this.id;
     }
 }

@@ -50,7 +50,10 @@ public class InterThreadCommunication {
      */
     public void send(Event event) {
         try {
-            addEventID(event);
+            // Add an ID to the Event only if it hasn't one yet, as the event could be a response to a request
+            if (event.getId() != -1){
+                addEventID(event);
+            }
             this.OUTPUT_QUEUE.put(event);  // Put the event in the queue to send it to the other thread
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -92,7 +95,6 @@ public class InterThreadCommunication {
                 this.asynchronousPriority.release();
                 return event;
             }
-
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -131,7 +133,7 @@ public class InterThreadCommunication {
      */
     protected Event makeResponse(Event request, String eventOperation){
         Event response = new Event(eventOperation);  // Create the event response with the name of the operation
-        addEventID(response, request.getId());  // Add the ID to the event
+        response.setId(request.getId());  // Set the ID to be the same as the request one
 
         return response;
     }
@@ -143,15 +145,6 @@ public class InterThreadCommunication {
         int id = generateID();  // Generate a random unique ID
         this.activeIDs.add(id);  // Add the ID to the active ones
         event.setId(id);  // Set the generated ID
-    }
-
-    /**
-     * Set the ID of an event that has to be sent as a reply
-     * @param id The ID of the event that request a response
-     */
-    private void addEventID(Event event, int id){
-        this.activeIDs.add(id);  // Add the ID to the active ones
-        event.setId(id);  // Set the ID to be the same as the request one
     }
 
     /**
