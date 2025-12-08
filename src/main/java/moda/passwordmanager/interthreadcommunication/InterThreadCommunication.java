@@ -14,7 +14,7 @@ public class InterThreadCommunication {
 
     // Collection of semaphores used to set the threads to wait for a specific type of event
     private final static int SEMAPHORE_PERMITS = 0;
-    private Semaphore asynchronousPriority;
+    private Semaphore asynchronousSemaphore;
     private Semaphore synchronousSemaphore;
 
     /**
@@ -34,7 +34,7 @@ public class InterThreadCommunication {
         this.activeIDs = new ArrayList<>();
         this.synchronousEvents = new ArrayList<>();
 
-        this.asynchronousPriority = new Semaphore(SEMAPHORE_PERMITS);
+        this.asynchronousSemaphore = new Semaphore(SEMAPHORE_PERMITS);
         this.synchronousSemaphore = new Semaphore(SEMAPHORE_PERMITS);
     }
 
@@ -51,7 +51,7 @@ public class InterThreadCommunication {
     public void send(Event event) {
         try {
             // Add an ID to the Event only if it hasn't one yet, as the event could be a response to a request
-            if (event.getId() != -1){
+            if (!event.isIdSet()){
                 addEventID(event);
             }
             this.OUTPUT_QUEUE.put(event);  // Put the event in the queue to send it to the other thread
@@ -92,7 +92,7 @@ public class InterThreadCommunication {
                 waitAsynchronousEvent();  // Let the thread wait until synchronous event is removed from the queue
                 return receive();  // Recall the receive method until it founds an asynchronous event to return
             }else{  // If the event is not a synchronous one, then return it
-                this.asynchronousPriority.release();
+                this.asynchronousSemaphore.release();
                 return event;
             }
         } catch (InterruptedException e) {
@@ -117,7 +117,7 @@ public class InterThreadCommunication {
                 return event;
             }else{
                 this.INPUT_QUEUE.put(event);  // Put the event in the response queue to be found by other threads
-                waitSynchronousEvents();  // Wait until a synchronous event is the first in the queue
+                waitSynchronousEvent();  // Wait until a synchronous event is the first in the queue
                 return receive(id);  // Recall the method until the request event is found
             }
 
@@ -177,13 +177,13 @@ public class InterThreadCommunication {
     /**
      * Set the thread in a waiting condition until the asynchronous event is removed from the queue
      */
-    private void waitSynchronousEvents(){
+    private void waitSynchronousEvent(){
         try {
-            this.asynchronousPriority.acquire();
+            this.asynchronousSemaphore.acquire();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        this.asynchronousPriority = new Semaphore(SEMAPHORE_PERMITS);
+        this.asynchronousSemaphore = new Semaphore(SEMAPHORE_PERMITS);
     }
 
     /**

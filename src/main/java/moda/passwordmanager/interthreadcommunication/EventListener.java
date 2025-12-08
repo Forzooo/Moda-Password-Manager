@@ -121,7 +121,7 @@ public abstract class EventListener extends Thread {
      */
     protected void handleExceptionRaised(){
         // Create a dummy response used only to stop any synchronous event
-        Event response = this.ITC.makeResponse(this.request, this.request.getOperation());
+        Event response = this.ITC.makeResponse(this.request, "");
         this.ITC.send(response);
     }
 

@@ -56,4 +56,11 @@ public class Event {
     protected int getId() {
         return this.id;
     }
+
+    /**
+     * Returns whether the ID has been set to a value different than -1
+     */
+    protected boolean isIdSet(){
+        return this.id != -1;
+    }
 }

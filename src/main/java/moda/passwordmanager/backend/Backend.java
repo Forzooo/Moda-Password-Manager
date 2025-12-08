@@ -127,7 +127,7 @@ public class Backend extends EventListener {
         // Create the traceback file that contains the full stack trace of the exception before anything else
         createTracebackFile(t,e);
 
-        // Before sending the exception we need to send back the event because if the request one is an high-priority
+        // Before sending the exception we need to send back the event because if the request one is a synchronous
         // one, then EDT is waiting for the response before handling the exception
         handleExceptionRaised();
 
