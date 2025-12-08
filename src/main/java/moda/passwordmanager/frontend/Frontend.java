@@ -11,14 +11,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class Frontend extends JPanel implements ActionListener {
 
-    private final static String VERSION = "0.4.2";  // The current version of the software
+    private final static String VERSION = "1.0.0";  // The current version of the software
 
     // The InterThreadCommunication objects used to communicate with the Backend thread
     private InterThreadCommunication itc;
@@ -142,7 +139,7 @@ public class Frontend extends JPanel implements ActionListener {
             return;
         }
         Event event = new Event("set-database", databasePath);
-        this.itc.requestAndReceive(event);
+        this.itc.request(event);
     }
 
     /**
@@ -173,7 +170,7 @@ public class Frontend extends JPanel implements ActionListener {
      * @param frontendQueue The queue that events are sent from
      */
     private void initCommunication(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
-        this.itc = new InterThreadCommunication(frontendQueue, backendQueue);
+        this.itc = new InterThreadCommunication(backendQueue, frontendQueue);
     }
 
     /**

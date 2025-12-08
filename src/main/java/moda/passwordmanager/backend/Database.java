@@ -154,7 +154,7 @@ public class Database {
      * Change the data fields inside a record
      * @param data The data to replace the previous one
      */
-    public void changeRecord(Data data){
+    public void updateRecord(Data data){
         try {
             // Create the UPDATE query and set its parameters
             PreparedStatement query = this.connection.prepareStatement(

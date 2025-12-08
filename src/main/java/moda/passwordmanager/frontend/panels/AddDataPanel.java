@@ -267,7 +267,7 @@ public class AddDataPanel extends JPanel {
         // Create the Event to send to the backend
         Event saveData = new Event("save-data", userData);
 
-        this.interThreadCommunication.request(saveData);
+        this.interThreadCommunication.send(saveData);
 //        notifyUser();  // Example method to show the user a messagebox with the operation status
     }
 
@@ -276,7 +276,7 @@ public class AddDataPanel extends JPanel {
         // Create the Event to send to the backend
         Event generatePassword = new Event("generate-string");
 
-        Event response = this.interThreadCommunication.requestAndReceive(generatePassword);  // Wait for the result
+        Event response = this.interThreadCommunication.request(generatePassword);  // Wait for the result
 
         String password = (String) response.getData().getFirst();  // Get the password from the backend
         this.passwordTextField.setText(password);  // Set the password to the TextField

@@ -245,7 +245,7 @@ public class SettingsPanel extends JPanel {
                     return;
                 }
 
-                changeMasterPassword(masterPassword);
+                updateMasterPassword(masterPassword);
             }
         });
 
@@ -313,7 +313,7 @@ public class SettingsPanel extends JPanel {
      * @return
      */
     private String getCurrentDatabasePath(){
-        Event response = this.itc.requestAndReceive(new Event("get-database"));
+        Event response = this.itc.request(new Event("get-database"));
         String databasePath = (String) response.getData().getFirst();  // Retrieve the path of the database
         return databasePath;
     }
@@ -325,7 +325,7 @@ public class SettingsPanel extends JPanel {
     private void setNewDatabase(String databasePath){
         // Set the path of the database
         Event event = new Event("set-database", databasePath);
-        this.itc.requestAndReceive(event);
+        this.itc.request(event);
         this.databasePathTextField.setText(databasePath);  // Set the new path of the database into the Text Field
 
         // Set the master password of the database before using it
@@ -337,9 +337,9 @@ public class SettingsPanel extends JPanel {
      * Change the current master password of the database to a new one
      * @param masterPassword The new master password
      */
-    private void changeMasterPassword(String masterPassword){
-        Event event = new Event("change-master-password", masterPassword.toCharArray());
-        this.itc.requestAndReceive(event);  // Wait for the end of the operations in the backend
+    private void updateMasterPassword(String masterPassword){
+        Event event = new Event("update-master-password", masterPassword.toCharArray());
+        this.itc.request(event);  // Wait for the end of the operations in the backend
     }
 
     /**
@@ -349,7 +349,7 @@ public class SettingsPanel extends JPanel {
     private void setGoogleDriveVisibility(){
        // Retrieve from the settings file the configuration of Google Drive visibility
         Event event = new Event("get-google-drive");
-        Event response = this.itc.requestAndReceive(event);
+        Event response = this.itc.request(event);
         boolean visibility = (boolean) response.getData().getFirst();
 
         if (!visibility){
@@ -375,7 +375,7 @@ public class SettingsPanel extends JPanel {
     private void setGoogleDriveAutomaticSynchronizationVisibility(){
         // Retrieve from the settings file the configuration of Google Drive synchronization visibility
         Event event = new Event("get-google-drive-synchronization");
-        Event response = this.itc.requestAndReceive(event);
+        Event response = this.itc.request(event);
         boolean visibility = (boolean) response.getData().getFirst();
 
         if (!visibility){
@@ -393,15 +393,15 @@ public class SettingsPanel extends JPanel {
      */
     private void enableGoogleDrive(String credentialsPath){
         Event event = new Event("google-drive-authenticate", credentialsPath);
-        this.itc.request(event);
+        this.itc.send(event);
     }
 
     /**
      * Disable the Google Drive synchronization
      */
     private void disableGoogleDrive(){
-        Event event = new Event("google-drive-unauthenticate");
-        this.itc.request(event);  // Wait for the end of operations before disabling the button
+        Event event = new Event("google-drive-deauthenticate");
+        this.itc.send(event);  // Wait for the end of operations before disabling the button
     }
 
     /**
@@ -409,7 +409,7 @@ public class SettingsPanel extends JPanel {
      */
     private void synchronizeGoogleDrive(){
         Event event = new Event("google-drive-synchronize");
-        this.itc.requestAndReceive(event);
+        this.itc.request(event);
     }
 
     /**
@@ -417,7 +417,7 @@ public class SettingsPanel extends JPanel {
      */
     private void enableAutomaticSynchronization(){
         Event event = new Event("enable-google-drive-synchronization");
-        this.itc.request(event);
+        this.itc.send(event);
     }
 
     /**
@@ -425,7 +425,7 @@ public class SettingsPanel extends JPanel {
      */
     private void disableAutomaticSynchronization(){
         Event event = new Event("disable-google-drive-synchronization");
-        this.itc.request(event);
+        this.itc.send(event);
     }
 
 }

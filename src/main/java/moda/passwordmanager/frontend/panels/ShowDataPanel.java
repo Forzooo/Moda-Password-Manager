@@ -150,7 +150,7 @@ public class ShowDataPanel extends JPanel {
         Event getData = new Event("get-data", id);
 
         // Wait for the response
-        Event getSingleDataCompleted = this.interThreadCommunication.requestAndReceive(getData);
+        Event getSingleDataCompleted = this.interThreadCommunication.request(getData);
 
         Data userData = (Data) getSingleDataCompleted.getData().getFirst();  // Get the user data
 

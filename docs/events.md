@@ -1,233 +1,200 @@
-# Documentazione degli eventi dell'Inter Thread Communication
-Sezioni:
-* [Generali](#generali)
-* [Gestione dei dati](#gestione-dei-dati)
-* [Gestione del database](#gestione-del-database)
-* [Generazione delle stringhe](#generazione-delle-stringhe)
+# ITC Events implemented by the Moda Password Manager
+Events sections:
+* [General Use](#general-use)
+* [Data Operations](#data-operations)
+* [Database Operations](#database-operations)
 * [Google Drive](#google-drive)
+* [Utilities](#utilities)
 
-**Per l'implementazione attuale, se dei dati di risposta, dello stesso tipo di evento, sono inclusi, allora non è
-possibile che esista un evento di risposta, e viceversa.**
 
-## Generali
-### exception-raised
-* Nome: `exception-raised`
-* Mittente: Backend
-* Descrizione: Invia al frontend l'eccezione che è accaduta sul backend
-* Dati: _String_ nome del thread dove è avvenuta l'eccezione, _Throwable_ l'eccezione provocata
-* Dati risposta: -
-* Evento di risposta: `close-connection`
-* Altà priorità: false
+## General Use
+### Exception Raised
+* Operation: `exception-raised`
+* Sender: Backend
+* Description: Sends to the frontend the exception raised
+* Data sent: _String_ the thread name, _Throwable_ the exception raised
+* Data received: -
+* Synchronous: not required
 
-### close-connection
-* Nome: `close-connection`
-* Mittente: Frontend
-* Descrizione: Il frontend indica al backend che la comunicazione viene chiusa e che quindi si può interrompere
-  l'esecuzione
-* Dati inviati: -
-* Dati risposta: -
-* Evento di risposta: -
-* Altà priorità: true
-
-### unknown-event
-* Nome: `unknown-event`
-* Mittente: Backend
-* Descrizione: Il backend indica al frontend che l'evento inviato non è conosciuto, e quindi è scartato
-* Dati inviati: -
-* Dati risposta: -
-* Evento di risposta: -
-* Altà priorità: true
+### Close the connection
+* Operation: `close-connection`
+* Sender: Frontend
+* Description: The connection will be closed, thus the execution will be terminated
+* Data sent: -
+* Data received: -
+* Synchronous: required
 
 ***
 
-## Gestione dei dati
-### set-master-password
-* Nome: `set-master-password`
-* Mittente: Frontend
-* Descrizione: Invia al backend la master password inserita dall'utente.
+## Data Operations
+### Set the Master Password
+* Operation: `set-master-password`
+* Sender: Frontend
+* Description: Sends the master password entered by the user
 * Dati: _char[]_ masterPassword
-* Dati risposta: _boolean_ Flag che indica se la master password è corretta
-* Evento di risposta: -
-* Altà priorità: true
+* Data received: _boolean_ flag that is set to true only if the master password entered is the right one
+* Synchronous: required
 
-### change-master-password
-* Nome: `change-master-password`
-* Mittente: Frontend
-* Descrizione: Il frontend richiede di cambiare la master password per il database in uso
-* Dati inviati: _char[]_ nuova master password
-* Dati risposta: -
-* Evento di risposta: -
-* Altà priorità: true
+### Update the Master Password
+* Operation: `update-master-password`
+* Sender: Frontend
+* Description: Updates the master password with a new one, reencrypting the data of the database
+* Data sent: _char[]_ new master password
+* Data received: -
+* Synchronous: required
 
-### update-service-fields
-* Nome: `update-service-fields`
-* Mittente: Backend
-* Descrizione: Il backend invia al Frontend i dati aggiornati da mostrare nella sezione "Show Data"
-* Dati inviati: _ArrayList<Data>_ i dati aggiornati
-* Dati risposta: -
-* Evento di risposta: -
-* Altà priorità: false
+### Update the service fields
+* Operation: `update-service-fields`
+* Sender: Backend
+* Description: The updated service fields are sent to the Frontend, to be shown in the "Show Data" section
+* Data sent: _ArrayList<Data>_ the updated data
+* Data received: -
+* Synchronous: not required
 
-### reset-service-fields
-* Nome: `reset-service-fields`
-* Mittente: Backend
-* Descrizione: Il backend indica al Frontend che i dati da mostrare nella sezione "Show Data" devono essere cancellati
-* Dati inviati: -
-* Dati risposta: -
-* Evento di risposta: -
-* Alta priorità: false
+### Reset the service fields
+* Operation: `reset-service-fields`
+* Sender: Backend
+* Description: The service fields stored in the "Show Data" section must be reset
+* Data sent: -
+* Data received: -
+* Synchronous: not required
 
-### get-data
-* Nome: `get-data`
-* Mittente: Frontend
-* Descrizione: Invia un ID al Backend per richiedere tutti i dati decrittati relativi a quel specifico ID
-* Dati inviati: _int_ ID associato ai dati richiesti
-* Dati risposta: _Data_ i dati decrittati relativi a quel ID
-* Evento di risposta: -
-* Altà priorità: true
+### Get Data
+* Operation: `get-data`
+* Sender: Frontend
+* Description: Request the decrypted data associated with a specific ID
+* Data sent: _int_ ID
+* Data received: _Data_ decrypted data
+* Synchronous: required
 
-### save-data
-* Nome: `save-data`
-* Mittente: Frontend
-* Descrizione: Invia tutti i dati inseriti dall'utente affinché vengano salvati nel database
-* Dati inviati: _Data_ contenente i dati inseriti dell'utente
-* Dati risposta: -
-* Evento di risposta: -
-* Altà priorità: false
+### Save Data
+* Operation: `save-data`
+* Sender: Frontend
+* Description: Send the data to the backend to save it inside the database
+* Data sent: _Data_ data entered by the user
+* Data received: -
+* Synchronous: not required
 
-### delete-data
-* Nome: `delete-data`
-* Mittente: Frontend
-* Descrizione: Invia un ID al backend per richiedere di rimuovere il record che ha quel ID
-* Dati inviati: _int_ ID associato al record da eliminare
-* Dati risposta: -
+### Delete Data
+* Operation: `delete-data`
+* Sender: Frontend
+* Data sent: _int_ ID
+* Data received: -
 * Evento di risposta: -
-* Altà priorità: false
+* Synchronous: not required
 
-### change-data
-* Nome: `change-data`
-* Mittente: Frontend
-* Descrizione: Invia l'oggetto di tipo Data contenente l'ID con i relativi dati aggiornati
-* Dati inviati: _Data_ contenente i dati aggiornati
-* Dati risposta: -
-* Evento di risposta: -
-* Altà priorità: true
+### Update Data
+* Operation: `update-data`
+* Sender: Frontend
+* Description: Send the updated data to update its record
+* Data sent: _Data_ the data updated
+* Data received: -
+* Synchronous: required
 
 ***
 
-## Gestione del database
-### set-database
-* Nome: `set-database`
-* Mittente: Frontend
-* Descrizione: Invia il path del database da utilizzare al backend
-* Dati inviati: _String_ path del database da utilizzare
-* Dati risposta: -
-* Evento di risposta: -
-* Altà priorità: true
+## Database Operations
+### Set the database
+* Operation: `set-database`
+* Sender: Frontend
+* Description: Send the path of the database to use
+* Data sent: _String_ path
+* Data received: -
+* Synchronous: required
 
-### get-database
-* Nome: `get-database`
-* Mittente: Frontend
-* Descrizione: Richiedi il path del database in uso
-* Dati inviati: -
-* Dati risposta: _String_ path del database in uso
-* Evento di risposta: -
-* Altà priorità: true
-
-***
-
-## Generazione delle stringhe
-### generate-string
-* Nome: `generate-string`
-* Mittente: Frontend
-* Descrizione: Richiedi dal backend una stringa generata casualmente utilizzando i parametri configurati
-* Dati inviati: -
-* Dati ricevuti: _String_ stringa generata casualmente
-* Evento di risposta: -
-* Altà priorità: true
-
-### configure-string-generation
-* Nome: `configure-string-generation`
-* Mittente: Frontend
-* Descrizione: Invia i parametri per la generazione delle stringhe da salvare nelle impostazioni
-* Dati inviati: _int_ numero di caratteri, _bool_ se le lettere sono abilitate, _bool_ se i numeri sono abilitati, _bool_ se i
-caratteri speciali sono abilitati
-* Dati risposta: -
-* Evento di risposta: -
-* Altà priorità: false
-
-### get-string-generation-configuration
-* Nome: `get-string-generation-configuration`
-* Mittente: Frontend
-* Descrizione: Richiedi i parametri della generazione delle stringhe
-* Dati inviati: -
-* Dati ricevuti: _int_ numero di caratteri, _bool_ se le lettere sono abilitate, _bool_ se i numeri sono abilitati, _bool_ se i
-  caratteri speciali sono abilitati
-* Evento di risposta: -
-* Altà priorità: true
+### Get the database
+* Operation: `get-database`
+* Sender: Frontend
+* Description: Get the path of the database in use
+* Data sent: -
+* Data received: _String_ path
+* Synchronous: required
 
 ***
 
 ## Google Drive
-### get-google-drive
-* Nome: `get-google-drive`
-* Mittente: Frontend
-* Descrizione: Richiede al backend la configurazione attuale di google drive
-* Dati inviati: -
-* Dati risposta:  _boolean_ Stato di google drive
-* Evento di risposta: -
-* Altà priorità: true
+### Get Google Drive
+* Operation: `get-google-drive`
+* Sender: Frontend
+* Description: Requests whether Google Drive synchronization is enabled
+* Data sent: -
+* Data received:  _boolean_ google drive synchronizations status
+* Synchronous: required
 
-### google-drive-authenticate
-* Nome: `google-drive-authenticate`
-* Mittente: Frontend
-* Descrizione: Invia al Backend il path del file richiesto per l'autenticazione
-* Dati inviati: _String_ path del file "credentials.json"
-* Dati risposta: -
-* Evento di risposta: -
-* Altà priorità: false
+### Google Drive authentication
+* Operation: `google-drive-authenticate`
+* Sender: Frontend
+* Description: Send the path of the JSON credentials file used to authenticate with Google Drive
+* Data sent: _String_ path of "credentials.json"
+* Data received: -
+* Synchronous: not required
 
-### google-drive-unauthenticate
-* Nome: `google-drive-unauthenticate`
-* Mittente: Frontend
-* Descrizione: Indica al backend che google drive è da disabilitare
-* Dati inviati: -
-* Dati risposta: -
-* Evento di risposta: -
-* Altà priorità: false
+### Google Drive deauthentication
+* Operation: `google-drive-deauthentication`
+* Sender: Frontend
+* Description: Deauthenticate from Google Drive
+* Data sent: -
+* Data received: -
+* Synchronous: not required
 
-### google-drive-synchronize
-* Nome: `google-drive-synchronize`
-* Mittente: Frontend
-* Descrizione: Indica al backend che deve effettuare una sincronizzazione con Google Drive
-* Dati inviati: -
-* Dati risposta: -
-* Evento di risposta: -
-* Altà priorità: true
+### Google Drive synchronization
+* Operation: `google-drive-synchronize`
+* Sender: Frontend
+* Description: Perform a synchronization with Google Drive
+* Data sent: -
+* Data received: -
+* Synchronous: required
 
-### enable-google-drive-synchronization
-* Nome: `enable-google-drive-synchronization`
-* Mittente: Frontend
-* Descrizione: Indica al backend che viene abilitata la sincronizzazione automatica ogni 60 secondi
-* Dati inviati: -
-* Dati risposta: -
-* Evento di risposta: -
-* Altà priorità: false
+### Enable Google Drive automatic synchronization
+* Operation: `enable-google-drive-synchronization`
+* Sender: Frontend
+* Description: Enable the automatic synchronization
+* Data sent: -
+* Data received: -
+* Synchronous: not required
 
-### disable-google-drive-synchronization
-* Nome: `disable-google-drive-synchronization`
-* Mittente: Frontend
-* Descrizione: Indica al backend che viene disabilitata la sincronizzazione automatica
-* Dati inviati: -
-* Dati risposta: -
-* Evento di risposta: -
-* Altà priorità: false
+### Disable Google Drive automatic synchronization
+* Operation: `disable-google-drive-synchronization`
+* Sender: Frontend
+* Description: Disable the automatic synchronization
+* Data sent: -
+* Data received: -
+* Synchronous: not required
 
-### get-google-drive-synchronization
-* Nome: `get-google-drive-synchronization`
-* Mittente: Frontend
-* Descrizione: Richiede al backend se la sincronizzazione automatica è abilitata
-* Dati inviati: -
-* Dati risposta: _boolean_ Stato della sincronizzazione automatica di google drive
-* Evento di risposta: -
-* Altà priorità: true
+### Get Google Drive automatic synchronization
+* Operation: `get-google-drive-synchronization`
+* Sender: Frontend
+* Description: Request whether the automatic synchronization is enabled
+* Data sent: -
+* Data received: _boolean_ automatic synchronization status
+* Synchronous: required
+
+***
+
+## Utilities
+### Generate a string
+* Operation: `generate-string`
+* Sender: Frontend
+* Description: Request a randomly generated string, where the parameters of the generation are stored in the settings 
+file
+* Data sent: -
+* Data received: _String_ the generated string
+* Synchronous: required
+
+### Configure String Generation
+* Operation: `configure-string-generation`
+* Sender: Frontend
+* Description: Set the parameters of the string generation
+* Data sent: _int_ length of the string, _bool_ whether letters are enabled, _bool_ whether numbers are enabled, _bool_ 
+whether special characters are enabled
+* Data received: -
+* Synchronous: not required
+
+### Get String Generation Configuration
+* Operation: `get-string-generation-configuration`
+* Sender: Frontend
+* Description: Request the parameters of the string generation
+* Data sent: -
+* Data received: _int_ length of the string, _bool_ whether letters are enabled, _bool_ whether numbers are enabled, _bool_
+  whether special characters are enabled
+* Synchronous: required
