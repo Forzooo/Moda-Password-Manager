@@ -45,8 +45,9 @@ public abstract class EventListener extends Thread {
         while (this.runFlag){
             this.request = this.ITC.receive();  // Wait for a request
 
-            makeResponse(this.request);  // Create the response to send to the other queue
-            handleRequest(this.request);  //  Handle the operation requested
+            // Create the response to send to the other queue, where the name of the operation is always the same
+            makeResponse(this.request, this.request.getOperation());
+            handleRequest(this.request);  // Handle the operation requested
 
             // It can happen that the operation requested is not in the handling map, thus it is recognized as
             // an unknown event, and the data has already been reset
@@ -71,14 +72,14 @@ public abstract class EventListener extends Thread {
     /**
      * Make the response to the event received
      */
-    private void makeResponse(Event request){
-         this.response = this.ITC.makeResponse(request, request.getOperation());
+    private void makeResponse(Event request, String operation){
+        this.response = this.ITC.makeResponse(request, operation);
     }
 
     /**
      * Handle the operation requested
      */
-    private void handleRequest(Event request){
+    private void handleRequest(Event request) {
         String operation = request.getOperation();  // Get the operation to perform
         if (this.handlerMap.containsKey(operation)){
             this.handlerMap.get(operation).run();  // Execute the method reference
@@ -90,7 +91,7 @@ public abstract class EventListener extends Thread {
     /**
      * Add an operation to the handler
      */
-    protected void addOperation(String operation, Runnable method){
+    protected void addOperation(String operation, Runnable method) {
         this.handlerMap.put(operation, method);
     }
 

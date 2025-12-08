@@ -2,7 +2,6 @@ package moda.passwordmanager.frontend;
 
 import moda.passwordmanager.backend.Data;
 import moda.passwordmanager.frontend.panels.ShowDataPanel;
-import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.EventListener;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 

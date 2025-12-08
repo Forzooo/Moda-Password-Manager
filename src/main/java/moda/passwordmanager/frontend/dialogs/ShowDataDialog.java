@@ -197,7 +197,7 @@ public class ShowDataDialog extends JDialog {
         }
 
         // Send the data to the backend
-        changeData(new Data(this.ID, updatedData[0], updatedData[1], updatedData[2], updatedData[3], updatedData[4]));
+        updateData(new Data(this.ID, updatedData[0], updatedData[1], updatedData[2], updatedData[3], updatedData[4]));
 
         // Hide the save JButton and the generate password button, show the Delete button and enable the modify JButton again
         this.saveChangesButton.setVisible(false);
@@ -228,9 +228,9 @@ public class ShowDataDialog extends JDialog {
      * Update a record of the database
      * @param data The data modified
      */
-    private void changeData(Data data){
+    private void updateData(Data data){
         // Create and send the event
-        Event event = new Event("change-data", data);
+        Event event = new Event("update-data", data);
         this.itc.request(event);  // Wait for the response of the backend
     }
 

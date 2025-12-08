@@ -85,8 +85,8 @@ public class Backend extends EventListener {
         });
 
         // Change a data and update the service fields
-        addOperation("change-data", () -> {
-            changeData((Data) getRequestData().getFirst());
+        addOperation("update-data", () -> {
+            updateData((Data) getRequestData().getFirst());
             this.helper.executeInBackground(this::updateServiceFields);
         });
 
@@ -105,10 +105,10 @@ public class Backend extends EventListener {
 
         addOperation("get-database", this::getDatabasePath);
         addOperation("get-string-generation-configuration", this::getStringGenerationConfiguration);
-        addOperation("change-master-password", this::changeMasterPassword);
+        addOperation("update-master-password", this::updateMasterPassword);
         addOperation("get-google-drive", this::getGoogleDrive);
         addOperation("get-google-drive-synchronization", this::getGoogleDriveSynchronization);
-        addOperation("google-drive-unauthenticate", this::unauthenticateGoogleDrive);
+        addOperation("google-drive-deauthenticate", this::deauthenticateGoogleDrive);
 
         // Synchronize with Google Drive and update the service fields
         addOperation("google-drive-synchronize", () -> {
@@ -322,8 +322,8 @@ public class Backend extends EventListener {
      * Change the data of a record inside the database
      * @param data The updated data to save
      */
-    private void changeData(Data data){
-        this.database.changeRecord(this.helper.encryptData(data));  // Encrypt the data with the helper before saving it
+    private void updateData(Data data){
+        this.database.updateRecord(this.helper.encryptData(data));  // Encrypt the data with the helper before saving it
     }
 
     /**
@@ -440,9 +440,9 @@ public class Backend extends EventListener {
     }
 
     /**
-     * Change the current master password by generating again the encrypted data with the new password
+     * Change the current master password in use for the database, and encrypt the data with the new password
      */
-    private void changeMasterPassword(){
+    private void updateMasterPassword(){
         char[] masterPassword = (char[]) getRequestData().getFirst();  // The new master password
 
         ArrayList<Data> oldData = this.database.getRecords();  // Get all the data from the database
@@ -517,7 +517,7 @@ public class Backend extends EventListener {
     /**
      * Disable in the settings file the Google Drive synchronization and delete the stored credentials, if there's any
      */
-    private void unauthenticateGoogleDrive(){
+    private void deauthenticateGoogleDrive(){
         try {
             FileUtils.deleteDirectory(new File(this.googleDrive.getTOKENS_DIRECTORY_PATH()));
         } catch (IOException e) {

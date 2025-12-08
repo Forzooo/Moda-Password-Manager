@@ -245,7 +245,7 @@ public class SettingsPanel extends JPanel {
                     return;
                 }
 
-                changeMasterPassword(masterPassword);
+                updateMasterPassword(masterPassword);
             }
         });
 
@@ -337,8 +337,8 @@ public class SettingsPanel extends JPanel {
      * Change the current master password of the database to a new one
      * @param masterPassword The new master password
      */
-    private void changeMasterPassword(String masterPassword){
-        Event event = new Event("change-master-password", masterPassword.toCharArray());
+    private void updateMasterPassword(String masterPassword){
+        Event event = new Event("update-master-password", masterPassword.toCharArray());
         this.itc.request(event);  // Wait for the end of the operations in the backend
     }
 
@@ -400,7 +400,7 @@ public class SettingsPanel extends JPanel {
      * Disable the Google Drive synchronization
      */
     private void disableGoogleDrive(){
-        Event event = new Event("google-drive-unauthenticate");
+        Event event = new Event("google-drive-deauthenticate");
         this.itc.send(event);  // Wait for the end of operations before disabling the button
     }
 
