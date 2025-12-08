@@ -1,20 +1,30 @@
 package moda.passwordmanager.interthreadcommunication;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class EventTests {
 
+    private final static String EVENT_NAME = "Test";
     private final static int EVENT_ID = 1;
+    private Event event;
+
+    /**
+     * Initialize the Event object before each test
+     */
+    @BeforeEach
+    void init(){
+        this.event = new Event(EVENT_NAME);
+    }
 
     /**
      * Ensure that the ID of an event if it's not set, is equal to -1
      */
     @Test
     void defaultEventID(){
-        Event event = new Event("Test");
-        assertEquals(-1, event.getId());
+        assertEquals(-1, this.event.getId());
     }
 
     /**
@@ -22,9 +32,8 @@ class EventTests {
      */
     @Test
     void setEventID(){
-        Event event = new Event("Test");
-        event.setId(EVENT_ID);
-        assertEquals(EVENT_ID, event.getId());
+        this.event.setId(EVENT_ID);
+        assertEquals(EVENT_ID, this.event.getId());
     }
 
     /**
@@ -32,10 +41,26 @@ class EventTests {
      */
     @Test
     void modifyEventID(){
-        Event event = new Event("Test");
-        event.setId(EVENT_ID);
-        event.setId(EVENT_ID+1);
-        assertEquals(EVENT_ID, event.getId());
+        this.event.setId(EVENT_ID);
+        this.event.setId(EVENT_ID+1);
+        assertEquals(EVENT_ID, this.event.getId());
+    }
+
+    /**
+     * Ensure that when setting an ID the isIdSet method returns true
+     */
+    @Test
+    void isEventIdSet(){
+        this.event.setId(EVENT_ID);
+        assertTrue(this.event.isIdSet());
+    }
+
+    /**
+     * Ensure that when the ID is not set yet, the isIdSet method returns false
+     */
+    @Test
+    void isEventIdSetFalse(){
+        assertFalse(this.event.isIdSet());
     }
 
 }

@@ -12,6 +12,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 class InterThreadCommunicationTests {
 
     private final static String EVENT_NAME = "Test";
+    private final static int EVENT_ID = 1;
     private InterThreadCommunication sender;
     private InterThreadCommunication receiver;
 
@@ -96,6 +97,19 @@ class InterThreadCommunicationTests {
             throw new RuntimeException(e);
         }
         assertEquals(EVENT_NAME, request.getOperation());
+    }
+
+    /**
+     * Ensure that makeResponse method returns an event with the same ID as the request one
+     */
+    @Test
+    void makeResponse(){
+        Event request = new Event(EVENT_NAME);
+        request.setId(EVENT_ID);  // Set the ID of the event
+
+        // Make the response and assert the ID
+        Event response = this.sender.makeResponse(request, request.getOperation());
+        assertEquals(EVENT_ID,response.getId());
     }
 
 }
