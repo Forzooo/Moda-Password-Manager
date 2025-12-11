@@ -8,7 +8,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.TreeMap;
@@ -171,6 +170,7 @@ public class Backend extends Thread {
 
             case "set-database":
                 setDatabasePath((String) eventData.getFirst());
+                updateRecentDatabases((String) eventData.getFirst());  // Update the recent databases
                 break;
 
             case "get-database":
@@ -212,6 +212,10 @@ public class Backend extends Thread {
 
             case "disable-google-drive-synchronization":
                 disableGoogleDriveSynchronization();
+                break;
+
+            case "get-recent-databases":
+                getRecentDatabases();
                 break;
 
             default:  // If the event is not handled by one of the cases above, then discard the event
@@ -495,10 +499,10 @@ public class Backend extends Thread {
      * @param special Flag to indicate whether special characters are generated
      */
     private void configureStringGeneration(int length, boolean letters, boolean numbers, boolean special){
-        this.settings.writeSetting("string_generation/length", length);
-        this.settings.writeSetting("string_generation/letters", letters);
-        this.settings.writeSetting("string_generation/numbers", numbers);
-        this.settings.writeSetting("string_generation/special", special);
+        this.settings.writeProperty("string_generation/length", length);
+        this.settings.writeProperty("string_generation/letters", letters);
+        this.settings.writeProperty("string_generation/numbers", numbers);
+        this.settings.writeProperty("string_generation/special", special);
     }
 
     /**
@@ -506,7 +510,7 @@ public class Backend extends Thread {
      * @param databasePath The path of the database chosen
      */
     private void setDatabasePath(String databasePath){
-        this.settings.writeSetting("database/path", databasePath);  // Set the path of the database
+        this.settings.writeProperty("database/path", databasePath);  // Set the path of the database
         this.database.changeDatabase(databasePath);  // Set the new database to be the one used
     }
 
@@ -567,7 +571,7 @@ public class Backend extends Thread {
      * Retrieve from the settings file whether the automatic synchronization is enabled
      */
     private void getGoogleDriveSynchronization(){
-        boolean synchronizationEnabled = this.settings.readBooleanSetting("google_drive/automatic_synchronization");
+        boolean synchronizationEnabled = this.settings.readBooleanProperty("google_drive/automatic_synchronization");
         this.eventToSend.addData(synchronizationEnabled);
     }
 
@@ -601,7 +605,7 @@ public class Backend extends Thread {
         }
 
         this.googleDrive.init();  // Start the Google Drive communication
-        this.settings.writeSetting("google_drive/enabled", true);  // Set Google Drive to enabled
+        this.settings.writeProperty("google_drive/enabled", true);  // Set Google Drive to enabled
     }
 
     /**
@@ -613,7 +617,7 @@ public class Backend extends Thread {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        this.settings.writeSetting("google_drive/enabled", false);
+        this.settings.writeProperty("google_drive/enabled", false);
     }
 
     /**
@@ -621,7 +625,7 @@ public class Backend extends Thread {
      */
     private void synchronizeGoogleDrive(){
         // Ensure that Google Drive is enabled, and the Synchronization is enabled before synchronizing
-        if (this.helper.isGoogleDriveEnabled() && this.settings.readBooleanSetting("google_drive/automatic_synchronization")){
+        if (this.helper.isGoogleDriveEnabled() && this.settings.readBooleanProperty("google_drive/automatic_synchronization")){
             this.googleDrive.sync(this.helper.getDatabasePath(), this.database.getDatabaseName());
         }
     }
@@ -630,13 +634,37 @@ public class Backend extends Thread {
      * Enable the Google Drive automatic synchronization
      */
     private void enableGoogleDriveSynchronization(){
-        this.settings.writeSetting("google_drive/automatic_synchronization", true);
+        this.settings.writeProperty("google_drive/automatic_synchronization", true);
     }
 
     /**
      * Disable the Google Drive automatic synchronization
      */
     private void disableGoogleDriveSynchronization(){
-        this.settings.writeSetting("google_drive/automatic_synchronization", false);
+        this.settings.writeProperty("google_drive/automatic_synchronization", false);
     }
+
+    /**
+     * Get the last databases used from the settings file
+     */
+    private void getRecentDatabases(){
+        ArrayList<String> recentDatabases = this.settings.readListProperty("database/recent");
+        this.eventToSend.addData(recentDatabases);
+    }
+
+    /**
+     * Add to the recent databases the one with the path provided, otherwise if it already exists set it to be first
+     */
+    private void updateRecentDatabases(String path){
+        ArrayList<String> recentDatabases = this.settings.readListProperty("database/recent");
+        int pathIndex = recentDatabases.indexOf(path);  // Get the index of the path from the list
+
+        // If the index of the path is not -1, it means that the path has already been added to the list
+        if (pathIndex != -1){
+            recentDatabases.remove(pathIndex);
+        }
+        recentDatabases.addFirst(path);  // Add the path as the first element of the list
+        this.settings.writeList("database/recent", recentDatabases);  // Write the updated list in the settings
+    }
+
 }

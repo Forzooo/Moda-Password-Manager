@@ -12,6 +12,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.ArrayList;
 
 public class Startup extends JDialog {
 
@@ -292,7 +293,17 @@ public class Startup extends JDialog {
      */
     private void changeDatabase(String databasePath){
         Event event = new Event("set-database", databasePath);
-        this.itc.requestAndReceive(event);
+        this.itc.requestAndReceive(event);  // Wait for the operations to finish before setting the path in the label
         this.currentDatabaseLabel.setText(formatPath(databasePath));  // Set the new path of the database into the label
+    }
+
+    /**
+     * Get the last databases used by the user
+     */
+    private ArrayList<String> getRecentDatabases(){
+        Event event = new Event("get-recent-databases");
+        Event response = this.itc.requestAndReceive(event);
+
+        return (ArrayList<String>) response.getData().getFirst();
     }
 }
