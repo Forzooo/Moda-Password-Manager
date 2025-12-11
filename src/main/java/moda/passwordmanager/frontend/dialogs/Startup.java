@@ -8,10 +8,7 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.util.ArrayList;
 
 public class Startup extends JDialog {
@@ -24,6 +21,14 @@ public class Startup extends JDialog {
     private JLabel currentDatabaseLabel;
     private JButton newDatabaseButton;
     private JButton changeDatabaseButton;
+
+    // The recentDatabases ArrayList is used to retrieve an absolute path from a formatted one
+    private ArrayList<String> recentDatabases;
+    private JList<String> recentDatabasesList;
+
+    // The last databases used are set as a class attribute because if the user sets a new database, the model has to
+    // be updated
+    private DefaultListModel<String> recentDatabasesModel;
 
     public Startup(InterThreadCommunication itc){
         super();
@@ -96,6 +101,27 @@ public class Startup extends JDialog {
         masterPasswordPanel.add(loginLabel);
         masterPasswordPanel.add(masterPasswordFieldPanel);
 
+        // Recent databases section
+        JPanel recentDatabasesPanel = new JPanel();
+        recentDatabasesPanel.setPreferredSize(new Dimension(width, height/6));
+        recentDatabasesPanel.setMaximumSize(new Dimension(width, height/6));
+
+        JLabel recentDatabasesLabel = new JLabel();
+        recentDatabasesLabel.setText("Recent databases:");
+
+        this.recentDatabasesList = new JList<>();
+        this.recentDatabasesList.setMaximumSize(recentDatabasesPanel.getMaximumSize());
+        this.recentDatabasesList.setFixedCellHeight(30);
+        this.recentDatabasesModel = new DefaultListModel<>();
+        this.recentDatabasesList.setModel(this.recentDatabasesModel);
+
+        getRecentDatabases();  // Update the model with the recent databases
+
+        // Add a scrollbar to the JList and add it to the panel
+        JScrollPane scrollPane = new JScrollPane(this.recentDatabasesList);
+//        recentDatabasesPanel.add(recentDatabasesLabel);
+        recentDatabasesPanel.add(scrollPane);
+
         // Database section
         JPanel databaseInfoPanel = new JPanel();
         databaseInfoPanel.setPreferredSize(new Dimension(width, height/4));
@@ -120,6 +146,7 @@ public class Startup extends JDialog {
         // Add all the sections to the root panel
         rootPanel.add(titlePanel);
         rootPanel.add(masterPasswordPanel);
+        rootPanel.add(recentDatabasesPanel);
         rootPanel.add(databaseInfoPanel);
 
         add(rootPanel);
@@ -159,6 +186,18 @@ public class Startup extends JDialog {
                 }
                 sendMasterPassword(masterPasswordChar);
                 dispose();  // Close the window
+            }
+        });
+
+        this.recentDatabasesList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+
+                // Only allow double clicks
+                if (e.getClickCount() == 2){
+                    setDatabase(recentDatabases.get(recentDatabasesList.getSelectedIndex()));
+                }
             }
         });
 
@@ -215,6 +254,9 @@ public class Startup extends JDialog {
         return databasePath;
     }
 
+    /**
+     * Format an absolute path by showing only the drive and the last two subdirectories and the file
+     */
     private String formatPath(String path){
         StringBuilder formattedPath = new StringBuilder();
         String[] splittedPath = path.split("\\\\");
@@ -257,7 +299,7 @@ public class Startup extends JDialog {
                 if (!path.endsWith(".modb")){
                     path = path+".modb";
                 }
-                changeDatabase(path);
+                setDatabase(path);
             }
         }
     }
@@ -282,7 +324,7 @@ public class Startup extends JDialog {
 
             // Check whether the database has been chosen
             if (!path.isEmpty()){
-                changeDatabase(path);
+                setDatabase(path);
             }
         }
     }
@@ -291,19 +333,25 @@ public class Startup extends JDialog {
      * Change the current database in use
      * @param databasePath The path of the database to use
      */
-    private void changeDatabase(String databasePath){
+    private void setDatabase(String databasePath){
         Event event = new Event("set-database", databasePath);
         this.itc.requestAndReceive(event);  // Wait for the operations to finish before setting the path in the label
         this.currentDatabaseLabel.setText(formatPath(databasePath));  // Set the new path of the database into the label
+        getRecentDatabases();  // Update the recent databases list
     }
 
     /**
      * Get the last databases used by the user
      */
-    private ArrayList<String> getRecentDatabases(){
+    private void getRecentDatabases(){
         Event event = new Event("get-recent-databases");
         Event response = this.itc.requestAndReceive(event);
 
-        return (ArrayList<String>) response.getData().getFirst();
+        this.recentDatabases = (ArrayList<String>) response.getData().getFirst();
+
+        this.recentDatabasesModel.clear();  // Clear the model before adding all the elements
+        for (String path : this.recentDatabases){
+            this.recentDatabasesModel.addElement(formatPath(path));
+        }
     }
 }
