@@ -12,6 +12,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class Application extends JFrame {
 
+    private final static String VERSION = "1.0.0";  // The current version of the software
+
     public Application(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
                        String databaseToUse){
         initFlatLaf();  // It has to be called before any Swing component
@@ -83,6 +85,13 @@ public class Application extends JFrame {
      */
     public static String getApplicationTitle(){
         return "MODA - Password Manager";
+    }
+
+    /**
+     * Retrieve the current version of the application
+     */
+    public static String getVersion(){
+        return VERSION;
     }
 
     public static void main(String[] args) {

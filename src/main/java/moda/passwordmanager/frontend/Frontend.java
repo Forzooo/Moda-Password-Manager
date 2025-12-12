@@ -1,5 +1,6 @@
 package moda.passwordmanager.frontend;
 
+import moda.passwordmanager.frontend.dialogs.Settings;
 import moda.passwordmanager.frontend.dialogs.Startup;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
@@ -12,8 +13,6 @@ import java.io.StringWriter;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class Frontend extends JPanel {
-
-    private final static String VERSION = "1.0.0";  // The current version of the software
 
     // The InterThreadCommunication objects used to communicate with the Backend thread
     private InterThreadCommunication itc;
@@ -32,10 +31,8 @@ public class Frontend extends JPanel {
     private final static int MIN_CONTENT_WIDTH = 500;
 
     // All the JPanel of the GUI, defined as class attributes
-    private Sidebar sidebar;
-    private AddData addData;
-    private ShowData showData;
-    private Settings settings;
+    private AddData addDataPanel;
+    private ShowData showDataPanel;
 
     public Frontend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
                     String databasePath, int width, int height){
@@ -159,7 +156,7 @@ public class Frontend extends JPanel {
      * Initialize the Frontend event listener
      */
     private void initEventListener(){
-        this.eventListener = new FrontendEventListener(this.itc, this.showData);
+        this.eventListener = new FrontendEventListener(this.itc, this.showDataPanel);
         this.eventListener.start();
     }
 
@@ -167,8 +164,8 @@ public class Frontend extends JPanel {
      * Initialize all the panels
      */
     private void initPanels(){
-        this.sidebar = new Sidebar(VERSION, this.windowSize);
-        add(this.sidebar, BorderLayout.WEST);  // Add the Sidebar to the Frame
+        Sidebar sidebar = new Sidebar(this.windowSize);
+        add(sidebar, BorderLayout.WEST);  // Add the Sidebar to the Frame
 
         this.addData = new AddData(this.itc, MIN_CONTENT_WIDTH, this.windowSize,
                                              this.sidebar.getWidth());
@@ -176,11 +173,8 @@ public class Frontend extends JPanel {
         this.showData = new ShowData(this.itc, MIN_CONTENT_WIDTH, this.windowSize,
                                                this.sidebar.getWidth());
 
-        this.settings = new Settings(this.itc, MIN_CONTENT_WIDTH, this.windowSize,
-                                               this.sidebar.getWidth());
-
-        // Add the Show All Panel to the Board as it's the default panel at the start
-        this.selectedPanel = this.showData;
+        // Add the Show All Panel to the GUI as it's the default panel at the start
+        this.currentPanel = this.showData;
         add(this.showData, BorderLayout.CENTER);
     }
 
@@ -192,9 +186,8 @@ public class Frontend extends JPanel {
 
         // Based on the section chosen change the current panel to the new one
         switch (selectedPanel){
-            case ADD_DATA -> this.selectedPanel = this.addData;
-            case SHOW_DATA -> this.selectedPanel = this.showData;
-            case SETTINGS -> this.selectedPanel = this.settings;
+            case ADD_DATA -> this.currentPanel = this.addDataPanel;
+            case SHOW_DATA -> this.currentPanel = this.showDataPanel;
         }
 
         add(this.selectedPanel, BorderLayout.CENTER);  // Add the selected panel to the Board
@@ -202,6 +195,14 @@ public class Frontend extends JPanel {
         // Revalidate and repaint the GUI with the graphical changes
         revalidate();
         repaint();
+    }
+
+    /**
+     * Open the settings dialog
+     */
+    public void openSettings(){
+        Settings settings = new Settings(this.itc);
+        settings.setVisible(true);
     }
 
 }
