@@ -31,8 +31,8 @@ public class Frontend extends JPanel {
     private final static int MIN_CONTENT_WIDTH = 500;
 
     // All the JPanel of the GUI, defined as class attributes
-    private AddData addDataPanel;
-    private ShowData showDataPanel;
+    private AddData addData;
+    private ShowData showData;
 
     public Frontend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
                     String databasePath, int width, int height){
@@ -156,7 +156,7 @@ public class Frontend extends JPanel {
      * Initialize the Frontend event listener
      */
     private void initEventListener(){
-        this.eventListener = new FrontendEventListener(this.itc, this.showDataPanel);
+        this.eventListener = new FrontendEventListener(this.itc, this.showData);
         this.eventListener.start();
     }
 
@@ -168,13 +168,13 @@ public class Frontend extends JPanel {
         add(sidebar, BorderLayout.WEST);  // Add the Sidebar to the Frame
 
         this.addData = new AddData(this.itc, MIN_CONTENT_WIDTH, this.windowSize,
-                                             this.sidebar.getWidth());
+                                             sidebar.getWidth());
 
         this.showData = new ShowData(this.itc, MIN_CONTENT_WIDTH, this.windowSize,
-                                               this.sidebar.getWidth());
+                                               sidebar.getWidth());
 
         // Add the Show All Panel to the GUI as it's the default panel at the start
-        this.currentPanel = this.showData;
+        this.selectedPanel = this.showData;
         add(this.showData, BorderLayout.CENTER);
     }
 
@@ -186,8 +186,8 @@ public class Frontend extends JPanel {
 
         // Based on the section chosen change the current panel to the new one
         switch (selectedPanel){
-            case ADD_DATA -> this.currentPanel = this.addDataPanel;
-            case SHOW_DATA -> this.currentPanel = this.showDataPanel;
+            case ADD_DATA -> this.selectedPanel = this.addData;
+            case SHOW_DATA -> this.selectedPanel = this.showData;
         }
 
         add(this.selectedPanel, BorderLayout.CENTER);  // Add the selected panel to the Board
