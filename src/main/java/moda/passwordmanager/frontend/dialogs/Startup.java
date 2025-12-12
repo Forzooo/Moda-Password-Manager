@@ -14,7 +14,10 @@ import java.util.ArrayList;
 public class Startup extends JDialog {
 
     private InterThreadCommunication itc;
-    private final static Dimension dialogDimension = new Dimension(500, 600);
+    private final static Dimension DIALOG_DIMENSION = new Dimension(500, 600);
+
+    // The number of recent databases to show in the recentDatabasesList before a JScrollPane appears
+    private final static int RECENT_DATABASES_VISIBLE = 5;
 
     private JPasswordField masterPasswordPasswordField;
     private JButton loginButton;
@@ -45,22 +48,26 @@ public class Startup extends JDialog {
     private void initDialog(){
         setTitle(Application.getApplicationTitle());
         setIconImage(Application.getIcon());
-        setSize(dialogDimension);
+        setSize(DIALOG_DIMENSION);
+        setMaximumSize(DIALOG_DIMENSION);
 
         setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
         setModal(true);  // Enable modality to block input to other password manager windows
         setLocationRelativeTo(getRootPane());
 //        setAlwaysOnTop(true);
+        setResizable(false);
     }
 
     /**
      * Initialize and add all the Swing components of the Dialog
      */
     private void initComponents(){
-        int width = (int) dialogDimension.getWidth();
-        int height = (int) dialogDimension.getHeight();
+        int width = (int) DIALOG_DIMENSION.getWidth();
+        int height = (int) DIALOG_DIMENSION.getHeight();
         JPanel rootPanel = new JPanel();  // We use a root panel as it has a better layout than the JDialog itself
+        rootPanel.setSize(DIALOG_DIMENSION);
+        rootPanel.setMaximumSize(DIALOG_DIMENSION);
 
         // Title section
         JPanel titlePanel = new JPanel();
@@ -80,7 +87,8 @@ public class Startup extends JDialog {
         // The master password panel
         JPanel masterPasswordPanel = new JPanel();
         masterPasswordPanel.setLayout(new BoxLayout(masterPasswordPanel, BoxLayout.Y_AXIS));
-        masterPasswordPanel.setPreferredSize(new Dimension(width, height/2));
+        masterPasswordPanel.setPreferredSize(new Dimension(width, height/3));
+        masterPasswordPanel.setMaximumSize(new Dimension(width, height/3));
 
         JLabel loginLabel = new JLabel();
         loginLabel.setText("Enter your master password:");
@@ -103,15 +111,16 @@ public class Startup extends JDialog {
 
         // Recent databases section
         JPanel recentDatabasesPanel = new JPanel();
-        recentDatabasesPanel.setPreferredSize(new Dimension(width, height/6));
-        recentDatabasesPanel.setMaximumSize(new Dimension(width, height/6));
+        recentDatabasesPanel.setPreferredSize(new Dimension(width, height/5));
+        recentDatabasesPanel.setMaximumSize(new Dimension(width, height/5));
 
-        JLabel recentDatabasesLabel = new JLabel();
-        recentDatabasesLabel.setText("Recent databases:");
+//        JLabel recentDatabasesLabel = new JLabel();
+//        recentDatabasesLabel.setText("Recent databases:");
 
         this.recentDatabasesList = new JList<>();
-        this.recentDatabasesList.setMaximumSize(recentDatabasesPanel.getMaximumSize());
-        this.recentDatabasesList.setFixedCellHeight(30);
+
+        // A maximum number of visible rows are set otherwise the JList would continue endlessly, beyond the dialog size
+        this.recentDatabasesList.setVisibleRowCount(RECENT_DATABASES_VISIBLE);
         this.recentDatabasesModel = new DefaultListModel<>();
         this.recentDatabasesList.setModel(this.recentDatabasesModel);
 
@@ -119,7 +128,6 @@ public class Startup extends JDialog {
 
         // Add a scrollbar to the JList and add it to the panel
         JScrollPane scrollPane = new JScrollPane(this.recentDatabasesList);
-//        recentDatabasesPanel.add(recentDatabasesLabel);
         recentDatabasesPanel.add(scrollPane);
 
         // Database section
