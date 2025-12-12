@@ -20,9 +20,7 @@ public class Frontend extends JPanel {
     // The Frontend Event Listener used to receive and handle requests from the backend
     private FrontendEventListener eventListener;
 
-    // The dynamicState indicates which Panel needs to be switched to from the current one selected
-    private GUIState dynamicState;
-    private JPanel currentPanel;  // The current selected JPanel
+    private JPanel selectedPanel;  // The current panel shown next to the sidebar
 
     /**
     * A Dimension attribute, retrieved from getToolkit().getScreenSize(), used to dynamically resize
@@ -30,7 +28,7 @@ public class Frontend extends JPanel {
     */
     private Dimension windowSize;
 
-    private final int MIN_CONTENT_WIDTH = 500;
+    private final static int MIN_CONTENT_WIDTH = 500;
 
     // All the JPanel of the GUI, defined as class attributes
     private AddData addDataPanel;
@@ -169,21 +167,22 @@ public class Frontend extends JPanel {
         Sidebar sidebar = new Sidebar(this.windowSize);
         add(sidebar, BorderLayout.WEST);  // Add the Sidebar to the Frame
 
-        this.addDataPanel = new AddData(this.itc, this.MIN_CONTENT_WIDTH, this.windowSize, sidebar.getWidth());
+        this.addData = new AddData(this.itc, MIN_CONTENT_WIDTH, this.windowSize,
+                                             this.sidebar.getWidth());
 
-        this.showDataPanel = new ShowData(this.itc, this.MIN_CONTENT_WIDTH, this.windowSize, sidebar.getWidth());
-        this.dynamicState = GUIState.SHOW_DATA;  // Set the default dynamic state to be the Show Data panel
+        this.showData = new ShowData(this.itc, MIN_CONTENT_WIDTH, this.windowSize,
+                                               this.sidebar.getWidth());
 
-        // Add the Show All Panel to the Board as it's the default panel at the start
-        this.currentPanel = this.showDataPanel;
-        add(this.showDataPanel, BorderLayout.CENTER);
+        // Add the Show All Panel to the GUI as it's the default panel at the start
+        this.currentPanel = this.showData;
+        add(this.showData, BorderLayout.CENTER);
     }
 
     /**
      * Switch to a new JPanel hiding the previous one
      */
     public void switchPanel(GUIState selectedPanel){
-        remove(this.currentPanel);  // Remove the previous panel from the Board
+        remove(this.selectedPanel);  // Remove the previous panel from the Board
 
         // Based on the section chosen change the current panel to the new one
         switch (selectedPanel){
@@ -191,7 +190,7 @@ public class Frontend extends JPanel {
             case SHOW_DATA -> this.currentPanel = this.showDataPanel;
         }
 
-        add(this.currentPanel, BorderLayout.CENTER);  // Add the selected panel to the Board
+        add(this.selectedPanel, BorderLayout.CENTER);  // Add the selected panel to the Board
 
         // Revalidate and repaint the GUI with the graphical changes
         revalidate();

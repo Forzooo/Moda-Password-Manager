@@ -125,6 +125,15 @@ possibile che esista un evento di risposta, e viceversa.**
 * Evento di risposta: -
 * Altà priorità: true
 
+### get-recent-databases
+* Nome: `get-recent-databases`
+* Mittente: Frontend
+* Descrizione: Richiede il path degli ultimi 5 database utilizzati
+* Dati inviati: -
+* Dati risposta: _String[]_ path dei database utilizzati
+* Evento di risposta: -
+* Alta priorità: true
+
 ***
 
 ## Generazione delle stringhe
