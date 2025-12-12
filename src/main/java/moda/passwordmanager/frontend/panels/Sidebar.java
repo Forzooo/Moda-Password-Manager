@@ -141,9 +141,9 @@ public class Sidebar extends JPanel {
         this.componentsSection.add(buttonPanel, BorderLayout.SOUTH);
 
         // Settings + Details section
-        this.settingsButton = new JButton();  // TODO: Use the settings icon instead of the unicode char
+        this.settingsButton = new JButton();  // TODO: Use the settings icon
         this.settingsButton.setBorderPainted(false);
-        this.settingsButton.setText("⚙");
+        this.settingsButton.setText("Settings");
 //        this.settingsButton.setPreferredSize(buttonDimension);
 //        this.settingsButton.setMaximumSize(buttonDimension);
 
