@@ -95,7 +95,9 @@ public class Backend extends EventListener {
 
         // Set a database path and reset the service fields
         addOperation("set-database", () -> {
-            setDatabasePath((String) getRequestData().getFirst());
+            String path = (String) getRequestData().getFirst();
+            setDatabasePath(path);
+            updateRecentDatabases(path);  // Update the recent databases list with this path
 
             // As a new database is set, we need to reset the service fields to update the Frontend with the new
             // data, but updating with initServiceFields happens after the master password has been set,
@@ -117,6 +119,7 @@ public class Backend extends EventListener {
         });
         addOperation("enable-google-drive-synchronization", this::enableGoogleDriveSynchronization);
         addOperation("disable-google-drive-synchronization", this::disableGoogleDriveSynchronization);
+        addOperation("get-recent-databases", this::getRecentDatabases);
     }
 
     /**
@@ -404,10 +407,10 @@ public class Backend extends EventListener {
         boolean numbers = (boolean) requestData.get(2);  // Flag to indicate whether numbers are generated
         boolean special = (boolean) requestData.get(3);  // Flag to indicate whether special characters are generated
 
-        this.settings.writeSetting("string_generation/length", length);
-        this.settings.writeSetting("string_generation/letters", letters);
-        this.settings.writeSetting("string_generation/numbers", numbers);
-        this.settings.writeSetting("string_generation/special", special);
+        this.settings.writeProperty("string_generation/length", length);
+        this.settings.writeProperty("string_generation/letters", letters);
+        this.settings.writeProperty("string_generation/numbers", numbers);
+        this.settings.writeProperty("string_generation/special", special);
     }
 
     /**
@@ -415,7 +418,7 @@ public class Backend extends EventListener {
      * @param databasePath The path of the database chosen
      */
     private void setDatabasePath(String databasePath){
-        this.settings.writeSetting("database/path", databasePath);  // Set the path of the database
+        this.settings.writeProperty("database/path", databasePath);  // Set the path of the database
         this.database.changeDatabase(databasePath);  // Set the new database to be the one used
     }
 
@@ -477,7 +480,7 @@ public class Backend extends EventListener {
      * Retrieve from the settings file whether the automatic synchronization is enabled
      */
     private void getGoogleDriveSynchronization(){
-        boolean synchronizationEnabled = this.settings.readBooleanSetting("google_drive/automatic_synchronization");
+        boolean synchronizationEnabled = this.settings.readBooleanProperty("google_drive/automatic_synchronization");
         addResponseData(synchronizationEnabled);
     }
 
@@ -511,7 +514,7 @@ public class Backend extends EventListener {
         }
 
         this.googleDrive.init();  // Start the Google Drive communication
-        this.settings.writeSetting("google_drive/enabled", true);  // Set Google Drive to enabled
+        this.settings.writeProperty("google_drive/enabled", true);  // Set Google Drive to enabled
     }
 
     /**
@@ -523,7 +526,7 @@ public class Backend extends EventListener {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        this.settings.writeSetting("google_drive/enabled", false);
+        this.settings.writeProperty("google_drive/enabled", false);
     }
 
     /**
@@ -538,7 +541,7 @@ public class Backend extends EventListener {
      */
     private void automaticSynchronizeGoogleDrive(){
         // Ensure that Google Drive is enabled, and the Synchronization is enabled before synchronizing
-        if (this.helper.isGoogleDriveEnabled() && this.settings.readBooleanSetting("google_drive/automatic_synchronization")){
+        if (this.helper.isGoogleDriveEnabled() && this.settings.readBooleanProperty("google_drive/automatic_synchronization")){
             this.googleDrive.sync(this.helper.getDatabasePath(), this.database.getDatabaseName());
             this.helper.executeInBackground(this::updateServiceFields);  // Update the service fields in the Frontend
         }
@@ -548,13 +551,37 @@ public class Backend extends EventListener {
      * Enable the Google Drive automatic synchronization
      */
     private void enableGoogleDriveSynchronization(){
-        this.settings.writeSetting("google_drive/automatic_synchronization", true);
+        this.settings.writeProperty("google_drive/automatic_synchronization", true);
     }
 
     /**
      * Disable the Google Drive automatic synchronization
      */
     private void disableGoogleDriveSynchronization(){
-        this.settings.writeSetting("google_drive/automatic_synchronization", false);
+        this.settings.writeProperty("google_drive/automatic_synchronization", false);
     }
+
+    /**
+     * Get the last databases used from the settings file
+     */
+    private void getRecentDatabases(){
+        ArrayList<String> recentDatabases = this.settings.readListProperty("database/recent");
+        addResponseData(recentDatabases);
+    }
+
+    /**
+     * Add to the recent databases the one with the path provided, otherwise if it already exists set it to be first
+     */
+    private void updateRecentDatabases(String path){
+        ArrayList<String> recentDatabases = this.settings.readListProperty("database/recent");
+        int pathIndex = recentDatabases.indexOf(path);  // Get the index of the path from the list
+
+        // If the index of the path is not -1, it means that the path has already been added to the list
+        if (pathIndex != -1){
+            recentDatabases.remove(pathIndex);
+        }
+        recentDatabases.addFirst(path);  // Add the path as the first element of the list
+        this.settings.writeList("database/recent", recentDatabases);  // Write the updated list in the settings
+    }
+
 }

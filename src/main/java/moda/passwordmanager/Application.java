@@ -1,5 +1,6 @@
 package moda.passwordmanager;
 
+import com.formdev.flatlaf.FlatLightLaf;
 import moda.passwordmanager.backend.Backend;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.Frontend;
@@ -12,9 +13,23 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class Application extends JFrame {
 
+    private final static String VERSION = "1.0.0";  // The current version of the software
+
     public Application(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
                        String databaseToUse){
+        initFlatLaf();  // It has to be called before any Swing component
         initUI(backendQueue, frontendQueue, databaseToUse);
+    }
+
+    /**
+     * Apply the FlatLaf look and feel to the UI
+     */
+    private void initFlatLaf(){
+        try {
+            UIManager.setLookAndFeel(new FlatLightLaf());
+        } catch (UnsupportedLookAndFeelException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void initUI(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
@@ -27,10 +42,10 @@ public class Application extends JFrame {
         add(new Frontend(backendQueue, frontendQueue, databaseToUse, width, height));
         pack();
 
-        setTitle("MODA - Password Manager");
+        setTitle(getApplicationTitle());
         setSize(width, height);
 
-        setIconImage(Frontend.getIcon());  // Get the icon and set it
+        setIconImage(getIcon());  // Get the icon and set it
 
         setVisible(true);
         setLocationRelativeTo(null);
@@ -54,6 +69,30 @@ public class Application extends JFrame {
         }
 
         return databasePath;
+    }
+
+    /**
+     * Retrieve the icon of the password manager from the resources folder
+     * @return Icon of the password manager
+     */
+    public static Image getIcon(){
+        // Get the image from the resources
+        ImageIcon imageIcon = new ImageIcon(Application.class.getResource("/icon.png"));
+        return imageIcon.getImage();
+    }
+
+    /**
+     * Retrieve the title of the application
+     */
+    public static String getApplicationTitle(){
+        return "MODA - Password Manager";
+    }
+
+    /**
+     * Retrieve the current version of the application
+     */
+    public static String getVersion(){
+        return VERSION;
     }
 
     public static void main(String[] args) {

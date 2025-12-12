@@ -1,9 +1,8 @@
 package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.backend.Data;
+import moda.passwordmanager.frontend.components.CloseTab;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
-import moda.passwordmanager.interthreadcommunication.Event;
-import moda.passwordmanager.frontend.dialogs.ShowDataDialog;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -12,14 +11,16 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
-public class ShowDataPanel extends JPanel {
+public class ShowData extends JPanel {
 
     // Attribute to communicate with the backend
-    private InterThreadCommunication interThreadCommunication;
+    private InterThreadCommunication itc;
 
     // Attributes for the configuration of the panel
     private final int MIN_CONTENT_WIDTH;
     private Dimension windowSize;
+
+    private JTabbedPane dataTabbedPane;  // The tabbed pane shows the dataList and the data the user has selected
 
     /**
      * The service data shown in the JList of "Show Data" panel which it's updated automatically by the timer
@@ -30,12 +31,12 @@ public class ShowDataPanel extends JPanel {
     // Swing components
     private JList<String> dataList;
 
-    public ShowDataPanel(InterThreadCommunication interThreadCommunication, int MIN_CONTENT_WIDTH, Dimension windowSize,
-                         int sidebarPanelWidth) {
+    public ShowData(InterThreadCommunication itc, int MIN_CONTENT_WIDTH, Dimension windowSize,
+                    int sidebarPanelWidth) {
         super();  // Initialize the Panel
 
         // Set the attributes given by the JFrame
-        this.interThreadCommunication = interThreadCommunication;
+        this.itc = itc;
         this.MIN_CONTENT_WIDTH = MIN_CONTENT_WIDTH;
         this.windowSize = windowSize;
 
@@ -46,14 +47,6 @@ public class ShowDataPanel extends JPanel {
         initPanel(sidebarPanelWidth);
         initComponents();
         initListeners();
-    }
-
-    /**
-     * Get the layout used for the panel
-     * @return BorderLayout
-     */
-    private BorderLayout getPanelLayout() {
-        return new BorderLayout();
     }
 
     @Override
@@ -67,10 +60,14 @@ public class ShowDataPanel extends JPanel {
      * @param sidebarPanelWidth
      */
     private void initPanel(int sidebarPanelWidth){
-        setLayout(getPanelLayout());  // Set its layout
+        setLayout(new BorderLayout());  // Set its layout
+
+        // Calculate the preferred width and height
+        int width = (int) (this.windowSize.getWidth() - sidebarPanelWidth);
+        int height = (int) this.windowSize.getHeight();
 
         // Set the preferred size
-        setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - sidebarPanelWidth), (int) this.windowSize.getHeight()));
+        setPreferredSize(new Dimension(width, height));
 
         setBackground(Color.WHITE);
     }
@@ -79,6 +76,8 @@ public class ShowDataPanel extends JPanel {
      * Initialize the components of the panel
      */
     private void initComponents(){
+        this.dataTabbedPane = new JTabbedPane();
+
         // Create the JList used to show all the data saved inside the database
         this.dataList = new JList<>();
         this.dataList.setFixedCellHeight(30);
@@ -90,9 +89,11 @@ public class ShowDataPanel extends JPanel {
 
         JScrollPane scrollPane = new JScrollPane(this.dataList);
         scrollPane.setPreferredSize(new Dimension(1000, 750));
-
         scrollPane.setBorder(new EmptyBorder(10,30,10,30));
-        add(scrollPane, BorderLayout.CENTER);  // Add the ScrollPane with the JList to the panel
+
+        this.dataTabbedPane.addTab("User Data", scrollPane);
+
+        add(this.dataTabbedPane, BorderLayout.CENTER);
     }
 
     /**
@@ -105,16 +106,17 @@ public class ShowDataPanel extends JPanel {
                 super.mouseClicked(e);
                 // Only allow double clicks
                 if (e.getClickCount() == 2) {
-                    // Retrieve the ID from the selected data
-                    Data dataSelected = userData.get(dataList.getSelectedIndex());
-                    int id = dataSelected.getID();
+                    // Retrieve the ID selected by getting it from the userData attribute and check if a tab with that
+                    // ID already exists
+                    int id = userData.get(dataList.getSelectedIndex()).getID();
 
-                    // Retrieve the data with the ID from the database
-                    Data userSingleData = getData(id);
+                    // If the tab exists, then set it to be the selected one instead of creating a new tab for it
+                    if (checkDataTabExist(id)){
+                        dataTabbedPane.setSelectedIndex(indexOfDataTab(id));
+                        return;
+                    }
 
-                    // Create a Show Data Dialog to display the data retrieved
-                    ShowDataDialog showDataDialog = new ShowDataDialog(interThreadCommunication, userSingleData);
-                    showDataDialog.setVisible(true);
+                    addDataTab(userData.get(dataList.getSelectedIndex()).getID());
                 }
             }
         });
@@ -141,20 +143,30 @@ public class ShowDataPanel extends JPanel {
     }
 
     /**
-     * Retrieve the data associated with an ID from the database to show it in "Show Data" section
-     * @param id
-     * @return
+     * Check whether the service selected, thus its ID, has already a tab
      */
-    private Data getData(int id){
-        // Create the event to send to the backend
-        Event getData = new Event("get-data", id);
+    private boolean checkDataTabExist(int id){
+        // Iterate over all the UserData tabs and check if their ID is the same as the one given
+        for (int i = 1; i < this.dataTabbedPane.getTabCount(); i++){
+            Component tab = this.dataTabbedPane.getComponentAt(i);
+            if (tab.getClass() == UserData.class){  // Ensure that the tab is a UserData one
+                if (((UserData) tab).getID() == id){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
-        // Wait for the response
-        Event getSingleDataCompleted = this.interThreadCommunication.request(getData);
-
-        Data userData = (Data) getSingleDataCompleted.getData().getFirst();  // Get the user data
-
-        return userData;
+    /**
+     * Add a tab to the TabbedPane with the service selected by the user
+     */
+    private void addDataTab(int id){
+        UserData userDataTab = new UserData(this.itc, id, getWidth(), getHeight());
+        String tabName = this.userData.get(this.dataList.getSelectedIndex()).getSERVICE();  // Get the tab name from the service field
+        CloseTab closeTab = new CloseTab(this.dataTabbedPane, userDataTab, tabName);
+        closeTab.add();  // Add the tab to the TabbedPane
+        this.dataTabbedPane.setSelectedComponent(userDataTab);  // Set the tab to be shown to be the one created
     }
 
     public ArrayList<Data> getUserData() {
@@ -168,10 +180,26 @@ public class ShowDataPanel extends JPanel {
     /**
      * Return the index of the Data object of UserData that has the same ID. -1 is returned if it does not exist
      */
-    public int indexOfUserData(int ID){
+    public int indexOfUserData(int id){
         for (int i = 0; i < this.userData.size(); i++){
-            if (this.userData.get(i).getID() == ID) {
+            if (this.userData.get(i).getID() == id) {
                 return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Return the index of the UserData tab that has the same ID. -1 is returned if it does not exist
+     */
+    private int indexOfDataTab(int id){
+        // Iterate over all the UserData tabs and check if their ID is the same as the one given
+        for (int i = 0; i < this.dataTabbedPane.getTabCount(); i++){
+            Component tab = this.dataTabbedPane.getComponentAt(i);
+            if (tab.getClass() == UserData.class){  // Ensure that the tab is a UserData one
+                if (((UserData) tab).getID() == id){
+                    return i;
+                }
             }
         }
         return -1;

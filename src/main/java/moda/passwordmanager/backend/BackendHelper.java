@@ -111,10 +111,10 @@ public class BackendHelper {
         ArrayList<Object> stringGeneration = new ArrayList<>();
 
         // Read all the properties from the settings file
-        int stringLength = this.settings.readIntSetting("string_generation/length");
-        boolean letters = this.settings.readBooleanSetting("string_generation/letters");
-        boolean numbers = this.settings.readBooleanSetting("string_generation/numbers");
-        boolean special = this.settings.readBooleanSetting("string_generation/special");
+        int stringLength = this.settings.readIntProperty("string_generation/length");
+        boolean letters = this.settings.readBooleanProperty("string_generation/letters");
+        boolean numbers = this.settings.readBooleanProperty("string_generation/numbers");
+        boolean special = this.settings.readBooleanProperty("string_generation/special");
 
         // Add the properties to the ArrayList
         stringGeneration.add(stringLength);
@@ -130,7 +130,7 @@ public class BackendHelper {
      * @return Boolean that indicates the state of Google Drive
      */
     public boolean isGoogleDriveEnabled(){
-        return this.settings.readBooleanSetting("google_drive/enabled");
+        return this.settings.readBooleanProperty("google_drive/enabled");
     }
 
     /**
@@ -138,6 +138,6 @@ public class BackendHelper {
      * @return String that indicates the path of the database
      */
     public String getDatabasePath(){
-        return this.settings.readStringSetting("database/path");  // Read the path from settings
+        return this.settings.readStringProperty("database/path");  // Read the path from settings
     }
 }

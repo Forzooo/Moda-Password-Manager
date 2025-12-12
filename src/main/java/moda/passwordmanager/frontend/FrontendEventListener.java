@@ -1,7 +1,8 @@
 package moda.passwordmanager.frontend;
 
 import moda.passwordmanager.backend.Data;
-import moda.passwordmanager.frontend.panels.ShowDataPanel;
+import moda.passwordmanager.frontend.panels.ShowData;
+import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.EventListener;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
@@ -10,11 +11,16 @@ import java.util.ArrayList;
 
 public class FrontendEventListener extends EventListener {
 
-    private ShowDataPanel showDataPanel;  // The Listener needs the Show Data Panel to call the service fields
+    private InterThreadCommunication itc;
+    private boolean runFlag;  // Flag used to indicate when the thread has to stop
+    private Event eventToSend;  // The event that is sent to the Backend
+    private ShowData showData;  // The Listener needs the Show Data Panel to call the service fields
 
-    public FrontendEventListener(InterThreadCommunication itc, ShowDataPanel showDataPanel){
+    public FrontendEventListener(InterThreadCommunication itc, ShowData showData){
         super(itc, "Frontend Event Listener");  // Set the name of the thread for debug purposes
-        this.showDataPanel = showDataPanel;
+        this.itc = itc;
+        this.runFlag = true;
+        this.showData = showData;
 
         initHandler();  // Initialize all the operations to handle
     }
@@ -59,12 +65,12 @@ public class FrontendEventListener extends EventListener {
         ArrayList<Data> backendData = (ArrayList<Data>) getRequestData().getFirst();
 
         // Get the User Data and its model to update them with the changes
-        ArrayList<Data> userData = this.showDataPanel.getUserData();
-        DefaultListModel<String> userDataModel = this.showDataPanel.getUserDataModel();
+        ArrayList<Data> userData = this.showData.getUserData();
+        DefaultListModel<String> userDataModel = this.showData.getUserDataModel();
 
         for (Data data : backendData){
             // Retrieve the indexes of the Data objects that have the same ID
-            int userDataIndex = this.showDataPanel.indexOfUserData(data.getID());
+            int userDataIndex = this.showData.indexOfUserData(data.getID());
 
             // If the ID has not been found, then add the Data object
             if (userDataIndex == -1){
@@ -85,8 +91,8 @@ public class FrontendEventListener extends EventListener {
      * Reset the service data
      */
     private void resetServiceFields(){
-        this.showDataPanel.getUserData().clear();
-        this.showDataPanel.getUserDataModel().clear();
+        this.showData.getUserData().clear();
+        this.showData.getUserDataModel().clear();
     }
 
 }

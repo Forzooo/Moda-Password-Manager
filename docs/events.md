@@ -110,6 +110,14 @@ Events sections:
 * Data received: _String_ path
 * Synchronous: required
 
+### get-recent-databases
+* Operation: `get-recent-databases`
+* Sender: Frontend
+* Description: Get the paths of the last databases used
+* Dati sent: -
+* Dati received: _ArrayList<String>_ paths
+* Synchronous: required
+
 ***
 
 ## Google Drive
