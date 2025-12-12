@@ -109,7 +109,7 @@ public class GoogleDrive extends Section {
     private void initGoogleDriveCheckbox(){
         // Retrieve from the settings file the configuration of Google Drive visibility
         Event event = new Event("get-google-drive");
-        Event response = this.ITC.requestAndReceive(event);
+        Event response = this.ITC.request(event);
         boolean enabled = (boolean) response.getData().getFirst();
 
         if (enabled){
@@ -153,7 +153,7 @@ public class GoogleDrive extends Section {
     private void initAutomaticSynchronizationCheckbox(){
         // Retrieve from the settings file the configuration of Google Drive synchronization visibility
         Event event = new Event("get-google-drive-synchronization");
-        Event response = this.ITC.requestAndReceive(event);
+        Event response = this.ITC.request(event);
         boolean enabled = (boolean) response.getData().getFirst();
 
         if (enabled){
@@ -187,7 +187,7 @@ public class GoogleDrive extends Section {
      */
     private void synchronizeGoogleDrive(){
         Event event = new Event("google-drive-synchronize");
-        this.ITC.requestAndReceive(event);
+        this.ITC.request(event);
     }
 
     /**

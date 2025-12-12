@@ -95,7 +95,9 @@ public class Backend extends EventListener {
 
         // Set a database path and reset the service fields
         addOperation("set-database", () -> {
-            setDatabasePath((String) getRequestData().getFirst());
+            String path = (String) getRequestData().getFirst();
+            setDatabasePath(path);
+            updateRecentDatabases(path);  // Update the recent databases list with this path
 
             // As a new database is set, we need to reset the service fields to update the Frontend with the new
             // data, but updating with initServiceFields happens after the master password has been set,
@@ -117,6 +119,7 @@ public class Backend extends EventListener {
         });
         addOperation("enable-google-drive-synchronization", this::enableGoogleDriveSynchronization);
         addOperation("disable-google-drive-synchronization", this::disableGoogleDriveSynchronization);
+        addOperation("get-recent-databases", this::getRecentDatabases);
     }
 
     /**
@@ -563,7 +566,7 @@ public class Backend extends EventListener {
      */
     private void getRecentDatabases(){
         ArrayList<String> recentDatabases = this.settings.readListProperty("database/recent");
-        this.eventToSend.addData(recentDatabases);
+        addResponseData(recentDatabases);
     }
 
     /**

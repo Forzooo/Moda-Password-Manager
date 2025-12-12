@@ -45,7 +45,7 @@ public class UserPasswordField extends UserDataField {
      * Generate a password and set the password text field to it
      */
     private void generatePassword(){
-        Event event = this.itc.requestAndReceive(new Event("generate-string"));
+        Event event = this.itc.request(new Event("generate-string"));
         String password = (String) event.getData().getFirst();
         setData(password);  // Set the text of the Data TextField to be the generated password
     }

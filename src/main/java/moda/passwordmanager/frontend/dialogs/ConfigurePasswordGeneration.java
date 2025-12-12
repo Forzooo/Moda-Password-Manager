@@ -14,7 +14,7 @@ import java.util.ArrayList;
 /**
  * A JDialog used to retrieve the parameters of the generation of the password
  */
-public class ConfigureGenerationPassword extends JDialog {
+public class ConfigurePasswordGeneration extends JDialog {
 
     private InterThreadCommunication itc;
 
@@ -28,7 +28,7 @@ public class ConfigureGenerationPassword extends JDialog {
 
     private JButton saveConfigurationButton;
 
-    public ConfigureGenerationPassword(InterThreadCommunication itc){
+    public ConfigurePasswordGeneration(InterThreadCommunication itc){
         super();
 
         this.itc = itc;

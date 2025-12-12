@@ -4,7 +4,7 @@ import moda.passwordmanager.backend.Data;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.components.Placeholder;
-import moda.passwordmanager.frontend.dialogs.ConfigureGenerationPassword;
+import moda.passwordmanager.frontend.dialogs.ConfigurePasswordGeneration;
 
 import javax.swing.*;
 import java.awt.*;
@@ -205,8 +205,8 @@ public class AddData extends JPanel {
         this.configurePasswordGeneration.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                ConfigureGenerationPassword configureGenerationPassword = new ConfigureGenerationPassword(itc);
-                configureGenerationPassword.setVisible(true);
+                ConfigurePasswordGeneration configurePasswordGeneration = new ConfigurePasswordGeneration(itc);
+                configurePasswordGeneration.setVisible(true);
             }
         });
     }

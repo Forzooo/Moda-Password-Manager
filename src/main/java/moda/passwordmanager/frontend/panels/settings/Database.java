@@ -132,7 +132,7 @@ public class Database extends Section {
         }
 
         Event event = new Event("change-master-password", masterPassword.toCharArray());
-        this.ITC.requestAndReceive(event);  // Wait for the end of the operations in the backend
+        this.ITC.request(event);  // Wait for the end of the operations in the backend
     }
 
     /**
@@ -140,7 +140,7 @@ public class Database extends Section {
      * @return
      */
     private String getCurrentDatabasePath(){
-        Event response = this.ITC.requestAndReceive(new moda.passwordmanager.interthreadcommunication.Event("get-database"));
+        Event response = this.ITC.request(new moda.passwordmanager.interthreadcommunication.Event("get-database"));
         String databasePath = (String) response.getData().getFirst();  // Retrieve the path of the database
         return databasePath;
     }
@@ -161,7 +161,7 @@ public class Database extends Section {
 
         // Set the path of the database
         Event event = new Event("set-database", databasePath);
-        this.ITC.requestAndReceive(event);
+        this.ITC.request(event);
         this.databasePathTextField.setText(databasePath);  // Set the new path of the database into the Text Field
         changeMasterPassword(masterPassword);
     }

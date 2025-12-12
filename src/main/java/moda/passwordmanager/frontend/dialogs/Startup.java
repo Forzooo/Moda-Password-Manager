@@ -236,7 +236,7 @@ public class Startup extends JDialog {
         Event setMasterPassword = new Event("set-master-password", masterPassword);
 
         // Get the event from the backend to know whether the master password the user entered is correct
-        Event confirmEvent = this.itc.requestAndReceive(setMasterPassword);
+        Event confirmEvent = this.itc.request(setMasterPassword);
         boolean masterPasswordFlag = (Boolean) confirmEvent.getData().getFirst();
 
         // Show an Error message and terminate the execution if the master password entered is wrong
@@ -256,7 +256,7 @@ public class Startup extends JDialog {
         Event event = new Event("get-database");
 
         // Receive the path of the database from the backend
-        Event databasePathEvent = this.itc.requestAndReceive(event);
+        Event databasePathEvent = this.itc.request(event);
         String databasePath = (String) databasePathEvent.getData().getFirst();
 
         return databasePath;
@@ -343,7 +343,7 @@ public class Startup extends JDialog {
      */
     private void setDatabase(String databasePath){
         Event event = new Event("set-database", databasePath);
-        this.itc.requestAndReceive(event);  // Wait for the operations to finish before setting the path in the label
+        this.itc.request(event);  // Wait for the operations to finish before setting the path in the label
         this.currentDatabaseLabel.setText(formatPath(databasePath));  // Set the new path of the database into the label
         getRecentDatabases();  // Update the recent databases list
     }
@@ -353,7 +353,7 @@ public class Startup extends JDialog {
      */
     private void getRecentDatabases(){
         Event event = new Event("get-recent-databases");
-        Event response = this.itc.requestAndReceive(event);
+        Event response = this.itc.request(event);
 
         this.recentDatabases = (ArrayList<String>) response.getData().getFirst();
 

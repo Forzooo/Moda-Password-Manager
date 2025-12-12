@@ -70,7 +70,7 @@ public class UserData extends JPanel {
         Event getData = new Event("get-data", this.ID);
 
         // Wait for the response
-        Event getSingleDataCompleted = this.itc.requestAndReceive(getData);
+        Event getSingleDataCompleted = this.itc.request(getData);
 
         Data userData = (Data) getSingleDataCompleted.getData().getFirst();  // Get the user data
         return userData;
@@ -244,7 +244,7 @@ public class UserData extends JPanel {
     private void changeData(Data data){
         // Create and send the event
         Event event = new Event("change-data", data);
-        this.itc.requestAndReceive(event);  // Wait for the response of the backend
+        this.itc.request(event);  // Wait for the response of the backend
     }
 
     /**

@@ -64,7 +64,7 @@ public class Data extends Section {
         }
 
         Event event = new Event("change-master-password", masterPassword.toCharArray());
-        this.ITC.requestAndReceive(event);  // Wait for the end of the operations in the backend
+        this.ITC.request(event);  // Wait for the end of the operations in the backend
     }
 
 }
