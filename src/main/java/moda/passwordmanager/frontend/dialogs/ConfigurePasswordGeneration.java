@@ -128,7 +128,7 @@ public class ConfigureGenerationPassword extends JDialog {
                 event.addData(numbersSelected);
                 event.addData(specialCharactersSelected);
 
-                itc.request(event);  // Send the event
+                itc.send(event);  // Send the event
                 dispose();  // Destroy the JDialog after the configuration has been saved
             }
         });
@@ -140,7 +140,7 @@ public class ConfigureGenerationPassword extends JDialog {
     private void setCurrentParameters(){
         // Create the event and wait for the data
         Event event = new Event("get-string-generation-configuration");
-        Event backendResponse = this.itc.requestAndReceive(event);
+        Event backendResponse = this.itc.request(event);
 
         ArrayList<Object> data = backendResponse.getData();  // Retrieve the data
 

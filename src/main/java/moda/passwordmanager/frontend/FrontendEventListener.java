@@ -3,12 +3,13 @@ package moda.passwordmanager.frontend;
 import moda.passwordmanager.backend.Data;
 import moda.passwordmanager.frontend.panels.ShowData;
 import moda.passwordmanager.interthreadcommunication.Event;
+import moda.passwordmanager.interthreadcommunication.EventListener;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
 import javax.swing.*;
 import java.util.ArrayList;
 
-public class FrontendEventListener extends Thread {
+public class FrontendEventListener extends EventListener {
 
     private InterThreadCommunication itc;
     private boolean runFlag;  // Flag used to indicate when the thread has to stop
@@ -16,66 +17,33 @@ public class FrontendEventListener extends Thread {
     private ShowData showData;  // The Listener needs the Show Data Panel to call the service fields
 
     public FrontendEventListener(InterThreadCommunication itc, ShowData showData){
-        super("Frontend Event Listener");  // Set the name of the thread for debug purposes
+        super(itc, "Frontend Event Listener");  // Set the name of the thread for debug purposes
         this.itc = itc;
         this.runFlag = true;
         this.showData = showData;
-    }
 
-    @Override
-    public void run() {
-        super.run();
-
-        while (this.runFlag){
-            Event event = this.itc.receive();  // Wait for an event from the Backend
-
-            createEvent(event);  // Create an event to send to the Backend
-            handleEvent(event);  // Handle the operation requested from the Backend
-
-            // Check whether there is an Event to send to the Backend
-            if (this.eventToSend != null){
-                this.itc.reply(event, this.eventToSend);
-                resetSendData();  // Reset the data to send to the Backend
-            }
-        }
+        initHandler();  // Initialize all the operations to handle
     }
 
     /**
-     * Create the event that will be sent to the Frontend
-     * @param event
+     * Add all the operations to handle
      */
-    private void createEvent(Event event){
-        this.eventToSend = new Event(event.getNAME());
-    }
-
-    private void handleEvent(Event event){
-        ArrayList<Object> eventData = event.getData();
-
-        switch (event.getNAME()){
-            case "exception-raised":
-                exceptionRaised((String) eventData.getFirst(), (Throwable) eventData.get(1));
-                break;
-
-            case "update-service-fields":
-                updateServiceFields((ArrayList<Data>) eventData.getFirst());
-                break;
-
-            default:  // If the event is not handled by one of the cases above, then discard the event3
-                resetSendData();
-        }
-    }
-
-    private void resetSendData(){
-        this.eventToSend = null;
+    private void initHandler(){
+        addOperation("exception-raised", this::exceptionRaised);
+        addOperation("update-service-fields", this::updateServiceFields);
+        addOperation("reset-service-fields", this::resetServiceFields);
     }
 
     /**
      * Retrieve an exception raised in the backend and show it with a MessageBox in the EDT Thread before closing
      * the connection and exiting
-     * @param threadName The name of the thread where the exception occurred
-     * @param throwable The stackTrace of the exception
      */
-    private void exceptionRaised(String threadName, Throwable throwable){
+    private void exceptionRaised(){
+        // Retrieve the data from the request
+        ArrayList<Object> requestData = getRequestData();
+        String threadName = (String) requestData.getFirst();  // The name of the thread where the exception occurred
+        Throwable throwable = (Throwable) requestData.get(1);  // The stack trace of the exception
+
         String stackTrace = Frontend.getStackTrace(throwable);  // Get the full stack trace of the throwable
         String message = Frontend.getLastStackTrace(stackTrace, 5) +
                 "\r\nThe traceback has been saved to the data folder.";
@@ -90,23 +58,12 @@ public class FrontendEventListener extends Thread {
     }
 
     /**
-     * Close the connection with the backend, and terminate the execution
-     */
-    private void closeConnection(){
-        Event closeConnection = new Event("close-connection");
-
-        // Wait for the backend before terminating the execution as some operations could still being executed in the
-        // background tasks
-        this.itc.request(closeConnection);
-
-        System.exit(0);
-    }
-
-    /**
      * Update the service data with the new one
-     * @param backendData The updated service data from the backend
      */
-    private void updateServiceFields(ArrayList<Data> backendData){
+    private void updateServiceFields(){
+        // The updated service data from the backend
+        ArrayList<Data> backendData = (ArrayList<Data>) getRequestData().getFirst();
+
         // Get the User Data and its model to update them with the changes
         ArrayList<Data> userData = this.showData.getUserData();
         DefaultListModel<String> userDataModel = this.showData.getUserDataModel();
@@ -128,6 +85,14 @@ public class FrontendEventListener extends Thread {
                 userDataModel.set(userDataIndex, data.getSERVICE());
             }
         }
+    }
+
+    /**
+     * Reset the service data
+     */
+    private void resetServiceFields(){
+        this.showData.getUserData().clear();
+        this.showData.getUserDataModel().clear();
     }
 
 }

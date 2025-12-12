@@ -268,7 +268,7 @@ public class AddData extends JPanel {
         // Create the Event to send to the backend
         Event saveData = new Event("save-data", userData);
 
-        this.itc.request(saveData);
+        this.itc.send(saveData);
 //        notifyUser();  // Example method to show the user a messagebox with the operation status
     }
 
@@ -277,7 +277,7 @@ public class AddData extends JPanel {
         // Create the Event to send to the backend
         Event generatePassword = new Event("generate-string");
 
-        Event response = this.itc.requestAndReceive(generatePassword);  // Wait for the result
+        Event response = this.itc.request(generatePassword);  // Wait for the result
 
         String password = (String) response.getData().getFirst();  // Get the password from the backend
         this.passwordTextField.setText(password);  // Set the password to the TextField

@@ -4,6 +4,7 @@ import com.formdev.flatlaf.FlatLightLaf;
 import moda.passwordmanager.backend.Backend;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.Frontend;
+import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
 import javax.swing.*;
 import java.awt.*;
@@ -98,12 +99,12 @@ public class Application extends JFrame {
         String databaseToUse = databaseParsing(args);  // Parse the args to look for a database to use
 
         // Create the two LinkedBlockingQueue objects here to pass them to the Backend and the Frontend
-        LinkedBlockingQueue<Event> backendQueue = new LinkedBlockingQueue<>();
-        LinkedBlockingQueue<Event> frontendQueue = new LinkedBlockingQueue<>();
+        LinkedBlockingQueue<Event> backendQueue = InterThreadCommunication.createQueue();
+        LinkedBlockingQueue<Event> frontendQueue = InterThreadCommunication.createQueue();
 
         EventQueue.invokeLater(() -> {
-            Application ex = new Application(backendQueue, frontendQueue, databaseToUse);
-            ex.setVisible(true);
+            Application application = new Application(backendQueue, frontendQueue, databaseToUse);
+            application.setVisible(true);
         });
 
         Backend backend = new Backend(backendQueue, frontendQueue);

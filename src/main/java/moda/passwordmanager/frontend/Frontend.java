@@ -118,7 +118,7 @@ public class Frontend extends JPanel {
             return;
         }
         Event event = new Event("set-database", databasePath);
-        this.itc.requestAndReceive(event);
+        this.itc.request(event);
     }
 
     /**
@@ -149,7 +149,7 @@ public class Frontend extends JPanel {
      * @param frontendQueue The queue that events are sent from
      */
     private void initCommunication(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
-        this.itc = new InterThreadCommunication(frontendQueue, backendQueue);
+        this.itc = new InterThreadCommunication(backendQueue, frontendQueue);
     }
 
     /**
