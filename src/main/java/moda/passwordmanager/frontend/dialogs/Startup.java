@@ -9,6 +9,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class Startup extends JDialog {
@@ -65,57 +67,65 @@ public class Startup extends JDialog {
     private void initComponents(){
         int width = (int) DIALOG_DIMENSION.getWidth();
         int height = (int) DIALOG_DIMENSION.getHeight();
+
         JPanel rootPanel = new JPanel();  // We use a root panel as it has a better layout than the JDialog itself
+        rootPanel.setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(0,0,0,0);
+
         rootPanel.setSize(DIALOG_DIMENSION);
         rootPanel.setMaximumSize(DIALOG_DIMENSION);
-
-        // Title section
-        JPanel titlePanel = new JPanel();
-        titlePanel.setPreferredSize(new Dimension(width, height/4));
 
         JLabel title = new JLabel();  // Create the JLabel that displays the name of the Password Manager
         title.setText("MODA");
         title.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 80));
+        title.setHorizontalAlignment(JLabel.CENTER);
+
+        c.gridx = 0;            //column
+        c.gridy = 0;            //row
+        c.gridwidth = 2;        //quante colonne occupa
+        c.weightx = 1.0;        //quanto si estende orizzontalmente
+        c.insets = new Insets(0,0,5,0);
+        rootPanel.add(title, c);
 
         JLabel subtitle = new JLabel();
         subtitle.setText("Password Manager");
         subtitle.setFont(new Font("Arial Bold", Font.PLAIN, 32));
+        subtitle.setHorizontalAlignment(JLabel.CENTER);
 
-        titlePanel.add(title);
-        titlePanel.add(subtitle);
-
-        // The master password panel
-        JPanel masterPasswordPanel = new JPanel();
-        masterPasswordPanel.setLayout(new BoxLayout(masterPasswordPanel, BoxLayout.Y_AXIS));
-        masterPasswordPanel.setPreferredSize(new Dimension(width, height/3));
-        masterPasswordPanel.setMaximumSize(new Dimension(width, height/3));
+        c.gridx = 0;
+        c.gridy = 1;
+        c.gridwidth = 2;
+        c.weightx = 1.0;
+        c.insets = new Insets(0,0,20,0);
+        rootPanel.add(subtitle, c);
 
         JLabel loginLabel = new JLabel();
         loginLabel.setText("Enter your master password:");
 
+        c.gridx = 0;
+        c.gridy = 2;
+        c.gridwidth = 2;
+        c.weightx = 1.0;
+        c.insets = new Insets(0,0,5,0);
+        rootPanel.add(loginLabel, c);
+
         JPanel masterPasswordFieldPanel = new JPanel();
 
-        this.masterPasswordPasswordField = new JPasswordField();
-        this.masterPasswordPasswordField.setPreferredSize(new Dimension(200, 25));
-        this.masterPasswordPasswordField.setMaximumSize(new Dimension(200, 25));
+        this.masterPasswordPasswordField = new JPasswordField(20);
 
         this.loginButton = new JButton();
         this.loginButton.setText("Log In");
 
-        masterPasswordFieldPanel.add(this.masterPasswordPasswordField);
-        masterPasswordFieldPanel.add(this.loginButton);
+        masterPasswordFieldPanel.add(masterPasswordPasswordField);
+        masterPasswordFieldPanel.add(loginButton);
 
-        masterPasswordPanel.add(Box.createRigidArea(new Dimension(0, 50)));
-        masterPasswordPanel.add(loginLabel);
-        masterPasswordPanel.add(masterPasswordFieldPanel);
-
-        // Recent databases section
-        JPanel recentDatabasesPanel = new JPanel();
-        recentDatabasesPanel.setPreferredSize(new Dimension(width, height/5));
-        recentDatabasesPanel.setMaximumSize(new Dimension(width, height/5));
-
-//        JLabel recentDatabasesLabel = new JLabel();
-//        recentDatabasesLabel.setText("Recent databases:");
+        c.gridx = 0;
+        c.gridy = 3;
+        c.gridwidth = 2;
+        c.weightx = 1.0;
+        c.insets = new Insets(0,0,0,0);
+        rootPanel.add(masterPasswordFieldPanel, c);
 
         this.recentDatabasesList = new JList<>();
 
@@ -128,36 +138,60 @@ public class Startup extends JDialog {
 
         // Add a scrollbar to the JList and add it to the panel
         JScrollPane scrollPane = new JScrollPane(this.recentDatabasesList);
-        recentDatabasesPanel.add(scrollPane);
 
-        // Database section
-        JPanel databaseInfoPanel = new JPanel();
-        databaseInfoPanel.setPreferredSize(new Dimension(width, height/4));
+        c.gridx = 0;
+        c.gridy = 4;
+        c.gridwidth = 2;
+        c.gridheight = 3;
 
-        this.currentDatabaseLabel = new JLabel();
-        this.currentDatabaseLabel.setText("Current database: " + formatPath(getCurrentDatabase()));
+        c.fill = GridBagConstraints.BOTH;
+        c.weightx = 1.0;
+
+        c.insets = new Insets(10, 50, 20, 50);
+
+        rootPanel.add(scrollPane, c);
 
         // Database operations panel
-        JPanel databaseOperationsPanel = new JPanel();
+
+/*
+        this.currentDatabaseLabel = new JLabel();
+        this.currentDatabaseLabel.setText("Current database: " + fileNameFromPath(getCurrentDatabase()));
+
+        c.gridx = 0;
+        c.gridy = 7;
+        c.gridwidth = 2;
+        c.gridheight = 0;
+
+        c.fill = 0;
+        c.insets = new Insets(0, 0, 5, 0);
+        rootPanel.add(this.currentDatabaseLabel, c);
+ */
+
         this.newDatabaseButton = new JButton();
         this.newDatabaseButton.setText("New database");
+
+        c.gridx = 0;
+        c.gridy = 8;
+        c.gridwidth = 1;
+        rootPanel.add(this.newDatabaseButton, c);
 
         this.changeDatabaseButton = new JButton();
         this.changeDatabaseButton.setText("Change database");
 
-        databaseOperationsPanel.add(newDatabaseButton);
-        databaseOperationsPanel.add(changeDatabaseButton);
-
-        databaseInfoPanel.add(this.currentDatabaseLabel);
-        databaseInfoPanel.add(databaseOperationsPanel);
-
-        // Add all the sections to the root panel
-        rootPanel.add(titlePanel);
-        rootPanel.add(masterPasswordPanel);
-        rootPanel.add(recentDatabasesPanel);
-        rootPanel.add(databaseInfoPanel);
+        c.gridx = 1;
+        c.gridy = 8;
+        c.gridwidth = 1;
+        rootPanel.add(this.changeDatabaseButton, c);
 
         add(rootPanel);
+    }
+
+    private String fileNameFromPath(String path){
+
+        Path filePath = Paths.get(path);
+
+        return filePath.getFileName().toString();
+
     }
 
     /**
