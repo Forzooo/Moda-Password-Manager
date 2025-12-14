@@ -1,26 +1,25 @@
 package moda.passwordmanager.backend;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * The BackendHelper class is used to provide methods that can be used by all the APIs of the Backend class.
+ * The Helper class is used to provide methods that can be used by all the APIs of the Backend class.
  */
-public class BackendHelper {
+public class Helper {
 
     private Cryptography cryptography;
     private Settings settings;
-    private GoogleDrive googleDrive;
 
     // Execute operations in the background
     private ScheduledExecutorService backgroundExecutor;
 
-    public BackendHelper(Cryptography cryptography, Settings settings, GoogleDrive googleDrive){
+    public Helper(Cryptography cryptography, Settings settings){
         this.cryptography = cryptography;
         this.settings = settings;
-        this.googleDrive = googleDrive;
 
         this.backgroundExecutor = Executors.newScheduledThreadPool(2);  // Initialize the Background Executor
     }
@@ -47,7 +46,7 @@ public class BackendHelper {
      * @return Decrypted string
      */
     private String decrypt(String ciphertext){
-        return new String(this.cryptography.decrypt(Data.decode(ciphertext)));
+        return new String(this.cryptography.decrypt(decodeBase64(ciphertext)));
     }
 
     /**
@@ -56,7 +55,7 @@ public class BackendHelper {
      * @return Encrypted and encoded string
      */
     private String encrypt(String plaintext){
-        return Data.encodeToBase64(this.cryptography.encrypt(plaintext));
+        return encodeBase64(this.cryptography.encrypt(plaintext));
     }
 
     /**
@@ -92,6 +91,24 @@ public class BackendHelper {
         }
 
         return new Data(data.getID(), fields.getFirst(), fields.get(1), fields.get(2), fields.get(3), fields.get(4));
+    }
+
+    /**
+     * Encode any given data, in byte array format, to a Base64 format string
+     * @param data
+     * @return A Base64 encoded string
+     */
+    public static String encodeBase64(byte[] data){
+        return Base64.getEncoder().encodeToString(data);
+    }
+
+    /**
+     * Decode any given data, in Base64 byte array format
+     * @param data
+     * @return A byte array
+     */
+    public static byte[] decodeBase64(String data){
+        return Base64.getDecoder().decode(data.getBytes());
     }
 
     /**

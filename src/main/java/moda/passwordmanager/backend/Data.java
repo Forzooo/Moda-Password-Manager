@@ -92,56 +92,6 @@ public class Data {
         return new String[]{this.USERNAME, this.EMAIL_ADDRESS, this.PASSWORD, this.SERVICE, this.ADDITIONAL_DATA};
     }
 
-    /**
-     * Encode any given data, in byte array format, to the Base64 format
-     * @param data
-     * @return A Base64 byte array
-     */
-    public static byte[] encode(byte[] data){
-        return Base64.getEncoder().encode(data);
-    }
-
-    /**
-     * Encode any given data, in byte array format, to the Base64 format
-     * @param data
-     * @return A Base64 byte array
-     */
-    public static byte[] encode(String data){
-        return Base64.getEncoder().encode(data.getBytes());
-    }
-
-    public static String encodeToString(byte[] data){
-        return new String(data, StandardCharsets.UTF_8);
-    }
-
-
-    /**
-     * Encode any given data, in byte array format, to a Base64 format string
-     * @param data
-     * @return A Base64 encoded string
-     */
-    public static String encodeToBase64(byte[] data){
-        return Base64.getEncoder().encodeToString(data);
-    }
-
-    /**
-     * Decode any given data, in Base64 byte array format
-     * @param data
-     * @return A byte array
-     */
-    public static byte[] decode(byte[] data){
-        return Base64.getDecoder().decode(data);
-    }
-
-    /**
-     * Decode any given data, in Base64 byte array format
-     * @param data
-     * @return A byte array
-     */
-    public static byte[] decode(String data){
-        return Base64.getDecoder().decode(data.getBytes());
-    }
-
     @Override
     public int hashCode() {
         return Objects.hash(this.ID, this.USERNAME, this.EMAIL_ADDRESS, this.PASSWORD, this.SERVICE,

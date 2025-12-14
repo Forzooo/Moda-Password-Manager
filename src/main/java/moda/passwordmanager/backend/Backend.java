@@ -16,7 +16,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class Backend extends EventListener {
 
-    private BackendHelper helper;
+    private Helper helper;
 
     // Main components of the backend classes
     private Cryptography cryptography;
@@ -44,7 +44,7 @@ public class Backend extends EventListener {
         this.cryptography = new Cryptography();
         this.googleDrive = new GoogleDrive(this.settings.getAPPDATA_DIRECTORY_PATH());
 
-        this.helper = new BackendHelper(this.cryptography, this.settings, this.googleDrive);
+        this.helper = new Helper(this.cryptography, this.settings);
 
         // The path of the database is retrieved from the helper
         this.database = new Database(this.helper.getDatabasePath());
