@@ -199,7 +199,7 @@ public class Backend extends EventListener {
             return true;
         }
 
-        byte[] service = Data.decode(testData.getSERVICE());  // Decode from base64
+        byte[] service = Helper.decodeBase64(testData.getSERVICE());  // Decode from base64
 
         // Try to decrypt it and add the data to the event based on whether an exception has been thrown
         try{
