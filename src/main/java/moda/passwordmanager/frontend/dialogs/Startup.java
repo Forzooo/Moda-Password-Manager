@@ -65,13 +65,12 @@ public class Startup extends JDialog {
      * Initialize and add all the Swing components of the Dialog
      */
     private void initComponents(){
-        int width = (int) DIALOG_DIMENSION.getWidth();
-        int height = (int) DIALOG_DIMENSION.getHeight();
-
         JPanel rootPanel = new JPanel();  // We use a root panel as it has a better layout than the JDialog itself
         rootPanel.setLayout(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(0,0,0,0);
+
+        // Allows to set the properties of the placement of the current component
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.insets = new Insets(0,0,0,0);
 
         rootPanel.setSize(DIALOG_DIMENSION);
         rootPanel.setMaximumSize(DIALOG_DIMENSION);
@@ -81,34 +80,34 @@ public class Startup extends JDialog {
         title.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 80));
         title.setHorizontalAlignment(JLabel.CENTER);
 
-        c.gridx = 0;            //column
-        c.gridy = 0;            //row
-        c.gridwidth = 2;        //quante colonne occupa
-        c.weightx = 1.0;        //quanto si estende orizzontalmente
-        c.insets = new Insets(0,0,5,0);
-        rootPanel.add(title, c);
+        constraints.gridx = 0;  // Column
+        constraints.gridy = 0;  // Row
+        constraints.gridwidth = 2;  // The number of columns it takes
+        constraints.weightx = 1.0;  // How far horizontally it extends
+        constraints.insets = new Insets(0,0,5,0);  // Margin of the element
+        rootPanel.add(title, constraints);
 
         JLabel subtitle = new JLabel();
         subtitle.setText("Password Manager");
         subtitle.setFont(new Font("Arial Bold", Font.PLAIN, 32));
         subtitle.setHorizontalAlignment(JLabel.CENTER);
 
-        c.gridx = 0;
-        c.gridy = 1;
-        c.gridwidth = 2;
-        c.weightx = 1.0;
-        c.insets = new Insets(0,0,20,0);
-        rootPanel.add(subtitle, c);
+        constraints.gridx = 0;
+        constraints.gridy = 1;
+        constraints.gridwidth = 2;
+        constraints.weightx = 1.0;
+        constraints.insets = new Insets(0,0,20,0);
+        rootPanel.add(subtitle, constraints);
 
         JLabel loginLabel = new JLabel();
         loginLabel.setText("Enter your master password:");
 
-        c.gridx = 0;
-        c.gridy = 2;
-        c.gridwidth = 2;
-        c.weightx = 1.0;
-        c.insets = new Insets(0,0,5,0);
-        rootPanel.add(loginLabel, c);
+        constraints.gridx = 0;
+        constraints.gridy = 2;
+        constraints.gridwidth = 2;
+        constraints.weightx = 1.0;
+        constraints.insets = new Insets(0,0,5,0);
+        rootPanel.add(loginLabel, constraints);
 
         JPanel masterPasswordFieldPanel = new JPanel();
 
@@ -117,15 +116,15 @@ public class Startup extends JDialog {
         this.loginButton = new JButton();
         this.loginButton.setText("Log In");
 
-        masterPasswordFieldPanel.add(masterPasswordPasswordField);
-        masterPasswordFieldPanel.add(loginButton);
+        masterPasswordFieldPanel.add(this.masterPasswordPasswordField);
+        masterPasswordFieldPanel.add(this.loginButton);
 
-        c.gridx = 0;
-        c.gridy = 3;
-        c.gridwidth = 2;
-        c.weightx = 1.0;
-        c.insets = new Insets(0,0,0,0);
-        rootPanel.add(masterPasswordFieldPanel, c);
+        constraints.gridx = 0;
+        constraints.gridy = 3;
+        constraints.gridwidth = 2;
+        constraints.weightx = 1.0;
+        constraints.insets = new Insets(0,0,0,0);
+        rootPanel.add(masterPasswordFieldPanel, constraints);
 
         this.recentDatabasesList = new JList<>();
 
@@ -139,17 +138,17 @@ public class Startup extends JDialog {
         // Add a scrollbar to the JList and add it to the panel
         JScrollPane scrollPane = new JScrollPane(this.recentDatabasesList);
 
-        c.gridx = 0;
-        c.gridy = 4;
-        c.gridwidth = 2;
-        c.gridheight = 3;
+        constraints.gridx = 0;
+        constraints.gridy = 4;
+        constraints.gridwidth = 2;
+        constraints.gridheight = 3;
 
-        c.fill = GridBagConstraints.BOTH;
-        c.weightx = 1.0;
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.weightx = 1.0;
 
-        c.insets = new Insets(10, 50, 20, 50);
+        constraints.insets = new Insets(10, 50, 20, 50);
 
-        rootPanel.add(scrollPane, c);
+        rootPanel.add(scrollPane, constraints);
 
         // Database operations panel
 
@@ -170,18 +169,18 @@ public class Startup extends JDialog {
         this.newDatabaseButton = new JButton();
         this.newDatabaseButton.setText("New database");
 
-        c.gridx = 0;
-        c.gridy = 8;
-        c.gridwidth = 1;
-        rootPanel.add(this.newDatabaseButton, c);
+        constraints.gridx = 0;
+        constraints.gridy = 8;
+        constraints.gridwidth = 1;
+        rootPanel.add(this.newDatabaseButton, constraints);
 
         this.changeDatabaseButton = new JButton();
         this.changeDatabaseButton.setText("Change database");
 
-        c.gridx = 1;
-        c.gridy = 8;
-        c.gridwidth = 1;
-        rootPanel.add(this.changeDatabaseButton, c);
+        constraints.gridx = 1;
+        constraints.gridy = 8;
+        constraints.gridwidth = 1;
+        rootPanel.add(this.changeDatabaseButton, constraints);
 
         add(rootPanel);
     }
