@@ -15,26 +15,12 @@ import java.util.List;
  */
 public class Settings {
 
-    private final static String DEFAULT_DATABASE_NAME = "moda-password-manager.modb";
-    private final String APPDATA_DIRECTORY_PATH;
     private File settingsFile;
     private ObjectMapper objectMapper;
 
     public Settings(){
-        this.APPDATA_DIRECTORY_PATH = System.getenv("APPDATA")+"\\Moda\\Password-Manager\\";  // Windows only
         this.objectMapper = new ObjectMapper();  // Create the object mapper used to write/read from the settings file
 
-        initSettings();
-    }
-
-    public String getAPPDATA_DIRECTORY_PATH() {
-        return APPDATA_DIRECTORY_PATH;
-    }
-
-    /**
-     * Initialize the settings class
-     */
-    private void initSettings(){
         createAppdataDirectory();
         createSettingsFile();
     }
@@ -43,7 +29,7 @@ public class Settings {
      * Create the Appdata folder for the software to store inside it files
      */
     private void createAppdataDirectory(){
-        File appdataDirectory = new File(this.APPDATA_DIRECTORY_PATH);
+        File appdataDirectory = new File(Helper.getAppDataDirectory());
 
         // Check whether the directory already exists to avoid recreating it
         if (appdataDirectory.exists()){
@@ -58,7 +44,7 @@ public class Settings {
      */
     private void createSettingsFile(){
         try {
-            this.settingsFile = new File(this.APPDATA_DIRECTORY_PATH+"settings.json");
+            this.settingsFile = new File(Helper.getAppDataDirectory()+Helper.getSettingsFile());
 
             // If the file exists already the creation is skipped
             if (!this.settingsFile.createNewFile()){
@@ -69,7 +55,7 @@ public class Settings {
 
             // Set all the database values
             ArrayList<String> recentDatabases = new ArrayList<>();
-            recentDatabases.add(this.APPDATA_DIRECTORY_PATH+DEFAULT_DATABASE_NAME);  // The default database used
+            recentDatabases.add(Helper.getAppDataDirectory()+Helper.getDefaultDatabase());  // The default database used
 
             ObjectNode database = this.objectMapper.createObjectNode();  // Contains all the database values
             database.put("path", recentDatabases.getFirst());

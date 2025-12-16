@@ -42,7 +42,7 @@ public class Backend extends EventListener {
         // Initialize all the backend components
         this.settings = new Settings();
         this.cryptography = new Cryptography();
-        this.googleDrive = new GoogleDrive(this.settings.getAPPDATA_DIRECTORY_PATH());
+        this.googleDrive = new GoogleDrive(Helper.getAppDataDirectory());
 
         this.helper = new Helper(this.cryptography, this.settings);
 
@@ -163,7 +163,7 @@ public class Backend extends EventListener {
         String timestamp = new SimpleDateFormat("yyyy-M-dd-HH-mm-ss").format(new Date());
 
         try {
-            File traceback = new File(this.settings.getAPPDATA_DIRECTORY_PATH()+"traceback-"+
+            File traceback = new File(Helper.getAppDataDirectory()+"traceback-"+
                     timestamp+".txt");
             traceback.createNewFile();  // Create the traceback file
 
@@ -339,7 +339,7 @@ public class Backend extends EventListener {
         char[] stringCharacters = generateStringCharacters((Boolean) configuration.get(1), (Boolean) configuration.get(2),
                 (Boolean) configuration.get(3));  // Generate the characters
 
-        addResponseData(this.cryptography.generateString((int) configuration.getFirst(), stringCharacters).toString());
+        addResponseData(Helper.generateRandomString((int) configuration.getFirst(), stringCharacters).toString());
     }
 
     /**

@@ -1,5 +1,6 @@
 package moda.passwordmanager.backend;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.concurrent.Executors;
@@ -10,6 +11,9 @@ import java.util.concurrent.TimeUnit;
  * The Helper class is used to provide methods that can be used by all the APIs of the Backend class.
  */
 public class Helper {
+
+    private final static String DEFAULT_DATABASE = "moda-password-manager.modb";
+    private final static String SETTINGS_FILE = "settings.json";
 
     private Cryptography cryptography;
     private Settings settings;
@@ -22,6 +26,27 @@ public class Helper {
         this.settings = settings;
 
         this.backgroundExecutor = Executors.newScheduledThreadPool(2);  // Initialize the Background Executor
+    }
+
+    /**
+     * Return the path of the AppData directory for the current user
+     */
+    public static String getAppDataDirectory() {
+        return System.getenv("APPDATA")+"\\Moda\\Password-Manager\\";
+    }
+
+    /**
+     * Return the name of the default database used by the password manager
+     */
+    public static String getDefaultDatabase() {
+        return DEFAULT_DATABASE;
+    }
+
+    /**
+     * Return the name of the settings file used by the password manager
+     */
+    public static String getSettingsFile() {
+        return SETTINGS_FILE;
     }
 
     /**
@@ -157,4 +182,22 @@ public class Helper {
     public String getDatabasePath(){
         return this.settings.readStringProperty("database/path");  // Read the path from settings
     }
+
+    /**
+     * Generate a random string of a certain length
+     * @param charNum The length of the string
+     * @param charSet The set of the characters to use
+     */
+    public static StringBuilder generateRandomString(int charNum, char[] charSet){
+        SecureRandom secureRandom = new SecureRandom();  // Create a secure random object to generate the string
+        StringBuilder stringBuilder = new StringBuilder();  // Create a StringBuilder object to append characters better
+
+        for (int i = 0; i < charNum; i++){
+            int index = secureRandom.nextInt(charSet.length);  // Generate an index between 0, and the length of the set
+            stringBuilder.append(charSet[index]);  // Append the character at the random index to the string builder
+        }
+
+        return stringBuilder;
+    }
+
 }
