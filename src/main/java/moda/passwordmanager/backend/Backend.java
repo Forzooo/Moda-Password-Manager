@@ -39,8 +39,10 @@ public class Backend extends EventListener {
         // Get the ITC from the EventListener, otherwise we would have to create two separate ITC object
         this.ITC = getITC();
 
+        createAppdataDirectory();  // Create the folder to store the configuration files inside it
+
         // Initialize all the backend components
-        this.settings = new Settings();
+        this.settings = new Settings(Helper.getAppDataDirectory()+Helper.getSettingsFile());
         this.cryptography = new Cryptography();
         this.googleDrive = new GoogleDrive(Helper.getAppDataDirectory());
 
@@ -51,6 +53,20 @@ public class Backend extends EventListener {
 
         startGoogleDrive();  // Initialize the connection with Google Drive only if enabled by the user
         initHandler();  // Initialize all the operations to handle
+    }
+
+    /**
+     * Create the Appdata folder for the software to store inside it files
+     */
+    private void createAppdataDirectory(){
+        File appdataDirectory = new File(Helper.getAppDataDirectory());
+
+        // Check whether the directory already exists to avoid recreating it
+        if (appdataDirectory.exists()){
+            return;
+        }
+
+        appdataDirectory.mkdirs();  // Create the directories
     }
 
     /**
@@ -581,7 +597,7 @@ public class Backend extends EventListener {
             recentDatabases.remove(pathIndex);
         }
         recentDatabases.addFirst(path);  // Add the path as the first element of the list
-        this.settings.writeList("database/recent", recentDatabases);  // Write the updated list in the settings
+        this.settings.writeListProperty("database/recent", recentDatabases);  // Write the updated list in the settings
     }
 
 }
