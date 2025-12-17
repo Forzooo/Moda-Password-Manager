@@ -98,9 +98,10 @@ public class Data {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Data data = (Data) o;
-        return ID == data.ID && Objects.equals(USERNAME, data.USERNAME) &&
-                Objects.equals(EMAIL_ADDRESS, data.EMAIL_ADDRESS) && Objects.equals(PASSWORD, data.PASSWORD) &&
-                Objects.equals(SERVICE, data.SERVICE) && Objects.equals(ADDITIONAL_DATA, data.ADDITIONAL_DATA);
+        return this.ID == data.ID && Objects.equals(this.USERNAME, data.getUSERNAME()) &&
+                Objects.equals(this.EMAIL_ADDRESS, data.getEMAIL_ADDRESS()) &&
+                Objects.equals(this.PASSWORD, data.getPASSWORD()) && Objects.equals(this.SERVICE, data.getSERVICE()) &&
+                Objects.equals(this.ADDITIONAL_DATA, data.getADDITIONAL_DATA());
     }
 
     @Override
