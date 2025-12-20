@@ -19,8 +19,12 @@ class HelperTests {
 
     // String generation test attributes
     private final static String STRING_GENERATION_SETTINGS_ROOT_NODE = "string_generation/";
-    private final static int STRING_GENERATION_LENGTH = 64;  // Avoid 32 as it's the default value
-    private final static boolean STRING_GENERATION_CHARS = false;
+
+    // Google Drive test attributes
+    private final static String GOOGLE_DRIVE_ROOT_NODE = "google_drive/";
+
+    // Database test attributes
+    private final static String DATABASE_ROOT_NODE = "database/";
 
     /**
      * The temporary directory where the settings file will be placed. It must not be a static attribute as otherwise the
@@ -57,18 +61,34 @@ class HelperTests {
      */
     @Test
     void getStringGenerationConfiguration(){
-        // Set the values of the configuration before retrieving them
-        this.settings.writeProperty(STRING_GENERATION_SETTINGS_ROOT_NODE+"length", STRING_GENERATION_LENGTH);
-        this.settings.writeProperty(STRING_GENERATION_SETTINGS_ROOT_NODE+"letters", STRING_GENERATION_CHARS);
-        this.settings.writeProperty(STRING_GENERATION_SETTINGS_ROOT_NODE+"numbers", STRING_GENERATION_CHARS);
-        this.settings.writeProperty(STRING_GENERATION_SETTINGS_ROOT_NODE+"special", STRING_GENERATION_CHARS);
-
         ArrayList<Object> configuration = this.helper.getStringGenerationConfiguration();
-        assertEquals(STRING_GENERATION_LENGTH, configuration.getFirst());
-        assertEquals(STRING_GENERATION_CHARS, configuration.get(1));
-        assertEquals(STRING_GENERATION_CHARS, configuration.get(2));
-        assertEquals(STRING_GENERATION_CHARS, configuration.get(3));
+
+        assertEquals(this.settings.readIntProperty(STRING_GENERATION_SETTINGS_ROOT_NODE+"length"),
+                configuration.getFirst());
+        assertEquals(this.settings.readBooleanProperty(STRING_GENERATION_SETTINGS_ROOT_NODE+"letters"),
+                configuration.get(1));
+        assertEquals(this.settings.readBooleanProperty(STRING_GENERATION_SETTINGS_ROOT_NODE+"numbers"),
+                configuration.get(2));
+        assertEquals(this.settings.readBooleanProperty(STRING_GENERATION_SETTINGS_ROOT_NODE+"special"),
+                configuration.get(3));
     }
 
+    /**
+     * Ensure that the Helper returns the current state of Google Drive
+     */
+    @Test
+    void isGoogleDriveEnabled(){
+        boolean googleDriveState = this.helper.isGoogleDriveEnabled();
+        assertEquals(this.settings.readBooleanProperty(GOOGLE_DRIVE_ROOT_NODE+"enabled"), googleDriveState);
+    }
+
+    /**
+     * Ensure that the Helper returns the path of the database
+     */
+    @Test
+    void getDatabasePath(){
+        String databasePath = this.helper.getDatabasePath();
+        assertEquals(this.settings.readStringProperty(DATABASE_ROOT_NODE+"path"), databasePath);
+    }
 
 }
