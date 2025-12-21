@@ -9,6 +9,8 @@ import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+// Currently for the current configuration of the cryptography class, the encryption tests cannot be performed, so they
+// are ignored and no test case involves them
 class HelperTests {
 
     private Settings settings;
@@ -25,6 +27,19 @@ class HelperTests {
 
     // Database test attributes
     private final static String DATABASE_ROOT_NODE = "database/";
+
+    // Decryption test attributes
+    private final static String STRING_PLAINTEXT = "Test";
+    private final static String STRING_CIPHERTEXT = "aCRSwS7aFZXmixeSRHPxgLwHLXejH22ZkJAxfxDtqxtJWZBxhdQyyFGuM3+UNI3Z";
+    private final static Data DATA_PLAINTEXT = new Data(STRING_PLAINTEXT, STRING_PLAINTEXT, STRING_PLAINTEXT,
+            STRING_PLAINTEXT, STRING_PLAINTEXT);
+    private final static Data DATA_CIPHERTEXT = new Data(
+            "SvZNvHkFLzlNyYnAfiubsivzoD8kDCxs+WN1L6XObeQfRbSL469P+sWWZvLiB3+v",
+            "hqm3IG7983V5gbfxsyixvo4ZO6Ziajr9Hlds0zjgYstxcZqv6rhT2vfWHMqUWcPY",
+            "4X7xLUCgUs+5bDORr6mTUCAeDqR0NaCM53f+wuppHDMY6kNnE1uGIvBGQepRbtFZ",
+            "tmWEn5QoLbzoLOW4tGNCTSYHhgbQ9JGFfZnlIhRCVnPNKt+N0IpNTcair2KYVliI",
+            "m5pMeoBQ++fmEO/5FedHYXG5HkYdAYXczoSGOrkBZ25h2uzk+/NCWNeU/Wfu5YHm"
+    );
 
     /**
      * The temporary directory where the settings file will be placed. It must not be a static attribute as otherwise the
@@ -89,6 +104,19 @@ class HelperTests {
     void getDatabasePath(){
         String databasePath = this.helper.getDatabasePath();
         assertEquals(this.settings.readStringProperty(DATABASE_ROOT_NODE+"path"), databasePath);
+    }
+
+    /**
+     * Test the decryption of a string encoded in base 64
+     */
+    @Test
+    void decryptString(){
+        assertEquals(STRING_PLAINTEXT, this.helper.decryptString(STRING_CIPHERTEXT));
+    }
+
+    @Test
+    void decryptData(){
+        assertEquals(DATA_PLAINTEXT, this.helper.decryptData(DATA_CIPHERTEXT));
     }
 
 }
