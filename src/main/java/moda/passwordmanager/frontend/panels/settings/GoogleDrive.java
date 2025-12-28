@@ -1,11 +1,10 @@
 package moda.passwordmanager.frontend.panels.settings;
 
+import com.formdev.flatlaf.util.SystemFileChooser;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -56,17 +55,17 @@ public class GoogleDrive extends Section {
             public void actionPerformed(ActionEvent e) {
                 if (googleDriveCheckbox.isSelected()){
                     // Create the File Chooser to allow user to select the credentials.json file
-                    JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+                    SystemFileChooser fileChooser = new SystemFileChooser();
                     fileChooser.setDialogTitle("Choose the OAuth credentials file");
                     fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
 
                     // Create the filter to choose only .modb files
-                    FileNameExtensionFilter filter = new FileNameExtensionFilter("OAuth Credentials (.json)",
+                    SystemFileChooser.FileNameExtensionFilter filter = new SystemFileChooser.FileNameExtensionFilter("OAuth Credentials (.json)",
                             "json");
                     fileChooser.setFileFilter(filter);
 
                     // Open the file chooser
-                    if (fileChooser.showOpenDialog(getPanel()) == JFileChooser.APPROVE_OPTION){
+                    if (fileChooser.showOpenDialog(getPanel()) == SystemFileChooser.APPROVE_OPTION){
                         String path = fileChooser.getSelectedFile().getAbsolutePath();  // Retrieve the path chosen
 
                         // Check whether the database has been chosen

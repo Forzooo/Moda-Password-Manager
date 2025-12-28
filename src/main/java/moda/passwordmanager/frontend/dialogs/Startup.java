@@ -1,11 +1,11 @@
 package moda.passwordmanager.frontend.dialogs;
 
+import com.formdev.flatlaf.util.SystemFileChooser;
 import moda.passwordmanager.Application;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.*;
@@ -151,20 +151,18 @@ public class Startup extends JDialog {
         rootPanel.add(scrollPane, constraints);
 
         // Database operations panel
-
-/*
         this.currentDatabaseLabel = new JLabel();
         this.currentDatabaseLabel.setText("Current database: " + fileNameFromPath(getCurrentDatabase()));
 
-        c.gridx = 0;
-        c.gridy = 7;
-        c.gridwidth = 2;
-        c.gridheight = 0;
-
-        c.fill = 0;
-        c.insets = new Insets(0, 0, 5, 0);
-        rootPanel.add(this.currentDatabaseLabel, c);
- */
+        // TODO: To fix the placement on the window
+//        constraints.gridx = 0;
+//        constraints.gridy = 7;
+//        constraints.gridwidth = 2;
+//        constraints.gridheight = 0;
+//
+//        constraints.fill = 0;
+//        constraints.insets = new Insets(0, 0, 5, 0);
+//        rootPanel.add(this.currentDatabaseLabel, constraints);
 
         this.newDatabaseButton = new JButton();
         this.newDatabaseButton.setText("New database");
@@ -321,17 +319,17 @@ public class Startup extends JDialog {
      */
     private void createDatabase(){
         // Create the File Chooser that opens in the desktop, and saves a .modb file
-        JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+        SystemFileChooser fileChooser = new SystemFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
         fileChooser.setDialogTitle("Create a new database to use");
         fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
 
         // Create the filter to save only .modb files
-        FileNameExtensionFilter filter = new FileNameExtensionFilter("Moda Password Manager Database (.modb)",
-                ".modb");
+        SystemFileChooser.FileNameExtensionFilter filter = new SystemFileChooser.FileNameExtensionFilter(
+                "Moda Password Manager Database","modb");
         fileChooser.setFileFilter(filter);
 
         // Open the file chooser
-        if (fileChooser.showSaveDialog(getRootPane()) == JFileChooser.APPROVE_OPTION){
+        if (fileChooser.showSaveDialog(getRootPane()) == SystemFileChooser.APPROVE_OPTION){
             String path = fileChooser.getSelectedFile().getAbsolutePath();  // Retrieve the path chosen
 
             // Check whether the database has been chosen
@@ -350,17 +348,17 @@ public class Startup extends JDialog {
      */
     private void openDatabaseChooser(){
         // Create the File Chooser that opens in the desktop view, and selects only .modb files
-        JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+        SystemFileChooser fileChooser = new SystemFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
         fileChooser.setDialogTitle("Choose a database to use");
         fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
 
         // Create the filter to choose only .modb files
-        FileNameExtensionFilter filter = new FileNameExtensionFilter("Moda Password Manager Database (.modb)",
-                "modb");
+        SystemFileChooser.FileNameExtensionFilter filter = new SystemFileChooser.FileNameExtensionFilter(
+                "Moda Password Manager Database","modb");
         fileChooser.setFileFilter(filter);
 
         // Open the file chooser in the current dialog and check that the user has chosen a database file
-        if (fileChooser.showOpenDialog((this)) == JFileChooser.APPROVE_OPTION){
+        if (fileChooser.showOpenDialog((this)) == SystemFileChooser.APPROVE_OPTION){
             String path = fileChooser.getSelectedFile().getAbsolutePath();  // Retrieve the path chosen
 
             // Check whether the database has been chosen
