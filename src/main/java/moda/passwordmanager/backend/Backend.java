@@ -28,6 +28,7 @@ public class Backend extends EventListener {
      * The servicesMap is used to map IDs with the hashCode of the service field
      */
     private TreeMap<Integer, Integer> servicesMap;
+    private final static int SERVICES_CHUNK = 4;  // The number of services sent per chunk
 
     // The InterThreadCommunication object used to communicate with the Frontend thread
     private final InterThreadCommunication ITC;
@@ -237,9 +238,21 @@ public class Backend extends EventListener {
 
         // Initialize an ArrayList that stores the data objects that are sent to the Frontend
         ArrayList<Data> dataToSend = new ArrayList<>();
+        ArrayList<Data> serviceFields = this.database.getServiceFields();
 
-        // Iterate over the service fields
-        for (Data data : this.database.getServiceFields()){
+        for (int i = 0; i < serviceFields.size(); i++){
+            // Check the current size of the data to send to know if a chunk size is reached to send it
+            if (dataToSend.size() >= SERVICES_CHUNK){
+                Event updateService = new Event("update-service-fields", dataToSend);
+                this.ITC.send(updateService);
+
+                // We need to recreate the dataToSend object as otherwise it would use the same address as the one sent
+                // to the FrontendEventListener which would raise a concurrent exception
+                dataToSend = new ArrayList<>();
+            }
+
+            Data data = serviceFields.get(i);
+
             // Add the ID and the hash of the service to the map
             this.servicesMap.put(data.getID(), data.getSERVICE().hashCode());
 
@@ -269,7 +282,19 @@ public class Backend extends EventListener {
         ArrayList<Integer> servicesMapID = new ArrayList<>(this.servicesMap.keySet());
 
         // Iterate over the Data of the Database
-        for (Data data : serviceFields){
+        for (int i = 0; i < serviceFields.size(); i++){
+            // Check the current size of the data to send to know if a chunk size is reached to send it
+            if (updatedData.size() >= SERVICES_CHUNK){
+                Event updateService = new Event("update-service-fields", updatedData);
+                this.ITC.send(updateService);
+
+                // We need to recreate the dataToSend object as otherwise it would use the same address as the one sent
+                // to the FrontendEventListener which would raise a concurrent exception
+                updatedData = new ArrayList<>();
+            }
+
+            Data data = serviceFields.get(i);
+
             int id = data.getID();
             int hash = data.getSERVICE().hashCode();
 
@@ -290,6 +315,16 @@ public class Backend extends EventListener {
         // Iterate over the IDs that haven't been deleted, and set their service field to be empty to remove them
         // from the frontend
         for (Integer id : servicesMapID){
+            // Check the current size of the data to send to know if a chunk size is reached to send it
+            if (updatedData.size() >= SERVICES_CHUNK){
+                Event updateService = new Event("update-service-fields", updatedData);
+                this.ITC.send(updateService);
+
+                // We need to recreate the dataToSend object as otherwise it would use the same address as the one sent
+                // to the FrontendEventListener which would raise a concurrent exception
+                updatedData = new ArrayList<>();
+            }
+
             updatedData.add(new Data(id, ""));
             this.servicesMap.remove(id);  // Remove the ID from the service map as it has been deleted
         }
