@@ -221,21 +221,4 @@ public class Cryptography {
         return newData;
     }
 
-    /**
-     * Randomically generate a string of a certain length
-     * @param charNum The length of the string
-     * @param charSet The set of the characters to use
-     */
-    public StringBuilder generateString(int charNum, char[] charSet){
-        reseed();  // Reseed the secure random generator before generating random characters
-        StringBuilder stringBuilder = new StringBuilder();  // Create a StringBuilder object to append characters better
-
-        for (int i = 0; i < charNum; i++){
-            int index = this.secureRandom.nextInt(charSet.length);  // Generate an index between 0, and the length of the set
-            stringBuilder.append(charSet[index]);  // Append the character at the random index to the string builder
-        }
-
-        return stringBuilder;
-    }
-
 }

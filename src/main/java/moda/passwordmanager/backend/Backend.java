@@ -16,7 +16,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class Backend extends EventListener {
 
-    private BackendHelper helper;
+    private Helper helper;
 
     // Main components of the backend classes
     private Cryptography cryptography;
@@ -39,18 +39,34 @@ public class Backend extends EventListener {
         // Get the ITC from the EventListener, otherwise we would have to create two separate ITC object
         this.ITC = getITC();
 
-        // Initialize all the backend components
-        this.settings = new Settings();
-        this.cryptography = new Cryptography();
-        this.googleDrive = new GoogleDrive(this.settings.getAPPDATA_DIRECTORY_PATH());
+        createAppdataDirectory();  // Create the folder to store the configuration files inside it
 
-        this.helper = new BackendHelper(this.cryptography, this.settings, this.googleDrive);
+        // Initialize all the backend components
+        this.settings = new Settings(Helper.getAppDataDirectory()+Helper.getSettingsFile());
+        this.cryptography = new Cryptography();
+        this.googleDrive = new GoogleDrive(Helper.getAppDataDirectory());
+
+        this.helper = new Helper(this.cryptography, this.settings);
 
         // The path of the database is retrieved from the helper
         this.database = new Database(this.helper.getDatabasePath());
 
         startGoogleDrive();  // Initialize the connection with Google Drive only if enabled by the user
         initHandler();  // Initialize all the operations to handle
+    }
+
+    /**
+     * Create the Appdata folder for the software to store inside it files
+     */
+    private void createAppdataDirectory(){
+        File appdataDirectory = new File(Helper.getAppDataDirectory());
+
+        // Check whether the directory already exists to avoid recreating it
+        if (appdataDirectory.exists()){
+            return;
+        }
+
+        appdataDirectory.mkdirs();  // Create the directories
     }
 
     /**
@@ -129,6 +145,7 @@ public class Backend extends EventListener {
     public void handleException(Thread t, Throwable e) {
         // Create the traceback file that contains the full stack trace of the exception before anything else
         createTracebackFile(t,e);
+        this.database.closeConnection();  // Close the connection with the database
 
         // Before sending the exception we need to send back the event because if the request one is a synchronous
         // one, then EDT is waiting for the response before handling the exception
@@ -163,7 +180,7 @@ public class Backend extends EventListener {
         String timestamp = new SimpleDateFormat("yyyy-M-dd-HH-mm-ss").format(new Date());
 
         try {
-            File traceback = new File(this.settings.getAPPDATA_DIRECTORY_PATH()+"traceback-"+
+            File traceback = new File(Helper.getAppDataDirectory()+"traceback-"+
                     timestamp+".txt");
             traceback.createNewFile();  // Create the traceback file
 
@@ -199,7 +216,7 @@ public class Backend extends EventListener {
             return true;
         }
 
-        byte[] service = Data.decode(testData.getSERVICE());  // Decode from base64
+        byte[] service = Helper.decodeBase64(testData.getSERVICE());  // Decode from base64
 
         // Try to decrypt it and add the data to the event based on whether an exception has been thrown
         try{
@@ -339,7 +356,7 @@ public class Backend extends EventListener {
         char[] stringCharacters = generateStringCharacters((Boolean) configuration.get(1), (Boolean) configuration.get(2),
                 (Boolean) configuration.get(3));  // Generate the characters
 
-        addResponseData(this.cryptography.generateString((int) configuration.getFirst(), stringCharacters).toString());
+        addResponseData(Helper.generateRandomString((int) configuration.getFirst(), stringCharacters).toString());
     }
 
     /**
@@ -581,7 +598,7 @@ public class Backend extends EventListener {
             recentDatabases.remove(pathIndex);
         }
         recentDatabases.addFirst(path);  // Add the path as the first element of the list
-        this.settings.writeList("database/recent", recentDatabases);  // Write the updated list in the settings
+        this.settings.writeListProperty("database/recent", recentDatabases);  // Write the updated list in the settings
     }
 
 }

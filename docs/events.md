@@ -6,6 +6,7 @@ Events sections:
 * [Google Drive](#google-drive)
 * [Utilities](#utilities)
 
+***
 
 ## General Use
 ### Exception Raised

@@ -222,7 +222,7 @@ public class UserData extends JPanel {
 
         // Disable the editing and send the data to the backend
         disableEditing();
-        changeData(new Data(this.ID, updatedData[0], updatedData[1], updatedData[2], updatedData[3], updatedData[4]));
+        updateData(new Data(this.ID, updatedData[0], updatedData[1], updatedData[2], updatedData[3], updatedData[4]));
     }
 
     /**
@@ -241,9 +241,9 @@ public class UserData extends JPanel {
      * Update a record of the database
      * @param data The data modified
      */
-    private void changeData(Data data){
+    private void updateData(Data data){
         // Create and send the event
-        Event event = new Event("change-data", data);
+        Event event = new Event("update-data", data);
         this.itc.request(event);  // Wait for the response of the backend
     }
 
