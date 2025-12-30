@@ -127,6 +127,7 @@ public class Backend extends EventListener {
         addOperation("update-master-password", this::updateMasterPassword);
         addOperation("get-google-drive", this::getGoogleDrive);
         addOperation("get-google-drive-synchronization", this::getGoogleDriveSynchronization);
+        addOperation("google-drive-authenticate", this::authenticateGoogleDrive);
         addOperation("google-drive-deauthenticate", this::deauthenticateGoogleDrive);
 
         // Synchronize with Google Drive and update the service fields
@@ -231,10 +232,10 @@ public class Backend extends EventListener {
     }
 
     /**
-     * Initialize the mapping of the service fields and send the service fields in chunks
+     * Initialize the mapping of the service fields and send them in chunks
      */
     private void initServiceMapping(){
-        this.servicesMap = new TreeMap<>();  // Initialize the TreeMap to associate IDs with their hash
+        this.servicesMap = new TreeMap<>();  // Initialize the TreeMap to associate IDs with their hashcode
 
         // Initialize an ArrayList that stores the data objects that are sent to the Frontend
         ArrayList<Data> dataToSend = new ArrayList<>();
