@@ -178,7 +178,7 @@ public class GoogleDrive extends Section {
      * Disable the Google Drive synchronization
      */
     private void disableGoogleDrive(){
-        Event event = new Event("google-drive-unauthenticate");
+        Event event = new Event("google-drive-deauthenticate");
         this.ITC.request(event);  // Wait for the end of operations before disabling the button
     }
 
