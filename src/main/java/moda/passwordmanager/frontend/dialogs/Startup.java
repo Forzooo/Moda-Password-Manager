@@ -4,6 +4,7 @@ import com.formdev.flatlaf.util.SystemFileChooser;
 import moda.passwordmanager.Application;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
+import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
@@ -51,13 +52,13 @@ public class Startup extends JDialog {
         setTitle(Application.getApplicationTitle());
         setIconImage(Application.getIcon());
         setSize(DIALOG_DIMENSION);
-        setMaximumSize(DIALOG_DIMENSION);
 
-        setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
+        setLayout(new MigLayout());
 
-        setModal(true);  // Enable modality to block input to other password manager windows
+        // Enable modality to block other password manager windows until this one is disposed
+        setModalityType(ModalityType.DOCUMENT_MODAL);
         setLocationRelativeTo(getRootPane());
-//        setAlwaysOnTop(true);
+        setAlwaysOnTop(true);
         setResizable(false);
     }
 
@@ -65,66 +66,23 @@ public class Startup extends JDialog {
      * Initialize and add all the Swing components of the Dialog
      */
     private void initComponents(){
-        JPanel rootPanel = new JPanel();  // We use a root panel as it has a better layout than the JDialog itself
-        rootPanel.setLayout(new GridBagLayout());
-
-        // Allows to set the properties of the placement of the current component
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.insets = new Insets(0,0,0,0);
-
-        rootPanel.setSize(DIALOG_DIMENSION);
-        rootPanel.setMaximumSize(DIALOG_DIMENSION);
-
         JLabel title = new JLabel();  // Create the JLabel that displays the name of the Password Manager
         title.setText("MODA");
         title.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 80));
         title.setHorizontalAlignment(JLabel.CENTER);
-
-        constraints.gridx = 0;  // Column
-        constraints.gridy = 0;  // Row
-        constraints.gridwidth = 2;  // The number of columns it takes
-        constraints.weightx = 1.0;  // How far horizontally it extends
-        constraints.insets = new Insets(0,0,5,0);  // Margin of the element
-        rootPanel.add(title, constraints);
 
         JLabel subtitle = new JLabel();
         subtitle.setText("Password Manager");
         subtitle.setFont(new Font("Arial Bold", Font.PLAIN, 32));
         subtitle.setHorizontalAlignment(JLabel.CENTER);
 
-        constraints.gridx = 0;
-        constraints.gridy = 1;
-        constraints.gridwidth = 2;
-        constraints.weightx = 1.0;
-        constraints.insets = new Insets(0,0,20,0);
-        rootPanel.add(subtitle, constraints);
-
         JLabel loginLabel = new JLabel();
         loginLabel.setText("Enter your master password:");
-
-        constraints.gridx = 0;
-        constraints.gridy = 2;
-        constraints.gridwidth = 2;
-        constraints.weightx = 1.0;
-        constraints.insets = new Insets(0,0,5,0);
-        rootPanel.add(loginLabel, constraints);
-
-        JPanel masterPasswordFieldPanel = new JPanel();
 
         this.masterPasswordPasswordField = new JPasswordField(20);
 
         this.loginButton = new JButton();
         this.loginButton.setText("Log In");
-
-        masterPasswordFieldPanel.add(this.masterPasswordPasswordField);
-        masterPasswordFieldPanel.add(this.loginButton);
-
-        constraints.gridx = 0;
-        constraints.gridy = 3;
-        constraints.gridwidth = 2;
-        constraints.weightx = 1.0;
-        constraints.insets = new Insets(0,0,0,0);
-        rootPanel.add(masterPasswordFieldPanel, constraints);
 
         this.recentDatabasesList = new JList<>();
 
@@ -136,51 +94,27 @@ public class Startup extends JDialog {
         getRecentDatabases();  // Update the model with the recent databases
 
         // Add a scrollbar to the JList and add it to the panel
-        JScrollPane scrollPane = new JScrollPane(this.recentDatabasesList);
-
-        constraints.gridx = 0;
-        constraints.gridy = 4;
-        constraints.gridwidth = 2;
-        constraints.gridheight = 3;
-
-        constraints.fill = GridBagConstraints.BOTH;
-        constraints.weightx = 1.0;
-
-        constraints.insets = new Insets(10, 50, 20, 50);
-
-        rootPanel.add(scrollPane, constraints);
+        JScrollPane databaseScrollPane = new JScrollPane(this.recentDatabasesList);
 
         // Database operations panel
         this.currentDatabaseLabel = new JLabel();
         this.currentDatabaseLabel.setText("Current database: " + fileNameFromPath(getCurrentDatabase()));
 
-        // TODO: To fix the placement on the window
-//        constraints.gridx = 0;
-//        constraints.gridy = 7;
-//        constraints.gridwidth = 2;
-//        constraints.gridheight = 0;
-//
-//        constraints.fill = 0;
-//        constraints.insets = new Insets(0, 0, 5, 0);
-//        rootPanel.add(this.currentDatabaseLabel, constraints);
-
         this.newDatabaseButton = new JButton();
         this.newDatabaseButton.setText("New database");
-
-        constraints.gridx = 0;
-        constraints.gridy = 8;
-        constraints.gridwidth = 1;
-        rootPanel.add(this.newDatabaseButton, constraints);
 
         this.changeDatabaseButton = new JButton();
         this.changeDatabaseButton.setText("Change database");
 
-        constraints.gridx = 1;
-        constraints.gridy = 8;
-        constraints.gridwidth = 1;
-        rootPanel.add(this.changeDatabaseButton, constraints);
-
-        add(rootPanel);
+        add(title, "span, align center, wrap");
+        add(subtitle, "span, align center, sg 1, wrap");
+        add(loginLabel, "span, center, gaptop 25, wrap");
+        add(this.masterPasswordPasswordField, "split 2, align center");
+        add(this.loginButton, "wrap");
+        add(databaseScrollPane, "span, gaptop 30, grow, push, sg 1, wrap");
+        add(this.currentDatabaseLabel, "span, align center, wrap");
+        add(this.newDatabaseButton, "split 2, align center");
+        add(this.changeDatabaseButton);
     }
 
     private String fileNameFromPath(String path){
