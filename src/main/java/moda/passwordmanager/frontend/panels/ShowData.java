@@ -14,7 +14,7 @@ import java.util.ArrayList;
 public class ShowData extends JPanel {
 
     // Attribute to communicate with the backend
-    private InterThreadCommunication itc;
+    private final InterThreadCommunication ITC;
 
     // Attributes for the configuration of the panel
     private final int MIN_CONTENT_WIDTH;
@@ -36,7 +36,7 @@ public class ShowData extends JPanel {
         super();  // Initialize the Panel
 
         // Set the attributes given by the JFrame
-        this.itc = itc;
+        this.ITC = itc;
         this.MIN_CONTENT_WIDTH = MIN_CONTENT_WIDTH;
         this.windowSize = windowSize;
 
@@ -162,7 +162,7 @@ public class ShowData extends JPanel {
      * Add a tab to the TabbedPane with the service selected by the user
      */
     private void addDataTab(int id){
-        UserData userDataTab = new UserData(this.itc, id, getWidth(), getHeight());
+        UserData userDataTab = new UserData(this.ITC, id);
         String tabName = this.userData.get(this.dataList.getSelectedIndex()).getSERVICE();  // Get the tab name from the service field
         CloseTab closeTab = new CloseTab(this.dataTabbedPane, userDataTab, tabName);
         closeTab.add();  // Add the tab to the TabbedPane

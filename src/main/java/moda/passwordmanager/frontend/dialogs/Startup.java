@@ -108,7 +108,7 @@ public class Startup extends JDialog {
 
         add(title, "span, align center, wrap");
         add(subtitle, "span, align center, sg 1, wrap");
-        add(loginLabel, "span, center, gaptop 25, wrap");
+        add(loginLabel, "span, align center, gaptop 25, wrap");
         add(this.masterPasswordPasswordField, "split 2, align center");
         add(this.loginButton, "wrap");
         add(databaseScrollPane, "span, gaptop 30, grow, push, sg 1, wrap");

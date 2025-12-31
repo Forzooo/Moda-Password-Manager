@@ -8,7 +8,7 @@ import java.awt.*;
 
 public class UserPasswordField extends UserDataField {
 
-    private InterThreadCommunication itc;
+    private final InterThreadCommunication ITC;
     private JButton generatePasswordButton;
 
     /**
@@ -16,7 +16,7 @@ public class UserPasswordField extends UserDataField {
      */
     public UserPasswordField(String dataField, InterThreadCommunication itc) {
         super(dataField);
-        this.itc = itc;
+        this.ITC = itc;
 
         initComponents();
         initListeners();
@@ -27,6 +27,7 @@ public class UserPasswordField extends UserDataField {
      */
     private void initComponents(){
         this.generatePasswordButton = new JButton("Generate a Password");
+        this.generatePasswordButton.setToolTipText("Generate a password");
         this.generatePasswordButton.setVisible(false);  // The button is shown only when the editing mode is enabled
         this.generatePasswordButton.setPreferredSize(new Dimension(70, 70));
         this.generatePasswordButton.setMaximumSize(new Dimension(70, 70));
@@ -45,9 +46,9 @@ public class UserPasswordField extends UserDataField {
      * Generate a password and set the password text field to it
      */
     private void generatePassword(){
-        Event event = this.itc.request(new Event("generate-string"));
+        Event event = this.ITC.request(new Event("generate-string"));
         String password = (String) event.getData().getFirst();
-        setData(password);  // Set the text of the Data TextField to be the generated password
+        setText(password);  // Set the text to be the generated password
     }
 
     /**
