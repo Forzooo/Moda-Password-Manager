@@ -1,5 +1,6 @@
 package moda.passwordmanager.frontend.panels.settings;
 
+import moda.passwordmanager.frontend.dialogs.ConfigurePasswordGeneration;
 import moda.passwordmanager.frontend.dialogs.Startup;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
@@ -12,6 +13,7 @@ import java.awt.event.ActionListener;
 public class Data extends Section {
 
     private JButton changeMasterPasswordButton;  // Change the master password of the current database
+    private JButton configureStringGenerationButton;
 
     public Data(InterThreadCommunication itc){
         super("Data", itc);
@@ -32,7 +34,12 @@ public class Data extends Section {
         this.changeMasterPasswordButton.setText("Change the master password");
         this.changeMasterPasswordButton.setMaximumSize(buttonDimension);
 
+        this.configureStringGenerationButton = new JButton();
+        this.configureStringGenerationButton.setText("Configure the string generation");
+        this.configureStringGenerationButton.setMaximumSize(buttonDimension);
+
         addOption(this.changeMasterPasswordButton);
+        addOption(this.configureStringGenerationButton);
     }
 
     private void initListeners(){
@@ -40,7 +47,8 @@ public class Data extends Section {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // Set the master password of the database before using it
-                String masterPassword = JOptionPane.showInputDialog(getRootPane(), "Enter the new master password","");
+                String masterPassword = JOptionPane.showInputDialog(getRootPane(), "Enter the new master password",
+                        "");
 
                 // Initial checks on the master password entered to ensure that it is a valid string, otherwise abort the
                 // operation
@@ -49,6 +57,14 @@ public class Data extends Section {
                 }
 
                 changeMasterPassword(masterPassword);
+            }
+        });
+
+        this.configureStringGenerationButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ConfigurePasswordGeneration configurePasswordGeneration = new ConfigurePasswordGeneration(getITC());
+                configurePasswordGeneration.setVisible(true);
             }
         });
     }
@@ -64,7 +80,7 @@ public class Data extends Section {
         }
 
         Event event = new Event("change-master-password", masterPassword.toCharArray());
-        this.ITC.request(event);  // Wait for the end of the operations in the backend
+        getITC().request(event);  // Wait for the end of the operations in the backend
     }
 
 }

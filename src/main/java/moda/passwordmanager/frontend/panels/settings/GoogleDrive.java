@@ -108,7 +108,7 @@ public class GoogleDrive extends Section {
     private void initGoogleDriveCheckbox(){
         // Retrieve from the settings file the configuration of Google Drive visibility
         Event event = new Event("get-google-drive");
-        Event response = this.ITC.request(event);
+        Event response = getITC().request(event);
         boolean enabled = (boolean) response.getData().getFirst();
 
         if (enabled){
@@ -152,7 +152,7 @@ public class GoogleDrive extends Section {
     private void initAutomaticSynchronizationCheckbox(){
         // Retrieve from the settings file the configuration of Google Drive synchronization visibility
         Event event = new Event("get-google-drive-synchronization");
-        Event response = this.ITC.request(event);
+        Event response = getITC().request(event);
         boolean enabled = (boolean) response.getData().getFirst();
 
         if (enabled){
@@ -170,7 +170,7 @@ public class GoogleDrive extends Section {
      */
     private void enableGoogleDrive(String credentialsPath){
         Event event = new Event("google-drive-authenticate", credentialsPath);
-        this.ITC.request(event);
+        getITC().request(event);
     }
 
     /**
@@ -178,7 +178,7 @@ public class GoogleDrive extends Section {
      */
     private void disableGoogleDrive(){
         Event event = new Event("google-drive-unauthenticate");
-        this.ITC.request(event);  // Wait for the end of operations before disabling the button
+        getITC().request(event);  // Wait for the end of operations before disabling the button
     }
 
     /**
@@ -186,7 +186,7 @@ public class GoogleDrive extends Section {
      */
     private void synchronizeGoogleDrive(){
         Event event = new Event("google-drive-synchronize");
-        this.ITC.request(event);
+        getITC().request(event);
     }
 
     /**
@@ -194,7 +194,7 @@ public class GoogleDrive extends Section {
      */
     private void enableAutomaticSynchronization(){
         Event event = new Event("enable-google-drive-synchronization");
-        this.ITC.request(event);
+        getITC().request(event);
     }
 
     /**
@@ -202,7 +202,7 @@ public class GoogleDrive extends Section {
      */
     private void disableAutomaticSynchronization(){
         Event event = new Event("disable-google-drive-synchronization");
-        this.ITC.request(event);
+        getITC().request(event);
     }
 
 }

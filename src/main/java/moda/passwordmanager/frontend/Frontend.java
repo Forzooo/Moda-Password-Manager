@@ -167,11 +167,9 @@ public class Frontend extends JPanel {
         Sidebar sidebar = new Sidebar(this.windowSize);
         add(sidebar, BorderLayout.WEST);  // Add the Sidebar to the Frame
 
-        this.addData = new AddData(this.itc, MIN_CONTENT_WIDTH, this.windowSize,
-                                             sidebar.getWidth());
+        this.addData = new AddData(this.itc);
 
-        this.showData = new ShowData(this.itc, MIN_CONTENT_WIDTH, this.windowSize,
-                                               sidebar.getWidth());
+        this.showData = new ShowData(this.itc, MIN_CONTENT_WIDTH, this.windowSize, sidebar.getWidth());
 
         // Add the Show All Panel to the GUI as it's the default panel at the start
         this.selectedPanel = this.showData;

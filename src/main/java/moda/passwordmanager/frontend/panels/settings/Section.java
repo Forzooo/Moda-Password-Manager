@@ -17,7 +17,7 @@ public abstract class Section extends JPanel {
      */
     private final String SECTION_TITLE;
 
-    protected final InterThreadCommunication ITC;
+    private final InterThreadCommunication ITC;
 
     public Section(String title, InterThreadCommunication itc){
         this.SECTION_TITLE = title;
@@ -55,5 +55,10 @@ public abstract class Section extends JPanel {
         add(optionPanel);
     }
 
-
+    /**
+     * Get the ITC object used to communicate
+     */
+    protected InterThreadCommunication getITC(){
+        return this.ITC;
+    }
 }
