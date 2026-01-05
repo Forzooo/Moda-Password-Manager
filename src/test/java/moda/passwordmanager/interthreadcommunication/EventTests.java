@@ -24,7 +24,7 @@ class EventTests {
      */
     @Test
     void defaultEventID(){
-        assertEquals(-1, this.event.getId());
+        assertEquals(-1, this.event.getCommunicationID());
     }
 
     /**
@@ -32,8 +32,8 @@ class EventTests {
      */
     @Test
     void setEventID(){
-        this.event.setId(EVENT_ID);
-        assertEquals(EVENT_ID, this.event.getId());
+        this.event.setCommunicationID(EVENT_ID);
+        assertEquals(EVENT_ID, this.event.getCommunicationID());
     }
 
     /**
@@ -41,9 +41,9 @@ class EventTests {
      */
     @Test
     void modifyEventID(){
-        this.event.setId(EVENT_ID);
-        this.event.setId(EVENT_ID+1);
-        assertEquals(EVENT_ID, this.event.getId());
+        this.event.setCommunicationID(EVENT_ID);
+        this.event.setCommunicationID(EVENT_ID+1);
+        assertEquals(EVENT_ID, this.event.getCommunicationID());
     }
 
     /**
@@ -51,7 +51,7 @@ class EventTests {
      */
     @Test
     void isEventIdSet(){
-        this.event.setId(EVENT_ID);
+        this.event.setCommunicationID(EVENT_ID);
         assertTrue(this.event.isIdSet());
     }
 

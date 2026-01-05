@@ -13,7 +13,8 @@ handle any operation.
 Event objects have the following properties:
 - _String_ operation: indicates the operation requested
 - _ArrayList\<Object\> data: the data required for the operation
-- _int_ ID: a unique integer used to identify the communication that is automatically set
+- _int_ communicationID: a unique integer that identifies the communication
+- _int_ sequenceNumber: an auto incremental integer that identifies the current state of the communication
 
 \[[List of events supported by the Password Manager](events.md)\]
 

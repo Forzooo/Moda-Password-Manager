@@ -54,6 +54,7 @@ public class InterThreadCommunication {
             if (!event.isIdSet()){
                 addEventID(event);
             }
+            event.incrementSequenceNumber();  // Increment the sequence number of the event
             this.OUTPUT_QUEUE.put(event);  // Put the event in the queue to send it to the other thread
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -67,19 +68,22 @@ public class InterThreadCommunication {
      */
     public Event request(Event request){
         send(request);
-        addSynchronousEvent(request.getId());
-        return receive(request.getId());
+        addSynchronousEvent(request.getCommunicationID());
+        return receive(request.getCommunicationID());
     }
 
     /**
      * Receive an Event from the other Queue
      * @return The event sent
      */
-    public Event receive() {
+    protected Event receive() {
+        // The method has protected as visibility because if a thread, that does not inherit the EventListener class,
+        // receives a synchronous event, it is unable to use the makeResponse method to reply to the request creating a
+        // deadlock for the sender thread
         try {
             Event event = this.INPUT_QUEUE.take();  // Wait for an event sent from the receiver queue
 
-            int eventID = event.getId();  // Retrieve the ID of the event
+            int eventID = event.getCommunicationID();  // Retrieve the ID of the event
 
             // If the event sent is a response, remove its ID from the active ones
             if (this.activeIDs.contains(eventID)){
@@ -88,8 +92,8 @@ public class InterThreadCommunication {
 
             // Check whether the event is a synchronous one
             if (this.synchronousEvents.contains(eventID)){
-                this.INPUT_QUEUE.put(event);  // Put the event in the response queue to be found by other threads
-                waitAsynchronousEvent();  // Let the thread wait until synchronous event is removed from the queue
+                this.INPUT_QUEUE.put(event);  // Put the event in the input queue to let it be found by other threads
+                waitAsynchronousEvent();  // Let the thread wait until the synchronous event is removed from the queue
                 return receive();  // Recall the receive method until it founds an asynchronous event to return
             }else{  // If the event is not a synchronous one, then return it
                 this.asynchronousSemaphore.release();
@@ -110,7 +114,7 @@ public class InterThreadCommunication {
             Event event = this.INPUT_QUEUE.take();  // Wait for an event sent from the receiver queue
 
             // Check whether the ID of the event is the one of the synchronous event we want
-            if (event.getId() == id){
+            if (event.getCommunicationID() == id){
                 this.synchronousSemaphore.release();
                 this.synchronousEvents.remove((Integer) id);  // Remove the ID from the synchronous events
                 this.activeIDs.remove((Integer) id);  // Remove the ID from the active IDs
@@ -127,13 +131,19 @@ public class InterThreadCommunication {
     }
 
     /**
-     * Configurate an Event as a response
+     * Configure an Event as a response
      * @param request The request made by the other queue: its ID is required to use the same communication
      * @param eventOperation The name of the event that will be created
      */
     protected Event makeResponse(Event request, String eventOperation){
-        Event response = new Event(eventOperation);  // Create the event response with the name of the operation
-        response.setId(request.getId());  // Set the ID to be the same as the request one
+        Event response = new Event(eventOperation);  // Create the event response with the operation specified
+
+        // The response needs to have the same sequence number as the request
+        while (response.getSequenceNumber() != request.getSequenceNumber()){
+            response.incrementSequenceNumber();
+        }
+
+        response.setCommunicationID(request.getCommunicationID());  // Set the ID to be the same as the request one
 
         return response;
     }
@@ -144,7 +154,7 @@ public class InterThreadCommunication {
     private void addEventID(Event event){
         int id = generateID();  // Generate a random unique ID
         this.activeIDs.add(id);  // Add the ID to the active ones
-        event.setId(id);  // Set the generated ID
+        event.setCommunicationID(id);  // Set the generated ID
     }
 
     /**

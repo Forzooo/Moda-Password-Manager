@@ -105,11 +105,11 @@ class InterThreadCommunicationTests {
     @Test
     void makeResponse(){
         Event request = new Event(EVENT_NAME);
-        request.setId(EVENT_ID);  // Set the ID of the event
+        request.setCommunicationID(EVENT_ID);  // Set the ID of the event
 
         // Make the response and assert the ID
         Event response = this.sender.makeResponse(request, request.getOperation());
-        assertEquals(EVENT_ID,response.getId());
+        assertEquals(EVENT_ID,response.getCommunicationID());
     }
 
 }
