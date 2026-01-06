@@ -6,10 +6,12 @@ import org.junit.jupiter.api.Test;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class EventListenerTests {
 
     private final static String EVENT_NAME = "Test";
+    private final static String EVENT_NAME_2 = "Test_2";
     private InterThreadCommunication sender;
     private EventListener eventListener;
 
@@ -42,5 +44,46 @@ class EventListenerTests {
         assertEquals(EVENT_NAME, response.getOperation());
     }
 
+    /**
+     * Ensure that the EventListener discards any event that has the sequence number equal or greater than 2
+     */
+    @Test
+    void discardEvent(){
+        // Add the operations to the handler map
+        this.eventListener.addOperation(EVENT_NAME, () -> {});
+        this.eventListener.addOperation(EVENT_NAME_2, () -> {});
+
+        // The event which has to be discarded from the EventListener, thus we need to increment the sequence number
+        // two times
+        Event eventToDiscard = new Event(EVENT_NAME);
+        eventToDiscard.incrementSequenceNumber();
+        eventToDiscard.incrementSequenceNumber();
+
+        Event eventToReceive = new Event(EVENT_NAME_2);
+
+        this.sender.send(eventToDiscard);
+        this.sender.send(eventToReceive);
+
+        Event eventListenerResponse = this.sender.receive();
+        assertEquals(EVENT_NAME_2, eventListenerResponse.getOperation());
+    }
+
+    /**
+     * Ensure that readding the same operation to the event listener, raises an OverriddenOperationException
+     */
+    @Test
+    void raiseOverriddenOperationException(){
+        boolean exceptionRaised = false;
+
+        this.eventListener.addOperation(EVENT_NAME, () -> {});
+
+        try{
+            this.eventListener.addOperation(EVENT_NAME, () -> {});
+        }catch (OverriddenOperationException e){
+            exceptionRaised = true;
+        }
+
+        assertTrue(exceptionRaised);
+    }
 
 }

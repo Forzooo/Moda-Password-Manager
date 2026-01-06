@@ -7,8 +7,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class EventTests {
 
-    private final static String EVENT_NAME = "Test";
-    private final static int EVENT_ID = 1;
+    private final static String OPERATION = "Test";
+    private final static int COMMUNICATION_ID = 1;
+    private final static int EVENT_COMMUNICATION_ID_NOT_SET = -1;
+    private final static int EXPECTED_SEQUENCE_NUMBER = 1;
     private Event event;
 
     /**
@@ -16,51 +18,61 @@ class EventTests {
      */
     @BeforeEach
     void init(){
-        this.event = new Event(EVENT_NAME);
+        this.event = new Event(OPERATION);
     }
 
     /**
-     * Ensure that the ID of an event if it's not set, is equal to -1
+     * Ensure that the communication ID of an event if it's not set, is equal to -1
      */
     @Test
-    void defaultEventID(){
+    void defaultCommunicationID(){
         assertEquals(-1, this.event.getCommunicationID());
     }
 
     /**
-     * Ensure that setting the ID of an event works
+     * Ensure that setting the communication ID of an event works
      */
     @Test
-    void setEventID(){
-        this.event.setCommunicationID(EVENT_ID);
-        assertEquals(EVENT_ID, this.event.getCommunicationID());
+    void setCommunicationID(){
+        this.event.setCommunicationID(COMMUNICATION_ID);
+        assertEquals(COMMUNICATION_ID, this.event.getCommunicationID());
     }
 
     /**
-     * Ensure that the value of the ID of an Event cannot be changed
+     * Ensure that the value of the communication ID of an Event cannot be changed
      */
     @Test
-    void modifyEventID(){
-        this.event.setCommunicationID(EVENT_ID);
-        this.event.setCommunicationID(EVENT_ID+1);
-        assertEquals(EVENT_ID, this.event.getCommunicationID());
+    void modifyCommunicationID(){
+        this.event.setCommunicationID(COMMUNICATION_ID);
+        this.event.setCommunicationID(COMMUNICATION_ID+1);
+        assertEquals(COMMUNICATION_ID, this.event.getCommunicationID());
     }
 
     /**
-     * Ensure that when setting an ID the isIdSet method returns true
+     * Ensure that when setting the communication ID, the isIdSet method returns true
      */
     @Test
-    void isEventIdSet(){
-        this.event.setCommunicationID(EVENT_ID);
+    void isCommunicationIDSet(){
+        this.event.setCommunicationID(COMMUNICATION_ID);
         assertTrue(this.event.isIdSet());
     }
 
     /**
-     * Ensure that when the ID is not set yet, the isIdSet method returns false
+     * Ensure that when the communication ID is not set yet, the isIdSet method returns false
      */
     @Test
-    void isEventIdSetFalse(){
+    void isCommunicationIDSetFalse(){
         assertFalse(this.event.isIdSet());
+    }
+
+
+    /**
+     * Ensure that the method 'incrementSequenceNumber' increments the sequence number of the event
+     */
+    @Test
+    void incrementSequenceNumber(){
+        this.event.incrementSequenceNumber();
+        assertEquals(EXPECTED_SEQUENCE_NUMBER, this.event.getSequenceNumber());
     }
 
 }

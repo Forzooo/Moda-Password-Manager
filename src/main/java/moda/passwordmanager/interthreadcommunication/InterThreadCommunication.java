@@ -10,7 +10,10 @@ public class InterThreadCommunication {
     private final LinkedBlockingQueue<Event> INPUT_QUEUE;  // Receive Event from this queue from the other thread
     private final LinkedBlockingQueue<Event> OUTPUT_QUEUE;  // Send Event from this queue to the other thread
 
-    private ArrayList<Integer> activeIDs;  // This ArrayList is used to ensure that the ID generated must be unique
+    /**
+     * The ArrayList ensures that the ID generated for any communication is unique
+     */
+    private ArrayList<Integer> activeCommunications;
 
     // Collection of semaphores used to set the threads to wait for a specific type of event
     private final static int SEMAPHORE_PERMITS = 0;
@@ -19,9 +22,9 @@ public class InterThreadCommunication {
 
     /**
      * The Events that are synchronous, that means the same thread needs the response from the event it has send,
-     * have their ID number stored here to filter them.
+     * have their communication ID number stored here to filter them.
      */
-    private ArrayList<Integer> synchronousEvents;
+    private ArrayList<Integer> synchronousCommunications;
 
     /**
      * @param inputQueue The Queue that receives the Event objects
@@ -31,8 +34,8 @@ public class InterThreadCommunication {
         this.INPUT_QUEUE = inputQueue;
         this.OUTPUT_QUEUE = outputQueue;
 
-        this.activeIDs = new ArrayList<>();
-        this.synchronousEvents = new ArrayList<>();
+        this.activeCommunications = new ArrayList<>();
+        this.synchronousCommunications = new ArrayList<>();
 
         this.asynchronousSemaphore = new Semaphore(SEMAPHORE_PERMITS);
         this.synchronousSemaphore = new Semaphore(SEMAPHORE_PERMITS);
@@ -86,12 +89,12 @@ public class InterThreadCommunication {
             int eventID = event.getCommunicationID();  // Retrieve the ID of the event
 
             // If the event sent is a response, remove its ID from the active ones
-            if (this.activeIDs.contains(eventID)){
-                this.activeIDs.remove((Integer) eventID);
+            if (this.activeCommunications.contains(eventID)){
+                this.activeCommunications.remove((Integer) eventID);
             }
 
             // Check whether the event is a synchronous one
-            if (this.synchronousEvents.contains(eventID)){
+            if (this.synchronousCommunications.contains(eventID)){
                 this.INPUT_QUEUE.put(event);  // Put the event in the input queue to let it be found by other threads
                 waitAsynchronousEvent();  // Let the thread wait until the synchronous event is removed from the queue
                 return receive();  // Recall the receive method until it founds an asynchronous event to return
@@ -116,8 +119,8 @@ public class InterThreadCommunication {
             // Check whether the ID of the event is the one of the synchronous event we want
             if (event.getCommunicationID() == id){
                 this.synchronousSemaphore.release();
-                this.synchronousEvents.remove((Integer) id);  // Remove the ID from the synchronous events
-                this.activeIDs.remove((Integer) id);  // Remove the ID from the active IDs
+                this.synchronousCommunications.remove((Integer) id);  // Remove the ID from the synchronous events
+                this.activeCommunications.remove((Integer) id);  // Remove the ID from the active IDs
                 return event;
             }else{
                 this.INPUT_QUEUE.put(event);  // Put the event in the response queue to be found by other threads
@@ -153,7 +156,7 @@ public class InterThreadCommunication {
      */
     private void addEventID(Event event){
         int id = generateID();  // Generate a random unique ID
-        this.activeIDs.add(id);  // Add the ID to the active ones
+        this.activeCommunications.add(id);  // Add the ID to the active ones
         event.setCommunicationID(id);  // Set the generated ID
     }
 
@@ -166,7 +169,7 @@ public class InterThreadCommunication {
         int id = random.nextInt(0, Integer.MAX_VALUE);
 
         // Re-generate the ID if it's the same value as one inside the ActiveIDs ArrayList
-        while (this.activeIDs.contains(id)){
+        while (this.activeCommunications.contains(id)){
             id = random.nextInt(0, Integer.MAX_VALUE);
         }
         return id;
@@ -201,7 +204,7 @@ public class InterThreadCommunication {
      * @param ID The ID of the event
      */
     private void addSynchronousEvent(int ID){
-        this.synchronousEvents.add(ID);
+        this.synchronousCommunications.add(ID);
     }
 
 }
