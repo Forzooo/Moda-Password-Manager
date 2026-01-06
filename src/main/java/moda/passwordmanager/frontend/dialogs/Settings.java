@@ -19,9 +19,8 @@ public class Settings extends JDialog {
     private JList<String> sidebarSections;
     private DefaultListModel<String> sidebarSectionsModel;
 
+    private JPanel sectionPanel;  // The panel where are showed the sections
     private ArrayList<Section> sections;  // All the sections panels are stored here
-
-    private JPanel sectionPanel;  // The section panel is used to show the section selected
 
     public Settings(InterThreadCommunication itc) {
         super();  // Initialize the Panel
@@ -66,6 +65,7 @@ public class Settings extends JDialog {
         sidebarPanel.add(this.sidebarSections);
 
         this.sectionPanel = new JPanel();
+        this.sectionPanel.setLayout(new CardLayout());
 
         addSection(new Data(this.ITC));
         addSection(new Database(this.ITC));
@@ -95,17 +95,15 @@ public class Settings extends JDialog {
     private void addSection(Section section){
         this.sidebarSectionsModel.addElement(section.getSectionTitle());
         this.sections.add(section);
+        this.sectionPanel.add(section, section.getSectionTitle());
     }
 
     /**
      * Switch to another section
      */
     private void switchSection(Section section){
-        remove(this.sectionPanel);  // Remove the old panel
-        this.sectionPanel = section;  // Set the sectionPanel to be the one selected
-        add(this.sectionPanel, BorderLayout.CENTER);  // Add the section to the GUI, then revalidate and repaint
-        revalidate();
-        repaint();
+        CardLayout cardLayout = (CardLayout) this.sectionPanel.getLayout();
+        cardLayout.show(this.sectionPanel, section.getSectionTitle());
     }
 
 }

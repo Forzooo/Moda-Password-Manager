@@ -39,6 +39,8 @@ public class Data extends Section {
         this.configureStringGenerationButton.setMaximumSize(buttonDimension);
 
         addOption(this.changeMasterPasswordButton);
+
+        addSection("String generation");
         addOption(this.configureStringGenerationButton);
     }
 
