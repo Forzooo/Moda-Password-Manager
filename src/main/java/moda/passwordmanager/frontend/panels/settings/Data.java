@@ -1,6 +1,6 @@
 package moda.passwordmanager.frontend.panels.settings;
 
-import moda.passwordmanager.frontend.dialogs.ConfigurePasswordGeneration;
+import moda.passwordmanager.frontend.components.Placeholder;
 import moda.passwordmanager.frontend.dialogs.Startup;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
@@ -9,10 +9,17 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
 public class Data extends Section {
 
-    private JButton changeMasterPasswordButton;  // Change the master password of the current database
+    private JButton changeMasterPasswordButton;  // Change the master password of the current database4
+
+    private JTextField stringLengthTextField;
+    private Placeholder stringLengthPlaceholder;
+    private JCheckBox stringLettersCheckbox;
+    private JCheckBox stringNumbersCheckbox;
+    private JCheckBox stringSpecialCharactersCheckbox;
     private JButton configureStringGenerationButton;
 
     public Data(InterThreadCommunication itc){
@@ -20,6 +27,7 @@ public class Data extends Section {
 
         initComponents();
         initListeners();
+        setDefaultStringGenerationConfiguration();
     }
 
     @Override
@@ -34,13 +42,30 @@ public class Data extends Section {
         this.changeMasterPasswordButton.setText("Change the master password");
         this.changeMasterPasswordButton.setMaximumSize(buttonDimension);
 
+        this.stringLengthTextField = new JTextField();
+        this.stringLengthPlaceholder = new Placeholder(this.stringLengthTextField, "String length");
+        this.stringLengthPlaceholder.show();
+
+        this.stringLettersCheckbox = new JCheckBox();
+        this.stringLettersCheckbox.setText("Include letters (a-zA-Z)");
+
+        this.stringNumbersCheckbox = new JCheckBox();
+        this.stringNumbersCheckbox.setText("Include numbers (0-9)");
+
+        this.stringSpecialCharactersCheckbox = new JCheckBox();
+        this.stringSpecialCharactersCheckbox.setText("Include special characters (!?,...)");
+
         this.configureStringGenerationButton = new JButton();
-        this.configureStringGenerationButton.setText("Configure the string generation");
+        this.configureStringGenerationButton.setText("Change");
         this.configureStringGenerationButton.setMaximumSize(buttonDimension);
 
         addOption(this.changeMasterPasswordButton);
 
         addSection("String generation");
+        addOption(this.stringLengthTextField);
+        addOption(this.stringLettersCheckbox);
+        addOption(this.stringNumbersCheckbox);
+        addOption(this.stringSpecialCharactersCheckbox);
         addOption(this.configureStringGenerationButton);
     }
 
@@ -62,13 +87,7 @@ public class Data extends Section {
             }
         });
 
-        this.configureStringGenerationButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ConfigurePasswordGeneration configurePasswordGeneration = new ConfigurePasswordGeneration(getITC());
-                configurePasswordGeneration.setVisible(true);
-            }
-        });
+        this.configureStringGenerationButton.addActionListener(e -> configureStringGeneration());
     }
 
     /**
@@ -83,6 +102,44 @@ public class Data extends Section {
 
         Event event = new Event("change-master-password", masterPassword.toCharArray());
         getITC().request(event);  // Wait for the end of the operations in the backend
+    }
+
+    /**
+     * Configure the string generation
+     */
+    private void configureStringGeneration(){
+        // Retrieve the data from the user
+        int stringLength = Integer.parseInt(this.stringLengthTextField.getText());  // Convert the text to an int
+        boolean lettersSelected = this.stringLettersCheckbox.isSelected();
+        boolean numbersSelected = this.stringNumbersCheckbox.isSelected();
+        boolean specialCharactersSelected = this.stringSpecialCharactersCheckbox.isSelected();
+
+        // Create the Event with the data
+        Event event = new Event("configure-string-generation");
+        event.addData(stringLength);
+        event.addData(lettersSelected);
+        event.addData(numbersSelected);
+        event.addData(specialCharactersSelected);
+
+        getITC().send(event);  // Send the event
+    }
+
+    /**
+     * Set the default values of the string configuration
+     */
+    private void setDefaultStringGenerationConfiguration(){
+        // Create the event and wait for the data
+        Event event = new Event("get-string-generation-configuration");
+        Event backendResponse = getITC().request(event);
+
+        ArrayList<Object> data = backendResponse.getData();  // Retrieve the data
+
+        // Set the data to the components
+        this.stringLengthPlaceholder.hide();
+        this.stringLengthTextField.setText(String.valueOf(data.getFirst()));
+        this.stringLettersCheckbox.setSelected((boolean) data.get(1));
+        this.stringNumbersCheckbox.setSelected((boolean) data.get(2));
+        this.stringSpecialCharactersCheckbox.setSelected((boolean) data.get(3));
     }
 
 }
