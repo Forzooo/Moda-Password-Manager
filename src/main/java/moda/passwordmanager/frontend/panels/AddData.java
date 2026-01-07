@@ -135,7 +135,7 @@ public class AddData extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 passwordPlaceholder.hide();  // Hide the placeholder
-                generatePasswordButton.setText(generateString());  // Generate the password
+                passwordTextField.setText(generateString());  // Generate the password
             }
         });
     }
