@@ -1,13 +1,12 @@
 package moda.passwordmanager.frontend.dialogs;
 
-import com.formdev.flatlaf.util.SystemFileChooser;
 import moda.passwordmanager.Application;
+import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.*;
 import java.nio.file.Path;
@@ -142,7 +141,7 @@ public class Startup extends JDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 char[] masterPasswordChar = masterPasswordPasswordField.getPassword();
-                if (!checkMasterPassword(masterPasswordChar)) {
+                if (!Utilities.checkMasterPassword(masterPasswordChar)) {
                     return;
                 }
                 sendMasterPassword(masterPasswordPasswordField.getPassword());
@@ -154,7 +153,7 @@ public class Startup extends JDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 char[] masterPasswordChar = masterPasswordPasswordField.getPassword();
-                if (!checkMasterPassword(masterPasswordChar)) {
+                if (!Utilities.checkMasterPassword(masterPasswordChar)) {
                     return;
                 }
                 sendMasterPassword(masterPasswordChar);
@@ -174,22 +173,29 @@ public class Startup extends JDialog {
             }
         });
 
-        this.newDatabaseButton.addActionListener(e -> createDatabase());
+        this.newDatabaseButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String path = Utilities.newDatabaseFileChooser();
 
-        this.changeDatabaseButton.addActionListener(e -> openDatabaseChooser());
-    }
+                // Check if the user has created a database
+                if (!path.isBlank()){
+                    setDatabase(path);
+                }
+            }
+        });
 
-    /**
-     * Perform some initial check on the master password to allow only ones that comply with all the requirements
-     * @param masterPassword The master password the user entered
-     * @return Boolean to indicate whether the checks have been passed
-     */
-    public static boolean checkMasterPassword(char[] masterPassword){
-        if (masterPassword.length == 0){
-            return false;
-        }
+        this.changeDatabaseButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String path = Utilities.openDatabaseFileChooser();
 
-        return true;
+                // Check if the user has selected a database
+                if (!path.isBlank()){
+                    setDatabase(path);
+                }
+            }
+        });
     }
 
     /**
@@ -246,60 +252,6 @@ public class Startup extends JDialog {
         formattedPath.append(splittedPath[splittedPath.length-1]);
 
         return formattedPath.toString();
-    }
-
-    /**
-     * Create a new database file
-     */
-    private void createDatabase(){
-        // Create the File Chooser that opens in the desktop, and saves a .modb file
-        SystemFileChooser fileChooser = new SystemFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-        fileChooser.setDialogTitle("Create a new database to use");
-        fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
-
-        // Create the filter to save only .modb files
-        SystemFileChooser.FileNameExtensionFilter filter = new SystemFileChooser.FileNameExtensionFilter(
-                "Moda Password Manager Database","modb");
-        fileChooser.setFileFilter(filter);
-
-        // Open the file chooser
-        if (fileChooser.showSaveDialog(getRootPane()) == SystemFileChooser.APPROVE_OPTION){
-            String path = fileChooser.getSelectedFile().getAbsolutePath();  // Retrieve the path chosen
-
-            // Check whether the database has been chosen
-            if (!path.isEmpty()){
-                // If the file has been saved without setting the extension, set it automatically
-                if (!path.endsWith(".modb")){
-                    path = path+".modb";
-                }
-                setDatabase(path);
-            }
-        }
-    }
-
-    /**
-     * Open the Swing File Chooser and let the user select a database to use
-     */
-    private void openDatabaseChooser(){
-        // Create the File Chooser that opens in the desktop view, and selects only .modb files
-        SystemFileChooser fileChooser = new SystemFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-        fileChooser.setDialogTitle("Choose a database to use");
-        fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
-
-        // Create the filter to choose only .modb files
-        SystemFileChooser.FileNameExtensionFilter filter = new SystemFileChooser.FileNameExtensionFilter(
-                "Moda Password Manager Database","modb");
-        fileChooser.setFileFilter(filter);
-
-        // Open the file chooser in the current dialog and check that the user has chosen a database file
-        if (fileChooser.showOpenDialog((this)) == SystemFileChooser.APPROVE_OPTION){
-            String path = fileChooser.getSelectedFile().getAbsolutePath();  // Retrieve the path chosen
-
-            // Check whether the database has been chosen
-            if (!path.isEmpty()){
-                setDatabase(path);
-            }
-        }
     }
 
     /**

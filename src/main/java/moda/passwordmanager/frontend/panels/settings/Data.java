@@ -1,5 +1,6 @@
 package moda.passwordmanager.frontend.panels.settings;
 
+import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.frontend.components.Placeholder;
 import moda.passwordmanager.frontend.dialogs.Startup;
 import moda.passwordmanager.interthreadcommunication.Event;
@@ -96,7 +97,7 @@ public class Data extends Section {
      */
     private void changeMasterPassword(String masterPassword){
         // Perform some initial conditions check on the master password
-        if (!Startup.checkMasterPassword(masterPassword.toCharArray())){
+        if (!Utilities.checkMasterPassword(masterPassword.toCharArray())){
             return;
         }
 
