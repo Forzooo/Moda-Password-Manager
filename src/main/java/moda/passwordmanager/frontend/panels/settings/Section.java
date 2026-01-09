@@ -55,8 +55,7 @@ public abstract class Section extends JPanel {
     /**
      * Create a new section where all the options added will be. Moreover, it automatically ends the previous section, if
      * it exists. Lastly, the first section is already created.
-     * @param title The title of the section, displayed next to the JSeparator only if the section added is not the first
-     *              one
+     * @param title The title of the section, displayed next to the JSeparator
      */
     protected void addSection(String title){
         // Add the JSeparator with the title only if the section added is not the first

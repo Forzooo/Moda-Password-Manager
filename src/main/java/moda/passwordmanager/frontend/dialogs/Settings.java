@@ -3,9 +3,12 @@ package moda.passwordmanager.frontend.dialogs;
 import moda.passwordmanager.Application;
 import moda.passwordmanager.frontend.panels.settings.*;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
+import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -21,6 +24,10 @@ public class Settings extends JDialog {
 
     private JPanel sectionPanel;  // The panel where are showed the sections
     private ArrayList<Section> sections;  // All the sections panels are stored here
+
+    private JButton cancelButton;
+    private JButton confirmButton;
+    private JButton applyButton;
 
     public Settings(InterThreadCommunication itc) {
         super();  // Initialize the Panel
@@ -41,7 +48,8 @@ public class Settings extends JDialog {
         setIconImage(Application.getIcon());
         setSize(DIALOG_DIMENSION);
 
-        setLayout(new BoxLayout(getContentPane(), BoxLayout.X_AXIS));
+//        setLayout(new MigLayout("debug"));
+        setLayout(new MigLayout());
 
         setModal(true);  // Enable modality to block input to other password manager windows
         setLocationRelativeTo(getRootPane());
@@ -72,9 +80,27 @@ public class Settings extends JDialog {
         addSection(new GoogleDrive(this.ITC));
         addSection(new About(this.ITC));
 
-        add(sidebarPanel, BorderLayout.LINE_START);
-        add(new JSeparator(SwingConstants.VERTICAL));
-        add(this.sectionPanel, BorderLayout.CENTER);
+        // Dialog operations panel
+        JPanel dialogOperations = new JPanel();
+
+        this.cancelButton = new JButton();
+        this.cancelButton.setText("Cancel");
+
+        this.confirmButton = new JButton();
+        this.confirmButton.setText("Confirm");
+
+        this.applyButton = new JButton();
+        this.applyButton.setText("Apply");
+
+        dialogOperations.add(this.cancelButton);
+        dialogOperations.add(this.confirmButton);
+        dialogOperations.add(this.applyButton);
+
+        add(sidebarPanel);
+        add(new JSeparator(SwingConstants.VERTICAL), "grow");
+        add(this.sectionPanel, "span, grow, wrap");
+        add(new JSeparator(SwingConstants.CENTER), "span, grow, wrap");
+        add(dialogOperations, "span, align right");
     }
 
     /**
@@ -87,6 +113,8 @@ public class Settings extends JDialog {
                 switchSection(sections.get(sidebarSections.getSelectedIndex()));
             }
         });
+
+        this.cancelButton.addActionListener(e -> dispose());
     }
 
     /**

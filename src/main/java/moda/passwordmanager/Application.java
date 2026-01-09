@@ -39,17 +39,16 @@ public class Application extends JFrame {
         int width = (int) (screen.getWidth() * 4/5);
         int height = (int) (screen.getHeight() * 4/5);
 
-        add(new Frontend(backendQueue, frontendQueue, databaseToUse, width, height));
-        pack();
-
         setTitle(getApplicationTitle());
         setSize(width, height);
 
         setIconImage(getIcon());  // Get the icon and set it
 
-        setVisible(true);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+        add(new Frontend(backendQueue, frontendQueue, databaseToUse, width, height));
+        pack();
     }
 
     /**
