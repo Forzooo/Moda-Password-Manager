@@ -1,10 +1,10 @@
 package moda.passwordmanager.frontend;
 
-import moda.passwordmanager.frontend.dialogs.Settings;
 import moda.passwordmanager.frontend.dialogs.Startup;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.panels.*;
+import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
@@ -82,7 +82,7 @@ public class Frontend extends JPanel {
      */
     private void initPanel(){
         setFocusable(true);  // Set the focus on the frame to get the keyboard inputs
-        setLayout(new BorderLayout());  // The layout for the frontend is the Border one
+        setLayout(new MigLayout("debug"));
     }
 
     /**
@@ -104,12 +104,12 @@ public class Frontend extends JPanel {
         this.frontendPanel = new JPanel();
         this.frontendPanel.setLayout(new CardLayout());
 
-        this.showDataPanel = new ShowData(this.ITC, MIN_CONTENT_WIDTH, windowSize, sidebar.getWidth());
+        this.showDataPanel = new ShowData(this.ITC, MIN_CONTENT_WIDTH);
         this.frontendPanel.add(this.showDataPanel, ShowData.getPanelTitle());
         this.frontendPanel.add(new AddData(this.ITC), AddData.getPanelTitle());
 
-        add(sidebar, BorderLayout.WEST);
-        add(this.frontendPanel, BorderLayout.CENTER);
+        add(sidebar);
+        add(this.frontendPanel, "span, grow");
     }
 
     /**

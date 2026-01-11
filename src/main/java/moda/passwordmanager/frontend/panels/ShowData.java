@@ -18,7 +18,6 @@ public class ShowData extends JPanel {
 
     // Attributes for the configuration of the panel
     private final int MIN_CONTENT_WIDTH;
-    private Dimension windowSize;
 
     private JTabbedPane dataTabbedPane;  // The tabbed pane shows the dataList and the data the user has selected
 
@@ -31,45 +30,28 @@ public class ShowData extends JPanel {
     // Swing components
     private JList<String> dataList;
 
-    public ShowData(InterThreadCommunication itc, int MIN_CONTENT_WIDTH, Dimension windowSize,
-                    int sidebarPanelWidth){
+    public ShowData(InterThreadCommunication itc, int MIN_CONTENT_WIDTH){
         super();  // Initialize the Panel
 
         // Set the attributes given by the JFrame
         this.ITC = itc;
         this.MIN_CONTENT_WIDTH = MIN_CONTENT_WIDTH;
-        this.windowSize = windowSize;
 
         // Initialize the user data ArrayList and Model
         this.userData = new ArrayList<>();
         this.userDataModel = new DefaultListModel<>();
 
-        initPanel(sidebarPanelWidth);
+        initPanel();
         initComponents();
         initListeners();
     }
 
-    @Override
-    public Dimension getMinimumSize(){
-        // altezza 0 -> “qualsiasi”, conta solo la larghezza minima
-        return new Dimension(MIN_CONTENT_WIDTH, 0);
-    }
-
     /**
      * Set the configuration of the JPanel
-     * @param sidebarPanelWidth
      */
-    private void initPanel(int sidebarPanelWidth){
-        setLayout(new BorderLayout());  // Set its layout
-
-        // Calculate the preferred width and height
-        int width = (int) (this.windowSize.getWidth() - sidebarPanelWidth);
-        int height = (int) this.windowSize.getHeight();
-
-        // Set the preferred size
-        setPreferredSize(new Dimension(width, height));
-
-        setBackground(Color.WHITE);
+    private void initPanel(){
+        // A generic boxlayout can be used as it's the only component of the panel
+        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
     }
 
     /**
