@@ -13,6 +13,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class Application extends JFrame {
 
+    private final static String TITLE = "MODA - Password Manager";
     private final static String VERSION = "1.0.0";  // The current version of the software
 
     public Application(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
@@ -41,22 +42,23 @@ public class Application extends JFrame {
 
         setTitle(getApplicationTitle());
         setSize(width, height);
+        setPreferredSize(new Dimension(width, height));
 
         setIconImage(getIcon());  // Get the icon and set it
 
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(null);  // Set the application to be at the center of the screen
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-        add(new Frontend(backendQueue, frontendQueue, databaseToUse, width, height));
+        add(new Frontend(backendQueue, frontendQueue, databaseToUse));
         pack();
     }
 
     /**
      * Parse the arguments and look for the path of a database to use
      * @param args The arguments
-     * @return An empty string or the path of a database
+     * @return The path of the database if it exists, otherwise an empty string
      */
-    private static String databaseParsing(String[] args){
+    private static String parseDatabasePath(String[] args){
         String databasePath = "";
 
         for (String arg : args){
@@ -84,7 +86,7 @@ public class Application extends JFrame {
      * Retrieve the title of the application
      */
     public static String getApplicationTitle(){
-        return "MODA - Password Manager";
+        return TITLE;
     }
 
     /**
@@ -95,7 +97,7 @@ public class Application extends JFrame {
     }
 
     public static void main(String[] args) {
-        String databaseToUse = databaseParsing(args);  // Parse the args to look for a database to use
+        String databaseToUse = parseDatabasePath(args);  // Parse the args to look for a database to use
 
         // Create the two LinkedBlockingQueue objects here to pass them to the Backend and the Frontend
         LinkedBlockingQueue<Event> backendQueue = InterThreadCommunication.createQueue();

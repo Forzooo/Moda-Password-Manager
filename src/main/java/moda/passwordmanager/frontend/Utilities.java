@@ -3,6 +3,8 @@ package moda.passwordmanager.frontend;
 import com.formdev.flatlaf.util.SystemFileChooser;
 
 import javax.swing.filechooser.FileSystemView;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 /**
  * The Utilities class provides general use APIs that can be used by any Frontend class.
@@ -68,6 +70,52 @@ public class Utilities {
             }
         }
         return "";
+    }
+
+    /**
+     * Get the stack trace of the exception raised
+     * @param throwable The exception raised
+     * @return The stack trace formatted as a string
+     */
+    public static String getStackTrace(Throwable throwable){
+        // StringWriter and PrintWriter are used to get the stack trace of the exception into the string format
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter printWriter = new PrintWriter(stringWriter);
+        throwable.printStackTrace(printWriter);
+
+        return stringWriter.toString();
+    }
+
+    /**
+     * Get the last n rows of a stack trace
+     * @param stackTrace The stack trace
+     */
+    public static String getStackTraceRows(String stackTrace, int rows){
+        String[] stackTraceArray = stackTrace.split("\n");  // Split the string by the \n character
+        StringBuilder newStackTrace = new StringBuilder();
+
+        // We need to include the "Caused by" text in the stack so we need to increment by 1 the stack rows
+        for (int i = 0; i < rows+1; i++){
+            // If the length of stackTrace is less than the number of rows, break the for loop
+            if (i == stackTraceArray.length){
+                break;
+            }
+            newStackTrace.append(stackTraceArray[i]).append("\n");
+        }
+
+        // If the stack trace is longer than the number of rows, we show triple dots to indicate that there are more
+        // lines than displayed
+        if (rows + 1 < stackTraceArray.length){
+            newStackTrace.append("... (").append(stackTraceArray.length - rows).append(" more line");
+
+            // Add the "s" to line if there are multiple lines hidden
+            if (stackTraceArray.length - rows - 1 > 1){
+                newStackTrace.append("s");
+            }
+            newStackTrace.append(" hidden)");
+        }
+
+        return newStackTrace.toString();
     }
 
 }

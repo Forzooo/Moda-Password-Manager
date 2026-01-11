@@ -44,8 +44,8 @@ public class FrontendEventListener extends EventListener {
         String threadName = (String) requestData.getFirst();  // The name of the thread where the exception occurred
         Throwable throwable = (Throwable) requestData.get(1);  // The stack trace of the exception
 
-        String stackTrace = Frontend.getStackTrace(throwable);  // Get the full stack trace of the throwable
-        String message = Frontend.getLastStackTrace(stackTrace, 5) +
+        String stackTrace = Utilities.getStackTrace(throwable);  // Get the full stack trace of the throwable
+        String message = Utilities.getStackTraceRows(stackTrace, 5) +
                 "\r\nThe traceback has been saved to the data folder.";
 
         // Show the exception as a Message Dialog with the type of error message
