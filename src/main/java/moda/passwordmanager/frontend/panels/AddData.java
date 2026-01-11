@@ -141,6 +141,13 @@ public class AddData extends JPanel {
     }
 
     /**
+     * Returns the title of the panel
+     */
+    public static String getPanelTitle() {
+        return "Add Data";
+    }
+
+    /**
      * Reset all the placeholders
      */
     private void resetPlaceholders() {

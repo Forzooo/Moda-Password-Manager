@@ -18,13 +18,13 @@ public class Frontend extends JPanel {
     // The Frontend Event Listener used to receive and handle requests from the backend
     private FrontendEventListener eventListener;
 
-    private JPanel selectedPanel;  // The current panel shown next to the sidebar
+    // The panel that contains the one being shown in the frontend and is used to retrieve its CardLayout to switch
+    // between panels, which have to implement the PanelTitle interface
+    private JPanel frontendPanel;
+
+    private ShowData showDataPanel;
 
     private final static int MIN_CONTENT_WIDTH = 500;
-
-    // The panels that are handled by the frontend panel
-    private AddData addDataPanel;
-    private ShowData showDataPanel;
 
     public Frontend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
                     String databasePath){
@@ -99,43 +99,26 @@ public class Frontend extends JPanel {
     private void initPanels(){
         Dimension windowSize = getToolkit().getScreenSize();  // Get the initial size of the window
 
-        Sidebar sidebar = new Sidebar(windowSize);
-        add(sidebar, BorderLayout.WEST);  // Add the Sidebar to the Frame
+        Sidebar sidebar = new Sidebar(windowSize, this.ITC);
 
-        this.addDataPanel = new AddData(this.ITC);
+        this.frontendPanel = new JPanel();
+        this.frontendPanel.setLayout(new CardLayout());
 
         this.showDataPanel = new ShowData(this.ITC, MIN_CONTENT_WIDTH, windowSize, sidebar.getWidth());
+        this.frontendPanel.add(this.showDataPanel, ShowData.getPanelTitle());
+        this.frontendPanel.add(new AddData(this.ITC), AddData.getPanelTitle());
 
-        // Add the Show All Panel to the GUI as it's the default panel at the start
-        this.selectedPanel = this.showDataPanel;
-        add(this.showDataPanel, BorderLayout.CENTER);
+        add(sidebar, BorderLayout.WEST);
+        add(this.frontendPanel, BorderLayout.CENTER);
     }
 
     /**
-     * Switch to a new JPanel hiding the previous one
+     * Switch to another of the panels of the frontend
+     * @param panelTitle The title of the panel, which is provided by the PanelTitle interface
      */
-    public void switchPanel(GUIState selectedPanel){
-        remove(this.selectedPanel);  // Remove the previous panel from the Board
-
-        // Based on the section chosen change the current panel to the new one
-        switch (selectedPanel){
-            case ADD_DATA -> this.selectedPanel = this.addDataPanel;
-            case SHOW_DATA -> this.selectedPanel = this.showDataPanel;
-        }
-
-        add(this.selectedPanel, BorderLayout.CENTER);  // Add the selected panel to the Board
-
-        // Revalidate and repaint the GUI with the graphical changes
-        revalidate();
-        repaint();
-    }
-
-    /**
-     * Open the settings dialog
-     */
-    public void openSettings(){
-        Settings settings = new Settings(this.ITC);
-        settings.setVisible(true);
+    public void switchPanel(String panelTitle){
+        CardLayout cardLayout = (CardLayout) this.frontendPanel.getLayout();
+        cardLayout.show(this.frontendPanel, panelTitle);
     }
 
 }

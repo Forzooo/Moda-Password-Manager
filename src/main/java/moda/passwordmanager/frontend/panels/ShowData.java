@@ -32,7 +32,7 @@ public class ShowData extends JPanel {
     private JList<String> dataList;
 
     public ShowData(InterThreadCommunication itc, int MIN_CONTENT_WIDTH, Dimension windowSize,
-                    int sidebarPanelWidth) {
+                    int sidebarPanelWidth){
         super();  // Initialize the Panel
 
         // Set the attributes given by the JFrame
@@ -50,7 +50,7 @@ public class ShowData extends JPanel {
     }
 
     @Override
-    public Dimension getMinimumSize() {
+    public Dimension getMinimumSize(){
         // altezza 0 -> “qualsiasi”, conta solo la larghezza minima
         return new Dimension(MIN_CONTENT_WIDTH, 0);
     }
@@ -140,6 +140,13 @@ public class ShowData extends JPanel {
 
             }
         });
+    }
+
+    /**
+     * Returns the title of the panel
+     */
+    public static String getPanelTitle() {
+        return "Show Data";
     }
 
     /**

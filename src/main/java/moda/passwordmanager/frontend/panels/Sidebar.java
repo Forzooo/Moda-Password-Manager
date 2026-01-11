@@ -1,17 +1,17 @@
 package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.frontend.Frontend;
-import moda.passwordmanager.frontend.GUIState;
 import moda.passwordmanager.frontend.dialogs.Settings;
+import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class Sidebar extends JPanel {
+
+    private final InterThreadCommunication ITC;
 
     // Attributes for the configuration of the panel
     private final static int MAX_SIDEBAR = 300;  // Set the maximum size of the sidebar
@@ -27,14 +27,12 @@ public class Sidebar extends JPanel {
     private JButton showDataButton;
     private JButton settingsButton;
 
-    // The selectedPanel indicates the JPanel that is selected
-    private GUIState selectedPanel;
-
-    public Sidebar(Dimension windowSize){
+    public Sidebar(Dimension windowSize, InterThreadCommunication itc){
         super();  // Initialize the Panel
 
         // Set the attributes given by the JFrame
         this.windowSize = windowSize;
+        this.ITC = itc;
 
         initPanel();
         initSections();
@@ -158,34 +156,32 @@ public class Sidebar extends JPanel {
      * Initialize all the listeners on the components
      */
     private void initListeners(){
-        this.addDataButton.addActionListener(e -> switchPanel(GUIState.ADD_DATA));
+        this.addDataButton.addActionListener(e -> switchPanel(AddData.getPanelTitle()));
         setHoverEffect(this.addDataButton);
 
-        this.showDataButton.addActionListener(e -> switchPanel(GUIState.SHOW_DATA));
+        this.showDataButton.addActionListener(e -> switchPanel(ShowData.getPanelTitle()));
         setHoverEffect(this.showDataButton);
 
         this.settingsButton.addActionListener(e -> openSettings());
-
         setHoverEffect(this.settingsButton);
     }
 
     /**
      * Switch the JPanel shown to the new one
      */
-    private void switchPanel(GUIState guiState){
+    private void switchPanel(String panelTitle){
         // To do this, we first have to get the Frontend object by the getParent method, then call the real
         // switchPanel that is inside the Frontend
         Frontend frontend = (Frontend) getParent();
-        frontend.switchPanel(guiState);
+        frontend.switchPanel(panelTitle);
     }
 
     /**
      * Open the settings dialog
      */
     private void openSettings(){
-        // Retrieve the Frontend object, then call the openSettings method
-        Frontend frontend = (Frontend) getParent();
-        frontend.openSettings();
+        Settings settingsDialog = new Settings(this.ITC);
+        settingsDialog.setVisible(true);
     }
 
     /**
