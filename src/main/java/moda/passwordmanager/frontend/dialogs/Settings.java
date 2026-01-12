@@ -92,8 +92,8 @@ public class Settings extends JDialog {
         this.applyButton = new JButton();
         this.applyButton.setText("Apply");
 
-        dialogOperations.add(this.cancelButton);
         dialogOperations.add(this.confirmButton);
+        dialogOperations.add(this.cancelButton);
         dialogOperations.add(this.applyButton);
 
         add(sidebarPanel);

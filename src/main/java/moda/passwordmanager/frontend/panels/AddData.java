@@ -45,11 +45,8 @@ public class AddData extends JPanel {
      * Set the configuration of the panel
      */
     private void initPanel() {
-
         // The constraint "fill" is used to let the components use all the panel
         setLayout(new MigLayout("fill"));
-
-        setBackground(Color.WHITE);  // TODO: Temporary
     }
 
     /**

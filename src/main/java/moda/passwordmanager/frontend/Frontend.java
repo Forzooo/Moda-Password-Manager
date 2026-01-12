@@ -24,8 +24,6 @@ public class Frontend extends JPanel {
 
     private ShowData showDataPanel;
 
-    private final static int MIN_CONTENT_WIDTH = 500;
-
     public Frontend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
                     String databasePath){
 
@@ -97,19 +95,17 @@ public class Frontend extends JPanel {
      * Initialize all the panels
      */
     private void initPanels(){
-        Dimension windowSize = getToolkit().getScreenSize();  // Get the initial size of the window
-
-        Sidebar sidebar = new Sidebar(windowSize, this.ITC);
+        Sidebar sidebar = new Sidebar(this.ITC);
 
         this.frontendPanel = new JPanel();
         this.frontendPanel.setLayout(new CardLayout());
 
-        this.showDataPanel = new ShowData(this.ITC, MIN_CONTENT_WIDTH);
+        this.showDataPanel = new ShowData(this.ITC);
         this.frontendPanel.add(this.showDataPanel, ShowData.getPanelTitle());
         this.frontendPanel.add(new AddData(this.ITC), AddData.getPanelTitle());
 
-        add(sidebar);
-        add(this.frontendPanel, "span, grow");
+        add(sidebar, "grow");
+        add(this.frontendPanel, "span, grow, push");
     }
 
     /**

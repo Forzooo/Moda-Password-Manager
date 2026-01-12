@@ -16,9 +16,6 @@ public class ShowData extends JPanel {
     // Attribute to communicate with the backend
     private final InterThreadCommunication ITC;
 
-    // Attributes for the configuration of the panel
-    private final int MIN_CONTENT_WIDTH;
-
     private JTabbedPane dataTabbedPane;  // The tabbed pane shows the dataList and the data the user has selected
 
     /**
@@ -30,12 +27,11 @@ public class ShowData extends JPanel {
     // Swing components
     private JList<String> dataList;
 
-    public ShowData(InterThreadCommunication itc, int MIN_CONTENT_WIDTH){
+    public ShowData(InterThreadCommunication itc){
         super();  // Initialize the Panel
 
         // Set the attributes given by the JFrame
         this.ITC = itc;
-        this.MIN_CONTENT_WIDTH = MIN_CONTENT_WIDTH;
 
         // Initialize the user data ArrayList and Model
         this.userData = new ArrayList<>();
@@ -66,8 +62,8 @@ public class ShowData extends JPanel {
         this.dataList.setModel(this.userDataModel);  // Set the model of the JList (Strings containing service data)
         this.dataList.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 20));
 
-        dataList.setSelectionBackground(Color.black);
-        dataList.setSelectionForeground(Color.white);
+        this.dataList.setSelectionBackground(Color.black);
+        this.dataList.setSelectionForeground(Color.white);
 
         JScrollPane scrollPane = new JScrollPane(this.dataList);
         scrollPane.setPreferredSize(new Dimension(1000, 750));
