@@ -30,8 +30,6 @@ public class Cryptography {
     private byte[] masterPassword;  // The master password that allows encryption/decryption
     private SecureRandom secureRandom;
     private Argon2Parameters.Builder hashBuilder;  // The builder for hash generation
-    private Argon2BytesGenerator hashGenerator;  // The generator for the hash
-    private Cipher aes;  // Used to compute AES
 
     public Cryptography(){
         this.masterPassword = null;  // The master password is set only with the set method
@@ -46,14 +44,6 @@ public class Cryptography {
                 .withIterations(Cryptography.ARGON_ITERATIONS)  // Set the number of iterations
                 .withMemoryAsKB(Cryptography.ARGON_MEMORY*1000)  // Set the RAM usage of Argon in KiloBytes
                 .withParallelism(Cryptography.ARGON_PARALLELISM);  // Set the number of threads
-
-        this.hashGenerator = new Argon2BytesGenerator();  // Create an Argon2 generator to create the hashes
-
-        try {
-            this.aes = Cipher.getInstance("AES/GCM/NoPadding");  // Define that the cipher used is AES-GCM
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     /**
@@ -97,7 +87,6 @@ public class Cryptography {
 
     // Removes all the headers from the ciphertext and decrypts it
     public byte[] decrypt(byte[] encryptedData){
-
         byte[] salt = readHeader(encryptedData, ARGON_SALT_SIZE);
         encryptedData = removeHeader(encryptedData, ARGON_SALT_SIZE);
 
@@ -136,10 +125,12 @@ public class Cryptography {
     private byte[] hash(byte[] salt){
         this.hashBuilder.withSalt(salt);  // Set the salt of the hash generator
 
-        this.hashGenerator.init(this.hashBuilder.build());
+        // The hashGenerator has to be created locally, otherwise a race condition can happen
+        Argon2BytesGenerator hashGenerator = new Argon2BytesGenerator();
+        hashGenerator.init(this.hashBuilder.build());
 
         byte[] hash = new byte[Cryptography.AES_KEY_SIZE];  // Create the array of bytes where the hash will be stored
-        this.hashGenerator.generateBytes(this.masterPassword, hash);  // Compute the hashes using the master password
+        hashGenerator.generateBytes(this.masterPassword, hash);  // Compute the hashes using the master password
 
         return hash;
     }
@@ -153,6 +144,13 @@ public class Cryptography {
      * @return The encrypted/decrypted data encoded in a byte array
      */
     private byte[] computeAES(byte[] data, byte[] hash, byte[] iv, int cipherMode){
+        // The aes object has to be created locally, otherwise a race condition can happen
+        Cipher aes;
+        try {
+            aes = Cipher.getInstance("AES/GCM/NoPadding");
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
+            throw new RuntimeException(e);
+        }
         SecretKeySpec encryptionKey = new SecretKeySpec(hash, "AES");  // Create a Secret Key from the hash
 
         // Define the parameters of the AES GCM cipher
@@ -160,9 +158,9 @@ public class Cryptography {
         try {
             // Initialize the AES in encryption/decryption mode with the encryption key (the hash) generated from
             // Argon2id and the parameters specified in the GCMParamterSpec object
-            this.aes.init(cipherMode, encryptionKey, gcmParameterSpec);
+            aes.init(cipherMode, encryptionKey, gcmParameterSpec);
 
-            return this.aes.doFinal(data);  // Encrypt/decrypt the data
+            return aes.doFinal(data);  // Encrypt/decrypt the data
         } catch (IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException |
                  InvalidKeyException e) {
             throw new RuntimeException(e);
