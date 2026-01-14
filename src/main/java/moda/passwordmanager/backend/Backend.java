@@ -86,8 +86,6 @@ public class Backend extends EventListener {
             }
         });
 
-        addOperation("close-connection", this::closeConnection);
-
         // Save the data and update the service fields
         addOperation("save-data", () -> {
             saveData((Data) getRequestData().getFirst());

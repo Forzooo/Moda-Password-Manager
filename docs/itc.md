@@ -13,7 +13,8 @@ handle any operation.
 Event objects have the following properties:
 - _String_ operation: indicates the operation requested
 - _ArrayList\<Object\> data: the data required for the operation
-- _int_ ID: a unique integer used to identify the communication that is automatically set
+- _int_ communicationID: a unique integer that identifies the communication
+- _int_ sequenceNumber: an auto incremental integer that identifies the current state of the communication
 
 \[[List of events supported by the Password Manager](events.md)\]
 
@@ -22,7 +23,8 @@ Event objects have the following properties:
 Send an event asynchronously.
 
 ### Event receive()
-Set the thread to wait until an event is sent, and returns it.
+Set the thread to wait until an event is sent, and returns it. Only the classes in the same package, or that inherit the
+ITC class, can use it, as other methods required to make a response have protected visibility.
 
 ### Event request(Event request)
 Send an event synchronously, waiting for the response and returns it.
