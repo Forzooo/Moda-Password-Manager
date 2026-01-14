@@ -23,7 +23,8 @@ Event objects have the following properties:
 Send an event asynchronously.
 
 ### Event receive()
-Set the thread to wait until an event is sent, and returns it.
+Set the thread to wait until an event is sent, and returns it. Only the classes in the same package, or that inherit the
+ITC class, can use it, as other methods required to make a response have protected visibility.
 
 ### Event request(Event request)
 Send an event synchronously, waiting for the response and returns it.
