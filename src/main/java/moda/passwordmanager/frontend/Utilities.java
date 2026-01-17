@@ -2,6 +2,7 @@ package moda.passwordmanager.frontend;
 
 import com.formdev.flatlaf.util.SystemFileChooser;
 
+import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -116,6 +117,14 @@ public class Utilities {
         }
 
         return newStackTrace.toString();
+    }
+
+    /**
+     * Returns an icon based on its name
+     * @param name The name of the file (ex. icon.png)
+     */
+    public static ImageIcon getIcon(String name){
+        return new ImageIcon(Utilities.class.getResource("/icons/"+name));
     }
 
 }

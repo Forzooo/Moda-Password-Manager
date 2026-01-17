@@ -83,7 +83,7 @@
                             <winDirChooser>true</winDirChooser>
                             <winShortcut>true</winShortcut>
                             <winShortcutPrompt>true</winShortcutPrompt>
-                            <icon>${project.basedir}/target/classes/icon.ico</icon>
+                            <icon>${project.basedir}/target/classes/icons/icon.ico</icon>
                             <vendor>Moda</vendor>
                             <copyright>GNU General Public License, version 3 (GPLv3)</copyright>
                             <licenseFile>${project.basedir}/target/classes/LICENSE</licenseFile>

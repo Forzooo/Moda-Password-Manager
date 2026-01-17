@@ -1,8 +1,6 @@
 package moda.passwordmanager.frontend.panels.settings;
 
 import moda.passwordmanager.frontend.Utilities;
-import moda.passwordmanager.frontend.components.Placeholder;
-import moda.passwordmanager.frontend.dialogs.Startup;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
@@ -17,7 +15,6 @@ public class Data extends Section {
     private JButton changeMasterPasswordButton;  // Change the master password of the current database4
 
     private JTextField stringLengthTextField;
-    private Placeholder stringLengthPlaceholder;
     private JCheckBox stringLettersCheckbox;
     private JCheckBox stringNumbersCheckbox;
     private JCheckBox stringSpecialCharactersCheckbox;
@@ -44,8 +41,7 @@ public class Data extends Section {
         this.changeMasterPasswordButton.setMaximumSize(buttonDimension);
 
         this.stringLengthTextField = new JTextField();
-        this.stringLengthPlaceholder = new Placeholder(this.stringLengthTextField, "String length");
-        this.stringLengthPlaceholder.show();
+        this.stringLengthTextField.putClientProperty("JTextField.placeholderText", "String length");
 
         this.stringLettersCheckbox = new JCheckBox();
         this.stringLettersCheckbox.setText("Include letters (a-zA-Z)");
@@ -136,7 +132,6 @@ public class Data extends Section {
         ArrayList<Object> data = backendResponse.getData();  // Retrieve the data
 
         // Set the data to the components
-        this.stringLengthPlaceholder.hide();
         this.stringLengthTextField.setText(String.valueOf(data.getFirst()));
         this.stringLettersCheckbox.setSelected((boolean) data.get(1));
         this.stringNumbersCheckbox.setSelected((boolean) data.get(2));

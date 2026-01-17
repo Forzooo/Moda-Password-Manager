@@ -85,7 +85,7 @@ public class UserData extends JPanel {
         this.rollbackDataFields = new String[userData.length];  // Create the rollback array based on the data length
 
         for (int i = 0; i < this.userDataFields.length; i++){
-            // As the password field requires its own panel, then we need to check each time the value of i to know
+            // As the password field requires its own panel we need to check each time the value of i to know
             // the field we are creating
             UserDataField userDataField;
             if (i != 2){

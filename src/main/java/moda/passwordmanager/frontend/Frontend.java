@@ -38,7 +38,7 @@ public class Frontend extends JPanel {
         initStartup();
 
         initPanel();  // Set the properties of the panel
-        initPanels();  // Initialize all the JPanels
+        initComponents();  // Initialize all the JPanels
         initEventListener();  // Initialize the Event Listener only after all the frontend components have been init
 
     }
@@ -92,9 +92,9 @@ public class Frontend extends JPanel {
     }
 
     /**
-     * Initialize all the panels
+     * Initialize the components
      */
-    private void initPanels(){
+    private void initComponents(){
         Sidebar sidebar = new Sidebar(this.ITC);
 
         this.frontendPanel = new JPanel();

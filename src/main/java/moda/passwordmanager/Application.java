@@ -2,6 +2,7 @@ package moda.passwordmanager;
 
 import com.formdev.flatlaf.FlatLightLaf;
 import moda.passwordmanager.backend.Backend;
+import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.Frontend;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
@@ -78,8 +79,7 @@ public class Application extends JFrame {
      */
     public static Image getIcon(){
         // Get the image from the resources
-        ImageIcon imageIcon = new ImageIcon(Application.class.getResource("/icon.png"));
-        return imageIcon.getImage();
+        return Utilities.getIcon("logo.png").getImage();
     }
 
     /**
@@ -96,7 +96,7 @@ public class Application extends JFrame {
         return VERSION;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args){
         String databaseToUse = parseDatabasePath(args);  // Parse the args to look for a database to use
 
         // Create the two LinkedBlockingQueue objects here to pass them to the Backend and the Frontend

@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -27,7 +28,7 @@ public class Backend extends EventListener {
     /**
      * The servicesMap is used to map IDs with the hashCode of the service field
      */
-    private TreeMap<Integer, Integer> servicesMap;
+    private HashMap<Integer, Integer> servicesMap;
 
     // The InterThreadCommunication object used to communicate with the Frontend thread
     private final InterThreadCommunication ITC;
@@ -216,7 +217,7 @@ public class Backend extends EventListener {
      * Initialize the mapping of the service fields and send the service fields in chunks
      */
     private void initServiceMapping(){
-        this.servicesMap = new TreeMap<>();  // Initialize the TreeMap to associate IDs with their hash
+        this.servicesMap = new HashMap<>();  // Initialize the HashMap to associate IDs with their hash
 
         // Initialize an ArrayList that stores the data objects that are sent to the Frontend
         ArrayList<Data> dataToSend = new ArrayList<>();

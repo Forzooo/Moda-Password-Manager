@@ -1,7 +1,8 @@
 package moda.passwordmanager.frontend.panels;
 
+import moda.passwordmanager.frontend.Utilities;
+
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -38,13 +39,15 @@ public class UserDataField extends JPanel {
 
         // Create the JButton to copy the data field
         this.copyButton = new JButton();
-        this.copyButton.setText("❏");
-        this.copyButton.setToolTipText("Copy");
+        this.copyButton.setIcon(Utilities.getIcon("copy.png"));
+        this.copyButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        this.copyButton.setToolTipText("Copy the data.");
         this.copyButton.setPreferredSize(new Dimension(50, 70));
         this.copyButton.setMaximumSize(new Dimension(50, 70));
 
+        this.dataField.putClientProperty("JTextField.trailingComponent", this.copyButton);
+
         add(this.dataField);
-        add(this.copyButton);
     }
 
     /**

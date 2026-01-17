@@ -19,10 +19,10 @@ public class ShowData extends JPanel {
     private JTabbedPane dataTabbedPane;  // The tabbed pane shows the dataList and the data the user has selected
 
     /**
-     * The service data shown in the JList of "Show Data" panel which it's updated automatically by the timer
+     * The service fields shown in the JList, which are updated by the FrontendEventListener
      */
-    private ArrayList<Data> userData;  // A Data object is required as each service shown needs to be associated with its ID
-    private DefaultListModel<String> userDataModel;
+    private final ArrayList<Data> USER_DATA;  // A Data object is required as each service shown needs to be associated with its ID
+    private final DefaultListModel<String> USER_DATA_MODEL;
 
     // Swing components
     private JList<String> dataList;
@@ -34,8 +34,8 @@ public class ShowData extends JPanel {
         this.ITC = itc;
 
         // Initialize the user data ArrayList and Model
-        this.userData = new ArrayList<>();
-        this.userDataModel = new DefaultListModel<>();
+        this.USER_DATA = new ArrayList<>();
+        this.USER_DATA_MODEL = new DefaultListModel<>();
 
         initPanel();
         initComponents();
@@ -59,7 +59,7 @@ public class ShowData extends JPanel {
         // Create the JList used to show all the data saved inside the database
         this.dataList = new JList<>();
         this.dataList.setFixedCellHeight(30);
-        this.dataList.setModel(this.userDataModel);  // Set the model of the JList (Strings containing service data)
+        this.dataList.setModel(this.USER_DATA_MODEL);  // Set the model of the JList (Strings containing service data)
         this.dataList.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 20));
 
         this.dataList.setSelectionBackground(Color.black);
@@ -86,7 +86,7 @@ public class ShowData extends JPanel {
                 if (e.getClickCount() == 2) {
                     // Retrieve the ID selected by getting it from the userData attribute and check if a tab with that
                     // ID already exists
-                    int id = userData.get(dataList.getSelectedIndex()).getID();
+                    int id = USER_DATA.get(dataList.getSelectedIndex()).getID();
 
                     // If the tab exists, then set it to be the selected one instead of creating a new tab for it
                     if (checkDataTabExist(id)){
@@ -94,7 +94,7 @@ public class ShowData extends JPanel {
                         return;
                     }
 
-                    addDataTab(userData.get(dataList.getSelectedIndex()).getID());
+                    addDataTab(USER_DATA.get(dataList.getSelectedIndex()).getID());
                 }
             }
         });
@@ -148,26 +148,26 @@ public class ShowData extends JPanel {
      */
     private void addDataTab(int id){
         UserData userDataTab = new UserData(this.ITC, id);
-        String tabName = this.userData.get(this.dataList.getSelectedIndex()).getSERVICE();  // Get the tab name from the service field
+        String tabName = this.USER_DATA.get(this.dataList.getSelectedIndex()).getSERVICE();  // Get the tab name from the service field
         CloseTab closeTab = new CloseTab(this.dataTabbedPane, userDataTab, tabName);
         closeTab.add();  // Add the tab to the TabbedPane
         this.dataTabbedPane.setSelectedComponent(userDataTab);  // Set the tab to be shown to be the one created
     }
 
-    public ArrayList<Data> getUserData() {
-        return this.userData;
+    public ArrayList<Data> getUSER_DATA() {
+        return this.USER_DATA;
     }
 
-    public DefaultListModel<String> getUserDataModel() {
-        return this.userDataModel;
+    public DefaultListModel<String> getUSER_DATA_MODEL() {
+        return this.USER_DATA_MODEL;
     }
 
     /**
      * Return the index of the Data object of UserData that has the same ID. -1 is returned if it does not exist
      */
     public int indexOfUserData(int id){
-        for (int i = 0; i < this.userData.size(); i++){
-            if (this.userData.get(i).getID() == id) {
+        for (int i = 0; i < this.USER_DATA.size(); i++){
+            if (this.USER_DATA.get(i).getID() == id) {
                 return i;
             }
         }
