@@ -40,10 +40,8 @@ public class UserDataField extends JPanel {
         // Create the JButton to copy the data field
         this.copyButton = new JButton();
         this.copyButton.setIcon(Utilities.getIcon("copy.png"));
-        this.copyButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         this.copyButton.setToolTipText("Copy the data.");
-        this.copyButton.setPreferredSize(new Dimension(50, 70));
-        this.copyButton.setMaximumSize(new Dimension(50, 70));
+        Utilities.applyTrailingButtonProperties(this.copyButton);
 
         this.dataField.putClientProperty("JTextField.trailingComponent", this.copyButton);
 
@@ -100,6 +98,14 @@ public class UserDataField extends JPanel {
         updateClipboardCopy();  // We assume that when the editing is finished the data has been changed
         this.copyButton.setEnabled(true);  // Enable again the copy button
         this.copyButton.setVisible(true);
+    }
+
+    protected JTextField getDataField(){
+        return this.dataField;
+    }
+
+    protected JButton getCopyButton(){
+        return this.copyButton;
     }
 
     /**

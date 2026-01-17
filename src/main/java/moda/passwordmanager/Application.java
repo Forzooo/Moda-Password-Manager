@@ -1,5 +1,7 @@
 package moda.passwordmanager;
 
+import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import moda.passwordmanager.backend.Backend;
 import moda.passwordmanager.frontend.Utilities;
@@ -24,7 +26,7 @@ public class Application extends JFrame {
     }
 
     /**
-     * Apply the FlatLaf look and feel to the UI
+     * Apply the FlatLaf look and feel to the UI and set general properties
      */
     private void initFlatLaf(){
         try {
@@ -32,6 +34,9 @@ public class Application extends JFrame {
         } catch (UnsupportedLookAndFeelException e) {
             throw new RuntimeException(e);
         }
+
+        // General properties
+        UIManager.put("TabbedPane.showTabSeparators", true);
     }
 
     private void initUI(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,

@@ -1,7 +1,6 @@
 package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.backend.Data;
-import moda.passwordmanager.frontend.components.CloseTab;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
 import javax.swing.*;
@@ -10,6 +9,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.function.IntConsumer;
 
 public class ShowData extends JPanel {
 
@@ -148,9 +148,13 @@ public class ShowData extends JPanel {
      */
     private void addDataTab(int id){
         UserData userDataTab = new UserData(this.ITC, id);
+        userDataTab.putClientProperty("JTabbedPane.tabClosable", true);  // Set only the tab to be closeable, not the
+                                                                         // entire JTabbedPane
+        userDataTab.putClientProperty("JTabbedPane.tabCloseCallback",
+                (IntConsumer) tabIndex -> this.dataTabbedPane.remove(tabIndex));
+
         String tabName = this.USER_DATA.get(this.dataList.getSelectedIndex()).getSERVICE();  // Get the tab name from the service field
-        CloseTab closeTab = new CloseTab(this.dataTabbedPane, userDataTab, tabName);
-        closeTab.add();  // Add the tab to the TabbedPane
+        this.dataTabbedPane.add(tabName, userDataTab);
         this.dataTabbedPane.setSelectedComponent(userDataTab);  // Set the tab to be shown to be the one created
     }
 

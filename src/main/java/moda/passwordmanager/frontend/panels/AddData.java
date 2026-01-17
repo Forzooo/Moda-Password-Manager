@@ -1,6 +1,7 @@
 package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.backend.Data;
+import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import net.miginfocom.swing.MigLayout;
@@ -64,9 +65,12 @@ public class AddData extends JPanel {
 
         // Create the button for the generation of a password
         this.generatePasswordButton = new JButton();
-        this.generatePasswordButton.setText("Generate Password");
-        this.generatePasswordButton.setToolTipText("Generate a password");  // The tooltip will became useful when the
-                                                                            // the button will have an icon instead
+        this.generatePasswordButton.setIcon(Utilities.getIcon("generate_string.png"));
+        this.generatePasswordButton.setToolTipText("Generate a password");
+        
+        Utilities.applyTrailingButtonProperties(this.generatePasswordButton);
+        this.passwordTextField.putClientProperty("JTextField.trailingComponent", this.generatePasswordButton);
+
         this.serviceTextField = new JTextField();
         this.serviceTextField.putClientProperty("JTextField.placeholderText", "Service (Google, Microsoft, ...)");
 
@@ -84,8 +88,7 @@ public class AddData extends JPanel {
         add(addDataLabel, "span, align center, wrap");
         add(this.usernameTextField, "span, grow, wrap");
         add(this.emailAddressTextField, "span, grow, wrap");
-        add(this.passwordTextField, "split 2, grow, align center");
-        add(this.generatePasswordButton, "wrap");
+        add(this.passwordTextField, "span, grow, wrap");
         add(this.serviceTextField, "span, grow, wrap");
         add(this.additionalDataTextField, "span, grow, wrap");
         add(this.resetButton, "split 2, align center");

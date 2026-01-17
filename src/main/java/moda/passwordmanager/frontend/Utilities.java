@@ -4,6 +4,7 @@ import com.formdev.flatlaf.util.SystemFileChooser;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
+import java.awt.*;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
@@ -125,6 +126,15 @@ public class Utilities {
      */
     public static ImageIcon getIcon(String name){
         return new ImageIcon(Utilities.class.getResource("/icons/"+name));
+    }
+
+    /**
+     * Applies all the default properties to a button that is used as a trailing component
+     */
+    public static void applyTrailingButtonProperties(JButton button){
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        button.setPreferredSize(new Dimension(50, 70));
+        button.setMaximumSize(new Dimension(50, 70));
     }
 
 }
