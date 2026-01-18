@@ -13,6 +13,9 @@ class InterThreadCommunicationTests {
 
     private final static String EVENT_NAME = "Test";
     private final static int EVENT_ID = 1;
+
+    // The sequence number has to be 1 after the event is sent one time
+    private final static int EVENT_SEQUENCE_SENT_ONE_TIME = 1;
     private InterThreadCommunication sender;
     private InterThreadCommunication receiver;
 
@@ -33,8 +36,13 @@ class InterThreadCommunicationTests {
     @Test
     void sendAndReceiveSameThread(){
         this.sender.send(new Event(EVENT_NAME));
-        Event event = receiver.receive();
+        Event event = this.receiver.receive();
         assertEquals(EVENT_NAME, event.getOperation());
+
+        // Also ensure that the sequence number is 1 as the event has been sent one time
+        // Lastly, it can be asserted only here as the send method is the same for all test cases, thus the same
+        // behaviour is expected
+        assertEquals(EVENT_SEQUENCE_SENT_ONE_TIME, event.getSequenceNumber());
     }
 
     /**
@@ -105,11 +113,11 @@ class InterThreadCommunicationTests {
     @Test
     void makeResponse(){
         Event request = new Event(EVENT_NAME);
-        request.setId(EVENT_ID);  // Set the ID of the event
+        request.setCommunicationID(EVENT_ID);  // Set the ID of the event
 
         // Make the response and assert the ID
         Event response = this.sender.makeResponse(request, request.getOperation());
-        assertEquals(EVENT_ID,response.getId());
+        assertEquals(EVENT_ID,response.getCommunicationID());
     }
 
 }

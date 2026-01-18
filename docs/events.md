@@ -1,13 +1,17 @@
 # ITC Events implemented by the Moda Password Manager
 Events sections:
-* [General Use](#general-use)
+* [Default Operations](#default-operations)
 * [Data Operations](#data-operations)
 * [Database Operations](#database-operations)
 * [Google Drive](#google-drive)
 * [Utilities](#utilities)
 
+***
 
-## General Use
+## Default Operations
+The default operations are added by the EventListener itself, thus they cannot be added by using the `addOperation`
+method.
+
 ### Exception Raised
 * Operation: `exception-raised`
 * Sender: Backend

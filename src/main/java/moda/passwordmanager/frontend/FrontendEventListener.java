@@ -11,15 +11,12 @@ import java.util.ArrayList;
 
 public class FrontendEventListener extends EventListener {
 
-    private InterThreadCommunication itc;
-    private boolean runFlag;  // Flag used to indicate when the thread has to stop
-    private Event eventToSend;  // The event that is sent to the Backend
-    private ShowData showData;  // The Listener needs the Show Data Panel to call the service fields
+    private final InterThreadCommunication ITC;
+    private ShowData showData;  // The EventListener needs the Show Data Panel to call the service fields
 
     public FrontendEventListener(InterThreadCommunication itc, ShowData showData){
         super(itc, "Frontend Event Listener");  // Set the name of the thread for debug purposes
-        this.itc = itc;
-        this.runFlag = true;
+        this.ITC = itc;
         this.showData = showData;
 
         initHandler();  // Initialize all the operations to handle
@@ -54,6 +51,7 @@ public class FrontendEventListener extends EventListener {
                     "The following exception occurred in the " +  threadName + "thread", JOptionPane.ERROR_MESSAGE);
 
             closeConnection();  // The "close-connection" event must be sent after the JOptionPane has been closed
+            System.exit(0);  // Terminate the execution of the software
         });
     }
 

@@ -10,7 +10,7 @@ import java.util.HashMap;
 public abstract class EventListener extends Thread {
 
     private final InterThreadCommunication ITC;
-    private boolean runFlag;  // Flag used to indicate when the thread has to stop
+    private boolean runFlag;  // Flag used to indicate when the thread has to terminate its execution
 
     /**
      * The request is used by higher level methods to retrieve the data associated with it, or its operation if it's
@@ -22,20 +22,24 @@ public abstract class EventListener extends Thread {
     /**
      * The handlerMap maps the operations with a method reference and it's used by the handleRequest method
      */
-    private HashMap<String, Runnable> handlerMap;
+    private final HashMap<String, Runnable> HANDLER_MAP;
 
     public EventListener(InterThreadCommunication itc){
         super();
         this.ITC = itc;
         this.runFlag = true;
-        this.handlerMap = new HashMap<>();
+        this.HANDLER_MAP = new HashMap<>();
+
+        initDefaultOperations();
     }
 
     public EventListener(InterThreadCommunication itc, String threadName){
         super(threadName);  // Set the name of the thread for log purposes
         this.ITC = itc;
         this.runFlag = true;
-        this.handlerMap = new HashMap<>();
+        this.HANDLER_MAP = new HashMap<>();
+
+        initDefaultOperations();
     }
 
     @Override
@@ -44,6 +48,12 @@ public abstract class EventListener extends Thread {
 
         while (this.runFlag){
             this.request = this.ITC.receive();  // Wait for a request
+
+            // If the sequence number of the event is 2 or higher, it means that the event is response to a request,
+            // thus we can discard it
+            if (this.request.getSequenceNumber() >= 2){
+                continue;
+            }
 
             // Create the response to send to the other queue, where the name of the operation is always the same
             makeResponse(this.request, this.request.getOperation());
@@ -56,17 +66,20 @@ public abstract class EventListener extends Thread {
                 resetResponse();  // Reset the data to send for the next Event
             }
         }
-
     }
 
     /**
-     * Close the connection and terminate the execution
+     * Add the default operations to the handler map
+     */
+    private void initDefaultOperations(){
+        addOperation("close-connection", this::closeConnection);
+    }
+
+    /**
+     * Close the connection and terminate the execution of the thread
      */
     protected void closeConnection(){
         this.runFlag = false;  // Terminate the execution of the thread
-        Event closeConnection = new Event("close-connection");
-        this.ITC.send(closeConnection);
-        System.exit(0);
     }
 
     /**
@@ -81,10 +94,10 @@ public abstract class EventListener extends Thread {
      */
     private void handleRequest(Event request) {
         String operation = request.getOperation();  // Get the operation to perform
-        if (this.handlerMap.containsKey(operation)){
-            this.handlerMap.get(operation).run();  // Execute the method reference
+        if (this.HANDLER_MAP.containsKey(operation)){
+            this.HANDLER_MAP.get(operation).run();  // Execute the method reference
         }else{
-            resetResponse();  // The operation requested is unknown, thus the response is reset
+            throw new UnknownOperationException("The operation " + request.getOperation() + " requested is unknown.");
         }
     }
 
@@ -92,7 +105,10 @@ public abstract class EventListener extends Thread {
      * Add an operation to the handler
      */
     protected void addOperation(String operation, Runnable method) {
-        this.handlerMap.put(operation, method);
+        if (this.HANDLER_MAP.containsKey(operation)){
+            throw new OverriddenOperationException("The operation " + operation + " already exists in the handler map.");
+        }
+        this.HANDLER_MAP.put(operation, method);
     }
 
     /**

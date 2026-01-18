@@ -1,10 +1,14 @@
 package moda.passwordmanager.backend;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Objects;
 
 public class Data {
+
+    /**
+     * The value of the ID if it has not been set by the constructor
+     */
+    private final static int ID_NOT_SET = -1;
 
     private final int ID;
     private final String USERNAME;
@@ -24,8 +28,6 @@ public class Data {
 
     /**
      * Constructor used for the JList of "Show Data" of Frontend where only ID and service are used
-     * @param id
-     * @param service
      */
     public Data(int id, String service){
         this.ID = id;
@@ -38,7 +40,7 @@ public class Data {
     }
 
     public Data(byte[] username, byte[] emailAddress, byte[] password, byte[] service, byte[] additional){
-        this.ID = -1;  // Set the ID as -1 as it won't be used when this constructor is called
+        this.ID = ID_NOT_SET;  // Set the ID as -1 as it won't be used when this constructor is called
         this.USERNAME = new String(username, StandardCharsets.UTF_8);
         this.EMAIL_ADDRESS = new String(emailAddress, StandardCharsets.UTF_8);
         this.PASSWORD = new String(password, StandardCharsets.UTF_8);
@@ -47,7 +49,7 @@ public class Data {
     }
 
     public Data(String username, String emailAddress, String password, String service, String additional){
-        this.ID = -1;  // Set the ID as -1 as it won't be used when this constructor is called
+        this.ID = ID_NOT_SET;  // Set the ID as -1 as it won't be used when this constructor is called
         this.USERNAME = username;
         this.EMAIL_ADDRESS = emailAddress;
         this.PASSWORD = password;
@@ -60,7 +62,7 @@ public class Data {
      */
 
     public int getID() {
-        return ID;
+        return this.ID;
     }
 
     public String getUSERNAME() {
@@ -92,54 +94,14 @@ public class Data {
         return new String[]{this.USERNAME, this.EMAIL_ADDRESS, this.PASSWORD, this.SERVICE, this.ADDITIONAL_DATA};
     }
 
-    /**
-     * Encode any given data, in byte array format, to the Base64 format
-     * @param data
-     * @return A Base64 byte array
-     */
-    public static byte[] encode(byte[] data){
-        return Base64.getEncoder().encode(data);
-    }
-
-    /**
-     * Encode any given data, in byte array format, to the Base64 format
-     * @param data
-     * @return A Base64 byte array
-     */
-    public static byte[] encode(String data){
-        return Base64.getEncoder().encode(data.getBytes());
-    }
-
-    public static String encodeToString(byte[] data){
-        return new String(data, StandardCharsets.UTF_8);
-    }
-
-
-    /**
-     * Encode any given data, in byte array format, to a Base64 format string
-     * @param data
-     * @return A Base64 encoded string
-     */
-    public static String encodeToBase64(byte[] data){
-        return Base64.getEncoder().encodeToString(data);
-    }
-
-    /**
-     * Decode any given data, in Base64 byte array format
-     * @param data
-     * @return A byte array
-     */
-    public static byte[] decode(byte[] data){
-        return Base64.getDecoder().decode(data);
-    }
-
-    /**
-     * Decode any given data, in Base64 byte array format
-     * @param data
-     * @return A byte array
-     */
-    public static byte[] decode(String data){
-        return Base64.getDecoder().decode(data.getBytes());
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Data data = (Data) o;
+        return this.ID == data.ID && Objects.equals(this.USERNAME, data.getUSERNAME()) &&
+                Objects.equals(this.EMAIL_ADDRESS, data.getEMAIL_ADDRESS()) &&
+                Objects.equals(this.PASSWORD, data.getPASSWORD()) && Objects.equals(this.SERVICE, data.getSERVICE()) &&
+                Objects.equals(this.ADDITIONAL_DATA, data.getADDITIONAL_DATA());
     }
 
     @Override

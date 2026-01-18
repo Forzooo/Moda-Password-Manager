@@ -17,7 +17,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class Backend extends EventListener {
 
-    private BackendHelper helper;
+    private Helper helper;
 
     // Main components of the backend classes
     private Cryptography cryptography;
@@ -29,6 +29,7 @@ public class Backend extends EventListener {
      * The servicesMap is used to map IDs with the hashCode of the service field
      */
     private HashMap<Integer, Integer> servicesMap;
+    private final static int SERVICES_CHUNK = 4;  // The number of services sent per chunk
 
     // The InterThreadCommunication object used to communicate with the Frontend thread
     private final InterThreadCommunication ITC;
@@ -40,18 +41,34 @@ public class Backend extends EventListener {
         // Get the ITC from the EventListener, otherwise we would have to create two separate ITC object
         this.ITC = getITC();
 
-        // Initialize all the backend components
-        this.settings = new Settings();
-        this.cryptography = new Cryptography();
-        this.googleDrive = new GoogleDrive(this.settings.getAPPDATA_DIRECTORY_PATH());
+        createAppdataDirectory();  // Create the folder to store the configuration files inside it
 
-        this.helper = new BackendHelper(this.cryptography, this.settings, this.googleDrive);
+        // Initialize all the backend components
+        this.settings = new Settings(Helper.getAppDataDirectory()+Helper.getSettingsFile());
+        this.cryptography = new Cryptography();
+        this.googleDrive = new GoogleDrive(Helper.getAppDataDirectory());
+
+        this.helper = new Helper(this.cryptography, this.settings);
 
         // The path of the database is retrieved from the helper
         this.database = new Database(this.helper.getDatabasePath());
 
         startGoogleDrive();  // Initialize the connection with Google Drive only if enabled by the user
         initHandler();  // Initialize all the operations to handle
+    }
+
+    /**
+     * Create the Appdata folder for the software to store inside it files
+     */
+    private void createAppdataDirectory(){
+        File appdataDirectory = new File(Helper.getAppDataDirectory());
+
+        // Check whether the directory already exists to avoid recreating it
+        if (appdataDirectory.exists()){
+            return;
+        }
+
+        appdataDirectory.mkdirs();  // Create the directories
     }
 
     /**
@@ -69,8 +86,6 @@ public class Backend extends EventListener {
                 this.helper.executeInBackground(this::initServiceMapping);
             }
         });
-
-        addOperation("close-connection", this::closeConnection);
 
         // Save the data and update the service fields
         addOperation("save-data", () -> {
@@ -111,6 +126,7 @@ public class Backend extends EventListener {
         addOperation("update-master-password", this::updateMasterPassword);
         addOperation("get-google-drive", this::getGoogleDrive);
         addOperation("get-google-drive-synchronization", this::getGoogleDriveSynchronization);
+        addOperation("google-drive-authenticate", this::authenticateGoogleDrive);
         addOperation("google-drive-deauthenticate", this::deauthenticateGoogleDrive);
 
         // Synchronize with Google Drive and update the service fields
@@ -130,6 +146,7 @@ public class Backend extends EventListener {
     public void handleException(Thread t, Throwable e) {
         // Create the traceback file that contains the full stack trace of the exception before anything else
         createTracebackFile(t,e);
+        this.database.closeConnection();  // Close the connection with the database
 
         // Before sending the exception we need to send back the event because if the request one is a synchronous
         // one, then EDT is waiting for the response before handling the exception
@@ -164,7 +181,7 @@ public class Backend extends EventListener {
         String timestamp = new SimpleDateFormat("yyyy-M-dd-HH-mm-ss").format(new Date());
 
         try {
-            File traceback = new File(this.settings.getAPPDATA_DIRECTORY_PATH()+"traceback-"+
+            File traceback = new File(Helper.getAppDataDirectory()+"traceback-"+
                     timestamp+".txt");
             traceback.createNewFile();  // Create the traceback file
 
@@ -200,7 +217,7 @@ public class Backend extends EventListener {
             return true;
         }
 
-        byte[] service = Data.decode(testData.getSERVICE());  // Decode from base64
+        byte[] service = Helper.decodeBase64(testData.getSERVICE());  // Decode from base64
 
         // Try to decrypt it and add the data to the event based on whether an exception has been thrown
         try{
@@ -214,16 +231,28 @@ public class Backend extends EventListener {
     }
 
     /**
-     * Initialize the mapping of the service fields and send the service fields in chunks
+     * Initialize the mapping of the service fields and send them in chunks
      */
     private void initServiceMapping(){
         this.servicesMap = new HashMap<>();  // Initialize the HashMap to associate IDs with their hash
 
         // Initialize an ArrayList that stores the data objects that are sent to the Frontend
         ArrayList<Data> dataToSend = new ArrayList<>();
+        ArrayList<Data> serviceFields = this.database.getServiceFields();
 
-        // Iterate over the service fields
-        for (Data data : this.database.getServiceFields()){
+        for (int i = 0; i < serviceFields.size(); i++){
+            // Check the current size of the data to send to know if a chunk size is reached to send it
+            if (dataToSend.size() >= SERVICES_CHUNK){
+                Event updateService = new Event("update-service-fields", dataToSend);
+                this.ITC.send(updateService);
+
+                // We need to recreate the dataToSend object as otherwise it would use the same address as the one sent
+                // to the FrontendEventListener which would raise a concurrent exception
+                dataToSend = new ArrayList<>();
+            }
+
+            Data data = serviceFields.get(i);
+
             // Add the ID and the hash of the service to the map
             this.servicesMap.put(data.getID(), data.getSERVICE().hashCode());
 
@@ -253,7 +282,19 @@ public class Backend extends EventListener {
         ArrayList<Integer> servicesMapID = new ArrayList<>(this.servicesMap.keySet());
 
         // Iterate over the Data of the Database
-        for (Data data : serviceFields){
+        for (int i = 0; i < serviceFields.size(); i++){
+            // Check the current size of the data to send to know if a chunk size is reached to send it
+            if (updatedData.size() >= SERVICES_CHUNK){
+                Event updateService = new Event("update-service-fields", updatedData);
+                this.ITC.send(updateService);
+
+                // We need to recreate the dataToSend object as otherwise it would use the same address as the one sent
+                // to the FrontendEventListener which would raise a concurrent exception
+                updatedData = new ArrayList<>();
+            }
+
+            Data data = serviceFields.get(i);
+
             int id = data.getID();
             int hash = data.getSERVICE().hashCode();
 
@@ -274,6 +315,16 @@ public class Backend extends EventListener {
         // Iterate over the IDs that haven't been deleted, and set their service field to be empty to remove them
         // from the frontend
         for (Integer id : servicesMapID){
+            // Check the current size of the data to send to know if a chunk size is reached to send it
+            if (updatedData.size() >= SERVICES_CHUNK){
+                Event updateService = new Event("update-service-fields", updatedData);
+                this.ITC.send(updateService);
+
+                // We need to recreate the dataToSend object as otherwise it would use the same address as the one sent
+                // to the FrontendEventListener which would raise a concurrent exception
+                updatedData = new ArrayList<>();
+            }
+
             updatedData.add(new Data(id, ""));
             this.servicesMap.remove(id);  // Remove the ID from the service map as it has been deleted
         }
@@ -340,7 +391,7 @@ public class Backend extends EventListener {
         char[] stringCharacters = generateStringCharacters((Boolean) configuration.get(1), (Boolean) configuration.get(2),
                 (Boolean) configuration.get(3));  // Generate the characters
 
-        addResponseData(this.cryptography.generateString((int) configuration.getFirst(), stringCharacters).toString());
+        addResponseData(Helper.generateRandomString((int) configuration.getFirst(), stringCharacters).toString());
     }
 
     /**
@@ -582,7 +633,7 @@ public class Backend extends EventListener {
             recentDatabases.remove(pathIndex);
         }
         recentDatabases.addFirst(path);  // Add the path as the first element of the list
-        this.settings.writeList("database/recent", recentDatabases);  // Write the updated list in the settings
+        this.settings.writeListProperty("database/recent", recentDatabases);  // Write the updated list in the settings
     }
 
 }
