@@ -1,5 +1,6 @@
 package moda.passwordmanager.frontend.panels;
 
+import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
@@ -8,7 +9,7 @@ import java.awt.*;
 
 public class UserPasswordField extends UserDataField {
 
-    private InterThreadCommunication itc;
+    private final InterThreadCommunication ITC;
     private JButton generatePasswordButton;
 
     /**
@@ -16,7 +17,7 @@ public class UserPasswordField extends UserDataField {
      */
     public UserPasswordField(String dataField, InterThreadCommunication itc) {
         super(dataField);
-        this.itc = itc;
+        this.ITC = itc;
 
         initComponents();
         initListeners();
@@ -26,12 +27,10 @@ public class UserPasswordField extends UserDataField {
      * Initialize the components of the panel
      */
     private void initComponents(){
-        this.generatePasswordButton = new JButton("Generate a Password");
-        this.generatePasswordButton.setVisible(false);  // The button is shown only when the editing mode is enabled
-        this.generatePasswordButton.setPreferredSize(new Dimension(70, 70));
-        this.generatePasswordButton.setMaximumSize(new Dimension(70, 70));
-
-        add(this.generatePasswordButton);
+        this.generatePasswordButton = new JButton();
+        this.generatePasswordButton.setIcon(Utilities.getIcon("generate_string.png"));
+        this.generatePasswordButton.setToolTipText("Generate a password");
+        Utilities.applyTrailingButtonProperties(this.generatePasswordButton);
     }
 
     /**
@@ -45,9 +44,9 @@ public class UserPasswordField extends UserDataField {
      * Generate a password and set the password text field to it
      */
     private void generatePassword(){
-        Event event = this.itc.request(new Event("generate-string"));
+        Event event = this.ITC.request(new Event("generate-string"));
         String password = (String) event.getData().getFirst();
-        setData(password);  // Set the text of the Data TextField to be the generated password
+        setText(password);  // Set the text to be the generated password
     }
 
     /**
@@ -58,8 +57,7 @@ public class UserPasswordField extends UserDataField {
         super.enableEditing();
 
         // The generate password button is shown only in editing mode
-        this.generatePasswordButton.setVisible(true);
-        this.generatePasswordButton.setEnabled(true);
+        getDataField().putClientProperty("JTextField.trailingComponent", this.generatePasswordButton);
     }
 
     /**
@@ -69,8 +67,7 @@ public class UserPasswordField extends UserDataField {
     public void disableEditing(){
         super.disableEditing();
 
-        // The generate password button is shown only in editing mode
-        this.generatePasswordButton.setVisible(false);
-        this.generatePasswordButton.setEnabled(false);
+        // The generate password button is shown only in editing mode, thus we put again the copy button instead
+        getDataField().putClientProperty("JTextField.trailingComponent", getCopyButton());
     }
 }

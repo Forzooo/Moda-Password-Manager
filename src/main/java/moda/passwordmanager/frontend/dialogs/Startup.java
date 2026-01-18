@@ -1,12 +1,12 @@
 package moda.passwordmanager.frontend.dialogs;
 
 import moda.passwordmanager.Application;
+import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
+import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 public class Startup extends JDialog {
 
     private InterThreadCommunication itc;
-    private final static Dimension DIALOG_DIMENSION = new Dimension(500, 600);
+    private final static Dimension DIALOG_DIMENSION = new Dimension(475, 550);
 
     // The number of recent databases to show in the recentDatabasesList before a JScrollPane appears
     private final static int RECENT_DATABASES_VISIBLE = 5;
@@ -49,13 +49,13 @@ public class Startup extends JDialog {
         setTitle(Application.getApplicationTitle());
         setIconImage(Application.getIcon());
         setSize(DIALOG_DIMENSION);
-        setMaximumSize(DIALOG_DIMENSION);
 
-        setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
+        setLayout(new MigLayout("fillx, align center"));
 
-        setModal(true);  // Enable modality to block input to other password manager windows
+        // Enable modality to block other password manager windows until this one is disposed
+        setModalityType(ModalityType.DOCUMENT_MODAL);
         setLocationRelativeTo(getRootPane());
-//        setAlwaysOnTop(true);
+        setAlwaysOnTop(true);
         setResizable(false);
     }
 
@@ -63,59 +63,23 @@ public class Startup extends JDialog {
      * Initialize and add all the Swing components of the Dialog
      */
     private void initComponents(){
-        int width = (int) DIALOG_DIMENSION.getWidth();
-        int height = (int) DIALOG_DIMENSION.getHeight();
-        JPanel rootPanel = new JPanel();  // We use a root panel as it has a better layout than the JDialog itself
-        rootPanel.setSize(DIALOG_DIMENSION);
-        rootPanel.setMaximumSize(DIALOG_DIMENSION);
-
-        // Title section
-        JPanel titlePanel = new JPanel();
-        titlePanel.setPreferredSize(new Dimension(width, height/4));
-
         JLabel title = new JLabel();  // Create the JLabel that displays the name of the Password Manager
         title.setText("MODA");
         title.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 80));
+        title.setHorizontalAlignment(JLabel.CENTER);
 
         JLabel subtitle = new JLabel();
         subtitle.setText("Password Manager");
         subtitle.setFont(new Font("Arial Bold", Font.PLAIN, 32));
-
-        titlePanel.add(title);
-        titlePanel.add(subtitle);
-
-        // The master password panel
-        JPanel masterPasswordPanel = new JPanel();
-        masterPasswordPanel.setLayout(new BoxLayout(masterPasswordPanel, BoxLayout.Y_AXIS));
-        masterPasswordPanel.setPreferredSize(new Dimension(width, height/3));
-        masterPasswordPanel.setMaximumSize(new Dimension(width, height/3));
+        subtitle.setHorizontalAlignment(JLabel.CENTER);
 
         JLabel loginLabel = new JLabel();
         loginLabel.setText("Enter your master password:");
 
-        JPanel masterPasswordFieldPanel = new JPanel();
-
-        this.masterPasswordPasswordField = new JPasswordField();
-        this.masterPasswordPasswordField.setPreferredSize(new Dimension(200, 25));
-        this.masterPasswordPasswordField.setMaximumSize(new Dimension(200, 25));
+        this.masterPasswordPasswordField = new JPasswordField(20);
 
         this.loginButton = new JButton();
         this.loginButton.setText("Log In");
-
-        masterPasswordFieldPanel.add(this.masterPasswordPasswordField);
-        masterPasswordFieldPanel.add(this.loginButton);
-
-        masterPasswordPanel.add(Box.createRigidArea(new Dimension(0, 50)));
-        masterPasswordPanel.add(loginLabel);
-        masterPasswordPanel.add(masterPasswordFieldPanel);
-
-        // Recent databases section
-        JPanel recentDatabasesPanel = new JPanel();
-        recentDatabasesPanel.setPreferredSize(new Dimension(width, height/5));
-        recentDatabasesPanel.setMaximumSize(new Dimension(width, height/5));
-
-//        JLabel recentDatabasesLabel = new JLabel();
-//        recentDatabasesLabel.setText("Recent databases:");
 
         this.recentDatabasesList = new JList<>();
 
@@ -127,37 +91,27 @@ public class Startup extends JDialog {
         getRecentDatabases();  // Update the model with the recent databases
 
         // Add a scrollbar to the JList and add it to the panel
-        JScrollPane scrollPane = new JScrollPane(this.recentDatabasesList);
-        recentDatabasesPanel.add(scrollPane);
-
-        // Database section
-        JPanel databaseInfoPanel = new JPanel();
-        databaseInfoPanel.setPreferredSize(new Dimension(width, height/4));
-
-        this.currentDatabaseLabel = new JLabel();
-        this.currentDatabaseLabel.setText("Current database: " + formatPath(getCurrentDatabase()));
+        JScrollPane databaseScrollPane = new JScrollPane(this.recentDatabasesList);
 
         // Database operations panel
-        JPanel databaseOperationsPanel = new JPanel();
+        this.currentDatabaseLabel = new JLabel();
+        this.currentDatabaseLabel.setText("Current database: " + Utilities.getFilenameFromPath(getCurrentDatabase()));
+
         this.newDatabaseButton = new JButton();
         this.newDatabaseButton.setText("New database");
 
         this.changeDatabaseButton = new JButton();
         this.changeDatabaseButton.setText("Change database");
 
-        databaseOperationsPanel.add(newDatabaseButton);
-        databaseOperationsPanel.add(changeDatabaseButton);
-
-        databaseInfoPanel.add(this.currentDatabaseLabel);
-        databaseInfoPanel.add(databaseOperationsPanel);
-
-        // Add all the sections to the root panel
-        rootPanel.add(titlePanel);
-        rootPanel.add(masterPasswordPanel);
-        rootPanel.add(recentDatabasesPanel);
-        rootPanel.add(databaseInfoPanel);
-
-        add(rootPanel);
+        add(title, "span, align center, wrap -25");  // wrap -25 allows the subtitle to be closer to the title
+        add(subtitle, "span, align center, sg 1, wrap");
+        add(loginLabel, "span, align center, gaptop 25, wrap");
+        add(this.masterPasswordPasswordField, "split 2, align center");
+        add(this.loginButton, "wrap");
+        add(this.currentDatabaseLabel, "span, align center, gaptop 60, wrap");
+        add(databaseScrollPane, "align center, sg 1, wrap");
+        add(this.newDatabaseButton, "span, split 2, align center");
+        add(this.changeDatabaseButton);
     }
 
     /**
@@ -177,7 +131,7 @@ public class Startup extends JDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 char[] masterPasswordChar = masterPasswordPasswordField.getPassword();
-                if (!checkMasterPassword(masterPasswordChar)) {
+                if (!Utilities.checkMasterPassword(masterPasswordChar)) {
                     return;
                 }
                 sendMasterPassword(masterPasswordPasswordField.getPassword());
@@ -189,7 +143,7 @@ public class Startup extends JDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 char[] masterPasswordChar = masterPasswordPasswordField.getPassword();
-                if (!checkMasterPassword(masterPasswordChar)) {
+                if (!Utilities.checkMasterPassword(masterPasswordChar)) {
                     return;
                 }
                 sendMasterPassword(masterPasswordChar);
@@ -209,22 +163,29 @@ public class Startup extends JDialog {
             }
         });
 
-        this.newDatabaseButton.addActionListener(e -> createDatabase());
+        this.newDatabaseButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String path = Utilities.newDatabaseFileChooser();
 
-        this.changeDatabaseButton.addActionListener(e -> openDatabaseChooser());
-    }
+                // Check if the user has created a database
+                if (!path.isBlank()){
+                    setDatabase(path);
+                }
+            }
+        });
 
-    /**
-     * Perform some initial check on the master password to allow only ones that comply with all the requirements
-     * @param masterPassword The master password the user entered
-     * @return Boolean to indicate whether the checks have been passed
-     */
-    public static boolean checkMasterPassword(char[] masterPassword){
-        if (masterPassword.length == 0){
-            return false;
-        }
+        this.changeDatabaseButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String path = Utilities.openDatabaseFileChooser();
 
-        return true;
+                // Check if the user has selected a database
+                if (!path.isBlank()){
+                    setDatabase(path);
+                }
+            }
+        });
     }
 
     /**
@@ -281,60 +242,6 @@ public class Startup extends JDialog {
         formattedPath.append(splittedPath[splittedPath.length-1]);
 
         return formattedPath.toString();
-    }
-
-    /**
-     * Create a new database file
-     */
-    private void createDatabase(){
-        // Create the File Chooser that opens in the desktop, and saves a .modb file
-        JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-        fileChooser.setDialogTitle("Create a new database to use");
-        fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
-
-        // Create the filter to save only .modb files
-        FileNameExtensionFilter filter = new FileNameExtensionFilter("Moda Password Manager Database (.modb)",
-                ".modb");
-        fileChooser.setFileFilter(filter);
-
-        // Open the file chooser
-        if (fileChooser.showSaveDialog(getRootPane()) == JFileChooser.APPROVE_OPTION){
-            String path = fileChooser.getSelectedFile().getAbsolutePath();  // Retrieve the path chosen
-
-            // Check whether the database has been chosen
-            if (!path.isEmpty()){
-                // If the file has been saved without setting the extension, set it automatically
-                if (!path.endsWith(".modb")){
-                    path = path+".modb";
-                }
-                setDatabase(path);
-            }
-        }
-    }
-
-    /**
-     * Open the Swing File Chooser and let the user select a database to use
-     */
-    private void openDatabaseChooser(){
-        // Create the File Chooser that opens in the desktop view, and selects only .modb files
-        JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-        fileChooser.setDialogTitle("Choose a database to use");
-        fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
-
-        // Create the filter to choose only .modb files
-        FileNameExtensionFilter filter = new FileNameExtensionFilter("Moda Password Manager Database (.modb)",
-                "modb");
-        fileChooser.setFileFilter(filter);
-
-        // Open the file chooser in the current dialog and check that the user has chosen a database file
-        if (fileChooser.showOpenDialog((this)) == JFileChooser.APPROVE_OPTION){
-            String path = fileChooser.getSelectedFile().getAbsolutePath();  // Retrieve the path chosen
-
-            // Check whether the database has been chosen
-            if (!path.isEmpty()){
-                setDatabase(path);
-            }
-        }
     }
 
     /**

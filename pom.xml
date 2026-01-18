@@ -82,7 +82,7 @@
                             <winDirChooser>true</winDirChooser>
                             <winShortcut>true</winShortcut>
                             <winShortcutPrompt>true</winShortcutPrompt>
-                            <icon>${project.basedir}/target/classes/icon.ico</icon>
+                            <icon>${project.basedir}/target/classes/icons/icon.ico</icon>
                             <vendor>Moda</vendor>
                             <copyright>GNU General Public License, version 3 (GPLv3)</copyright>
                             <licenseFile>${project.basedir}/target/classes/LICENSE</licenseFile>
@@ -148,7 +148,7 @@
         <dependency>
             <groupId>com.formdev</groupId>
             <artifactId>flatlaf</artifactId>
-            <version>3.6.2</version>
+            <version>3.7</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api -->
         <dependency>
@@ -156,6 +156,12 @@
             <artifactId>junit-jupiter-api</artifactId>
             <version>6.0.1</version>
             <scope>test</scope>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.miglayout/miglayout-swing -->
+        <dependency>
+            <groupId>com.miglayout</groupId>
+            <artifactId>miglayout-swing</artifactId>
+            <version>11.4.2</version>
         </dependency>
     </dependencies>
 

@@ -1,7 +1,8 @@
 package moda.passwordmanager.frontend.panels;
 
+import moda.passwordmanager.frontend.Utilities;
+
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -23,8 +24,7 @@ public class UserDataField extends JPanel {
      * Set the configuration of the Panel
      */
     private void initPanel(){
-        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-        setBorder(new EmptyBorder(5, 0, 5, 0));  // Padding between each field
+        setLayout(new FlowLayout());
     }
 
     /**
@@ -39,12 +39,13 @@ public class UserDataField extends JPanel {
 
         // Create the JButton to copy the data field
         this.copyButton = new JButton();
-        this.copyButton.setText("❏");
-        this.copyButton.setPreferredSize(new Dimension(50, 70));
-        this.copyButton.setMaximumSize(new Dimension(50, 70));
+        this.copyButton.setIcon(Utilities.getIcon("copy.png"));
+        this.copyButton.setToolTipText("Copy the data.");
+        Utilities.applyTrailingButtonProperties(this.copyButton);
+
+        this.dataField.putClientProperty("JTextField.trailingComponent", this.copyButton);
 
         add(this.dataField);
-        add(this.copyButton);
     }
 
     /**
@@ -86,6 +87,7 @@ public class UserDataField extends JPanel {
     public void enableEditing(){
         this.dataField.setEditable(true);
         this.copyButton.setEnabled(false);  // Copying is not allowed in editing mode
+        this.copyButton.setVisible(false);
     }
 
     /**
@@ -95,6 +97,15 @@ public class UserDataField extends JPanel {
         this.dataField.setEditable(false);
         updateClipboardCopy();  // We assume that when the editing is finished the data has been changed
         this.copyButton.setEnabled(true);  // Enable again the copy button
+        this.copyButton.setVisible(true);
+    }
+
+    protected JTextField getDataField(){
+        return this.dataField;
+    }
+
+    protected JButton getCopyButton(){
+        return this.copyButton;
     }
 
     /**
@@ -105,10 +116,10 @@ public class UserDataField extends JPanel {
     }
 
     /**
-     * Set the data inside the TextField
+     * Set the text inside the TextField
      */
-    protected void setData(String data){
-        this.dataField.setText(data);
+    protected void setText(String text){
+        this.dataField.setText(text);
     }
 
 }

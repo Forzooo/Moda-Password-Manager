@@ -1,12 +1,13 @@
 package moda.passwordmanager.frontend.panels;
 
+import moda.passwordmanager.Application;
 import moda.passwordmanager.backend.Data;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
+import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
@@ -16,14 +17,13 @@ import java.util.Arrays;
  */
 public class UserData extends JPanel {
 
-    private InterThreadCommunication itc;
-
+    private final InterThreadCommunication ITC;
     private final int ID;  // The ID associated with the data
 
     // Swing Components
     private UserDataField[] userDataFields;  // The fields of the data
 
-    // The fields before editing state is enabled, thus added only inside "enableEditing"
+    // The fields before the editing state is enabled, thus added only inside "enableEditing"
     // They are used when "Discard Changes" button is clicked to restore the previous values, and it will clear the array
     private String[] rollbackDataFields;
 
@@ -32,13 +32,13 @@ public class UserData extends JPanel {
     private JButton saveChangesButton;
     private JButton discardChangesButton;
 
-    public UserData(InterThreadCommunication itc, int id, int width, int height) {
+    public UserData(InterThreadCommunication itc, int id) {
         super();  // Initialize the Panel
 
-        this.itc = itc;
+        this.ITC = itc;
         this.ID = id;
 
-        initPanel(width, height);
+        initPanel();
         initComponents();
         initListeners();
     }
@@ -46,41 +46,16 @@ public class UserData extends JPanel {
     /**
      * Set the configuration of the Panel
      */
-    private void initPanel(int width, int height){
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));  // Set its layout
+    private void initPanel(){
+        setLayout(new MigLayout("fill"));
         setBorder(new EmptyBorder(20,20,20,20));
-
-        // Set the preferred size
-        setPreferredSize(new Dimension(width, height));
     }
 
     /**
      * Get the panel of this class as some action listener require it
-     * @return JPanel of the class
      */
-    private JPanel getPanel(){
+    private UserData getPanel(){
         return this;
-    }
-
-    /**
-     * Retrieve the data associated with the ID given in the constructor
-     */
-    private Data getData(){
-        // Create the event to send to the backend
-        Event getData = new Event("get-data", this.ID);
-
-        // Wait for the response
-        Event getSingleDataCompleted = this.itc.request(getData);
-
-        Data userData = (Data) getSingleDataCompleted.getData().getFirst();  // Get the user data
-        return userData;
-    }
-
-    /**
-     * Get the ID associated with this UserData tab
-     */
-    public int getID() {
-        return ID;
     }
 
     /**
@@ -110,26 +85,22 @@ public class UserData extends JPanel {
         this.rollbackDataFields = new String[userData.length];  // Create the rollback array based on the data length
 
         for (int i = 0; i < this.userDataFields.length; i++){
-            // As the password field requires its own panel, then we need to check each time the value of i to know
+            // As the password field requires its own panel we need to check each time the value of i to know
             // the field we are creating
             UserDataField userDataField;
             if (i != 2){
                 userDataField = new UserDataField(userData[i]);
             }else{
-                userDataField = new UserPasswordField(userData[i], this.itc);
+                userDataField = new UserPasswordField(userData[i], this.ITC);
             }
             this.userDataFields[i] = userDataField;  // Set the panel to the array
-            add(userDataField);  // Add the panel to the GUI
+            add(userDataField, "span, align center, wrap");  // Add the panel to the GUI
         }
 
-        // Create a panel for the buttons
-        JPanel buttonsPanel = new JPanel();
-        buttonsPanel.add(this.modifyButton);
-        buttonsPanel.add(this.deleteButton);
-        buttonsPanel.add(this.saveChangesButton);
-        buttonsPanel.add(this.discardChangesButton);
-
-        add(buttonsPanel);
+        add(this.modifyButton, "split 2, align center");
+        add(this.deleteButton, "wrap");
+        add(this.saveChangesButton, "split 2, align center");
+        add(this.discardChangesButton);
     }
 
     /**
@@ -142,7 +113,7 @@ public class UserData extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 int result = JOptionPane.showConfirmDialog(getPanel(), "Delete the data?",
-                        "Moda Password Manager", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                        Application.getApplicationTitle(), JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 
                 // If the result is 0 (Yes) delete the data by sending an event to the backend
                 if (result == 0) {
@@ -152,10 +123,29 @@ public class UserData extends JPanel {
             }
         });
 
-        // Save the changes and send the event to the backend
         this.saveChangesButton.addActionListener(e -> saveChanges());
-
         this.discardChangesButton.addActionListener(e -> discardChanges());
+    }
+
+    /**
+     * Retrieve the data associated with the ID given in the constructor
+     */
+    private Data getData(){
+        // Create the event to send to the backend
+        Event getData = new Event("get-data", this.ID);
+
+        // Wait for the response
+        Event getSingleDataCompleted = this.ITC.request(getData);
+
+        Data userData = (Data) getSingleDataCompleted.getData().getFirst();  // Get the user data
+        return userData;
+    }
+
+    /**
+     * Get the ID associated with this UserData tab
+     */
+    public int getID() {
+        return this.ID;
     }
 
     /**
@@ -168,13 +158,13 @@ public class UserData extends JPanel {
             this.userDataFields[i].enableEditing();
         }
 
-        // Disable and hide the buttons that cannot be used while in Modify state
+        // Disable and hide the buttons that cannot be used while in editing state
         this.modifyButton.setEnabled(false);
         this.modifyButton.setVisible(false);
         this.deleteButton.setEnabled(false);
         this.deleteButton.setVisible(false);
 
-        // Enable and show the buttons that are related to Modify state
+        // Enable and show the buttons that are related to the editing state
         this.saveChangesButton.setEnabled(true);
         this.saveChangesButton.setVisible(true);
         this.discardChangesButton.setEnabled(true);
@@ -205,6 +195,9 @@ public class UserData extends JPanel {
         this.deleteButton.setVisible(true);
     }
 
+    /**
+     * Save the changes made into a Data object that is sent to the backend
+     */
     private void saveChanges(){
         // The updatedData is used to update the backend with the new data
         String[] updatedData = new String[5];
@@ -232,7 +225,7 @@ public class UserData extends JPanel {
         // Rollback each TextField to its previous value, where their clipboard is automatically updated when editing
         // mode is disabled
         for (int i = 0; i < this.userDataFields.length; i++){
-            this.userDataFields[i].setData(this.rollbackDataFields[i]);
+            this.userDataFields[i].setText(this.rollbackDataFields[i]);
         }
         disableEditing();  // Disable editing, which also clears the rollback array
     }
@@ -244,7 +237,7 @@ public class UserData extends JPanel {
     private void updateData(Data data){
         // Create and send the event
         Event event = new Event("update-data", data);
-        this.itc.request(event);  // Wait for the response of the backend
+        this.ITC.request(event);  // Wait for the response of the backend
     }
 
     /**
@@ -252,7 +245,7 @@ public class UserData extends JPanel {
      */
     private void deleteData(){
         Event event = new Event("delete-data", this.ID);
-        this.itc.request(event);
+        this.ITC.request(event);
     }
 
     /**

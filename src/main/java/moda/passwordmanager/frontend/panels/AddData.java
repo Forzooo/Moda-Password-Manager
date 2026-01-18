@@ -1,10 +1,10 @@
 package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.backend.Data;
+import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
-import moda.passwordmanager.frontend.components.Placeholder;
-import moda.passwordmanager.frontend.dialogs.ConfigurePasswordGeneration;
+import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,273 +13,163 @@ import java.awt.event.ActionListener;
 
 public class AddData extends JPanel {
 
-    // Attribute to communicate with the backend
-    private InterThreadCommunication itc;
+    private final InterThreadCommunication ITC;
 
-    // Attributes for the configuration of the panel
-    private final int MIN_CONTENT_WIDTH;
-    private Dimension windowSize;
-
-    // Swing components
     private JTextField usernameTextField;
     private JTextField emailAddressTextField;
     private JTextField passwordTextField;
     private JTextField serviceTextField;
     private JTextField additionalDataTextField;
 
-    private Placeholder usernamePlaceholder;
-    private Placeholder emailAddressPlaceholder;
-    private Placeholder passwordPlaceholder;
-    private Placeholder servicePlaceholder;
-    private Placeholder additionalDataPlaceholder;
-
     private JButton resetButton;
     private JButton saveButton;
     private JButton generatePasswordButton;
-    private JButton configurePasswordGeneration;
 
-    public AddData(InterThreadCommunication itc, int MIN_CONTENT_WIDTH, Dimension windowSize,
-                   int sidebarPanelWidth) {
+    public AddData(InterThreadCommunication itc){
         super();  // Initialize the Panel
 
-        // Set the attributes given by the JFrame
-        this.itc = itc;
-        this.MIN_CONTENT_WIDTH = MIN_CONTENT_WIDTH;
-        this.windowSize = windowSize;
+        this.ITC = itc;
 
-        initPanel(sidebarPanelWidth);
+        initPanel();
         initComponents();
         initListeners();
     }
 
     /**
-     * Get the layout used for the panel
-     *
-     * @return BoxLayout
+     * Set the configuration of the panel
      */
-    private BoxLayout getPanelLayout() {
-        return new BoxLayout(this, BoxLayout.Y_AXIS);
-    }
-
-    /**
-     * Set the configuration of the JPanel
-     *
-     * @param sidebarPanelWidth
-     */
-    private void initPanel(int sidebarPanelWidth) {
-        setLayout(getPanelLayout());  // Set its layout
-
-        // Set the preferred size
-        setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - sidebarPanelWidth), (int) this.windowSize.getHeight()));
-
-        setBackground(Color.WHITE);
-
-        // Set the margin of the Add Data Panel [top: 60, bottom: 60, left: 30, right: 30]
-        setBorder(BorderFactory.createEmptyBorder(60, 30, 60, 30));
+    private void initPanel(){
+        // The constraint "fill" is used to let the components use all the panel
+        setLayout(new MigLayout("fill"));
     }
 
     /**
      * Initialize the components of the panel
      */
-    private void initComponents() {
-
+    private void initComponents(){
         JLabel addDataLabel = new JLabel();
-        addDataLabel.setText("Add a new data:");
-        addDataLabel.setFont(new Font("Arial", Font.PLAIN, 16));
+        addDataLabel.setText("Add your data");
+        addDataLabel.setFont(new Font("Arial", Font.BOLD, 32));
+
+        Dimension textFieldDimension = new Dimension(600, 70);  // The dimension of each text field
 
         // Create all the JTextField for the data input
-        Dimension textFieldDimension = new Dimension(1600, 30);  // Define the dimension of any JTextField
-
         this.usernameTextField = new JTextField();
-        this.usernameTextField.setMaximumSize(textFieldDimension);
-        this.usernamePlaceholder = new Placeholder(this.usernameTextField, "Username");
+        this.usernameTextField.putClientProperty("JTextField.placeholderText", "Username");
+        this.usernameTextField.setPreferredSize(textFieldDimension);
 
         this.emailAddressTextField = new JTextField();
-        this.emailAddressTextField.setMaximumSize(textFieldDimension);
-        this.emailAddressPlaceholder = new Placeholder(this.emailAddressTextField, "Email Address (email@example.com)");
+        this.emailAddressTextField.putClientProperty("JTextField.placeholderText", "Email Address (email@example.com)");
+        this.emailAddressTextField.setPreferredSize(textFieldDimension);
 
         // The password field is not a JPasswordField because the user needs to know the password being entered in the database
         this.passwordTextField = new JTextField();
-        this.passwordTextField.setMaximumSize(textFieldDimension);
-        this.passwordPlaceholder = new Placeholder(this.passwordTextField, "Password");
+        this.passwordTextField.putClientProperty("JTextField.placeholderText", "Password");
+        this.passwordTextField.setPreferredSize(textFieldDimension);
+
+        // Create the button for the generation of a password
+        this.generatePasswordButton = new JButton();
+        this.generatePasswordButton.setIcon(Utilities.getIcon("generate_string.png"));
+        this.generatePasswordButton.setToolTipText("Generate a password");
+
+        Utilities.applyTrailingButtonProperties(this.generatePasswordButton);
+        this.passwordTextField.putClientProperty("JTextField.trailingComponent", this.generatePasswordButton);
 
         this.serviceTextField = new JTextField();
-        this.serviceTextField.setMaximumSize(textFieldDimension);
-        this.servicePlaceholder = new Placeholder(this.serviceTextField, "Service (Google, Microsoft, ...)");
+        this.serviceTextField.putClientProperty("JTextField.placeholderText", "Service (Google, Microsoft, ...)");
+        this.serviceTextField.setPreferredSize(textFieldDimension);
 
         this.additionalDataTextField = new JTextField();
-        this.additionalDataTextField.setMaximumSize(textFieldDimension);
-        this.additionalDataPlaceholder = new Placeholder(this.additionalDataTextField, "Additional Data (Data " +
-                "not covered by the other fields)");
-
-        // Create the JButton for Reset and Confirm operations
-        Dimension buttonDimension = new Dimension(250, 20);  // Define the dimension of any JButton
+        this.additionalDataTextField.putClientProperty("JTextField.placeholderText",
+                "Additional Data (Data not covered by the other fields)");
+        this.additionalDataTextField.setPreferredSize(textFieldDimension);
 
         this.resetButton = new JButton();
         this.resetButton.setText("Reset");
-        this.resetButton.setMaximumSize(buttonDimension);
 
         this.saveButton = new JButton();
         this.saveButton.setText("Save");
-        this.saveButton.setMaximumSize(buttonDimension);
-
-        // Create the Buttons for the Generation and the configuration of the password
-        this.generatePasswordButton = new JButton();
-        this.generatePasswordButton.setText("Generate Password");
-        this.generatePasswordButton.setMaximumSize(buttonDimension);
-
-        this.configurePasswordGeneration = new JButton();
-        this.configurePasswordGeneration.setText("Configure the Password Generation");
-        this.configurePasswordGeneration.setMaximumSize(buttonDimension);
 
         // Add all the components to the Panel
-        add(addDataLabel);
-        add(Box.createRigidArea(new Dimension(0, 20)));  // Add RigidArea to add spacing between components
-        add(this.usernameTextField);
-        add(Box.createRigidArea(new Dimension(0, 20)));
-        add(this.emailAddressTextField);
-        add(Box.createRigidArea(new Dimension(0, 20)));
-        add(this.passwordTextField);
-        add(Box.createRigidArea(new Dimension(0, 20)));
-        add(this.serviceTextField);
-        add(Box.createRigidArea(new Dimension(0, 20)));
-        add(this.additionalDataTextField);
-        add(Box.createRigidArea(new Dimension(0, 20)));
-        add(this.generatePasswordButton);
-        add(Box.createRigidArea(new Dimension(0, 10)));
-        add(this.configurePasswordGeneration);
-        add(Box.createRigidArea(new Dimension(0, 10)));
-        add(this.resetButton);
-        add(Box.createRigidArea(new Dimension(0, 10)));
+        add(addDataLabel, "span, align center, wrap");
+        add(this.usernameTextField, "span, align center, wrap");
+        add(this.emailAddressTextField, "span, align center, wrap");
+        add(this.passwordTextField, "span, align center, wrap");
+        add(this.serviceTextField, "span, align center, wrap");
+        add(this.additionalDataTextField, "span, align center, wrap");
+        add(this.resetButton, "split 2, align center");
         add(this.saveButton);
     }
 
     /**
      * Initialize all the listeners on the components
      */
-    private void initListeners() {
-        // When the Reset JButton is clicked then all the JTextField placeholders are reset
-        this.resetButton.addActionListener(
-                new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        // Reset the JTextFields by showing their placeholder
-                        resetPlaceholders();
-                    }
-                }
-        );
+    private void initListeners(){
+        // Reset the placeholders as the form is cleared
+        this.resetButton.addActionListener(e -> resetTextFields());
 
         // Save the data entered in the JTextFields in the database by calling the backend
         this.saveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Only the service placeholder is required to be set before saving some data
-                if (servicePlaceholder.isShown()) {
+                // The service must be set before adding the data as it needs to be shown in the "Show Data" section
+                if (serviceTextField.getText().isBlank()) {
                     return;
                 }
-
-                // Since some Text Fields are optional, it may happen that some of them are still shown when the
-                // "Save Data" button is clicked
-                hidePlaceholders();
 
                 // Call the save data function to tell the backend to save the data into the database
                 saveData(usernameTextField.getText(), emailAddressTextField.getText(),
                         passwordTextField.getText(), serviceTextField.getText(),
-                        additionalDataTextField.getText()
-                );
-
-                // Reset the placeholder after the data has been saved
-                resetPlaceholders();
+                        additionalDataTextField.getText());
             }
         });
 
         this.generatePasswordButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                passwordPlaceholder.hide();  // Hide the placeholder
-                generatePassword();  // Generate the password
-            }
-        });
-
-        // Initialize the Dialog for the configuration and show it to the user
-        this.configurePasswordGeneration.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ConfigurePasswordGeneration configurePasswordGeneration = new ConfigurePasswordGeneration(itc);
-                configurePasswordGeneration.setVisible(true);
+                passwordTextField.setText(generateString());  // Generate the password
             }
         });
     }
 
     /**
-     * Reset all the placeholders
+     * Returns the title of the panel
      */
-    private void resetPlaceholders() {
-        this.usernamePlaceholder.show();
-        this.emailAddressPlaceholder.show();
-        this.passwordPlaceholder.show();
-        this.servicePlaceholder.show();
-        this.additionalDataPlaceholder.show();
+    public static String getPanelTitle(){
+        return "Add Data";
     }
 
     /**
-     * Check whether placeholders are shown, then hide them
+     * Reset the text fields by setting their text to be blank
      */
-    private void hidePlaceholders(){
-        if (usernamePlaceholder.isShown()){
-            usernamePlaceholder.hide();
-        }
-
-        if (emailAddressPlaceholder.isShown()){
-            emailAddressPlaceholder.hide();
-        }
-
-        if (passwordPlaceholder.isShown()){
-            passwordPlaceholder.hide();
-        }
-
-        if (servicePlaceholder.isShown()){
-            servicePlaceholder.hide();
-        }
-
-        if (additionalDataPlaceholder.isShown()){
-            additionalDataPlaceholder.hide();
-        }
+    private void resetTextFields(){
+        this.usernameTextField.setText("");
+        this.emailAddressTextField.setText("");
+        this.passwordTextField.setText("");
+        this.serviceTextField.setText("");
+        this.additionalDataTextField.setText("");
     }
 
     /**
-     * Save the data the user has entered in "Add Data" section into the database
-     *
-     * @param username
-     * @param emailAddress
-     * @param password
-     * @param service
-     * @param additionalData
+     * Save the data the user has entered into the database
      */
-    private void saveData(String username, String emailAddress, String password, String service, String additionalData) {
-        // Check whether additionalData has been set, otherwise set it to blank instead of the placeholder text
-        if (additionalDataPlaceholder.isShown()){
-            additionalData = "";
-        }
-
+    private void saveData(String username, String emailAddress, String password, String service, String additionalData){
         // Create the Data object with the user data to send to the backend
         Data userData = new Data(username, emailAddress, password, service, additionalData);
 
         // Create the Event to send to the backend
         Event saveData = new Event("save-data", userData);
-
-        this.itc.send(saveData);
+        this.ITC.send(saveData);
 //        notifyUser();  // Example method to show the user a messagebox with the operation status
     }
 
-    private void generatePassword() {
-
-        // Create the Event to send to the backend
+    /**
+     * Generate a random string
+     */
+    private String generateString(){
         Event generatePassword = new Event("generate-string");
+        Event response = this.ITC.request(generatePassword);  // Wait for the result
 
-        Event response = this.itc.request(generatePassword);  // Wait for the result
-
-        String password = (String) response.getData().getFirst();  // Get the password from the backend
-        this.passwordTextField.setText(password);  // Set the password to the TextField
+        return (String) response.getData().getFirst();  // Return the string generated
     }
 }

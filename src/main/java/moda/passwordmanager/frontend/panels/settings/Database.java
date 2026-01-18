@@ -1,12 +1,10 @@
 package moda.passwordmanager.frontend.panels.settings;
 
-import moda.passwordmanager.frontend.dialogs.Startup;
+import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -69,28 +67,15 @@ public class Database extends Section {
         this.newDatabaseButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Create the File Chooser that opens in the desktop, and saves a .modb file
-                JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-                fileChooser.setDialogTitle("Create a new database to use");
-                fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
+                String path = Utilities.newDatabaseFileChooser();
 
-                // Create the filter to save only .modb files
-                FileNameExtensionFilter filter = new FileNameExtensionFilter("Moda Password Manager Database (.modb)",
-                        ".modb");
-                fileChooser.setFileFilter(filter);
-
-                // Open the file chooser
-                if (fileChooser.showSaveDialog(getPanel()) == JFileChooser.APPROVE_OPTION){
-                    String path = fileChooser.getSelectedFile().getAbsolutePath();  // Retrieve the path chosen
-
-                    // Check whether the database has been chosen
-                    if (!path.isEmpty()){
-                        // If the file has been saved without setting the extension, set it automatically
-                        if (!path.endsWith(".modb")){
-                            path = path+".modb";
-                        }
-                        setNewDatabase(path);
+                // Check whether the database has been chosen
+                if (!path.isEmpty()){
+                    // If the file has been saved without setting the extension, set it automatically
+                    if (!path.endsWith(".modb")){
+                        path = path+".modb";
                     }
+                    setNewDatabase(path);
                 }
             }
         });
@@ -98,24 +83,11 @@ public class Database extends Section {
         this.changeDatabaseButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Create the File Chooser that opens in the desktop view, and selects only .modb files
-                JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-                fileChooser.setDialogTitle("Choose a database to use");
-                fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
+                String path = Utilities.openDatabaseFileChooser();
 
-                // Create the filter to choose only .modb files
-                FileNameExtensionFilter filter = new FileNameExtensionFilter("Moda Password Manager Database (.modb)",
-                        "modb");
-                fileChooser.setFileFilter(filter);
-
-                // Open the file chooser
-                if (fileChooser.showOpenDialog(getPanel()) == JFileChooser.APPROVE_OPTION){
-                    String path = fileChooser.getSelectedFile().getAbsolutePath();  // Retrieve the path chosen
-
-                    // Check whether the database has been chosen
-                    if (!path.isEmpty()){
-                        setNewDatabase(path);
-                    }
+                // Check whether the database has been chosen
+                if (!path.isEmpty()){
+                    setNewDatabase(path);
                 }
             }
         });
@@ -127,12 +99,12 @@ public class Database extends Section {
      */
     private void changeMasterPassword(String masterPassword){
         // Perform some initial conditions check on the master password
-        if (!Startup.checkMasterPassword(masterPassword.toCharArray())){
+        if (!Utilities.checkMasterPassword(masterPassword.toCharArray())){
             return;
         }
 
         Event event = new Event("change-master-password", masterPassword.toCharArray());
-        this.ITC.request(event);  // Wait for the end of the operations in the backend
+        getITC().request(event);  // Wait for the end of the operations in the backend
     }
 
     /**
@@ -140,7 +112,7 @@ public class Database extends Section {
      * @return
      */
     private String getCurrentDatabasePath(){
-        Event response = this.ITC.request(new moda.passwordmanager.interthreadcommunication.Event("get-database"));
+        Event response = getITC().request(new Event("get-database"));
         String databasePath = (String) response.getData().getFirst();  // Retrieve the path of the database
         return databasePath;
     }
@@ -161,10 +133,8 @@ public class Database extends Section {
 
         // Set the path of the database
         Event event = new Event("set-database", databasePath);
-        this.ITC.request(event);
+        getITC().request(event);
         this.databasePathTextField.setText(databasePath);  // Set the new path of the database into the Text Field
         changeMasterPassword(masterPassword);
     }
-
-
 }
