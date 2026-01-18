@@ -61,13 +61,13 @@ public class ShowData extends JPanel {
         this.dataList.setFixedCellHeight(30);
         this.dataList.setModel(this.USER_DATA_MODEL);  // Set the model of the JList (Strings containing service data)
         this.dataList.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 20));
-
+        this.dataList.setBackground(null);
         this.dataList.setSelectionBackground(Color.black);
-        this.dataList.setSelectionForeground(Color.white);
 
         JScrollPane scrollPane = new JScrollPane(this.dataList);
+        scrollPane.setBackground(null);
         scrollPane.setPreferredSize(new Dimension(1000, 750));
-        scrollPane.setBorder(new EmptyBorder(10,30,10,30));
+        scrollPane.setBorder(new EmptyBorder(10,10,10,10));
 
         this.dataTabbedPane.addTab("User Data", scrollPane);
 
@@ -99,23 +99,20 @@ public class ShowData extends JPanel {
             }
         });
 
-        this.dataList.setCellRenderer(new DefaultListCellRenderer(){ //imposto un metodo per far renderizzare le celle della lista come mi pare
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) { //questo non so bene cosa sia, ma nell'esempio che ho spudoratamente copiato era così
+        this.dataList.setCellRenderer(new DefaultListCellRenderer(){
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
-                if (!isSelected) {  //questo perché invece quando è selezionato sarà nero
-                    if (! (index % 2 == 0)) {   //banalmente se la riga è pari avrà un colore di sfondo, mentre se è dispari un'altro
-                        c.setBackground(new Color(241, 241, 241)); // pari righe
+                if (isSelected){  // The selected row has black background
+                    c.setBackground(Color.BLACK);
+                } else {  // The other rows have two different colors
+                    if (index % 2 == 0){
+                        c.setBackground(new Color(255, 255, 255));
                     } else {
-                        c.setBackground(new Color(255, 255, 255)); // righe dispari
+                        c.setBackground(new Color(241, 241, 241));
                     }
-                } else {
-                    c.setBackground(list.getSelectionBackground());
-                    c.setForeground(list.getSelectionForeground());
                 }
-
                 return c;
-
             }
         });
     }

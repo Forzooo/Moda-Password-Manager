@@ -67,7 +67,7 @@ public class AddData extends JPanel {
         this.generatePasswordButton = new JButton();
         this.generatePasswordButton.setIcon(Utilities.getIcon("generate_string.png"));
         this.generatePasswordButton.setToolTipText("Generate a password");
-        
+
         Utilities.applyTrailingButtonProperties(this.generatePasswordButton);
         this.passwordTextField.putClientProperty("JTextField.trailingComponent", this.generatePasswordButton);
 

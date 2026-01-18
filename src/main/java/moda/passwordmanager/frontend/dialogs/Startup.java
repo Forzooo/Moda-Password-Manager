@@ -9,14 +9,12 @@ import net.miginfocom.swing.MigLayout;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class Startup extends JDialog {
 
     private InterThreadCommunication itc;
-    private final static Dimension DIALOG_DIMENSION = new Dimension(500, 600);
+    private final static Dimension DIALOG_DIMENSION = new Dimension(475, 550);
 
     // The number of recent databases to show in the recentDatabasesList before a JScrollPane appears
     private final static int RECENT_DATABASES_VISIBLE = 5;
@@ -52,7 +50,7 @@ public class Startup extends JDialog {
         setIconImage(Application.getIcon());
         setSize(DIALOG_DIMENSION);
 
-        setLayout(new MigLayout());
+        setLayout(new MigLayout("fillx, align center"));
 
         // Enable modality to block other password manager windows until this one is disposed
         setModalityType(ModalityType.DOCUMENT_MODAL);
@@ -97,7 +95,7 @@ public class Startup extends JDialog {
 
         // Database operations panel
         this.currentDatabaseLabel = new JLabel();
-        this.currentDatabaseLabel.setText("Current database: " + fileNameFromPath(getCurrentDatabase()));
+        this.currentDatabaseLabel.setText("Current database: " + Utilities.getFilenameFromPath(getCurrentDatabase()));
 
         this.newDatabaseButton = new JButton();
         this.newDatabaseButton.setText("New database");
@@ -105,23 +103,15 @@ public class Startup extends JDialog {
         this.changeDatabaseButton = new JButton();
         this.changeDatabaseButton.setText("Change database");
 
-        add(title, "span, align center, wrap");
+        add(title, "span, align center, wrap -25");  // wrap -25 allows the subtitle to be closer to the title
         add(subtitle, "span, align center, sg 1, wrap");
         add(loginLabel, "span, align center, gaptop 25, wrap");
         add(this.masterPasswordPasswordField, "split 2, align center");
         add(this.loginButton, "wrap");
-        add(databaseScrollPane, "span, gaptop 30, grow, push, sg 1, wrap");
-        add(this.currentDatabaseLabel, "span, align center, wrap");
-        add(this.newDatabaseButton, "split 2, align center");
+        add(this.currentDatabaseLabel, "span, align center, gaptop 60, wrap");
+        add(databaseScrollPane, "align center, sg 1, wrap");
+        add(this.newDatabaseButton, "span, split 2, align center");
         add(this.changeDatabaseButton);
-    }
-
-    private String fileNameFromPath(String path){
-
-        Path filePath = Paths.get(path);
-
-        return filePath.getFileName().toString();
-
     }
 
     /**

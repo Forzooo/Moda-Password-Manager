@@ -53,18 +53,15 @@ public class Sidebar extends JPanel {
         Dimension buttonDimension = new Dimension((int) getPreferredSize().getWidth(), 60);
 
         this.addDataButton = new JButton();
-        this.addDataButton.setBorderPainted(false);  // The buttons should not have the border
         this.addDataButton.setText("Add Data");
         this.addDataButton.setPreferredSize(buttonDimension);
 
         this.showDataButton = new JButton();
-        this.showDataButton.setBorderPainted(false);
         this.showDataButton.setText("Show Data");
         this.showDataButton.setPreferredSize(buttonDimension);
 
         // Settings + Details section
         this.settingsButton = new JButton();  // TODO: Use the settings icon
-        this.settingsButton.setBorderPainted(false);
         this.settingsButton.setText("Settings");
         this.settingsButton.setPreferredSize(buttonDimension);
 
@@ -79,13 +76,13 @@ public class Sidebar extends JPanel {
      */
     private void initListeners(){
         this.addDataButton.addActionListener(e -> switchPanel(AddData.getPanelTitle()));
-        setHoverEffect(this.addDataButton);
+//        setHoverEffect(this.addDataButton);
 
         this.showDataButton.addActionListener(e -> switchPanel(ShowData.getPanelTitle()));
-        setHoverEffect(this.showDataButton);
+//        setHoverEffect(this.showDataButton);
 
         this.settingsButton.addActionListener(e -> openSettings());
-        setHoverEffect(this.settingsButton);
+//        setHoverEffect(this.settingsButton);
     }
 
     /**

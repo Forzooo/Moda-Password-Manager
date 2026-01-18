@@ -84,6 +84,13 @@ public abstract class Section extends JPanel {
     }
 
     /**
+     * Add a component to the current section with some additional constraints
+     */
+    protected void addOption(Component component, String constraints){
+        this.currentSection.add(component, "span, wrap, " + constraints);
+    }
+
+    /**
      * Get the ITC object used to communicate
      */
     protected InterThreadCommunication getITC(){

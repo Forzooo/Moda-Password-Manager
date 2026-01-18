@@ -7,6 +7,8 @@ import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * The Utilities class provides general use APIs that can be used by any Frontend class.
@@ -135,6 +137,15 @@ public class Utilities {
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         button.setPreferredSize(new Dimension(50, 70));
         button.setMaximumSize(new Dimension(50, 70));
+    }
+
+    /**
+     * Get the filename from a path
+     */
+    public static String getFilenameFromPath(String path){
+        Path filePath = Paths.get(path);
+
+        return filePath.getFileName().toString();
     }
 
 }
