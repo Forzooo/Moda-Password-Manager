@@ -34,7 +34,7 @@ public class Sidebar extends JPanel {
      * Set the configuration of the JPanel
      */
     private void initPanel(){
-        setLayout(new MigLayout("debug, wrap 1, insets 20, fillx",
+        setLayout(new MigLayout("wrap 1, insets 20, fillx",
             "[align center]",
             "[][][]push[]"));
     }

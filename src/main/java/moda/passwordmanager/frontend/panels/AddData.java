@@ -51,17 +51,21 @@ public class AddData extends JPanel {
         addDataLabel.setText("Add your data");
         addDataLabel.setFont(new Font("Arial", Font.BOLD, 32));
 
+        Dimension textFieldDimension = new Dimension(600, 70);  // The dimension of each text field
+
         // Create all the JTextField for the data input
         this.usernameTextField = new JTextField();
         this.usernameTextField.putClientProperty("JTextField.placeholderText", "Username");
-//        this.usernamePlaceholder = new Placeholder(this.usernameTextField, "Username");
+        this.usernameTextField.setPreferredSize(textFieldDimension);
 
         this.emailAddressTextField = new JTextField();
         this.emailAddressTextField.putClientProperty("JTextField.placeholderText", "Email Address (email@example.com)");
+        this.emailAddressTextField.setPreferredSize(textFieldDimension);
 
         // The password field is not a JPasswordField because the user needs to know the password being entered in the database
         this.passwordTextField = new JTextField();
         this.passwordTextField.putClientProperty("JTextField.placeholderText", "Password");
+        this.passwordTextField.setPreferredSize(textFieldDimension);
 
         // Create the button for the generation of a password
         this.generatePasswordButton = new JButton();
@@ -73,10 +77,12 @@ public class AddData extends JPanel {
 
         this.serviceTextField = new JTextField();
         this.serviceTextField.putClientProperty("JTextField.placeholderText", "Service (Google, Microsoft, ...)");
+        this.serviceTextField.setPreferredSize(textFieldDimension);
 
         this.additionalDataTextField = new JTextField();
         this.additionalDataTextField.putClientProperty("JTextField.placeholderText",
                 "Additional Data (Data not covered by the other fields)");
+        this.additionalDataTextField.setPreferredSize(textFieldDimension);
 
         this.resetButton = new JButton();
         this.resetButton.setText("Reset");
@@ -86,11 +92,11 @@ public class AddData extends JPanel {
 
         // Add all the components to the Panel
         add(addDataLabel, "span, align center, wrap");
-        add(this.usernameTextField, "span, grow, wrap");
-        add(this.emailAddressTextField, "span, grow, wrap");
-        add(this.passwordTextField, "span, grow, wrap");
-        add(this.serviceTextField, "span, grow, wrap");
-        add(this.additionalDataTextField, "span, grow, wrap");
+        add(this.usernameTextField, "span, align center, wrap");
+        add(this.emailAddressTextField, "span, align center, wrap");
+        add(this.passwordTextField, "span, align center, wrap");
+        add(this.serviceTextField, "span, align center, wrap");
+        add(this.additionalDataTextField, "span, align center, wrap");
         add(this.resetButton, "split 2, align center");
         add(this.saveButton);
     }
