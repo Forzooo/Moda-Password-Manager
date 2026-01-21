@@ -1,11 +1,13 @@
 package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.frontend.GUIState;
+import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Objects;
 
 public class SidebarPanel extends JPanel {
 
@@ -32,6 +34,8 @@ public class SidebarPanel extends JPanel {
 
         // Set the initial state of the dynamic part to Show All Panel
         this.dynamicState = GUIState.SHOW_DATA;
+
+        this.setLayout(new MigLayout("debug, align center")); //rimuovi il debug
 
         initPanel();
         initComponents();
@@ -70,36 +74,35 @@ public class SidebarPanel extends JPanel {
         currentVersionLabel.setText("Version: " + CURRENT_VERSION);
         currentVersionLabel.setForeground(Color.WHITE);  // Set the color of the label
 
-        JPanel buttonPanel = new JPanel(new GridLayout(3, 1));
-
-        // Create the JButtons used to switch between JPanels of the dynamic part
-        Dimension buttonDimension = new Dimension(350, 50);
+        Dimension buttonDimension = new Dimension(50, 50);
 
         this.addDataButton = new JButton();
         this.addDataButton.setText("Add Data");
-        this.addDataButton.setMaximumSize(buttonDimension);
+        //this.addDataButton.setMaximumSize(buttonDimension);
 
         this.showDataButton = new JButton();
         this.showDataButton.setText("Show Data");
-        this.showDataButton.setMaximumSize(buttonDimension);
+        //this.showDataButton.setMaximumSize(buttonDimension);
 
         this.settingsButton = new JButton();  // TODO: Use the settings icon instead of the text
-        this.settingsButton.setText("Settings");
         this.settingsButton.setMaximumSize(buttonDimension);
 
+        this.settingsButton.setOpaque(false);
+        this.settingsButton.setContentAreaFilled(false);
+        this.settingsButton.setBorderPainted(false);
+        this.settingsButton.setFocusPainted(false);
+
+        ImageIcon settings_icon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/settings_icon/settings_icon.png")));
+        settings_icon.setImage(settings_icon.getImage().getScaledInstance(buttonDimension.width, buttonDimension.height, 0));
+        this.settingsButton.setIcon(settings_icon);
+
         // Add the components to the Sidebar
-        add(Box.createRigidArea(new Dimension(0, 20))); // Add RigidArea to add spacing between components
-        add(passwordManagerLabel);
+        add(passwordManagerLabel, "wrap 0, al center");
+        add(currentVersionLabel, "wrap 100, al center");
 
-        add(currentVersionLabel);
-        add(Box.createRigidArea(new Dimension(220, 20))); // Add RigidArea to add spacing between components
-
-        // Add the section buttons to their JPanel
-        buttonPanel.add(addDataButton);
-        buttonPanel.add(showDataButton);
-        buttonPanel.add(settingsButton);
-
-        add(buttonPanel, BorderLayout.SOUTH);
+        add(addDataButton, "wrap, center");
+        add(showDataButton, "wrap, center");
+        add(settingsButton, "wrap, bottom, pushy");
     }
 
     /**
