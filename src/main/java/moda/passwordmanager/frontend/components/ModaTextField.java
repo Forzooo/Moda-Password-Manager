@@ -3,63 +3,53 @@ package moda.passwordmanager.frontend.components;
 import javax.swing.*;
 import java.awt.*;
 
-public class ModaButton extends JButton {
+public class ModaTextField extends JTextField {
 
-    private ButtonStyle buttonStyle;
+    TestFieldStyle style;
+    public ModaTextField(TestFieldStyle style) {
+        this.style = style;
 
-    public ModaButton( ButtonStyle buttonStyle) {
+        this.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 20));
 
-        this.buttonStyle = buttonStyle;
-
-        this.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 30));
-        this.setForeground(Color.WHITE);
-
-        this.setContentAreaFilled(false);
-        this.setBorderPainted(false);
-        this.setFocusPainted(false);
         this.setOpaque(false);
-
+        this.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 5));
     }
 
     @Override
     protected void paintComponent(Graphics g) {
 
         Graphics2D g2 = (Graphics2D) g.create();
-        switch (buttonStyle) {
-            case CLASSIC:
+        switch (style) {
+            case SEARCH_BAR:
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                int arc = 25;
-
-                g2.setColor(Color.black);
-                g2.fillRoundRect(0, 0, this.getWidth(), this.getHeight(), arc, arc);
-
-                float thickness = 4.0f;
-                if (getModel().isRollover()) {
-                    thickness = 8.0f;
-                }
+                int arc = 24;
 
                 g2.setColor(Color.WHITE);
+                g2.fillRoundRect(0, 0, this.getWidth(), this.getHeight(), arc, arc);
+
+                float thickness = 2.0f;
+
+                g2.setColor(Color.BLACK);
                 g2.setStroke(new BasicStroke(thickness));
 
                 int offset = (int) (thickness / 2);
                 g2.drawRoundRect(offset, offset, this.getWidth() - (int)thickness, this.getHeight() - (int)thickness, arc, arc);
 
-                g2.setColor(Color.WHITE);
+                g2.setColor(Color.BLACK);
                 g2.setFont(getFont());
 
                 g2.dispose();
                 break;
-
-            case EMPTY:
-                break;
         }
+
 
         super.paintComponent(g);
     }
 
-    public enum  ButtonStyle {
+    public enum TestFieldStyle {
         CLASSIC,
         EMPTY,
+        SEARCH_BAR,
     }
 }

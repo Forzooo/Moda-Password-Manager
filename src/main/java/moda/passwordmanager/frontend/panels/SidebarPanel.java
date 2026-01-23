@@ -36,7 +36,7 @@ public class SidebarPanel extends JPanel {
         // Set the initial state of the dynamic part to Show All Panel
         this.dynamicState = GUIState.SHOW_DATA;
 
-        this.setLayout(new MigLayout("debug, align center")); //rimuovi il debug
+        this.setLayout(new MigLayout("align center")); //rimuovi il debug
 
         initPanel();
         initComponents();
@@ -77,15 +77,15 @@ public class SidebarPanel extends JPanel {
 
         Dimension buttonDimension = new Dimension(70, 70);
 
-        this.addDataButton = new ModaButton("Classic");
+        this.addDataButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC);
         this.addDataButton.setText("Add Data");
         //this.addDataButton.setMaximumSize(buttonDimension);
 
-        this.showDataButton = new ModaButton("Classic");
+        this.showDataButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC);
         this.showDataButton.setText("Show Data");
         //this.showDataButton.setMaximumSize(buttonDimension);
 
-        this.settingsButton = new ModaButton("Empty");  // TODO: Use the settings icon instead of the text
+        this.settingsButton = new ModaButton(ModaButton.ButtonStyle.EMPTY);  // TODO: Use the settings icon instead of the text
         this.settingsButton.setMaximumSize(buttonDimension);
 
         ImageIcon settings_icon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/settings_icon/settings_icon.png")));

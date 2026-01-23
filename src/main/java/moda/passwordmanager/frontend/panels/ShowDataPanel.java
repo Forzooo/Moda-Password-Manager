@@ -1,9 +1,12 @@
 package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.backend.Data;
+import moda.passwordmanager.frontend.components.ModaButton;
+import moda.passwordmanager.frontend.components.ModaTextField;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.dialogs.ShowDataDialog;
+import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -11,6 +14,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class ShowDataPanel extends JPanel {
 
@@ -20,6 +24,9 @@ public class ShowDataPanel extends JPanel {
     // Attributes for the configuration of the panel
     private final int MIN_CONTENT_WIDTH;
     private Dimension windowSize;
+
+    private ModaTextField searchBar;
+    private ModaButton searchButton;
 
     /**
      * The service data shown in the JList of "Show Data" panel which it's updated automatically by the timer
@@ -43,17 +50,12 @@ public class ShowDataPanel extends JPanel {
         this.userData = new ArrayList<>();
         this.userDataModel = new DefaultListModel<>();
 
+        this.searchBar = new ModaTextField(ModaTextField.TestFieldStyle.SEARCH_BAR);
+        this.searchButton = new ModaButton(ModaButton.ButtonStyle.EMPTY);
+
         initPanel(sidebarPanelWidth);
         initComponents();
         initListeners();
-    }
-
-    /**
-     * Get the layout used for the panel
-     * @return BorderLayout
-     */
-    private BorderLayout getPanelLayout() {
-        return new BorderLayout();
     }
 
     @Override
@@ -67,7 +69,7 @@ public class ShowDataPanel extends JPanel {
      * @param sidebarPanelWidth
      */
     private void initPanel(int sidebarPanelWidth){
-        setLayout(getPanelLayout());  // Set its layout
+        this.setLayout(new MigLayout());  // Set its layout
 
         // Set the preferred size
         setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - sidebarPanelWidth), (int) this.windowSize.getHeight()));
@@ -79,6 +81,15 @@ public class ShowDataPanel extends JPanel {
      * Initialize the components of the panel
      */
     private void initComponents(){
+
+        searchBar.setPreferredSize(new Dimension(MIN_CONTENT_WIDTH, 50));
+        add(searchBar, "growx, pushx");
+
+        ImageIcon searchIcon = new ImageIcon(Objects.requireNonNull(ShowDataPanel.class.getResource("/search_icon/search_icon.png")));
+        searchButton.setIcon(searchIcon);
+
+        add(searchButton, "wrap");
+
         // Create the JList used to show all the data saved inside the database
         this.dataList = new JList<>();
         this.dataList.setFixedCellHeight(30);
@@ -89,10 +100,10 @@ public class ShowDataPanel extends JPanel {
         dataList.setSelectionForeground(Color.white);
 
         JScrollPane scrollPane = new JScrollPane(this.dataList);
-        scrollPane.setPreferredSize(new Dimension(1000, 750));
 
-        scrollPane.setBorder(new EmptyBorder(10,30,10,30));
-        add(scrollPane, BorderLayout.CENTER);  // Add the ScrollPane with the JList to the panel
+        scrollPane.setBorder(new EmptyBorder(10,10,10,10));
+        scrollPane.setBackground(Color.WHITE);
+        add(scrollPane, "bottom, span, grow, pushy");  // Add the ScrollPane with the JList to the panel
     }
 
     /**
