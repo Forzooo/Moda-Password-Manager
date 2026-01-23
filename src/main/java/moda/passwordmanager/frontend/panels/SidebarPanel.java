@@ -1,6 +1,7 @@
 package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.frontend.GUIState;
+import moda.passwordmanager.frontend.components.ModaButton;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
@@ -17,9 +18,9 @@ public class SidebarPanel extends JPanel {
     private final String CURRENT_VERSION;  // The current version of the software shown in a JLabel
 
     // Swing components
-    private JButton addDataButton;
-    private JButton showDataButton;
-    private JButton settingsButton;
+    private ModaButton addDataButton;
+    private ModaButton showDataButton;
+    private ModaButton settingsButton;
 
     // The dynamicState indicates which Panel needs to be switched to from the current one selected
     private GUIState dynamicState;
@@ -66,7 +67,7 @@ public class SidebarPanel extends JPanel {
         // Create the JLabel that displays the name of the Password Manager
         JLabel passwordManagerLabel = new JLabel();
         passwordManagerLabel.setText("MODA");
-        passwordManagerLabel.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 80));  // Set the font of the label
+        passwordManagerLabel.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 85));  // Set the font of the label
         passwordManagerLabel.setForeground(Color.WHITE);  // Set the color of the label
 
         // Add the current version of the software at the bottom of the sidebar
@@ -74,23 +75,18 @@ public class SidebarPanel extends JPanel {
         currentVersionLabel.setText("Version: " + CURRENT_VERSION);
         currentVersionLabel.setForeground(Color.WHITE);  // Set the color of the label
 
-        Dimension buttonDimension = new Dimension(50, 50);
+        Dimension buttonDimension = new Dimension(70, 70);
 
-        this.addDataButton = new JButton();
+        this.addDataButton = new ModaButton("Classic");
         this.addDataButton.setText("Add Data");
         //this.addDataButton.setMaximumSize(buttonDimension);
 
-        this.showDataButton = new JButton();
+        this.showDataButton = new ModaButton("Classic");
         this.showDataButton.setText("Show Data");
         //this.showDataButton.setMaximumSize(buttonDimension);
 
-        this.settingsButton = new JButton();  // TODO: Use the settings icon instead of the text
+        this.settingsButton = new ModaButton("Empty");  // TODO: Use the settings icon instead of the text
         this.settingsButton.setMaximumSize(buttonDimension);
-
-        this.settingsButton.setOpaque(false);
-        this.settingsButton.setContentAreaFilled(false);
-        this.settingsButton.setBorderPainted(false);
-        this.settingsButton.setFocusPainted(false);
 
         ImageIcon settings_icon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/settings_icon/settings_icon.png")));
         settings_icon.setImage(settings_icon.getImage().getScaledInstance(buttonDimension.width, buttonDimension.height, 0));
@@ -98,11 +94,11 @@ public class SidebarPanel extends JPanel {
 
         // Add the components to the Sidebar
         add(passwordManagerLabel, "wrap 0, al center");
-        add(currentVersionLabel, "wrap 100, al center");
+        add(currentVersionLabel, "wrap 150, al center");
 
-        add(addDataButton, "wrap, center");
-        add(showDataButton, "wrap, center");
-        add(settingsButton, "wrap, bottom, pushy");
+        add(addDataButton, "wrap 50, center, grow, pushy 50");
+        add(showDataButton, "wrap 200, center, grow, pushy 50");
+        add(settingsButton, "bottom");
     }
 
     /**
