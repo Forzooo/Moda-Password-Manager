@@ -28,7 +28,7 @@ public class ModaTextField extends JTextField {
                 g2.setColor(Color.WHITE);
                 g2.fillRoundRect(0, 0, this.getWidth(), this.getHeight(), arc, arc);
 
-                float thickness = 2.0f;
+                float thickness = 3.0f;
 
                 g2.setColor(Color.BLACK);
                 g2.setStroke(new BasicStroke(thickness));

@@ -51,7 +51,8 @@ public class ShowDataPanel extends JPanel {
         this.userDataModel = new DefaultListModel<>();
 
         this.searchBar = new ModaTextField(ModaTextField.TestFieldStyle.SEARCH_BAR);
-        this.searchButton = new ModaButton(ModaButton.ButtonStyle.EMPTY);
+        this.searchButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE);
+        this.searchButton.setThickness(3.0f);
 
         initPanel(sidebarPanelWidth);
         initComponents();

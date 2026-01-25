@@ -32,6 +32,7 @@ public class Application extends JFrame {
         setIconImage(Frontend.getIcon());  // Get the icon and set it
 
         setVisible(true);
+        setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
     }

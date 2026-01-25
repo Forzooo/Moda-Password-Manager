@@ -77,11 +77,13 @@ public class SidebarPanel extends JPanel {
 
         Dimension buttonDimension = new Dimension(70, 70);
 
-        this.addDataButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC);
+        this.addDataButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_BLACK);
+        this.addDataButton.setThickness(4.0f);
         this.addDataButton.setText("Add Data");
         //this.addDataButton.setMaximumSize(buttonDimension);
 
-        this.showDataButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC);
+        this.showDataButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_BLACK);
+        this.showDataButton.setThickness(4.0f);
         this.showDataButton.setText("Show Data");
         //this.showDataButton.setMaximumSize(buttonDimension);
 
@@ -97,7 +99,7 @@ public class SidebarPanel extends JPanel {
         add(currentVersionLabel, "wrap 150, al center");
 
         add(addDataButton, "wrap 50, center, grow, pushy 50");
-        add(showDataButton, "wrap 200, center, grow, pushy 50");
+        add(showDataButton, "wrap 190, center, grow, pushy 50");
         add(settingsButton, "bottom");
     }
 
