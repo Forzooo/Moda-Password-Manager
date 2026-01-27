@@ -1,15 +1,19 @@
 package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.backend.Data;
+import moda.passwordmanager.frontend.components.ModaButton;
+import moda.passwordmanager.frontend.components.ModaTextField;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.components.Placeholder;
 import moda.passwordmanager.frontend.dialogs.ConfigureGenerationPasswordDialog;
+import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Objects;
 
 public class AddDataPanel extends JPanel {
 
@@ -21,11 +25,11 @@ public class AddDataPanel extends JPanel {
     private Dimension windowSize;
 
     // Swing components
-    private JTextField usernameTextField;
-    private JTextField emailAddressTextField;
-    private JTextField passwordTextField;
-    private JTextField serviceTextField;
-    private JTextField additionalDataTextField;
+    private ModaTextField usernameTextField;
+    private ModaTextField emailAddressTextField;
+    private ModaTextField passwordTextField;
+    private ModaTextField serviceTextField;
+    private ModaTextField additionalDataTextField;
 
     private Placeholder usernamePlaceholder;
     private Placeholder emailAddressPlaceholder;
@@ -33,10 +37,10 @@ public class AddDataPanel extends JPanel {
     private Placeholder servicePlaceholder;
     private Placeholder additionalDataPlaceholder;
 
-    private JButton resetButton;
-    private JButton saveButton;
-    private JButton generatePasswordButton;
-    private JButton configurePasswordGeneration;
+    private ModaButton resetButton;
+    private ModaButton saveButton;
+    private ModaButton generatePasswordButton;
+    private ModaButton configurePasswordGeneration;
 
     public AddDataPanel(InterThreadCommunication interThreadCommunication, int MIN_CONTENT_WIDTH, Dimension windowSize, int sidebarPanelWidth) {
         super();  // Initialize the Panel
@@ -66,15 +70,13 @@ public class AddDataPanel extends JPanel {
      * @param sidebarPanelWidth
      */
     private void initPanel(int sidebarPanelWidth) {
-        setLayout(getPanelLayout());  // Set its layout
+        setLayout(new MigLayout("insets 30 30 30 70", "[grow, fill][40!]"));  // Set its layout
 
         // Set the preferred size
         setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - sidebarPanelWidth), (int) this.windowSize.getHeight()));
 
         setBackground(Color.WHITE);
 
-        // Set the margin of the Add Data Panel [top: 60, bottom: 60, left: 30, right: 30]
-        setBorder(BorderFactory.createEmptyBorder(60, 30, 60, 30));
     }
 
     /**
@@ -84,73 +86,56 @@ public class AddDataPanel extends JPanel {
 
         JLabel addDataLabel = new JLabel();
         addDataLabel.setText("Add a new data:");
-        addDataLabel.setFont(new Font("Arial", Font.PLAIN, 16));
+        addDataLabel.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 40));
 
         // Create all the JTextField for the data input
-        Dimension textFieldDimension = new Dimension(1600, 30);  // Define the dimension of any JTextField
 
-        this.usernameTextField = new JTextField();
-        this.usernameTextField.setMaximumSize(textFieldDimension);
+        this.usernameTextField = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, 50);
         this.usernamePlaceholder = new Placeholder(this.usernameTextField, "Username");
 
-        this.emailAddressTextField = new JTextField();
-        this.emailAddressTextField.setMaximumSize(textFieldDimension);
+        this.emailAddressTextField = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, 50);
         this.emailAddressPlaceholder = new Placeholder(this.emailAddressTextField, "Email Address (email@example.com)");
 
-        // The password field is not a JPasswordField because the user needs to know the password being entered in the database
-        this.passwordTextField = new JTextField();
-        this.passwordTextField.setMaximumSize(textFieldDimension);
+        // The password field is not a JPasswordField because the user needs to know the password being entered in the database, perforza
+        this.passwordTextField = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, 50);
         this.passwordPlaceholder = new Placeholder(this.passwordTextField, "Password");
 
-        this.serviceTextField = new JTextField();
-        this.serviceTextField.setMaximumSize(textFieldDimension);
+        this.serviceTextField = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, 50);
         this.servicePlaceholder = new Placeholder(this.serviceTextField, "Service (Google, Microsoft, ...)");
 
-        this.additionalDataTextField = new JTextField();
-        this.additionalDataTextField.setMaximumSize(textFieldDimension);
+        this.additionalDataTextField = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, 50);
         this.additionalDataPlaceholder = new Placeholder(this.additionalDataTextField, "Additional Data (Data " +
                 "not covered by the other fields)");
 
-        // Create the JButton for Reset and Confirm operations
-        Dimension buttonDimension = new Dimension(250, 20);  // Define the dimension of any JButton
-
-        this.resetButton = new JButton();
+        Dimension buttonDimension = new Dimension(150, 50);
+        int fontSize = 21;
+        this.resetButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, buttonDimension, fontSize);
         this.resetButton.setText("Reset");
-        this.resetButton.setMaximumSize(buttonDimension);
 
-        this.saveButton = new JButton();
+        this.saveButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, buttonDimension, fontSize);
         this.saveButton.setText("Save");
-        this.saveButton.setMaximumSize(buttonDimension);
 
         // Create the Buttons for the Generation and the configuration of the password
-        this.generatePasswordButton = new JButton();
-        this.generatePasswordButton.setText("Generate Password");
-        this.generatePasswordButton.setMaximumSize(buttonDimension);
+        this.generatePasswordButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE,  50, 50, fontSize);
+        ImageIcon generateIcon = new ImageIcon(Objects.requireNonNull(AddDataPanel.class.getResource("/generate_icon.png")));
+        generateIcon.setImage(generateIcon.getImage().getScaledInstance(50, 50, 0));
+        this.generatePasswordButton.setIcon(generateIcon);
 
-        this.configurePasswordGeneration = new JButton();
+        this.configurePasswordGeneration = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE,   buttonDimension, fontSize);
         this.configurePasswordGeneration.setText("Configure the Password Generation");
-        this.configurePasswordGeneration.setMaximumSize(buttonDimension);
 
         // Add all the components to the Panel
-        add(addDataLabel);
-        add(Box.createRigidArea(new Dimension(0, 20)));  // Add RigidArea to add spacing between components
-        add(this.usernameTextField);
-        add(Box.createRigidArea(new Dimension(0, 20)));
-        add(this.emailAddressTextField);
-        add(Box.createRigidArea(new Dimension(0, 20)));
+        add(addDataLabel, "wrap 50");
+
+        add(this.usernameTextField, "wrap");
+        add(this.emailAddressTextField,  "wrap");
         add(this.passwordTextField);
-        add(Box.createRigidArea(new Dimension(0, 20)));
-        add(this.serviceTextField);
-        add(Box.createRigidArea(new Dimension(0, 20)));
-        add(this.additionalDataTextField);
-        add(Box.createRigidArea(new Dimension(0, 20)));
-        add(this.generatePasswordButton);
-        add(Box.createRigidArea(new Dimension(0, 10)));
+        add(this.generatePasswordButton, "wrap");
+        add(this.serviceTextField, "wrap");
+        add(this.additionalDataTextField,  "wrap 50");
+        add(this.resetButton, "split 2");
+        add(this.saveButton,  "wrap");
         add(this.configurePasswordGeneration);
-        add(Box.createRigidArea(new Dimension(0, 10)));
-        add(this.resetButton);
-        add(Box.createRigidArea(new Dimension(0, 10)));
-        add(this.saveButton);
     }
 
     /**

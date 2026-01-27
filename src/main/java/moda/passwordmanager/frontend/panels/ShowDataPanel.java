@@ -50,8 +50,8 @@ public class ShowDataPanel extends JPanel {
         this.userData = new ArrayList<>();
         this.userDataModel = new DefaultListModel<>();
 
-        this.searchBar = new ModaTextField(ModaTextField.TestFieldStyle.SEARCH_BAR);
-        this.searchButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE);
+        this.searchBar = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, 50);
+        this.searchButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, 50, 12);
         this.searchButton.setThickness(3.0f);
 
         initPanel(sidebarPanelWidth);
@@ -70,7 +70,7 @@ public class ShowDataPanel extends JPanel {
      * @param sidebarPanelWidth
      */
     private void initPanel(int sidebarPanelWidth){
-        this.setLayout(new MigLayout());  // Set its layout
+        this.setLayout(new MigLayout("insets 30 30 30 30"));  // Set its layout
 
         // Set the preferred size
         setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - sidebarPanelWidth), (int) this.windowSize.getHeight()));
@@ -83,10 +83,16 @@ public class ShowDataPanel extends JPanel {
      */
     private void initComponents(){
 
-        searchBar.setPreferredSize(new Dimension(MIN_CONTENT_WIDTH, 50));
+        JLabel showDataLabel = new JLabel();
+        showDataLabel.setText("Show data:");
+        showDataLabel.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 40));
+
+        add(showDataLabel, "wrap 20");
+
         add(searchBar, "growx, pushx");
 
         ImageIcon searchIcon = new ImageIcon(Objects.requireNonNull(ShowDataPanel.class.getResource("/search_icon/search_icon.png")));
+
         searchButton.setIcon(searchIcon);
 
         add(searchButton, "wrap");

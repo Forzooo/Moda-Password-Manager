@@ -17,19 +17,61 @@ public class ModaButton extends JButton {
     private float currentFontThickness;
     private Timer timerAnimation;
 
-    public ModaButton( ButtonStyle buttonStyle) {
+    public ModaButton(ButtonStyle buttonStyle, int height, int fontSize) {
 
         this.buttonStyle = buttonStyle;
 
         this.currentThickness = this.thickness;
 
-        this.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 30));
+        this.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, fontSize));
 
         this.setContentAreaFilled(false);
         this.setBorderPainted(false);
         this.setFocusPainted(false);
         this.setOpaque(false);
 
+        this.setPreferredSize(new Dimension(getWidth(), height));
+
+        animation_init();
+    }
+
+    public ModaButton(ButtonStyle buttonStyle, Dimension dimension, int fontSize) {
+
+        this.buttonStyle = buttonStyle;
+
+        this.currentThickness = this.thickness;
+
+        this.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, fontSize));
+
+        this.setContentAreaFilled(false);
+        this.setBorderPainted(false);
+        this.setFocusPainted(false);
+        this.setOpaque(false);
+
+        this.setPreferredSize(dimension);
+
+        animation_init();
+    }
+
+    public ModaButton(ButtonStyle buttonStyle, int width, int height, int fontSize) {
+
+        this.buttonStyle = buttonStyle;
+
+        this.currentThickness = this.thickness;
+
+        this.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, fontSize));
+
+        this.setContentAreaFilled(false);
+        this.setBorderPainted(false);
+        this.setFocusPainted(false);
+        this.setOpaque(false);
+
+        this.setPreferredSize(new Dimension(width, height));
+
+        animation_init();
+    }
+
+    private void animation_init(){
         timerAnimation = new Timer(15, event -> {
             float target = getModel().isRollover() ? thickness * 2.5f : thickness;
 
@@ -53,7 +95,6 @@ public class ModaButton extends JButton {
                 timerAnimation.start();
             }
         });
-
     }
 
     @Override

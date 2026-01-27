@@ -75,20 +75,17 @@ public class SidebarPanel extends JPanel {
         currentVersionLabel.setText("Version: " + CURRENT_VERSION);
         currentVersionLabel.setForeground(Color.WHITE);  // Set the color of the label
 
-        Dimension buttonDimension = new Dimension(70, 70);
 
-        this.addDataButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_BLACK);
+        this.addDataButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_BLACK, 70, 30);
         this.addDataButton.setThickness(4.0f);
         this.addDataButton.setText("Add Data");
-        //this.addDataButton.setMaximumSize(buttonDimension);
 
-        this.showDataButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_BLACK);
+        this.showDataButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_BLACK, 70, 30);
         this.showDataButton.setThickness(4.0f);
         this.showDataButton.setText("Show Data");
-        //this.showDataButton.setMaximumSize(buttonDimension);
 
-        this.settingsButton = new ModaButton(ModaButton.ButtonStyle.EMPTY);  // TODO: Use the settings icon instead of the text
-        this.settingsButton.setMaximumSize(buttonDimension);
+        Dimension buttonDimension = new Dimension(80, 80);
+        this.settingsButton = new ModaButton(ModaButton.ButtonStyle.EMPTY, buttonDimension, 30);  // TODO: Use the settings icon instead of the text
 
         ImageIcon settings_icon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/settings_icon/settings_icon.png")));
         settings_icon.setImage(settings_icon.getImage().getScaledInstance(buttonDimension.width, buttonDimension.height, 0));

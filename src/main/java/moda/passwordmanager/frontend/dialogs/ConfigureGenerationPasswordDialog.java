@@ -1,5 +1,6 @@
 package moda.passwordmanager.frontend.dialogs;
 
+import moda.passwordmanager.frontend.components.ModaTextField;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.Frontend;
@@ -19,7 +20,7 @@ public class ConfigureGenerationPasswordDialog extends JDialog {
     private InterThreadCommunication interThreadCommunication;
 
     // Dialog components
-    private JTextField passwordLengthTextField;
+    private ModaTextField passwordLengthTextField;
     private Placeholder passwordLengthPlaceholder;
 
     private JCheckBox lettersCheckBox;
@@ -75,8 +76,7 @@ public class ConfigureGenerationPasswordDialog extends JDialog {
         configurePasswordLabel.setText("Configure the password generation");
         configurePasswordLabel.setFont(new Font("Arial MT Bold", Font.BOLD, 18));
 
-        this.passwordLengthTextField = new JTextField();
-        this.passwordLengthTextField.setMaximumSize(new Dimension(400, 30));
+        this.passwordLengthTextField = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, 30);
         this.passwordLengthPlaceholder = new Placeholder(this.passwordLengthTextField, "Enter the password length");
         this.passwordLengthPlaceholder.show();
 

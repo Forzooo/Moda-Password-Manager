@@ -10,11 +10,11 @@ import java.awt.event.FocusListener;
  */
 public class Placeholder implements FocusListener {
 
-    private JTextField textField;  // The JTextField needs to be an attribute otherwise changes cannot be applied to it
+    private ModaTextField textField;  // The JTextField needs to be an attribute otherwise changes cannot be applied to it
     private final String TEXT;  // The text which is shown as a placeholder
     private boolean shown;  // A flag that indicates whether it's needed to show the placeholder or not
 
-    public Placeholder(JTextField textField, String text){
+    public Placeholder(ModaTextField textField, String text){
         this.textField = textField;
         this.TEXT = text;
         this.shown = true;

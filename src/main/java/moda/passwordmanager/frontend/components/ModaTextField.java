@@ -6,13 +6,26 @@ import java.awt.*;
 public class ModaTextField extends JTextField {
 
     TestFieldStyle style;
-    public ModaTextField(TestFieldStyle style) {
+    public ModaTextField(TestFieldStyle style, int height) {
         this.style = style;
 
         this.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 20));
 
         this.setOpaque(false);
         this.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 5));
+
+        this.setMinimumSize(new Dimension(getWidth(), height));
+    }
+
+    public ModaTextField(TestFieldStyle style, int width, int height) {
+        this.style = style;
+
+        this.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 20));
+
+        this.setOpaque(false);
+        this.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 5));
+
+        this.setMinimumSize(new Dimension(width, height));
     }
 
     @Override
@@ -20,7 +33,7 @@ public class ModaTextField extends JTextField {
 
         Graphics2D g2 = (Graphics2D) g.create();
         switch (style) {
-            case SEARCH_BAR:
+            case CLASSIC:
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
                 int arc = 24;
