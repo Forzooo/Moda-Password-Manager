@@ -1,8 +1,11 @@
 package moda.passwordmanager.frontend.panels;
 
+import moda.passwordmanager.frontend.components.ModaButton;
+import moda.passwordmanager.frontend.components.ModaTextField;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.dialogs.MasterPasswordDialog;
+import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -21,15 +24,15 @@ public class SettingsPanel extends JPanel {
     private Dimension windowSize;
 
     // Components of the panel
-    private JTextField databasePathTextField;  // Read-only state to show the state of the database
-    private JButton changeDatabaseButton;  // Change to another database, already existing
-    private JButton newDatabaseButton;  // Create a new database in a directory
-    private JButton changeMasterPasswordButton;  // Change the master password of the current database
-    private JButton enableGoogleDriveButton;  // Enable the Google Drive synchronization
-    private JButton disableGoogleDriveButton;  // Disable the Google Drive synchronization
-    private JButton synchronizeGoogleDriveButton;  // Manual synchronization with Google Drive
-    private JButton enableAutomaticSynchronizationButton;  // Enable the automatic synchronization
-    private JButton disableAutomaticSynchronizationButton;  // Disable the automatic synchronization
+    private ModaTextField databasePathTextField;  // Read-only state to show the state of the database
+    private ModaButton changeDatabaseButton;  // Change to another database, already existing
+    private ModaButton newDatabaseButton;  // Create a new database in a directory
+    private ModaButton changeMasterPasswordButton;  // Change the master password of the current database
+    private ModaButton enableGoogleDriveButton;  // Enable the Google Drive synchronization
+    private ModaButton disableGoogleDriveButton;  // Disable the Google Drive synchronization
+    private ModaButton synchronizeGoogleDriveButton;  // Manual synchronization with Google Drive
+    private ModaButton enableAutomaticSynchronizationButton;  // Enable the automatic synchronization
+    private ModaButton disableAutomaticSynchronizationButton;  // Disable the automatic synchronization
 
     public SettingsPanel(InterThreadCommunication itc, int MIN_CONTENT_WIDTH, Dimension windowSize,
                          int sidebarPanelWidth) {
@@ -72,91 +75,65 @@ public class SettingsPanel extends JPanel {
      * @param sidebarPanelWidth 
      */
     private void initPanel(int sidebarPanelWidth){
-        setLayout(getPanelLayout());  // Set its layout
+        setLayout(new MigLayout("debug"));  // Set its layout
 
         // Set the preferred size
         setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - sidebarPanelWidth), (int) this.windowSize.getHeight()));
 
         setBackground(Color.WHITE);
 
-        // Set the margin of the Add Data Panel [top: 60, bottom: 60, left: 30, right: 30]
-        setBorder(BorderFactory.createEmptyBorder(60,30,60,30));
     }
 
     /**
      * Initialize the components of the panel
      */
     private void initComponents(){
-        Dimension textFieldDimension = new Dimension(1600, 30);  // Define the dimension of any JTextField
         Dimension buttonDimension = new Dimension(250, 20);  // Define the dimension of any JButton
 
-        // Database settings section
-        JPanel databasePanel = new JPanel();  // The JPanel used for all the components related to the database
-        databasePanel.setBackground(Color.white);
-        databasePanel.setPreferredSize(new Dimension(500, 100));
-        databasePanel.setLayout(new FlowLayout());
+        int fontSize = 21;
+        
+        JLabel settingsLabel = new JLabel();
+        settingsLabel.setText("Add a new data:");
+        settingsLabel.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 40));
 
         JLabel databaseInUseLabel = new JLabel();
         databaseInUseLabel.setText("Database in use: ");
 
-        this.databasePathTextField = new JTextField();
+        this.databasePathTextField = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, 50);
         this.databasePathTextField.setText(getCurrentDatabasePath());
-        this.databasePathTextField.setMaximumSize(textFieldDimension);
         this.databasePathTextField.setEditable(false);
 
-        this.newDatabaseButton = new JButton();
+        this.newDatabaseButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(),fontSize);
         this.newDatabaseButton.setText("New database");
-        this.newDatabaseButton.setMaximumSize(buttonDimension);
 
-        this.changeDatabaseButton = new JButton();
+        this.changeDatabaseButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(),fontSize);
         this.changeDatabaseButton.setText("Change database");
-        this.changeDatabaseButton.setMaximumSize(buttonDimension);
 
-        databasePanel.add(databaseInUseLabel);
-        databasePanel.add(this.databasePathTextField);
-        databasePanel.add(this.newDatabaseButton);
-        databasePanel.add(this.changeDatabaseButton);
-
-        // Master password section
-        JPanel masterPasswordPanel = new JPanel();
-        masterPasswordPanel.setBackground(Color.white);
-        masterPasswordPanel.setPreferredSize(new Dimension(500, 100));
-        masterPasswordPanel.setLayout(new FlowLayout());
-
-        this.changeMasterPasswordButton = new JButton();
+        this.changeMasterPasswordButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(),fontSize);
         this.changeMasterPasswordButton.setText("Change the master password");
-        this.changeMasterPasswordButton.setMaximumSize(buttonDimension);
 
-        masterPasswordPanel.add(this.changeMasterPasswordButton);
-
-        // Google Drive section
-        JPanel googleDrivePanel = new JPanel();
-        googleDrivePanel.setBackground(Color.white);
-        googleDrivePanel.setPreferredSize(new Dimension(500, 100));
-        googleDrivePanel.setLayout(new FlowLayout());
-
-        this.enableGoogleDriveButton = new JButton();
+        this.enableGoogleDriveButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(),fontSize);
         this.enableGoogleDriveButton.setText("Enable Google Drive");
         this.enableGoogleDriveButton.setMaximumSize(buttonDimension);
         this.enableGoogleDriveButton.setVisible(false);  // The visibility it's decided later
 
-        this.disableGoogleDriveButton = new JButton();
+        this.disableGoogleDriveButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(),fontSize);
         this.disableGoogleDriveButton.setText("Disable Google Drive");
         this.disableGoogleDriveButton.setMaximumSize(buttonDimension);
         this.disableGoogleDriveButton.setVisible(false);  // The visibility it's decided later
 
-        this.synchronizeGoogleDriveButton = new JButton();
+        this.synchronizeGoogleDriveButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(),fontSize);
         this.synchronizeGoogleDriveButton.setText("Synchronize");
         this.synchronizeGoogleDriveButton.setMaximumSize(buttonDimension);
         this.synchronizeGoogleDriveButton.setEnabled(false);  // The sync is allowed only when Google Drive is enabled
 
-        this.enableAutomaticSynchronizationButton = new JButton();
+        this.enableAutomaticSynchronizationButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(),fontSize);
         this.enableAutomaticSynchronizationButton.setText("Enable automatic synchronization");
         this.enableAutomaticSynchronizationButton.setMaximumSize(buttonDimension);
         this.enableAutomaticSynchronizationButton.setVisible(false);  // The visibility it's decided later
         this.enableAutomaticSynchronizationButton.setEnabled(false);  // The sync is allowed only when Google Drive is enabled
 
-        this.disableAutomaticSynchronizationButton = new JButton();
+        this.disableAutomaticSynchronizationButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(),fontSize);
         this.disableAutomaticSynchronizationButton.setText("Disable automatic synchronization");
         this.disableAutomaticSynchronizationButton.setMaximumSize(buttonDimension);
         this.disableAutomaticSynchronizationButton.setVisible(false);  // The visibility it's decided later
@@ -166,15 +143,9 @@ public class SettingsPanel extends JPanel {
         setGoogleDriveVisibility();
         setGoogleDriveAutomaticSynchronizationVisibility();
 
-        googleDrivePanel.add(this.enableGoogleDriveButton);
-        googleDrivePanel.add(this.disableGoogleDriveButton);
-        googleDrivePanel.add(this.synchronizeGoogleDriveButton);
-        googleDrivePanel.add(this.enableAutomaticSynchronizationButton);
-        googleDrivePanel.add(this.disableAutomaticSynchronizationButton);
-
-        add(databasePanel);
-        add(masterPasswordPanel);
-        add(googleDrivePanel);
+        add(settingsLabel, "wrap, span");
+        add(databaseInUseLabel);
+        add(this.databasePathTextField, "growx, wrap");
     }
 
     /**

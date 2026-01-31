@@ -51,7 +51,7 @@ public class ShowDataPanel extends JPanel {
         this.userDataModel = new DefaultListModel<>();
 
         this.searchBar = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, 50);
-        this.searchButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, 50, 12);
+        this.searchButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, 50, 50, 12);
         this.searchButton.setThickness(3.0f);
 
         initPanel(sidebarPanelWidth);
@@ -92,10 +92,11 @@ public class ShowDataPanel extends JPanel {
         add(searchBar, "growx, pushx");
 
         ImageIcon searchIcon = new ImageIcon(Objects.requireNonNull(ShowDataPanel.class.getResource("/search_icon/search_icon.png")));
+        searchIcon.setImage(searchIcon.getImage().getScaledInstance(50, 50, Image.SCALE_DEFAULT));
 
         searchButton.setIcon(searchIcon);
 
-        add(searchButton, "wrap");
+        add(searchButton, "growy,wrap");
 
         // Create the JList used to show all the data saved inside the database
         this.dataList = new JList<>();
