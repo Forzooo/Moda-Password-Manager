@@ -13,6 +13,7 @@ import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.nio.file.Paths;
 
 public class SettingsPanel extends JPanel {
 
@@ -75,7 +76,7 @@ public class SettingsPanel extends JPanel {
      * @param sidebarPanelWidth 
      */
     private void initPanel(int sidebarPanelWidth){
-        setLayout(new MigLayout("debug"));  // Set its layout
+        setLayout(new MigLayout("insets 30 30 30 30, fillx"));  // Set its layout
 
         // Set the preferred size
         setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - sidebarPanelWidth), (int) this.windowSize.getHeight()));
@@ -88,54 +89,50 @@ public class SettingsPanel extends JPanel {
      * Initialize the components of the panel
      */
     private void initComponents(){
-        Dimension buttonDimension = new Dimension(250, 20);  // Define the dimension of any JButton
+        Dimension buttonDimension = new Dimension(250, 50);  // Define the dimension of any JButton
 
-        int fontSize = 21;
+        int buttonFontSize = 21;
         
         JLabel settingsLabel = new JLabel();
-        settingsLabel.setText("Add a new data:");
+        settingsLabel.setText("Settings:");
         settingsLabel.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 40));
 
         JLabel databaseInUseLabel = new JLabel();
         databaseInUseLabel.setText("Database in use: ");
 
-        this.databasePathTextField = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, 50);
-        this.databasePathTextField.setText(getCurrentDatabasePath());
+        this.databasePathTextField = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, 450,50);
+//        this.databasePathTextField.setText(getCurrentDatabasePath());
+        this.databasePathTextField.setText("C:\\...\\" + simplifiDBPath(getCurrentDatabasePath()));
         this.databasePathTextField.setEditable(false);
 
-        this.newDatabaseButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(),fontSize);
+        this.newDatabaseButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(), buttonFontSize);
         this.newDatabaseButton.setText("New database");
 
-        this.changeDatabaseButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(),fontSize);
+        this.changeDatabaseButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(), buttonFontSize);
         this.changeDatabaseButton.setText("Change database");
 
-        this.changeMasterPasswordButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(),fontSize);
+        this.changeMasterPasswordButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(), buttonFontSize);
         this.changeMasterPasswordButton.setText("Change the master password");
 
-        this.enableGoogleDriveButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(),fontSize);
+        this.enableGoogleDriveButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(), buttonFontSize);
         this.enableGoogleDriveButton.setText("Enable Google Drive");
-        this.enableGoogleDriveButton.setMaximumSize(buttonDimension);
         this.enableGoogleDriveButton.setVisible(false);  // The visibility it's decided later
 
-        this.disableGoogleDriveButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(),fontSize);
+        this.disableGoogleDriveButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(), buttonFontSize);
         this.disableGoogleDriveButton.setText("Disable Google Drive");
-        this.disableGoogleDriveButton.setMaximumSize(buttonDimension);
         this.disableGoogleDriveButton.setVisible(false);  // The visibility it's decided later
 
-        this.synchronizeGoogleDriveButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(),fontSize);
+        this.synchronizeGoogleDriveButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(), buttonFontSize);
         this.synchronizeGoogleDriveButton.setText("Synchronize");
-        this.synchronizeGoogleDriveButton.setMaximumSize(buttonDimension);
         this.synchronizeGoogleDriveButton.setEnabled(false);  // The sync is allowed only when Google Drive is enabled
 
-        this.enableAutomaticSynchronizationButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(),fontSize);
+        this.enableAutomaticSynchronizationButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(), buttonFontSize);
         this.enableAutomaticSynchronizationButton.setText("Enable automatic synchronization");
-        this.enableAutomaticSynchronizationButton.setMaximumSize(buttonDimension);
         this.enableAutomaticSynchronizationButton.setVisible(false);  // The visibility it's decided later
         this.enableAutomaticSynchronizationButton.setEnabled(false);  // The sync is allowed only when Google Drive is enabled
 
-        this.disableAutomaticSynchronizationButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(),fontSize);
+        this.disableAutomaticSynchronizationButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, (int) buttonDimension.getHeight(), buttonFontSize);
         this.disableAutomaticSynchronizationButton.setText("Disable automatic synchronization");
-        this.disableAutomaticSynchronizationButton.setMaximumSize(buttonDimension);
         this.disableAutomaticSynchronizationButton.setVisible(false);  // The visibility it's decided later
         this.disableAutomaticSynchronizationButton.setEnabled(false);  // The sync is allowed only when Google Drive is enabled
 
@@ -143,9 +140,45 @@ public class SettingsPanel extends JPanel {
         setGoogleDriveVisibility();
         setGoogleDriveAutomaticSynchronizationVisibility();
 
-        add(settingsLabel, "wrap, span");
-        add(databaseInUseLabel);
-        add(this.databasePathTextField, "growx, wrap");
+        add(settingsLabel, "grow, wrap, span");
+
+
+        JPanel changeDBSection = new JPanel();
+        changeDBSection.setLayout(new MigLayout("fillx"));
+
+        JLabel dbSettingsLabel = new JLabel();
+        dbSettingsLabel.setText("Database settings:");
+        dbSettingsLabel.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 20));
+
+        changeDBSection.add(dbSettingsLabel, "growx, wrap, span");
+        changeDBSection.add(databaseInUseLabel, "span 1 2");
+        changeDBSection.add(this.databasePathTextField, "growx, span 1 2");
+        changeDBSection.add(changeDatabaseButton, "growx, wrap 0");
+        changeDBSection.add(newDatabaseButton, "growx");
+
+        add(changeDBSection, "grow, wrap 30");
+
+
+        JPanel databaseSettings = new JPanel();
+        databaseSettings.setLayout(new MigLayout("fillx"));
+
+        databaseSettings.add(changeMasterPasswordButton);
+
+        add(databaseSettings, "grow, wrap 30");
+
+        JPanel driveSyncSection = new JPanel();
+        driveSyncSection.setLayout(new MigLayout("fillx"));
+
+        JLabel driveSyncSettingsLabel = new JLabel();
+        driveSyncSettingsLabel.setText("Google drive sync settings:");
+        driveSyncSettingsLabel.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 20));
+
+        driveSyncSection.add(driveSyncSettingsLabel, "growx, wrap, span");
+        driveSyncSection.add(enableGoogleDriveButton, "wrap");
+        driveSyncSection.add(enableAutomaticSynchronizationButton);
+        driveSyncSection.add(synchronizeGoogleDriveButton);
+
+        add(driveSyncSection, "grow");
     }
 
     /**
@@ -287,6 +320,22 @@ public class SettingsPanel extends JPanel {
         Event response = this.itc.requestAndReceive(new Event("get-database"));
         String databasePath = (String) response.getData().getFirst();  // Retrieve the path of the database
         return databasePath;
+    }
+
+    private String simplifiDBPath(String databasePath){
+        if (databasePath == null || databasePath.isEmpty()) {
+            return "";
+        }
+
+        String simplifiedPath = Paths.get(databasePath).getFileName().toString();
+        int lastDotIndex = simplifiedPath.lastIndexOf('.');
+
+        if (lastDotIndex <= 0) {
+            return simplifiedPath;
+        }
+
+        return simplifiedPath.substring(0, lastDotIndex);
+
     }
 
     /**

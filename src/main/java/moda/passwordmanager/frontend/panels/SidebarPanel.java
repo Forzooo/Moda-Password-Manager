@@ -36,7 +36,7 @@ public class SidebarPanel extends JPanel {
         // Set the initial state of the dynamic part to Show All Panel
         this.dynamicState = GUIState.SHOW_DATA;
 
-        this.setLayout(new MigLayout("align center")); //rimuovi il debug
+        this.setLayout(new MigLayout("align center, insets 10 30 10 30")); //rimuovi il debug
 
         initPanel();
         initComponents();

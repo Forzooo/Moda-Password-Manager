@@ -1,8 +1,7 @@
 package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.backend.Data;
-import moda.passwordmanager.frontend.components.ModaButton;
-import moda.passwordmanager.frontend.components.ModaTextField;
+import moda.passwordmanager.frontend.components.*;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.dialogs.ShowDataDialog;
@@ -35,7 +34,7 @@ public class ShowDataPanel extends JPanel {
     private DefaultListModel<String> userDataModel;
 
     // Swing components
-    private JList<String> dataList;
+    private ModaList dataList;
 
     public ShowDataPanel(InterThreadCommunication interThreadCommunication, int MIN_CONTENT_WIDTH, Dimension windowSize,
                          int sidebarPanelWidth) {
@@ -99,15 +98,15 @@ public class ShowDataPanel extends JPanel {
         add(searchButton, "growy,wrap");
 
         // Create the JList used to show all the data saved inside the database
-        this.dataList = new JList<>();
-        this.dataList.setFixedCellHeight(30);
-        this.dataList.setModel(this.userDataModel);  // Set the model of the JList (Strings containing service data)
-        this.dataList.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 20));
+        this.dataList = new ModaList(this.userDataModel, 20, 30);
 
         dataList.setSelectionBackground(Color.black);
         dataList.setSelectionForeground(Color.white);
 
-        JScrollPane scrollPane = new JScrollPane(this.dataList);
+        ModaScrollPane scrollPane = new ModaScrollPane(this.dataList);
+        ModaScrollBarUI modaScrollBarUI = new ModaScrollBarUI();
+
+        scrollPane.getVerticalScrollBar().setUI(modaScrollBarUI);
 
         scrollPane.setBorder(new EmptyBorder(10,10,10,10));
         scrollPane.setBackground(Color.WHITE);

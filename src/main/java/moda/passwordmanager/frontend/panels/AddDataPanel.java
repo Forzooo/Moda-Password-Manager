@@ -70,7 +70,7 @@ public class AddDataPanel extends JPanel {
      * @param sidebarPanelWidth
      */
     private void initPanel(int sidebarPanelWidth) {
-        setLayout(new MigLayout("insets 30 30 30 70", "[grow, fill][40!]"));  // Set its layout
+        setLayout(new MigLayout("insets 30 30 30 70", "[grow, fill][40!]"));
 
         // Set the preferred size
         setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - sidebarPanelWidth), (int) this.windowSize.getHeight()));
