@@ -49,14 +49,6 @@ public class SettingsPanel extends JPanel {
         initListeners();
     }
 
-    /**
-     * Get the layout used for the panel
-     * @return BorderLayout
-     */
-    private BoxLayout getPanelLayout() {
-        return new BoxLayout(this, BoxLayout.Y_AXIS);
-    }
-
     @Override
     public Dimension getMinimumSize() {
         // altezza 0 -> “qualsiasi”, conta solo la larghezza minima
@@ -76,7 +68,7 @@ public class SettingsPanel extends JPanel {
      * @param sidebarPanelWidth 
      */
     private void initPanel(int sidebarPanelWidth){
-        setLayout(new MigLayout("insets 30 30 30 30, fillx"));  // Set its layout
+        setLayout(new MigLayout("debug, insets 30 30 30 30, fillx"));  // Set its layout
 
         // Set the preferred size
         setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - sidebarPanelWidth), (int) this.windowSize.getHeight()));

@@ -32,7 +32,7 @@ public class Application extends JFrame {
         setIconImage(Frontend.getIcon());  // Get the icon and set it
 
         setVisible(true);
-        setResizable(false);
+        //setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
     }
@@ -62,6 +62,8 @@ public class Application extends JFrame {
         // Create the two LinkedBlockingQueue objects here to pass them to the Backend and the Frontend
         LinkedBlockingQueue<Event> backendQueue = new LinkedBlockingQueue<>();
         LinkedBlockingQueue<Event> frontendQueue = new LinkedBlockingQueue<>();
+
+        //System.setProperty("sun.java2d.uiScale", "1.0");
 
         EventQueue.invokeLater(() -> {
             Application ex = new Application(backendQueue, frontendQueue, databaseToUse);

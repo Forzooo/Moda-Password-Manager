@@ -25,7 +25,7 @@ public class ModaTextField extends JTextField {
         this.setOpaque(false);
         this.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 5));
 
-        this.setMinimumSize(new Dimension(width, height));
+        this.setPreferredSize(new Dimension(width, height));
     }
 
     @Override

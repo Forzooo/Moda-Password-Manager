@@ -17,8 +17,7 @@ public class ModaButton extends JButton {
     private float currentFontThickness;
     private Timer timerAnimation;
 
-    public ModaButton(ButtonStyle buttonStyle, int height, int fontSize) {
-
+    private void buttonInit(ButtonStyle buttonStyle, int fontSize){
         this.buttonStyle = buttonStyle;
 
         this.currentThickness = this.thickness;
@@ -29,44 +28,35 @@ public class ModaButton extends JButton {
         this.setBorderPainted(false);
         this.setFocusPainted(false);
         this.setOpaque(false);
+    }
 
-        this.setPreferredSize(new Dimension(getWidth(), height));
+    public ModaButton(ButtonStyle buttonStyle, int height, int fontSize) {
+
+        buttonInit(buttonStyle, fontSize);
+
+        this.setMinimumSize(new Dimension(100, height));
+        this.setPreferredSize(new Dimension(200, height));
+        this.setMaximumSize(new Dimension(300, height));
 
         animation_init();
     }
 
     public ModaButton(ButtonStyle buttonStyle, Dimension dimension, int fontSize) {
 
-        this.buttonStyle = buttonStyle;
+        buttonInit(buttonStyle, fontSize);
 
-        this.currentThickness = this.thickness;
-
-        this.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, fontSize));
-
-        this.setContentAreaFilled(false);
-        this.setBorderPainted(false);
-        this.setFocusPainted(false);
-        this.setOpaque(false);
-
+        this.setMinimumSize(new Dimension(dimension.width - 100, dimension.height));
         this.setPreferredSize(dimension);
+        this.setMaximumSize(new Dimension(dimension.width + 100, dimension.height));
 
         animation_init();
     }
 
     public ModaButton(ButtonStyle buttonStyle, int width, int height, int fontSize) {
 
-        this.buttonStyle = buttonStyle;
+        buttonInit(buttonStyle, fontSize);
 
-        this.currentThickness = this.thickness;
-
-        this.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, fontSize));
-
-        this.setContentAreaFilled(false);
-        this.setBorderPainted(false);
-        this.setFocusPainted(false);
-        this.setOpaque(false);
-
-        this.setPreferredSize(new Dimension(width, height));
+        this.setMaximumSize(new Dimension(width, height));
 
         animation_init();
     }
