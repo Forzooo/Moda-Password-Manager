@@ -34,9 +34,8 @@ public class ModaButton extends JButton {
 
         buttonInit(buttonStyle, fontSize);
 
-        this.setMinimumSize(new Dimension(100, height));
-        this.setPreferredSize(new Dimension(200, height));
-        this.setMaximumSize(new Dimension(300, height));
+
+        this.setPreferredSize(new Dimension(this.getWidth(), height));
 
         animation_init();
     }
@@ -45,9 +44,9 @@ public class ModaButton extends JButton {
 
         buttonInit(buttonStyle, fontSize);
 
-        this.setMinimumSize(new Dimension(dimension.width - 100, dimension.height));
+        this.setMinimumSize(dimension);
         this.setPreferredSize(dimension);
-        this.setMaximumSize(new Dimension(dimension.width + 100, dimension.height));
+        this.setMaximumSize(dimension);
 
         animation_init();
     }
@@ -56,7 +55,7 @@ public class ModaButton extends JButton {
 
         buttonInit(buttonStyle, fontSize);
 
-        this.setMaximumSize(new Dimension(width, height));
+        this.setPreferredSize(new Dimension(width, height));
 
         animation_init();
     }

@@ -9,7 +9,11 @@ import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -49,8 +53,9 @@ public class ShowDataPanel extends JPanel {
         this.userData = new ArrayList<>();
         this.userDataModel = new DefaultListModel<>();
 
+        //Initialize the search bar
         this.searchBar = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, 50);
-        this.searchButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, 50, 50, 12);
+        this.searchButton = new ModaButton(ModaButton.ButtonStyle.EMPTY, 50, 50, 12);
         this.searchButton.setThickness(3.0f);
 
         initPanel(sidebarPanelWidth);
@@ -91,7 +96,7 @@ public class ShowDataPanel extends JPanel {
         add(searchBar, "growx, pushx");
 
         ImageIcon searchIcon = new ImageIcon(Objects.requireNonNull(ShowDataPanel.class.getResource("/search_icon/search_icon.png")));
-        searchIcon.setImage(searchIcon.getImage().getScaledInstance(50, 50, Image.SCALE_DEFAULT));
+        searchIcon.setImage(searchIcon.getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH));
 
         searchButton.setIcon(searchIcon);
 
@@ -156,6 +161,50 @@ public class ShowDataPanel extends JPanel {
 
             }
         });
+
+        this.searchBar.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                filtra();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                filtra();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                filtra();
+            }
+
+            private void filtra() {
+                String testo = searchBar.getText().toLowerCase();
+
+                aggiornaLista(testo);
+            }
+        });
+    }
+
+    private void aggiornaLista(String query) {
+        this.userDataModel.clear();
+
+        if (query.isEmpty()) {
+            for (Data d : this.userData) {
+                this.userDataModel.addElement(d.getSERVICE());
+            }
+            return;
+        }
+
+        String queryLower = query.toLowerCase();
+
+        for (Data d : this.userData) {
+            String nomeLower = d.getSERVICE().toLowerCase();
+
+            if (nomeLower.startsWith(queryLower)) {
+                this.userDataModel.addElement(d.getSERVICE());
+            }
+        }
     }
 
     /**

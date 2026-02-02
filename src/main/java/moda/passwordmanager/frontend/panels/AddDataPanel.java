@@ -70,7 +70,7 @@ public class AddDataPanel extends JPanel {
      * @param sidebarPanelWidth
      */
     private void initPanel(int sidebarPanelWidth) {
-        setLayout(new MigLayout("insets 30 30 30 70", "[grow, fill][40!]"));
+        setLayout(new MigLayout("debug, insets 30 30 30 70", "[grow, fill][40!]"));
 
         // Set the preferred size
         setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - sidebarPanelWidth), (int) this.windowSize.getHeight()));
@@ -109,10 +109,10 @@ public class AddDataPanel extends JPanel {
 
         Dimension buttonDimension = new Dimension(150, 50);
         int fontSize = 21;
-        this.resetButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, buttonDimension, fontSize);
+        this.resetButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, buttonDimension.width, buttonDimension.height, fontSize);
         this.resetButton.setText("Reset");
 
-        this.saveButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, buttonDimension, fontSize);
+        this.saveButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, buttonDimension.width, buttonDimension.height, fontSize);
         this.saveButton.setText("Save");
 
         // Create the Buttons for the Generation and the configuration of the password
@@ -121,7 +121,7 @@ public class AddDataPanel extends JPanel {
         generateIcon.setImage(generateIcon.getImage().getScaledInstance(50, 50, 0));
         this.generatePasswordButton.setIcon(generateIcon);
 
-        this.configurePasswordGeneration = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE,   buttonDimension, fontSize);
+        this.configurePasswordGeneration = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE,buttonDimension.width, buttonDimension.height, fontSize);
         this.configurePasswordGeneration.setText("Configure the Password Generation");
 
         // Add all the components to the Panel
