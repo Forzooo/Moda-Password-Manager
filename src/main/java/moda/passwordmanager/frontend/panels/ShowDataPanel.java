@@ -179,7 +179,7 @@ public class ShowDataPanel extends JPanel {
             }
 
             private void filtra() {
-                String testo = searchBar.getText().toLowerCase();
+                String testo = searchBar.getText().toLowerCase().trim();
 
                 aggiornaLista(testo);
             }
