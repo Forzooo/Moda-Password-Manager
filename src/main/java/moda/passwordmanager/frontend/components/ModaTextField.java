@@ -5,8 +5,8 @@ import java.awt.*;
 
 public class ModaTextField extends JTextField {
 
-    TestFieldStyle style;
-    public ModaTextField(TestFieldStyle style, int height) {
+    TextFieldStyle style;
+    public ModaTextField(TextFieldStyle style, int height) {
         this.style = style;
 
         this.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 20));
@@ -17,7 +17,7 @@ public class ModaTextField extends JTextField {
         this.setMinimumSize(new Dimension(getWidth(), height));
     }
 
-    public ModaTextField(TestFieldStyle style, int width, int height) {
+    public ModaTextField(TextFieldStyle style, int width, int height) {
         this.style = style;
 
         this.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 20));
@@ -60,7 +60,7 @@ public class ModaTextField extends JTextField {
         super.paintComponent(g);
     }
 
-    public enum TestFieldStyle {
+    public enum TextFieldStyle {
         CLASSIC,
         EMPTY,
         SEARCH_BAR,

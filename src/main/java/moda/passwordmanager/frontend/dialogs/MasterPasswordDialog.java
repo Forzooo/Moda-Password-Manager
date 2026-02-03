@@ -1,8 +1,11 @@
 package moda.passwordmanager.frontend.dialogs;
 
+import moda.passwordmanager.frontend.components.ModaButton;
+import moda.passwordmanager.frontend.components.ModaPasswordField;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.Frontend;
+import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -12,6 +15,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.nio.file.Paths;
 
 /**
  * A JDialog used to retrieve the parameters of the generation of the password
@@ -21,10 +25,10 @@ public class MasterPasswordDialog extends JDialog {
     private InterThreadCommunication itc;
 
     // Dialog components
-    private JPasswordField masterPassword;
-    private JButton sendButton;
+    private ModaPasswordField masterPassword;
+    private ModaButton sendButton;
     private JLabel currentDatabaseLabel;
-    private JButton changeDatabaseButton;
+    private ModaButton changeDatabaseButton;
 
     public MasterPasswordDialog(InterThreadCommunication itc){
         super();
@@ -66,7 +70,7 @@ public class MasterPasswordDialog extends JDialog {
      */
     private void initDialog(){
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);  // We handle on our own how the dialog closes
-        setLayout(getDialogLayout());  // Set its layout
+        setLayout(new MigLayout("debug, center", "center"));  // Set its layout
 
         setTitle("MODA - Password Manager");
         setModal(true);
@@ -84,39 +88,29 @@ public class MasterPasswordDialog extends JDialog {
      * Initialize and add all the Swing components of the Dialog
      */
     private void initLoginComponents() {
-        // The panel that contains the master password login
-        JPanel masterPasswordPanel = new JPanel();
-        masterPasswordPanel.setLayout(new FlowLayout());
 
-        this.masterPassword = new JPasswordField();
-        this.masterPassword.setPreferredSize(new Dimension(200, 25));
+        this.masterPassword = new ModaPasswordField(200, 25);
 
-        this.sendButton = new JButton();
+        this.sendButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, 30, 20);
         this.sendButton.setText("Log In");
 
-        masterPasswordPanel.add(this.masterPassword);
-        masterPasswordPanel.add(this.sendButton);
-
-        add(masterPasswordPanel);
+        add(masterPassword);
+        add(sendButton, "wrap");
     }
 
     /**
      * Initialize the database information components
      */
     private void initDatabaseInformationComponents(){
-        // The panel that contains the information about the database
-        JPanel databaseInformationPanel = new JPanel();
-        databaseInformationPanel.setLayout(new FlowLayout());
 
         this.currentDatabaseLabel = new JLabel();
-        this.currentDatabaseLabel.setText("Current database: " + getCurrentDatabase());
+        this.currentDatabaseLabel.setText("Current database: " + simplifiDBPath(getCurrentDatabase()));
 
-        this.changeDatabaseButton = new JButton();
+        this.changeDatabaseButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, 30, 20);
         this.changeDatabaseButton.setText("Change database");
 
-        databaseInformationPanel.add(this.currentDatabaseLabel);
-        databaseInformationPanel.add(this.changeDatabaseButton);
-        add(databaseInformationPanel);
+        add(currentDatabaseLabel);
+        add(changeDatabaseButton);
     }
 
     /**
@@ -132,7 +126,7 @@ public class MasterPasswordDialog extends JDialog {
         this.currentDatabaseLabel.setText("Current database: " + databaseToUse);
 
         // The button is only initialized, without any attribute set, only for consistency
-        this.changeDatabaseButton = new JButton();
+        this.changeDatabaseButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, 30, 20);
 
         databaseInformationPanel.add(this.currentDatabaseLabel);
         add(databaseInformationPanel);
@@ -224,6 +218,22 @@ public class MasterPasswordDialog extends JDialog {
         String databasePath = (String) databasePathEvent.getData().getFirst();
 
         return databasePath;
+    }
+
+    private String simplifiDBPath(String databasePath){
+        if (databasePath == null || databasePath.isEmpty()) {
+            return "";
+        }
+
+        String simplifiedPath = Paths.get(databasePath).getFileName().toString();
+        int lastDotIndex = simplifiedPath.lastIndexOf('.');
+
+        if (lastDotIndex <= 0) {
+            return simplifiedPath;
+        }
+
+        return simplifiedPath.substring(0, lastDotIndex);
+
     }
 
     /**

@@ -30,6 +30,14 @@ public class ModaButton extends JButton {
         this.setOpaque(false);
     }
 
+    public ModaButton(ButtonStyle buttonStyle) {
+
+        buttonInit(buttonStyle, 21);
+        this.setPreferredSize(new Dimension(this.getWidth(), 50));
+
+        animation_init();
+    }
+
     public ModaButton(ButtonStyle buttonStyle, int height, int fontSize) {
 
         buttonInit(buttonStyle, fontSize);

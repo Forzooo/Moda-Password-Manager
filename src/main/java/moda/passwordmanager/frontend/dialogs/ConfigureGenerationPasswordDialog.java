@@ -76,7 +76,7 @@ public class ConfigureGenerationPasswordDialog extends JDialog {
         configurePasswordLabel.setText("Configure the password generation");
         configurePasswordLabel.setFont(new Font("Arial MT Bold", Font.BOLD, 18));
 
-        this.passwordLengthTextField = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, 30);
+        this.passwordLengthTextField = new ModaTextField(ModaTextField.TextFieldStyle.CLASSIC, 30);
         this.passwordLengthPlaceholder = new Placeholder(this.passwordLengthTextField, "Enter the password length");
         this.passwordLengthPlaceholder.show();
 

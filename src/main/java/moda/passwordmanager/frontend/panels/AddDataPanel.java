@@ -90,20 +90,20 @@ public class AddDataPanel extends JPanel {
 
         // Create all the JTextField for the data input
 
-        this.usernameTextField = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, 50);
+        this.usernameTextField = new ModaTextField(ModaTextField.TextFieldStyle.CLASSIC, 50);
         this.usernamePlaceholder = new Placeholder(this.usernameTextField, "Username");
 
-        this.emailAddressTextField = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, 50);
+        this.emailAddressTextField = new ModaTextField(ModaTextField.TextFieldStyle.CLASSIC, 50);
         this.emailAddressPlaceholder = new Placeholder(this.emailAddressTextField, "Email Address (email@example.com)");
 
         // The password field is not a JPasswordField because the user needs to know the password being entered in the database, perforza
-        this.passwordTextField = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, 50);
+        this.passwordTextField = new ModaTextField(ModaTextField.TextFieldStyle.CLASSIC, 50);
         this.passwordPlaceholder = new Placeholder(this.passwordTextField, "Password");
 
-        this.serviceTextField = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, 50);
+        this.serviceTextField = new ModaTextField(ModaTextField.TextFieldStyle.CLASSIC, 50);
         this.servicePlaceholder = new Placeholder(this.serviceTextField, "Service (Google, Microsoft, ...)");
 
-        this.additionalDataTextField = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, 50);
+        this.additionalDataTextField = new ModaTextField(ModaTextField.TextFieldStyle.CLASSIC, 50);
         this.additionalDataPlaceholder = new Placeholder(this.additionalDataTextField, "Additional Data (Data " +
                 "not covered by the other fields)");
 

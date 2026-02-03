@@ -12,8 +12,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -54,7 +52,7 @@ public class ShowDataPanel extends JPanel {
         this.userDataModel = new DefaultListModel<>();
 
         //Initialize the search bar
-        this.searchBar = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, 50);
+        this.searchBar = new ModaTextField(ModaTextField.TextFieldStyle.CLASSIC, 50);
         this.searchButton = new ModaButton(ModaButton.ButtonStyle.EMPTY, 50, 50, 12);
         this.searchButton.setThickness(3.0f);
 

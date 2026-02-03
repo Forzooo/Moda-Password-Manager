@@ -92,7 +92,7 @@ public class SettingsPanel extends JPanel {
         JLabel databaseInUseLabel = new JLabel();
         databaseInUseLabel.setText("Database in use: ");
 
-        this.databasePathTextField = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, 450,50);
+        this.databasePathTextField = new ModaTextField(ModaTextField.TextFieldStyle.CLASSIC, 450,50);
 //        this.databasePathTextField.setText(getCurrentDatabasePath());
         this.databasePathTextField.setText("C:\\...\\" + simplifiDBPath(getCurrentDatabasePath()));
         this.databasePathTextField.setEditable(false);
