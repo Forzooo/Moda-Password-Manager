@@ -70,13 +70,13 @@ public class MasterPasswordDialog extends JDialog {
      */
     private void initDialog(){
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);  // We handle on our own how the dialog closes
-        setLayout(new MigLayout("debug, center", "center"));  // Set its layout
+        setLayout(new MigLayout("center", "center"));  // Set its layout
 
         setTitle("MODA - Password Manager");
         setModal(true);
 
         // Set the preferred size
-        setSize(new Dimension(700, 150));
+        setSize(new Dimension(600, 200));
         setLocationRelativeTo(null);
         setAlwaysOnTop(true);
 
@@ -89,13 +89,13 @@ public class MasterPasswordDialog extends JDialog {
      */
     private void initLoginComponents() {
 
-        this.masterPassword = new ModaPasswordField(200, 25);
+        this.masterPassword = new ModaPasswordField(300, 50);
 
-        this.sendButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, 30, 20);
+        this.sendButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, 50, 20);
         this.sendButton.setText("Log In");
 
-        add(masterPassword);
-        add(sendButton, "wrap");
+        add(masterPassword, "span 2, growx");
+        add(sendButton, "wrap 20");
     }
 
     /**
@@ -106,11 +106,11 @@ public class MasterPasswordDialog extends JDialog {
         this.currentDatabaseLabel = new JLabel();
         this.currentDatabaseLabel.setText("Current database: " + simplifiDBPath(getCurrentDatabase()));
 
-        this.changeDatabaseButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, 30, 20);
+        this.changeDatabaseButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, 50, 20);
         this.changeDatabaseButton.setText("Change database");
 
         add(currentDatabaseLabel);
-        add(changeDatabaseButton);
+        add(changeDatabaseButton, "growx");
     }
 
     /**

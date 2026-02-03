@@ -5,6 +5,7 @@ import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.Frontend;
 import moda.passwordmanager.frontend.components.Placeholder;
+import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
@@ -41,21 +42,10 @@ public class ConfigureGenerationPasswordDialog extends JDialog {
     }
 
     /**
-     * Get the layout used for the Dialog
-     *
-     * @return BoxLayout
-     */
-    private BoxLayout getDialogLayout() {
-        // The target is the Dialog so to use it we retrieve it from the content pane otherwise we would use the
-        // entire container including other JPanels
-        return new BoxLayout(getContentPane(), BoxLayout.Y_AXIS);
-    }
-
-    /**
      * Set the configuration of the Dialog
      */
     private void initDialog(){
-        setLayout(getDialogLayout());  // Set its layout
+        setLayout(new MigLayout("debug"));  // Set its layout
         setTitle("Configuration of the password");
         setSize(new Dimension(400, 350));  // Set the preferred size
         setBackground(Color.WHITE);

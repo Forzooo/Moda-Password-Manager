@@ -8,10 +8,10 @@ public class ModaPasswordField extends JPasswordField {
     public ModaPasswordField(int width, int height) {
 
         this.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 20));
-        setPreferredSize(new Dimension(width, height));
+        setMinimumSize(new Dimension(width, height));
 
         this.setOpaque(false);
-//        this.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 5));
+        this.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 5));
 
     }
 

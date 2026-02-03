@@ -68,7 +68,7 @@ public class SettingsPanel extends JPanel {
      * @param sidebarPanelWidth 
      */
     private void initPanel(int sidebarPanelWidth){
-        setLayout(new MigLayout("debug, insets 30 30 30 30, fillx"));  // Set its layout
+        setLayout(new MigLayout("insets 30 30 30 30, fillx"));  // Set its layout
 
         // Set the preferred size
         setPreferredSize(new Dimension((int) (this.windowSize.getWidth() - sidebarPanelWidth), (int) this.windowSize.getHeight()));
