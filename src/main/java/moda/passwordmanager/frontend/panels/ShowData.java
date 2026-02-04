@@ -1,14 +1,19 @@
 package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.backend.Data;
+import moda.passwordmanager.frontend.components.*;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
+import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.function.IntConsumer;
 
 public class ShowData extends JPanel {
@@ -18,6 +23,9 @@ public class ShowData extends JPanel {
 
     private JTabbedPane dataTabbedPane;  // The tabbed pane shows the dataList and the data the user has selected
 
+    private ModaTextField searchBar;
+    private ModaButton searchButton;
+
     /**
      * The service fields shown in the JList, which are updated by the FrontendEventListener
      */
@@ -25,7 +33,7 @@ public class ShowData extends JPanel {
     private final DefaultListModel<String> USER_DATA_MODEL;
 
     // Swing components
-    private JList<String> dataList;
+    private ModaList dataList;
 
     public ShowData(InterThreadCommunication itc){
         super();  // Initialize the Panel
@@ -37,6 +45,16 @@ public class ShowData extends JPanel {
         this.USER_DATA = new ArrayList<>();
         this.USER_DATA_MODEL = new DefaultListModel<>();
 
+        int searchBarSize = 50;
+
+        this.searchBar = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, searchBarSize);
+
+        this.searchButton = new ModaButton(ModaButton.ButtonStyle.EMPTY, searchBarSize, searchBarSize, 12);
+        ImageIcon searchIcon = new ImageIcon(Objects.requireNonNull(ShowData.class.getResource("/icons/search_icon.png")));
+        searchIcon.setImage(searchIcon.getImage().getScaledInstance(searchBarSize, searchBarSize, Image.SCALE_SMOOTH));
+        searchButton.setIcon(searchIcon);
+        this.searchButton.setThickness(3.0f);
+
         initPanel();
         initComponents();
         initListeners();
@@ -47,7 +65,7 @@ public class ShowData extends JPanel {
      */
     private void initPanel(){
         // A generic boxlayout can be used as it's the only component of the panel
-        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+        setLayout(new MigLayout("debug, insets 30 30 30 30, fill"));
     }
 
     /**
@@ -57,21 +75,24 @@ public class ShowData extends JPanel {
         this.dataTabbedPane = new JTabbedPane();
 
         // Create the JList used to show all the data saved inside the database
-        this.dataList = new JList<>();
-        this.dataList.setFixedCellHeight(30);
-        this.dataList.setModel(this.USER_DATA_MODEL);  // Set the model of the JList (Strings containing service data)
-        this.dataList.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 20));
+        this.dataList = new ModaList(this.USER_DATA_MODEL, 20, 30);
+
         this.dataList.setBackground(null);
         this.dataList.setSelectionBackground(Color.black);
 
-        JScrollPane scrollPane = new JScrollPane(this.dataList);
-        scrollPane.setBackground(null);
-        scrollPane.setPreferredSize(new Dimension(1000, 750));
+        ModaScrollPane scrollPane = new ModaScrollPane(this.dataList);
+        ModaScrollBarUI modaScrollBarUI = new ModaScrollBarUI();
+
+        scrollPane.getVerticalScrollBar().setUI(modaScrollBarUI);
+
         scrollPane.setBorder(new EmptyBorder(10,10,10,10));
+        scrollPane.setBackground(Color.WHITE);
 
         this.dataTabbedPane.addTab("User Data", scrollPane);
 
-        add(this.dataTabbedPane, BorderLayout.CENTER);
+        add(searchBar, "growx, pushx, split 2");
+        add(searchButton, "wrap");
+        add(this.dataTabbedPane, "grow, push");
     }
 
     /**
@@ -99,22 +120,66 @@ public class ShowData extends JPanel {
             }
         });
 
-        this.dataList.setCellRenderer(new DefaultListCellRenderer(){
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+//        this.dataList.setCellRenderer(new DefaultListCellRenderer(){
+//            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+//                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+//
+//                if (isSelected){  // The selected row has black background
+//                    c.setBackground(Color.BLACK);
+//                } else {  // The other rows have two different colors
+//                    if (index % 2 == 0){
+//                        c.setBackground(new Color(255, 255, 255));
+//                    } else {
+//                        c.setBackground(new Color(241, 241, 241));
+//                    }
+//                }
+//                return c;
+//            }
+//        });
 
-                if (isSelected){  // The selected row has black background
-                    c.setBackground(Color.BLACK);
-                } else {  // The other rows have two different colors
-                    if (index % 2 == 0){
-                        c.setBackground(new Color(255, 255, 255));
-                    } else {
-                        c.setBackground(new Color(241, 241, 241));
-                    }
-                }
-                return c;
+        this.searchBar.getDocument().addDocumentListener(new DocumentListener() {
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                filtra();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                filtra();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                filtra();
+            }
+
+            private void filtra(){
+                String text = searchBar.getText().toLowerCase().trim();
+                aggiornaLista(text);
             }
         });
+    }
+
+    private void aggiornaLista(String query) {
+        this.USER_DATA_MODEL.clear();
+
+        if (query.isEmpty()) {
+            for (Data d : this.USER_DATA) {
+                this.USER_DATA_MODEL.addElement(d.getSERVICE());
+            }
+            return;
+        }
+
+        String queryLower = query.toLowerCase();
+
+        for (Data d : this.USER_DATA) {
+            String nomeLower = d.getSERVICE().toLowerCase();
+
+            if (nomeLower.startsWith(queryLower)) {
+                this.USER_DATA_MODEL.addElement(d.getSERVICE());
+            }
+        }
     }
 
     /**

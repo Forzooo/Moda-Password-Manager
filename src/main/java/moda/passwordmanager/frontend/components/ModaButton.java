@@ -82,7 +82,7 @@ public class ModaButton extends JButton {
         this.setFocusPainted(false);
         this.setOpaque(false);
 
-        this.setPreferredSize(new Dimension(width, height));
+        this.setMinimumSize(new Dimension(width, height));
 
         animation_init();
     }
