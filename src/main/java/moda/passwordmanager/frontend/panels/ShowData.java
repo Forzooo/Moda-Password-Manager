@@ -136,7 +136,6 @@ public class ShowData extends JPanel {
 //        });
 
         this.searchBar.getDocument().addDocumentListener(new DocumentListener() {
-
             @Override
             public void insertUpdate(DocumentEvent e) {
                 filter();
@@ -152,32 +151,30 @@ public class ShowData extends JPanel {
                 filter();
             }
 
+            /**
+             * Filter the data model to show only the services that start with the input of the user
+             */
             private void filter(){
-                String text = searchBar.getText().toLowerCase().trim();
-                aggiornaLista(text);
+                String searchText = searchBar.getText().toLowerCase().trim();  // Get the input of the user
+
+                USER_DATA_MODEL.clear();  // Clear the model to add only services that start with the input of the user
+
+                // If the search text is empty, add all the services to the model
+                if (searchText.isEmpty()) {
+                    for (Data d : USER_DATA) {
+                        USER_DATA_MODEL.addElement(d.getSERVICE());
+                    }
+                    return;
+                }
+
+                // Iterate over all the data and add the services that starts with the input of the user
+                for (Data data : USER_DATA) {
+                    if (data.getSERVICE().toLowerCase().trim().startsWith(searchText)) {
+                        USER_DATA_MODEL.addElement(data.getSERVICE());
+                    }
+                }
             }
         });
-    }
-
-    private void aggiornaLista(String query) {
-        this.USER_DATA_MODEL.clear();
-
-        if (query.isEmpty()) {
-            for (Data d : this.USER_DATA) {
-                this.USER_DATA_MODEL.addElement(d.getSERVICE());
-            }
-            return;
-        }
-
-        String queryLower = query.toLowerCase();
-
-        for (Data d : this.USER_DATA) {
-            String nomeLower = d.getSERVICE().toLowerCase();
-
-            if (nomeLower.startsWith(queryLower)) {
-                this.USER_DATA_MODEL.addElement(d.getSERVICE());
-            }
-        }
     }
 
     /**

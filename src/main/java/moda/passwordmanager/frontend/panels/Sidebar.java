@@ -1,6 +1,7 @@
 package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.frontend.Frontend;
+import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.frontend.components.ModaButton;
 import moda.passwordmanager.frontend.dialogs.Settings;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
@@ -10,7 +11,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Objects;
 
 public class Sidebar extends JPanel {
 
@@ -40,7 +40,7 @@ public class Sidebar extends JPanel {
             "",
             "[][][]push[]"));
 
-        setBackground(Color.BLACK);
+        setBackground(UIManager.getColor("Moda.Sidebar.background"));
     }
 
     /**
@@ -51,7 +51,7 @@ public class Sidebar extends JPanel {
         JLabel passwordManagerLabel = new JLabel();  // Create the JLabel that displays the name of the Password Manager
         passwordManagerLabel.setText("MODA");
         passwordManagerLabel.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 80));
-        passwordManagerLabel.setForeground(Color.WHITE);
+        passwordManagerLabel.setForeground(UIManager.getColor("Moda.Sidebar.Title.foreground"));
 
         // Create the JButtons used to switch between JPanels of the dynamic part, where their width is the same as
         // the sidebar
@@ -64,8 +64,8 @@ public class Sidebar extends JPanel {
         this.showDataButton.setText("Show Data");
 
         // Settings + Details section
-        this.settingsButton = new ModaButton(ModaButton.ButtonStyle.EMPTY, buttonDimension.height, buttonDimension.height, 30);  // TODO: Use the settings icon
-        ImageIcon settings_icon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/icons/settings_icon.png")));
+        this.settingsButton = new ModaButton(ModaButton.ButtonStyle.EMPTY, buttonDimension.height, buttonDimension.height, 30);
+        ImageIcon settings_icon = Utilities.getIcon("settings_icon.png");
         settings_icon.setImage(settings_icon.getImage().getScaledInstance(buttonDimension.height, buttonDimension.height, 0));
         this.settingsButton.setIcon(settings_icon);
 
