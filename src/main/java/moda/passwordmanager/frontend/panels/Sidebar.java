@@ -1,6 +1,7 @@
 package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.frontend.Frontend;
+import moda.passwordmanager.frontend.components.ModaButton;
 import moda.passwordmanager.frontend.dialogs.Settings;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import net.miginfocom.swing.MigLayout;
@@ -9,15 +10,16 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Objects;
 
 public class Sidebar extends JPanel {
 
     private final InterThreadCommunication ITC;
 
     // Swing components
-    private JButton addDataButton;
-    private JButton showDataButton;
-    private JButton settingsButton;
+    private ModaButton addDataButton;
+    private ModaButton showDataButton;
+    private ModaButton settingsButton;
 
     public Sidebar(InterThreadCommunication itc){
         super();  // Initialize the Panel
@@ -35,8 +37,10 @@ public class Sidebar extends JPanel {
      */
     private void initPanel(){
         setLayout(new MigLayout("wrap 1, insets 20, fillx",
-            "[align center]",
+            "",
             "[][][]push[]"));
+
+        setBackground(Color.BLACK);
     }
 
     /**
@@ -47,28 +51,28 @@ public class Sidebar extends JPanel {
         JLabel passwordManagerLabel = new JLabel();  // Create the JLabel that displays the name of the Password Manager
         passwordManagerLabel.setText("MODA");
         passwordManagerLabel.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 80));
+        passwordManagerLabel.setForeground(Color.WHITE);
 
         // Create the JButtons used to switch between JPanels of the dynamic part, where their width is the same as
         // the sidebar
-        Dimension buttonDimension = new Dimension((int) getPreferredSize().getWidth(), 60);
+        Dimension buttonDimension = new Dimension((int) getPreferredSize().getWidth(), 70);
 
-        this.addDataButton = new JButton();
+        this.addDataButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_BLACK, buttonDimension, 30);
         this.addDataButton.setText("Add Data");
-        this.addDataButton.setPreferredSize(buttonDimension);
 
-        this.showDataButton = new JButton();
+        this.showDataButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_BLACK, buttonDimension, 30);
         this.showDataButton.setText("Show Data");
-        this.showDataButton.setPreferredSize(buttonDimension);
 
         // Settings + Details section
-        this.settingsButton = new JButton();  // TODO: Use the settings icon
-        this.settingsButton.setText("Settings");
-        this.settingsButton.setPreferredSize(buttonDimension);
+        this.settingsButton = new ModaButton(ModaButton.ButtonStyle.EMPTY, buttonDimension.height, buttonDimension.height, 30);  // TODO: Use the settings icon
+        ImageIcon settings_icon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/icons/settings_icon.png")));
+        settings_icon.setImage(settings_icon.getImage().getScaledInstance(buttonDimension.height, buttonDimension.height, 0));
+        this.settingsButton.setIcon(settings_icon);
 
-        add(passwordManagerLabel);
-        add(this.addDataButton, "grow");
-        add(this.showDataButton, "grow");
-        add(this.settingsButton, "grow");
+        add(passwordManagerLabel, "al center, wrap 150");
+        add(this.addDataButton, "grow, al center, wrap 20");
+        add(this.showDataButton, "grow, al center");
+        add(this.settingsButton);
     }
 
     /**
