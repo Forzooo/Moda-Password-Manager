@@ -40,7 +40,7 @@ public class Application extends JFrame {
                         String databaseToUse){
         Dimension screen = getToolkit().getScreenSize();
 
-        int width = (int) (screen.getWidth() * 3/5);
+        int width = (int) (screen.getWidth() * 4/5);
         int height = (int) (screen.getHeight() * 4/5);
 
         setTitle(getApplicationTitle());

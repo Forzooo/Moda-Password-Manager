@@ -63,6 +63,5 @@ public class ModaTextField extends JTextField {
     public enum TestFieldStyle {
         CLASSIC,
         EMPTY,
-        SEARCH_BAR,
     }
 }

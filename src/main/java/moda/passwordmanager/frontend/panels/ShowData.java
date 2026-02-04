@@ -1,6 +1,7 @@
 package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.backend.Data;
+import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.frontend.components.*;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import net.miginfocom.swing.MigLayout;
@@ -13,7 +14,6 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.function.IntConsumer;
 
 public class ShowData extends JPanel {
@@ -24,7 +24,6 @@ public class ShowData extends JPanel {
     private JTabbedPane dataTabbedPane;  // The tabbed pane shows the dataList and the data the user has selected
 
     private ModaTextField searchBar;
-    private ModaButton searchButton;
 
     /**
      * The service fields shown in the JList, which are updated by the FrontendEventListener
@@ -44,16 +43,6 @@ public class ShowData extends JPanel {
         // Initialize the user data ArrayList and Model
         this.USER_DATA = new ArrayList<>();
         this.USER_DATA_MODEL = new DefaultListModel<>();
-
-        int searchBarSize = 50;
-
-        this.searchBar = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, searchBarSize);
-
-        this.searchButton = new ModaButton(ModaButton.ButtonStyle.EMPTY, searchBarSize, searchBarSize, 12);
-        ImageIcon searchIcon = new ImageIcon(Objects.requireNonNull(ShowData.class.getResource("/icons/search_icon.png")));
-        searchIcon.setImage(searchIcon.getImage().getScaledInstance(searchBarSize, searchBarSize, Image.SCALE_SMOOTH));
-        searchButton.setIcon(searchIcon);
-        this.searchButton.setThickness(3.0f);
 
         initPanel();
         initComponents();
@@ -88,11 +77,20 @@ public class ShowData extends JPanel {
         scrollPane.setBorder(new EmptyBorder(10,10,10,10));
         scrollPane.setBackground(Color.WHITE);
 
-        this.dataTabbedPane.addTab("User Data", scrollPane);
+        this.dataTabbedPane.addTab("User Data", scrollPane);  // Add the default tab which cannot be closed
 
-        add(searchBar, "growx, pushx, split 2");
-        add(searchButton, "wrap");
-        add(this.dataTabbedPane, "grow, push");
+        int searchBarSize = 50;  // The size of the search bar
+        this.searchBar = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, searchBarSize);
+
+        JLabel searchIconLabel = new JLabel();
+        ImageIcon searchIcon = Utilities.getIcon("search_icon.png");
+        searchIcon.setImage(searchIcon.getImage().getScaledInstance(searchBarSize, searchBarSize, Image.SCALE_SMOOTH));
+        searchIconLabel.setIcon(searchIcon);
+
+        this.searchBar.putClientProperty("JTextField.trailingComponent", searchIconLabel);
+
+        add(this.dataTabbedPane, "grow, push, wrap");
+        add(this.searchBar, "span, growx, pushx, split 2");
     }
 
     /**
@@ -141,20 +139,20 @@ public class ShowData extends JPanel {
 
             @Override
             public void insertUpdate(DocumentEvent e) {
-                filtra();
+                filter();
             }
 
             @Override
             public void removeUpdate(DocumentEvent e) {
-                filtra();
+                filter();
             }
 
             @Override
             public void changedUpdate(DocumentEvent e) {
-                filtra();
+                filter();
             }
 
-            private void filtra(){
+            private void filter(){
                 String text = searchBar.getText().toLowerCase().trim();
                 aggiornaLista(text);
             }
