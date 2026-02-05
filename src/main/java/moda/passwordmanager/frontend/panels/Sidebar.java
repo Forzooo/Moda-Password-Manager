@@ -66,7 +66,7 @@ public class Sidebar extends JPanel {
         // Settings + Details section
         this.settingsButton = new ModaButton(ModaButton.ButtonStyle.EMPTY, buttonDimension.height, buttonDimension.height, 30);
         ImageIcon settings_icon = Utilities.getIcon("settings_icon.png");
-        settings_icon.setImage(settings_icon.getImage().getScaledInstance(buttonDimension.height, buttonDimension.height, 0));
+        settings_icon.setImage(settings_icon.getImage().getScaledInstance(buttonDimension.height, buttonDimension.height, Image.SCALE_SMOOTH));
         this.settingsButton.setIcon(settings_icon);
 
         add(passwordManagerLabel, "al center, wrap 150");

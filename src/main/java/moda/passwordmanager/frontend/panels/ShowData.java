@@ -80,7 +80,7 @@ public class ShowData extends JPanel {
         this.dataTabbedPane.addTab("User Data", scrollPane);  // Add the default tab which cannot be closed
 
         int searchBarSize = 50;  // The size of the search bar
-        this.searchBar = new ModaTextField(ModaTextField.TestFieldStyle.CLASSIC, searchBarSize);
+        this.searchBar = new ModaTextField(ModaTextField.TextFieldStyle.CLASSIC, searchBarSize);
 
         JLabel searchIconLabel = new JLabel();
         ImageIcon searchIcon = Utilities.getIcon("search_icon.png");

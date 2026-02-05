@@ -5,8 +5,8 @@ import java.awt.*;
 
 public class ModaTextField extends JTextField {
 
-    TestFieldStyle style;
-    public ModaTextField(TestFieldStyle style, int height) {
+    TextFieldStyle style;
+    public ModaTextField(TextFieldStyle style, int height) {
         this.style = style;
 
         this.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 20));
@@ -17,7 +17,7 @@ public class ModaTextField extends JTextField {
         this.setMinimumSize(new Dimension(getWidth(), height));
     }
 
-    public ModaTextField(TestFieldStyle style, int width, int height) {
+    public ModaTextField(TextFieldStyle style, int width, int height) {
         this.style = style;
 
         this.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 20));
@@ -28,6 +28,15 @@ public class ModaTextField extends JTextField {
         this.setMinimumSize(new Dimension(width, height));
     }
 
+    public ModaTextField(TextFieldStyle style) {
+        this.style = style;
+
+        this.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 20));
+
+        this.setOpaque(false);
+        this.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 5));
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
 
@@ -36,7 +45,7 @@ public class ModaTextField extends JTextField {
             case CLASSIC:
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                int arc = 24;
+                int arc = 30;
 
                 g2.setColor(Color.WHITE);
                 g2.fillRoundRect(0, 0, this.getWidth(), this.getHeight(), arc, arc);
@@ -60,7 +69,7 @@ public class ModaTextField extends JTextField {
         super.paintComponent(g);
     }
 
-    public enum TestFieldStyle {
+    public enum TextFieldStyle {
         CLASSIC,
         EMPTY,
     }
