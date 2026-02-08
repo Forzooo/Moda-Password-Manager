@@ -123,6 +123,8 @@ public class AddData extends JPanel {
                 saveData(usernameTextField.getText(), emailAddressTextField.getText(),
                         passwordTextField.getText(), serviceTextField.getText(),
                         additionalDataTextField.getText());
+
+                resetTextFields();  // Reset all the text fields after the data has been saved
             }
         });
 
