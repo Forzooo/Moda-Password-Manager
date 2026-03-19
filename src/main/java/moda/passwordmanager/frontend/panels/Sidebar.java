@@ -64,10 +64,12 @@ public class Sidebar extends JPanel {
         this.showDataButton.setText("Show Data");
 
         // Settings + Details section
-        this.settingsButton = new ModaButton(ModaButton.ButtonStyle.EMPTY, buttonDimension.height, buttonDimension.height, 30);
+        this.settingsButton = new ModaButton(ModaButton.ButtonStyle.EMPTY, buttonDimension.height/2, buttonDimension.height/2, 30);
         ImageIcon settings_icon = Utilities.getIcon("settings_icon.png");
-        settings_icon.setImage(settings_icon.getImage().getScaledInstance(buttonDimension.height, buttonDimension.height, Image.SCALE_SMOOTH));
+        settings_icon.setImage(settings_icon.getImage().getScaledInstance(buttonDimension.height/2,
+                buttonDimension.height/2, Image.SCALE_SMOOTH));
         this.settingsButton.setIcon(settings_icon);
+        this.settingsButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         add(passwordManagerLabel, "al center, wrap 150");
         add(this.addDataButton, "grow, al center, wrap 20");
