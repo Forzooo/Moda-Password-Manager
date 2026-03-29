@@ -11,7 +11,7 @@
 
     <groupId>moda</groupId>
     <artifactId>moda-password-manager</artifactId>
-    <version>1.0.0</version>
+    <version>0.5.0</version>
     <name>Moda Password Manager</name>
     <description>Il Moda Password Manager</description>
     <url>https://github.com/Forzooo/Moda-Password-Manager/</url>
@@ -82,7 +82,7 @@
                             <winDirChooser>true</winDirChooser>
                             <winShortcut>true</winShortcut>
                             <winShortcutPrompt>true</winShortcutPrompt>
-                            <icon>${project.basedir}/target/classes/icons/icon.ico</icon>
+                            <icon>${project.basedir}/target/classes/icons/logo.ico</icon>
                             <vendor>Moda</vendor>
                             <copyright>GNU General Public License, version 3 (GPLv3)</copyright>
                             <licenseFile>${project.basedir}/target/classes/LICENSE</licenseFile>

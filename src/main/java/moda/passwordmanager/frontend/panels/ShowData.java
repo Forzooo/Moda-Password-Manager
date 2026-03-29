@@ -54,7 +54,7 @@ public class ShowData extends JPanel {
      */
     private void initPanel(){
         // A generic boxlayout can be used as it's the only component of the panel
-        setLayout(new MigLayout("debug, insets 30 30 30 30, fill"));
+        setLayout(new MigLayout("insets 30 30 30 30, fill"));
     }
 
     /**
@@ -89,8 +89,8 @@ public class ShowData extends JPanel {
 
         this.searchBar.putClientProperty("JTextField.trailingComponent", searchIconLabel);
 
+        add(this.searchBar, "span, growx, pushx, wrap");
         add(this.dataTabbedPane, "grow, push, wrap");
-        add(this.searchBar, "span, growx, pushx, split 2");
     }
 
     /**
