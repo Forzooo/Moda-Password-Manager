@@ -1,6 +1,5 @@
 package moda.passwordmanager;
 
-import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import moda.passwordmanager.backend.Backend;
@@ -17,7 +16,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class Application extends JFrame {
 
     private final static String TITLE = "MODA - Password Manager";
-    private final static String VERSION = "1.0.0";  // The current version of the software
+    private final static String VERSION = "0.5.0";  // The current version of the software
 
     public Application(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
                        String databaseToUse){
@@ -29,14 +28,12 @@ public class Application extends JFrame {
      * Apply the FlatLaf look and feel to the UI and set general properties
      */
     private void initFlatLaf(){
+        FlatLaf.registerCustomDefaultsSource("");  // Register the properties files
         try {
             UIManager.setLookAndFeel(new FlatLightLaf());
         } catch (UnsupportedLookAndFeelException e) {
             throw new RuntimeException(e);
         }
-
-        // General properties
-        UIManager.put("TabbedPane.showTabSeparators", true);
     }
 
     private void initUI(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,

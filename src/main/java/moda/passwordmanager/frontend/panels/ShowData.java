@@ -1,10 +1,15 @@
 package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.backend.Data;
+import moda.passwordmanager.frontend.Utilities;
+import moda.passwordmanager.frontend.components.*;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
+import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -18,6 +23,8 @@ public class ShowData extends JPanel {
 
     private JTabbedPane dataTabbedPane;  // The tabbed pane shows the dataList and the data the user has selected
 
+    private ModaTextField searchBar;
+
     /**
      * The service fields shown in the JList, which are updated by the FrontendEventListener
      */
@@ -25,7 +32,7 @@ public class ShowData extends JPanel {
     private final DefaultListModel<String> USER_DATA_MODEL;
 
     // Swing components
-    private JList<String> dataList;
+    private ModaList dataList;
 
     public ShowData(InterThreadCommunication itc){
         super();  // Initialize the Panel
@@ -47,7 +54,7 @@ public class ShowData extends JPanel {
      */
     private void initPanel(){
         // A generic boxlayout can be used as it's the only component of the panel
-        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+        setLayout(new MigLayout("insets 30 30 30 30, fill"));
     }
 
     /**
@@ -57,21 +64,33 @@ public class ShowData extends JPanel {
         this.dataTabbedPane = new JTabbedPane();
 
         // Create the JList used to show all the data saved inside the database
-        this.dataList = new JList<>();
-        this.dataList.setFixedCellHeight(30);
-        this.dataList.setModel(this.USER_DATA_MODEL);  // Set the model of the JList (Strings containing service data)
-        this.dataList.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 20));
+        this.dataList = new ModaList(this.USER_DATA_MODEL, 20, 30);
+
         this.dataList.setBackground(null);
         this.dataList.setSelectionBackground(Color.black);
 
-        JScrollPane scrollPane = new JScrollPane(this.dataList);
-        scrollPane.setBackground(null);
-        scrollPane.setPreferredSize(new Dimension(1000, 750));
+        ModaScrollPane scrollPane = new ModaScrollPane(this.dataList);
+        ModaScrollBarUI modaScrollBarUI = new ModaScrollBarUI();
+
+        scrollPane.getVerticalScrollBar().setUI(modaScrollBarUI);
+
         scrollPane.setBorder(new EmptyBorder(10,10,10,10));
+        scrollPane.setBackground(Color.WHITE);
 
-        this.dataTabbedPane.addTab("User Data", scrollPane);
+        this.dataTabbedPane.addTab("User Data", scrollPane);  // Add the default tab which cannot be closed
 
-        add(this.dataTabbedPane, BorderLayout.CENTER);
+        int searchBarSize = 50;  // The size of the search bar
+        this.searchBar = new ModaTextField(ModaTextField.TextFieldStyle.CLASSIC, searchBarSize);
+
+        JLabel searchIconLabel = new JLabel();
+        ImageIcon searchIcon = Utilities.getIcon("search_icon.png");
+        searchIcon.setImage(searchIcon.getImage().getScaledInstance(searchBarSize, searchBarSize, Image.SCALE_SMOOTH));
+        searchIconLabel.setIcon(searchIcon);
+
+        this.searchBar.putClientProperty("JTextField.trailingComponent", searchIconLabel);
+
+        add(this.searchBar, "span, growx, pushx, wrap");
+        add(this.dataTabbedPane, "grow, push, wrap");
     }
 
     /**
@@ -99,20 +118,61 @@ public class ShowData extends JPanel {
             }
         });
 
-        this.dataList.setCellRenderer(new DefaultListCellRenderer(){
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+//        this.dataList.setCellRenderer(new DefaultListCellRenderer(){
+//            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+//                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+//
+//                if (isSelected){  // The selected row has black background
+//                    c.setBackground(Color.BLACK);
+//                } else {  // The other rows have two different colors
+//                    if (index % 2 == 0){
+//                        c.setBackground(new Color(255, 255, 255));
+//                    } else {
+//                        c.setBackground(new Color(241, 241, 241));
+//                    }
+//                }
+//                return c;
+//            }
+//        });
 
-                if (isSelected){  // The selected row has black background
-                    c.setBackground(Color.BLACK);
-                } else {  // The other rows have two different colors
-                    if (index % 2 == 0){
-                        c.setBackground(new Color(255, 255, 255));
-                    } else {
-                        c.setBackground(new Color(241, 241, 241));
+        this.searchBar.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                filter();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                filter();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                filter();
+            }
+
+            /**
+             * Filter the data model to show only the services that start with the input of the user
+             */
+            private void filter(){
+                String searchText = searchBar.getText().toLowerCase().trim();  // Get the input of the user
+
+                USER_DATA_MODEL.clear();  // Clear the model to add only services that start with the input of the user
+
+                // If the search text is empty, add all the services to the model
+                if (searchText.isEmpty()) {
+                    for (Data d : USER_DATA) {
+                        USER_DATA_MODEL.addElement(d.getSERVICE());
+                    }
+                    return;
+                }
+
+                // Iterate over all the data and add the services that starts with the input of the user
+                for (Data data : USER_DATA) {
+                    if (data.getSERVICE().toLowerCase().trim().startsWith(searchText)) {
+                        USER_DATA_MODEL.addElement(data.getSERVICE());
                     }
                 }
-                return c;
             }
         });
     }

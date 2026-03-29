@@ -36,7 +36,7 @@ public abstract class Section extends JPanel {
      * Initialize the properties of the Section panels
      */
     private void initPanel(){
-        setLayout(new MigLayout("debug"));
+        setLayout(new MigLayout());
         addSection("");  // The first section is already added and has no title
     }
 
@@ -71,7 +71,7 @@ public abstract class Section extends JPanel {
             add(sectionEnd, "span, wrap");
         }
         this.currentSection = new JPanel();
-        this.currentSection.setLayout(new MigLayout("debug"));
+        this.currentSection.setLayout(new MigLayout());
 
         add(this.currentSection, "span, wrap");
     }

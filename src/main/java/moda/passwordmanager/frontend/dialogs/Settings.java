@@ -48,7 +48,6 @@ public class Settings extends JDialog {
         setIconImage(Application.getIcon());
         setSize(DIALOG_DIMENSION);
 
-//        setLayout(new MigLayout("debug"));
         setLayout(new MigLayout());
 
         setModal(true);  // Enable modality to block input to other password manager windows

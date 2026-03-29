@@ -2,6 +2,8 @@ package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.backend.Data;
 import moda.passwordmanager.frontend.Utilities;
+import moda.passwordmanager.frontend.components.ModaButton;
+import moda.passwordmanager.frontend.components.ModaTextField;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import net.miginfocom.swing.MigLayout;
@@ -15,15 +17,15 @@ public class AddData extends JPanel {
 
     private final InterThreadCommunication ITC;
 
-    private JTextField usernameTextField;
-    private JTextField emailAddressTextField;
-    private JTextField passwordTextField;
-    private JTextField serviceTextField;
-    private JTextField additionalDataTextField;
+    private ModaTextField usernameTextField;
+    private ModaTextField emailAddressTextField;
+    private ModaTextField passwordTextField;
+    private ModaTextField serviceTextField;
+    private ModaTextField additionalDataTextField;
 
-    private JButton resetButton;
-    private JButton saveButton;
-    private JButton generatePasswordButton;
+    private ModaButton resetButton;
+    private ModaButton saveButton;
+    private ModaButton generatePasswordButton;
 
     public AddData(InterThreadCommunication itc){
         super();  // Initialize the Panel
@@ -40,7 +42,7 @@ public class AddData extends JPanel {
      */
     private void initPanel(){
         // The constraint "fill" is used to let the components use all the panel
-        setLayout(new MigLayout("fill"));
+        setLayout(new MigLayout("fillx", "[al center]"));
     }
 
     /**
@@ -49,55 +51,55 @@ public class AddData extends JPanel {
     private void initComponents(){
         JLabel addDataLabel = new JLabel();
         addDataLabel.setText("Add your data");
-        addDataLabel.setFont(new Font("Arial", Font.BOLD, 32));
+        addDataLabel.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 32));
 
-        Dimension textFieldDimension = new Dimension(600, 70);  // The dimension of each text field
+        Dimension textFieldDimension = new Dimension(600, 60);  // The dimension of each text field
 
         // Create all the JTextField for the data input
-        this.usernameTextField = new JTextField();
+        this.usernameTextField = new ModaTextField(ModaTextField.TextFieldStyle.CLASSIC);
         this.usernameTextField.putClientProperty("JTextField.placeholderText", "Username");
         this.usernameTextField.setPreferredSize(textFieldDimension);
 
-        this.emailAddressTextField = new JTextField();
+        this.emailAddressTextField = new ModaTextField(ModaTextField.TextFieldStyle.CLASSIC);
         this.emailAddressTextField.putClientProperty("JTextField.placeholderText", "Email Address (email@example.com)");
         this.emailAddressTextField.setPreferredSize(textFieldDimension);
 
         // The password field is not a JPasswordField because the user needs to know the password being entered in the database
-        this.passwordTextField = new JTextField();
+        this.passwordTextField = new ModaTextField(ModaTextField.TextFieldStyle.CLASSIC);
         this.passwordTextField.putClientProperty("JTextField.placeholderText", "Password");
         this.passwordTextField.setPreferredSize(textFieldDimension);
 
         // Create the button for the generation of a password
-        this.generatePasswordButton = new JButton();
+        this.generatePasswordButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE);
         this.generatePasswordButton.setIcon(Utilities.getIcon("generate_string.png"));
         this.generatePasswordButton.setToolTipText("Generate a password");
 
         Utilities.applyTrailingButtonProperties(this.generatePasswordButton);
         this.passwordTextField.putClientProperty("JTextField.trailingComponent", this.generatePasswordButton);
 
-        this.serviceTextField = new JTextField();
+        this.serviceTextField = new ModaTextField(ModaTextField.TextFieldStyle.CLASSIC, textFieldDimension.height);
         this.serviceTextField.putClientProperty("JTextField.placeholderText", "Service (Google, Microsoft, ...)");
         this.serviceTextField.setPreferredSize(textFieldDimension);
 
-        this.additionalDataTextField = new JTextField();
+        this.additionalDataTextField = new ModaTextField(ModaTextField.TextFieldStyle.CLASSIC);
         this.additionalDataTextField.putClientProperty("JTextField.placeholderText",
                 "Additional Data (Data not covered by the other fields)");
         this.additionalDataTextField.setPreferredSize(textFieldDimension);
 
-        this.resetButton = new JButton();
+        this.resetButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, 60, 20);
         this.resetButton.setText("Reset");
 
-        this.saveButton = new JButton();
+        this.saveButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, 60, 20);
         this.saveButton.setText("Save");
 
         // Add all the components to the Panel
-        add(addDataLabel, "span, align center, wrap");
-        add(this.usernameTextField, "span, align center, wrap");
-        add(this.emailAddressTextField, "span, align center, wrap");
-        add(this.passwordTextField, "span, align center, wrap");
-        add(this.serviceTextField, "span, align center, wrap");
-        add(this.additionalDataTextField, "span, align center, wrap");
-        add(this.resetButton, "split 2, align center");
+        add(addDataLabel, "span, wrap 50");
+        add(this.usernameTextField, "span, wrap 20");
+        add(this.emailAddressTextField, "span, wrap 20");
+        add(this.passwordTextField, "span, wrap 20");
+        add(this.serviceTextField, "span, wrap 20");
+        add(this.additionalDataTextField, "span, wrap 30");
+        add(this.resetButton, "split 2");
         add(this.saveButton);
     }
 
@@ -121,6 +123,8 @@ public class AddData extends JPanel {
                 saveData(usernameTextField.getText(), emailAddressTextField.getText(),
                         passwordTextField.getText(), serviceTextField.getText(),
                         additionalDataTextField.getText());
+
+                resetTextFields();  // Reset all the text fields after the data has been saved
             }
         });
 

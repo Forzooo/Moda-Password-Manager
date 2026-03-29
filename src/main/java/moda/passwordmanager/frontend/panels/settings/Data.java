@@ -58,7 +58,7 @@ public class Data extends Section {
 
         addOption(this.changeMasterPasswordButton);
 
-        addSection("String generation");
+        addSection("String generation:");
         addOption(this.stringLengthTextField, "grow");
         addOption(this.stringLettersCheckbox);
         addOption(this.stringNumbersCheckbox);
