@@ -1,69 +1,52 @@
 package moda.passwordmanager.backend;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The settings class manages all the I/O operations made to the user settings of the Password Manager
  */
 public class Settings {
 
-    private final String APPDATA_DIRECTORY_PATH;
-    private File settingsFile;
+    private final File SETTINGS_FILE;
     private ObjectMapper objectMapper;
 
-    public Settings(){
-        this.APPDATA_DIRECTORY_PATH = System.getenv("APPDATA")+"\\Moda\\Password-Manager\\";  // Windows only
+    public Settings(String settingsPath){
         this.objectMapper = new ObjectMapper();  // Create the object mapper used to write/read from the settings file
 
-        initSettings();
-    }
+        this.SETTINGS_FILE = new File(settingsPath);
 
-    public String getAPPDATA_DIRECTORY_PATH() {
-        return APPDATA_DIRECTORY_PATH;
-    }
-
-
-    private void initSettings(){
-        createAppdataDirectory();
-        createSettingsFile();
-    }
-
-    /**
-     * Create the Appdata folder for the software to store inside it files
-     */
-    private void createAppdataDirectory(){
-        File appdataDirectory = new File(this.APPDATA_DIRECTORY_PATH);
-
-        // Check whether the directory already exists to avoid recreating it
-        if (appdataDirectory.exists()){
-            return;
+        // If the file does not exist yet, create it and add the default settings
+        try {
+            if (this.SETTINGS_FILE.createNewFile()){
+                addDefaultSettings();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-
-        appdataDirectory.mkdirs();  // Create the directories
     }
 
     /**
      * Create the settings.json file inside the appdata directory
      */
-    private void createSettingsFile(){
+    private void addDefaultSettings(){
         try {
-            this.settingsFile = new File(this.APPDATA_DIRECTORY_PATH+"settings.json");
-
-            // If the file exists already the creation is skipped
-            if (!this.settingsFile.createNewFile()){
-                return;
-            }
-
             ObjectNode rootNode = this.objectMapper.createObjectNode();  // The root of all the JSON nodes
 
             // Set all the database values
-            ObjectNode databaseNode = this.objectMapper.createObjectNode();  // Contains all the database values
-            databaseNode.put("path", this.APPDATA_DIRECTORY_PATH+"moda-password-manager.modb");
+            ArrayList<String> recentDatabases = new ArrayList<>();
+            recentDatabases.add(Helper.getAppDataDirectory()+Helper.getDefaultDatabase());  // The default database used
+
+            ObjectNode database = this.objectMapper.createObjectNode();  // Contains all the database values
+            database.put("path", recentDatabases.getFirst());
+            database.putPOJO("recent", recentDatabases);  // The last 5 database used
 
             // Set the string generation configuration
             ObjectNode stringGeneration = this.objectMapper.createObjectNode();
@@ -78,12 +61,12 @@ public class Settings {
             googleDrive.put("automatic_synchronization", false);
 
             // Define the hierarchy of the JSON
-            rootNode.put("database", databaseNode);
+            rootNode.put("database", database);
             rootNode.put("string_generation", stringGeneration);
             rootNode.put("google_drive", googleDrive);
 
             // Write the default data inside the settings file
-            this.objectMapper.writeValue(this.settingsFile, rootNode);
+            this.objectMapper.writeValue(this.SETTINGS_FILE, rootNode);
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -100,7 +83,7 @@ public class Settings {
 
         try {
             String[] nodes = nodePath.split("/");  // Split each node
-            JsonNode rootNode = this.objectMapper.readTree(this.settingsFile);  // Read the settings
+            JsonNode rootNode = this.objectMapper.readTree(this.SETTINGS_FILE);  // Read the settings
 
             // To get to the desired node the current node is updated with each iteration to get to the final one
             currentNode = rootNode.deepCopy();
@@ -117,7 +100,8 @@ public class Settings {
 
     /**
      * Retrieve a node from the path
-     * @param rootNode The root node can be provided if it's required to keep the same root variable for changed to properties
+     * @param rootNode The root node can be provided if it's required to keep the same root variable for changed to
+     *                 properties
      * @param nodePath The path to get to the node (ex. database/path)
      * @return The node requested
      */
@@ -138,9 +122,9 @@ public class Settings {
      * Write the settings.json file with the updated tree
      * @param rootNode The entire settings tree
      */
-    private void updateSettings(JsonNode rootNode){
+    private void updateSettingsFile(JsonNode rootNode){
         try {
-            this.objectMapper.writeValue(this.settingsFile, rootNode);
+            this.objectMapper.writeValue(this.SETTINGS_FILE, rootNode);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -151,7 +135,7 @@ public class Settings {
      * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/path)
      * @return Value of the property
      */
-    public String readStringSetting(String nodePath){
+    public String readStringProperty(String nodePath){
         JsonNode property = retrieveNode(nodePath);  // Retrieve the property
 
         return property.asText();
@@ -162,7 +146,7 @@ public class Settings {
      * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/path)
      * @return Value of the property
      */
-    public int readIntSetting(String nodePath){
+    public int readIntProperty(String nodePath){
         JsonNode property = retrieveNode(nodePath);  // Retrieve the property
         return property.asInt();
     }
@@ -172,20 +156,30 @@ public class Settings {
      * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/path)
      * @return Value of the property
      */
-    public boolean readBooleanSetting(String nodePath){
+    public boolean readBooleanProperty(String nodePath){
         JsonNode property = retrieveNode(nodePath);  // Retrieve the property
         return property.asBoolean();
     }
 
     /**
-     * Read a property from the settings file
+     * Read a list property from the settings file
+     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/path)
+     * @return ArrayList of the property
+     */
+    public ArrayList readListProperty(String nodePath){
+        JsonNode property = retrieveNode(nodePath);
+        return this.objectMapper.convertValue(property, new TypeReference<>(){});
+    }
+
+    /**
+     * Write a property from the settings file
      * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/path)
      * @param value The new value of the property
      */
-    public void writeSetting(String nodePath, Object value){
+    public void writeProperty(String nodePath, Object value){
         try {
             // As we need to change a property we need to keep the same root node, otherwise the changes would not be saved
-            JsonNode rootNode = this.objectMapper.readTree(this.settingsFile);
+            JsonNode rootNode = this.objectMapper.readTree(this.SETTINGS_FILE);
 
             // To set the new value we first need to get to the node previous to the one we want to change
             // so we have to split the nodePath based on the last '/' provided
@@ -196,8 +190,27 @@ public class Settings {
             // Convert the value to a JsonNode because there is no method to handle Object in ObjectNode
             node.put(nodeName, this.objectMapper.valueToTree(value));
 
-            updateSettings(rootNode);  // Update the file
+            updateSettingsFile(rootNode);  // Update the file
 
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void writeListProperty(String nodePath, List values){
+        try {
+            // As we need to change a property we need to keep the same root node, otherwise the changes would not be saved
+            JsonNode rootNode = this.objectMapper.readTree(this.SETTINGS_FILE);
+
+            // To set the new value we first need to get to the node previous to the one we want to change
+            // so we have to split the nodePath based on the last '/' provided
+            String nodeName = nodePath.substring(nodePath.lastIndexOf("/")+1);
+            nodePath = nodePath.substring(0, nodePath.lastIndexOf("/"));
+            ObjectNode node = (ObjectNode) retrieveNode(rootNode, nodePath);  // Cast to ObjectNode otherwise it cannot be modified
+
+            node.putPOJO(nodeName, values);  // Set the list to the node name
+
+            updateSettingsFile(rootNode);  // Update the file
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

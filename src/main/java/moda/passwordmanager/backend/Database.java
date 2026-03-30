@@ -28,6 +28,17 @@ public class Database {
         }
     }
 
+    /**
+     * Terminate the connection with the database
+     */
+    public void closeConnection(){
+        try {
+            this.connection.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     // Create a table, if it does not exist already, used to store all the data
     private void createTable(){
         try {
@@ -59,6 +70,7 @@ public class Database {
     }
 
     public void changeDatabase(String databasePath){
+        closeConnection();  // Close the previous connection
         this.databasePath = databasePath; // Set the new path of the database
         initConnection();  // Reinitialize the connection
         createTable();  // Create the table inside the database
@@ -154,7 +166,7 @@ public class Database {
      * Change the data fields inside a record
      * @param data The data to replace the previous one
      */
-    public void changeRecord(Data data){
+    public void updateRecord(Data data){
         try {
             // Create the UPDATE query and set its parameters
             PreparedStatement query = this.connection.prepareStatement(
@@ -186,11 +198,11 @@ public class Database {
         try{
             // Create the query to retrieve the service
             PreparedStatement query = this.connection.prepareStatement(
-                    "SELECT id, service FROM "+TABLE_NAME
+                    "SELECT id, service FROM "+ TABLE_NAME + " LIMIT 1"
             );
             ResultSet result = query.executeQuery();  // Execute the query and retrieve the result
 
-            result.next();  // Set the cursor to the first row
+            result.next();  // Set the cursor to the row
             int serviceID = result.getInt("id");  // Get the ID
             String service = result.getString("service");  // Get the service
 

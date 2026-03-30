@@ -4,40 +4,52 @@ import java.util.ArrayList;
 
 public class Event {
 
-    private final String NAME;  // The name of the event which specifies which operation to perform
-    private ArrayList<Object> data;  // The data that is communicated with the other thread
-    private int id;  // The ID, used to identify the Event communication, is unique and randomly generated
+    /**
+     * The operation that is request to be performed
+     */
+    private final String OPERATION;
+    private ArrayList<Object> data;  // The data that is communicated
 
     /**
-     * Define whether the Event is a High priority one: the thread that started the communication is the one that
-     * needs to receive the reply
+     * The ID identifies the Event communication, is unique and randomly generated and can only be accessed
+     * by package classes
      */
+    private int communicationID;
 
-    public Event(String name){
-        this.NAME = name;
+    /**
+     * The sequence number identifies the current state of the communication, where 0 is the setup state of the Event
+     * and is increased each time it is sent through the ITC class APIs
+     */
+    private int sequenceNumber;
+
+    public Event(String operation){
+        this.OPERATION = operation;
         this.data = new ArrayList<>();
-        this.id = -1;
+        this.communicationID = -1;
+        this.sequenceNumber = 0;
     }
 
-    public Event(String name, Object data){
-        this.NAME = name;
+    public Event(String operation, Object data){
+        this.OPERATION = operation;
         this.data = new ArrayList<>();
         this.data.add(data);
-        this.id = -1;
+        this.communicationID = -1;
+        this.sequenceNumber = 0;
     }
 
-    public Event(String name, ArrayList<Object> data){
-        this.NAME = name;
+    public Event(String operation, ArrayList<Object> data){
+        this.OPERATION = operation;
         this.data = new ArrayList<>(data);
-        this.id = -1;
+        this.communicationID = -1;
+        this.sequenceNumber = 0;
     }
 
     public void addData(Object data){
         this.data.add(data);
     }
 
-    public String getNAME() {
-        return NAME;
+    public String getOperation() {
+        return OPERATION;
     }
 
     public ArrayList<Object> getData() {
@@ -47,13 +59,28 @@ public class Event {
     /**
      * The ID can be set only the first time, and is considered to be a constant after
      */
-    public void setId(int id){
-        if (this.id == -1){
-            this.id = id;
+    protected void setCommunicationID(int communicationID){
+        if (this.communicationID == -1){
+            this.communicationID = communicationID;
         }
     }
 
-    public int getId() {
-        return id;
+    protected int getCommunicationID() {
+        return this.communicationID;
+    }
+
+    protected void incrementSequenceNumber(){
+        this.sequenceNumber++;
+    }
+
+    protected int getSequenceNumber(){
+        return this.sequenceNumber;
+    }
+
+    /**
+     * Returns whether the ID has been set to a value different than -1
+     */
+    protected boolean isIdSet(){
+        return this.communicationID != -1;
     }
 }

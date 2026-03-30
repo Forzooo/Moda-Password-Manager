@@ -7,63 +7,148 @@ import java.util.concurrent.Semaphore;
 
 public class InterThreadCommunication {
 
-    private LinkedBlockingQueue<Event> sender;  // Send Event from this queue to the other thread
-    private LinkedBlockingQueue<Event> receiver;  // Receive Event from this queue from the other thread
+    private final LinkedBlockingQueue<Event> INPUT_QUEUE;  // Receive Event from this queue from the other thread
+    private final LinkedBlockingQueue<Event> OUTPUT_QUEUE;  // Send Event from this queue to the other thread
 
-    private ArrayList<Integer> activeIDs;  // This ArrayList is used to ensure that the ID generated must be unique
+    /**
+     * The ArrayList ensures that the ID generated for any communication is unique
+     */
+    private ArrayList<Integer> activeCommunications;
 
-    // Collection of semaphores used to set the threads to wait for non-high priority events
-    private Semaphore nonHighPriority;
-
-    // Semaphores used to set the threads to wait
-    private Semaphore highPrioritySemaphore;
+    // Collection of semaphores used to set the threads to wait for a specific type of event
     private final static int SEMAPHORE_PERMITS = 0;
+    private Semaphore asynchronousSemaphore;
+    private Semaphore synchronousSemaphore;
 
     /**
-     * The Events that have an high priority, that means the same thread needs the response from the event it has send,
-     * have their ID number stored here to filter them.
+     * The Events that are synchronous, that means the same thread needs the response from the event it has send,
+     * have their communication ID number stored here to filter them.
      */
-    private ArrayList<Integer> highPriorityEvents;
+    private ArrayList<Integer> synchronousCommunications;
 
     /**
-     * @param sender The Queue that sends the Event objects
-     * @param receiver The Queue that receives the Event objects
+     * @param inputQueue The Queue that receives the Event objects
+     * @param outputQueue The Queue that sends the Event objects
      */
-    public InterThreadCommunication(LinkedBlockingQueue<Event> sender, LinkedBlockingQueue<Event> receiver){
-        this.sender = sender;
-        this.receiver = receiver;
+    public InterThreadCommunication(LinkedBlockingQueue<Event> inputQueue, LinkedBlockingQueue<Event> outputQueue){
+        this.INPUT_QUEUE = inputQueue;
+        this.OUTPUT_QUEUE = outputQueue;
 
-        this.activeIDs = new ArrayList<>();
-        this.highPriorityEvents = new ArrayList<>();
+        this.activeCommunications = new ArrayList<>();
+        this.synchronousCommunications = new ArrayList<>();
 
-        this.nonHighPriority = new Semaphore(SEMAPHORE_PERMITS);
-        this.highPrioritySemaphore = new Semaphore(SEMAPHORE_PERMITS);
+        this.asynchronousSemaphore = new Semaphore(SEMAPHORE_PERMITS);
+        this.synchronousSemaphore = new Semaphore(SEMAPHORE_PERMITS);
     }
 
     /**
-     * Send an event request to the other Queue.
+     * Create and return a queue used for the ITC
      */
-    public void request(Event event) {
+    public static LinkedBlockingQueue<Event> createQueue(){
+        return new LinkedBlockingQueue<>();
+    }
+
+    /**
+     * Send an event to the other Queue
+     */
+    public void send(Event event) {
         try {
-            addEventID(event);
-            this.sender.put(event);  // Put the event in the queue to send it to the other thread
+            // Add an ID to the Event only if it hasn't one yet, as the event could be a response to a request
+            if (!event.isIdSet()){
+                addEventID(event);
+            }
+            event.incrementSequenceNumber();  // Increment the sequence number of the event
+            this.OUTPUT_QUEUE.put(event);  // Put the event in the queue to send it to the other thread
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
 
     /**
-     * Reply to a request of the other queue
-     * @param request The request made by the other queue: its ID is required to use the same communication
-     * @param response The response to the request
+     * Send a synchronous request and wait for the response
+     * @param request The event to send
+     * @return The response to the request
      */
-    public void reply(Event request, Event response){
-        try{
-            addEventID(response, request.getId());
-            this.sender.put(response);  // Put the event in the queue to send it to the other thread
+    public Event request(Event request){
+        send(request);
+        addSynchronousEvent(request.getCommunicationID());
+        return receive(request.getCommunicationID());
+    }
+
+    /**
+     * Receive an Event from the other Queue
+     * @return The event sent
+     */
+    protected Event receive() {
+        // The method has protected as visibility because if a thread, that does not inherit the EventListener class,
+        // receives a synchronous event, it is unable to use the makeResponse method to reply to the request creating a
+        // deadlock for the sender thread
+        try {
+            Event event = this.INPUT_QUEUE.take();  // Wait for an event sent from the receiver queue
+
+            int eventID = event.getCommunicationID();  // Retrieve the ID of the event
+
+            // If the event sent is a response, remove its ID from the active ones
+            if (this.activeCommunications.contains(eventID)){
+                this.activeCommunications.remove((Integer) eventID);
+            }
+
+            // Check whether the event is a synchronous one
+            if (this.synchronousCommunications.contains(eventID)){
+                this.INPUT_QUEUE.put(event);  // Put the event in the input queue to let it be found by other threads
+                waitAsynchronousEvent();  // Let the thread wait until the synchronous event is removed from the queue
+                return receive();  // Recall the receive method until it founds an asynchronous event to return
+            }else{  // If the event is not a synchronous one, then return it
+                this.asynchronousSemaphore.release();
+                return event;
+            }
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Receive a synchronous event from the other queue, with a specific ID
+     * @param id The ID of the synchronous event
+     * @return The synchronous event
+     */
+    private Event receive(int id){
+        try {
+            Event event = this.INPUT_QUEUE.take();  // Wait for an event sent from the receiver queue
+
+            // Check whether the ID of the event is the one of the synchronous event we want
+            if (event.getCommunicationID() == id){
+                this.synchronousSemaphore.release();
+                this.synchronousCommunications.remove((Integer) id);  // Remove the ID from the synchronous events
+                this.activeCommunications.remove((Integer) id);  // Remove the ID from the active IDs
+                return event;
+            }else{
+                this.INPUT_QUEUE.put(event);  // Put the event in the response queue to be found by other threads
+                waitSynchronousEvent();  // Wait until a synchronous event is the first in the queue
+                return receive(id);  // Recall the method until the request event is found
+            }
+
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Configure an Event as a response
+     * @param request The request made by the other queue: its ID is required to use the same communication
+     * @param eventOperation The name of the event that will be created
+     */
+    protected Event makeResponse(Event request, String eventOperation){
+        Event response = new Event(eventOperation);  // Create the event response with the operation specified
+
+        // The response needs to have the same sequence number as the request
+        while (response.getSequenceNumber() != request.getSequenceNumber()){
+            response.incrementSequenceNumber();
+        }
+
+        response.setCommunicationID(request.getCommunicationID());  // Set the ID to be the same as the request one
+
+        return response;
     }
 
     /**
@@ -71,17 +156,8 @@ public class InterThreadCommunication {
      */
     private void addEventID(Event event){
         int id = generateID();  // Generate a random unique ID
-        this.activeIDs.add(id);  // Add the ID to the active ones
-        event.setId(id);  // Set the generated ID
-    }
-
-    /**
-     * Set the ID of an event that has to be sent as a reply
-     * @param id The ID of the event that request a response
-     */
-    private void addEventID(Event event, int id){
-        this.activeIDs.add(id);  // Add the ID to the active ones
-        event.setId(id);  // Set the ID to be the same as the request one
+        this.activeCommunications.add(id);  // Add the ID to the active ones
+        event.setCommunicationID(id);  // Set the generated ID
     }
 
     /**
@@ -93,111 +169,42 @@ public class InterThreadCommunication {
         int id = random.nextInt(0, Integer.MAX_VALUE);
 
         // Re-generate the ID if it's the same value as one inside the ActiveIDs ArrayList
-        while (this.activeIDs.contains(id)){
+        while (this.activeCommunications.contains(id)){
             id = random.nextInt(0, Integer.MAX_VALUE);
         }
         return id;
     }
 
     /**
-     * Receive an Event from the other Queue.
-     * @return The event sent
+     * Set the thread in a waiting condition until the synchronous event is removed from the queue
      */
-    public Event receive() {
+    private void waitAsynchronousEvent(){
         try {
-            Event event = this.receiver.take();  // Wait for an event sent from the receiver queue
-
-            int eventID = event.getId();  // Retrieve the ID of the event
-
-            // If the event sent is a response, remove its ID from the active ones
-            if (this.activeIDs.contains(eventID)){
-                this.activeIDs.remove((Integer) eventID);
-            }
-
-            // Check whether the event is a high priority one
-            if (this.highPriorityEvents.contains(eventID)){
-                this.receiver.put(event);  // Put the event in the response queue to be found by other threads
-                waitNonHighPriority();  // Let the thread wait until the high priority event is removed from the queue
-                return receive();  // Recall the receive method until it founds a non-high priority event to return
-            }else{  // If the event is not a high priority one, then return it
-                this.nonHighPriority.release();
-                return event;
-            }
-
+            this.synchronousSemaphore.acquire();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+        this.synchronousSemaphore = new Semaphore(SEMAPHORE_PERMITS);
     }
 
     /**
-     * Receive a high priority event from the other queue, with a specific ID
-     * @param priorityID The ID of the high priority event
-     * @return The high priority event
+     * Set the thread in a waiting condition until the asynchronous event is removed from the queue
      */
-    private Event receive(int priorityID){
+    private void waitSynchronousEvent(){
         try {
-            Event event = this.receiver.take();  // Wait for an event sent from the receiver queue
-
-            // Check whether the ID of the event is the high priority one we want
-            if (event.getId() == priorityID){
-                this.highPrioritySemaphore.release();
-                this.highPriorityEvents.remove((Integer) priorityID);  // Remove the ID from the high priority events
-                this.activeIDs.remove((Integer) priorityID);  // Remove the ID from the active IDs
-                return event;
-            }else{
-                this.receiver.put(event);  // Put the event in the response queue to be found by other threads
-                waitHighPriority();  // Wait until an high priority event is the first in the queue
-                return receive(priorityID);  // Recall the method until the request event is found
-            }
-
+            this.asynchronousSemaphore.acquire();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-
+        this.asynchronousSemaphore = new Semaphore(SEMAPHORE_PERMITS);
     }
 
     /**
-     * Send an Event to the other Queue and wait for its response with priority over other threads that are waiting
-     * for responses
-     * @param event Event to send
-     * @return The response's event
-     */
-    public Event requestAndReceive(Event event){
-        request(event);
-        addHighPriority(event.getId());
-        return receive(event.getId());
-    }
-
-    /**
-     * Set the thread in a waiting condition until the high priority event is removed from the queue
-     */
-    private void waitNonHighPriority(){
-        try {
-            this.highPrioritySemaphore.acquire();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        this.highPrioritySemaphore = new Semaphore(SEMAPHORE_PERMITS);
-    }
-
-    /**
-     * Set the thread in a waiting condition until the high priority event is removed from the queue
-     */
-    private void waitHighPriority(){
-        try {
-            this.nonHighPriority.acquire();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        this.nonHighPriority = new Semaphore(SEMAPHORE_PERMITS);
-    }
-
-    /**
-     * Add a high priority event to the list
+     * Add a synchronous event to the list
      * @param ID The ID of the event
      */
-    private void addHighPriority(int ID){
-        this.highPriorityEvents.add(ID);
+    private void addSynchronousEvent(int ID){
+        this.synchronousCommunications.add(ID);
     }
 
 }

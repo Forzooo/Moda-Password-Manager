@@ -5,14 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <properties>
-        <maven.compiler.source>23</maven.compiler.source>
-        <maven.compiler.target>23</maven.compiler.target>
+        <maven.compiler.release>25</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <groupId>moda</groupId>
     <artifactId>moda-password-manager</artifactId>
-    <version>0.4.2</version>
+    <version>0.5.0</version>
     <name>Moda Password Manager</name>
     <description>Il Moda Password Manager</description>
     <url>https://github.com/Forzooo/Moda-Password-Manager/</url>
@@ -29,36 +28,37 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.6.0</version>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.10.0</version>
                 <executions>
                     <execution>
+                        <id>copy-dependencies</id>
                         <phase>package</phase>
                         <goals>
-                            <goal>shade</goal>
+                            <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
-                            <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>moda.passwordmanager.Application</mainClass>
-                                </transformer>
-                            </transformers>
-                            <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/*.SF</exclude>
-                                        <exclude>META-INF/*.DSA</exclude>
-                                        <exclude>META-INF/*.RSA</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
-                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <outputDirectory>${project.build.directory}/release/</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.5.0</version>
+                <configuration>
+                    <outputDirectory>${project.build.directory}/release/</outputDirectory>
+                    <archive>
+                        <manifest>
+                            <mainClass>moda.passwordmanager.Application</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -70,10 +70,10 @@
                     <plugin>
                         <groupId>org.panteleyev</groupId>
                         <artifactId>jpackage-maven-plugin</artifactId>
-                        <version>1.6.6</version>
+                        <version>1.7.4</version>
                         <configuration>
                             <name>Moda Password Manager</name>
-                            <input>${project.build.directory}</input>
+                            <input>${project.build.directory}/release/</input>
                             <mainClass>moda.passwordmanager.Application</mainClass>
                             <mainJar>${project.build.finalName}.jar</mainJar>
                             <destination>${project.build.directory}/jpackage</destination>
@@ -83,7 +83,7 @@
                             <winDirChooser>true</winDirChooser>
                             <winShortcut>true</winShortcut>
                             <winShortcutPrompt>true</winShortcutPrompt>
-                            <icon>${project.basedir}/target/classes/icon.ico</icon>
+                            <icon>${project.basedir}/target/classes/icons/logo.ico</icon>
                             <vendor>Moda</vendor>
                             <copyright>GNU General Public License, version 3 (GPLv3)</copyright>
                             <licenseFile>${project.basedir}/target/classes/LICENSE</licenseFile>
@@ -131,7 +131,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.19.2</version>
+            <version>2.21.2</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
         <dependency>
@@ -145,6 +145,24 @@
             <artifactId>commons-io</artifactId>
             <version>2.20.0</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.formdev/flatlaf -->
+        <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf</artifactId>
+            <version>3.7</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>6.0.1</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.miglayout/miglayout-swing -->
+        <dependency>
+            <groupId>com.miglayout</groupId>
+            <artifactId>miglayout-swing</artifactId>
+            <version>11.4.2</version>
+        </dependency>
     </dependencies>
-
 </project>

@@ -1,8 +1,12 @@
 package moda.passwordmanager;
 
+import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.FlatLightLaf;
 import moda.passwordmanager.backend.Backend;
+import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.Frontend;
+import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,9 +15,25 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class Application extends JFrame {
 
+    private final static String TITLE = "MODA - Password Manager";
+    private final static String VERSION = "0.5.0";  // The current version of the software
+
     public Application(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
                        String databaseToUse){
+        initFlatLaf();  // It has to be called before any Swing component
         initUI(backendQueue, frontendQueue, databaseToUse);
+    }
+
+    /**
+     * Apply the FlatLaf look and feel to the UI and set general properties
+     */
+    private void initFlatLaf(){
+        FlatLaf.registerCustomDefaultsSource("moda.passwordmanager");  // Register the properties files
+        try {
+            UIManager.setLookAndFeel(new FlatLightLaf());
+        } catch (UnsupportedLookAndFeelException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void initUI(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
@@ -23,25 +43,25 @@ public class Application extends JFrame {
         int width = (int) (screen.getWidth() * 4/5);
         int height = (int) (screen.getHeight() * 4/5);
 
-        add(new Frontend(backendQueue, frontendQueue, databaseToUse, width, height));
-        pack();
-
-        setTitle("MODA - Password Manager");
+        setTitle(getApplicationTitle());
         setSize(width, height);
+        setPreferredSize(new Dimension(width, height));
 
-        setIconImage(Frontend.getIcon());  // Get the icon and set it
+        setIconImage(getIcon());  // Get the icon and set it
 
-        setVisible(true);
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(null);  // Set the application to be at the center of the screen
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+        add(new Frontend(backendQueue, frontendQueue, databaseToUse));
+        pack();
     }
 
     /**
      * Parse the arguments and look for the path of a database to use
      * @param args The arguments
-     * @return An empty string or the path of a database
+     * @return The path of the database if it exists, otherwise an empty string
      */
-    private static String databaseParsing(String[] args){
+    private static String parseDatabasePath(String[] args){
         String databasePath = "";
 
         for (String arg : args){
@@ -55,16 +75,39 @@ public class Application extends JFrame {
         return databasePath;
     }
 
-    public static void main(String[] args) {
-        String databaseToUse = databaseParsing(args);  // Parse the args to look for a database to use
+    /**
+     * Retrieve the icon of the password manager from the resources folder
+     * @return Icon of the password manager
+     */
+    public static Image getIcon(){
+        // Get the image from the resources
+        return Utilities.getIcon("logo.png").getImage();
+    }
+
+    /**
+     * Retrieve the title of the application
+     */
+    public static String getApplicationTitle(){
+        return TITLE;
+    }
+
+    /**
+     * Retrieve the current version of the application
+     */
+    public static String getVersion(){
+        return VERSION;
+    }
+
+    public static void main(String[] args){
+        String databaseToUse = parseDatabasePath(args);  // Parse the args to look for a database to use
 
         // Create the two LinkedBlockingQueue objects here to pass them to the Backend and the Frontend
-        LinkedBlockingQueue<Event> backendQueue = new LinkedBlockingQueue<>();
-        LinkedBlockingQueue<Event> frontendQueue = new LinkedBlockingQueue<>();
+        LinkedBlockingQueue<Event> backendQueue = InterThreadCommunication.createQueue();
+        LinkedBlockingQueue<Event> frontendQueue = InterThreadCommunication.createQueue();
 
         EventQueue.invokeLater(() -> {
-            Application ex = new Application(backendQueue, frontendQueue, databaseToUse);
-            ex.setVisible(true);
+            Application application = new Application(backendQueue, frontendQueue, databaseToUse);
+            application.setVisible(true);
         });
 
         Backend backend = new Backend(backendQueue, frontendQueue);

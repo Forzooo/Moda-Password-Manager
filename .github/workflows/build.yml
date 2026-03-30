@@ -1,0 +1,27 @@
+# This workflow builds the project with the LTS JDKs: 21, 25 to ensure compatibility over multiple versions of Java.
+name: Project build on multiple JDKs
+
+on:
+  pull_request:
+    branches: ["main", "dev"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false    
+      matrix:
+        jdk: [21, 25]
+
+    steps:
+    - uses: actions/checkout@v6.0.1
+
+    - name: Set up JDK ${{ matrix.jdk}}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ matrix.jdk}}
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml -Dmaven.compiler.release=${{ matrix.jdk }}
