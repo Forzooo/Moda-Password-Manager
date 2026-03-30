@@ -28,7 +28,7 @@ public class Application extends JFrame {
      * Apply the FlatLaf look and feel to the UI and set general properties
      */
     private void initFlatLaf(){
-        FlatLaf.registerCustomDefaultsSource("");  // Register the properties files
+        FlatLaf.registerCustomDefaultsSource("moda.passwordmanager");  // Register the properties files
         try {
             UIManager.setLookAndFeel(new FlatLightLaf());
         } catch (UnsupportedLookAndFeelException e) {
