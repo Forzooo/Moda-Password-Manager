@@ -29,6 +29,8 @@ public class ShowData extends JPanel {
      * The service fields shown in the JList, which are updated by the FrontendEventListener
      */
     private final ArrayList<Data> USER_DATA;  // A Data object is required as each service shown needs to be associated with its ID
+    private final ArrayList<Data> USER_FILTERED_DATA;  // The Data objects that match the selection IDs of the USER_DATA_MODEL
+                                                       // because using the USER_DATA one would not match the indexes
     private final DefaultListModel<String> USER_DATA_MODEL;
 
     // Swing components
@@ -42,6 +44,7 @@ public class ShowData extends JPanel {
 
         // Initialize the user data ArrayList and Model
         this.USER_DATA = new ArrayList<>();
+        this.USER_FILTERED_DATA = new ArrayList<>();
         this.USER_DATA_MODEL = new DefaultListModel<>();
 
         initPanel();
@@ -54,13 +57,16 @@ public class ShowData extends JPanel {
      */
     private void initPanel(){
         // A generic boxlayout can be used as it's the only component of the panel
-        setLayout(new MigLayout("insets 30 30 30 30, fill"));
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
     }
 
     /**
      * Initialize the components of the panel
      */
     private void initComponents(){
+        JPanel userDataPanel = new JPanel();  // In the userDataPanel the scrollPane and the search bar are added
+        userDataPanel.setLayout(new MigLayout("insets 10 10 10 10, fill"));
+
         this.dataTabbedPane = new JTabbedPane();
 
         // Create the JList used to show all the data saved inside the database
@@ -77,8 +83,6 @@ public class ShowData extends JPanel {
         scrollPane.setBorder(new EmptyBorder(10,10,10,10));
         scrollPane.setBackground(Color.WHITE);
 
-        this.dataTabbedPane.addTab("User Data", scrollPane);  // Add the default tab which cannot be closed
-
         int searchBarSize = 50;  // The size of the search bar
         this.searchBar = new ModaTextField(ModaTextField.TextFieldStyle.CLASSIC, searchBarSize);
 
@@ -89,8 +93,12 @@ public class ShowData extends JPanel {
 
         this.searchBar.putClientProperty("JTextField.trailingComponent", searchIconLabel);
 
-        add(this.searchBar, "span, growx, pushx, wrap");
-        add(this.dataTabbedPane, "grow, push, wrap");
+        // Add the scroll pane and the search bar into the userDataPanel to make them both in the same tab of the dataTabbedPane
+        userDataPanel.add(scrollPane, "grow, push, wrap");
+        userDataPanel.add(this.searchBar, "span, growx, pushx");
+
+        this.dataTabbedPane.addTab("User Data", userDataPanel);
+        add(this.dataTabbedPane);
     }
 
     /**
@@ -101,11 +109,17 @@ public class ShowData extends JPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
-                // Only allow double clicks
-                if (e.getClickCount() == 2) {
-                    // Retrieve the ID selected by getting it from the userData attribute and check if a tab with that
-                    // ID already exists
-                    int id = USER_DATA.get(dataList.getSelectedIndex()).getID();
+                // Only allow double clicks or more
+                if (e.getClickCount() >= 2) {
+                    // Retrieve the ID selected by getting it from the USER_DATA attribute if the search bar has not
+                    // been used as the USER_FILTERED_DATA is empty in that case, otherwise get it from the USER_FILTERED_DATA
+                    // because otherwise the selectedIndex would not match the ID of USER_DATA
+                    int id;
+                    if (searchBar.getText().trim().isBlank()){
+                        id = USER_DATA.get(dataList.getSelectedIndex()).getID();
+                    }else{
+                        id = USER_FILTERED_DATA.get(dataList.getSelectedIndex()).getID();
+                    }
 
                     // If the tab exists, then set it to be the selected one instead of creating a new tab for it
                     if (checkDataTabExist(id)){
@@ -113,27 +127,10 @@ public class ShowData extends JPanel {
                         return;
                     }
 
-                    addDataTab(USER_DATA.get(dataList.getSelectedIndex()).getID());
+                    addDataTab(id);
                 }
             }
         });
-
-//        this.dataList.setCellRenderer(new DefaultListCellRenderer(){
-//            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-//                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-//
-//                if (isSelected){  // The selected row has black background
-//                    c.setBackground(Color.BLACK);
-//                } else {  // The other rows have two different colors
-//                    if (index % 2 == 0){
-//                        c.setBackground(new Color(255, 255, 255));
-//                    } else {
-//                        c.setBackground(new Color(241, 241, 241));
-//                    }
-//                }
-//                return c;
-//            }
-//        });
 
         this.searchBar.getDocument().addDocumentListener(new DocumentListener() {
             @Override
@@ -158,11 +155,13 @@ public class ShowData extends JPanel {
                 String searchText = searchBar.getText().toLowerCase().trim();  // Get the input of the user
 
                 USER_DATA_MODEL.clear();  // Clear the model to add only services that start with the input of the user
+                USER_FILTERED_DATA.clear();
 
                 // If the search text is empty, add all the services to the model
                 if (searchText.isEmpty()) {
-                    for (Data d : USER_DATA) {
-                        USER_DATA_MODEL.addElement(d.getSERVICE());
+                    for (Data data : USER_DATA) {
+                        USER_DATA_MODEL.addElement(data.getSERVICE());
+                        USER_FILTERED_DATA.add(data);
                     }
                     return;
                 }
@@ -171,6 +170,7 @@ public class ShowData extends JPanel {
                 for (Data data : USER_DATA) {
                     if (data.getSERVICE().toLowerCase().trim().startsWith(searchText)) {
                         USER_DATA_MODEL.addElement(data.getSERVICE());
+                        USER_FILTERED_DATA.add(data);
                     }
                 }
             }
@@ -210,7 +210,7 @@ public class ShowData extends JPanel {
         userDataTab.putClientProperty("JTabbedPane.tabCloseCallback",
                 (IntConsumer) tabIndex -> this.dataTabbedPane.remove(tabIndex));
 
-        String tabName = this.USER_DATA.get(this.dataList.getSelectedIndex()).getSERVICE();  // Get the tab name from the service field
+        String tabName = userDataTab.getTitle();  // Get the tab name from the object itself
         this.dataTabbedPane.add(tabName, userDataTab);
         this.dataTabbedPane.setSelectedComponent(userDataTab);  // Set the tab to be shown to be the one created
     }
