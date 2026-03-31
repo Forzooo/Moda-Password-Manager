@@ -11,7 +11,7 @@
 
     <groupId>moda</groupId>
     <artifactId>moda-password-manager</artifactId>
-    <version>0.5.1</version>
+    <version>0.5.2</version>
     <name>Moda Password Manager</name>
     <description>Il Moda Password Manager</description>
     <url>https://github.com/Forzooo/Moda-Password-Manager/</url>

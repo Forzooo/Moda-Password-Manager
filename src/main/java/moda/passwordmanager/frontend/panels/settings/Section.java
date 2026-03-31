@@ -12,6 +12,9 @@ import java.awt.*;
  */
 public abstract class Section extends JPanel {
 
+    private final static Dimension BUTTON_DIMENSION = new Dimension(250, 20);
+    private final static Dimension TEXT_FIELD_DIMENSION = new Dimension(300, 20);
+
     /**
      * Defines the title of the section. <br>
      * It is displayed inside the Settings dialog.
@@ -95,5 +98,19 @@ public abstract class Section extends JPanel {
      */
     protected InterThreadCommunication getITC(){
         return this.ITC;
+    }
+
+    /**
+     * Get the default dimension of any section's button
+     */
+    public static Dimension getButtonDimension() {
+        return BUTTON_DIMENSION;
+    }
+
+    /**
+     * Get the default dimension of any section's text field
+     */
+    public static Dimension getTextFieldDimension() {
+        return TEXT_FIELD_DIMENSION;
     }
 }

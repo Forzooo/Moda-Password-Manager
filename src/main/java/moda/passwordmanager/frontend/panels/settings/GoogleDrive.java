@@ -28,13 +28,11 @@ public class GoogleDrive extends Section {
     }
 
     private void initComponents(){
-        Dimension buttonDimension = new Dimension(250, 20);  // Define the dimension of any JButton
-
         this.googleDriveCheckbox = new JCheckBox();
 
         this.synchronizeButton = new JButton();
         this.synchronizeButton.setText("Synchronize");
-        this.synchronizeButton.setMaximumSize(buttonDimension);
+        this.synchronizeButton.setMaximumSize(getButtonDimension());
         this.synchronizeButton.setEnabled(false);  // The sync is allowed only when Google Drive is enabled
 
         this.automaticSynchronizationCheckbox = new JCheckBox();
