@@ -9,10 +9,13 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Data extends Section {
 
-    private JButton changeMasterPasswordButton;  // Change the master password of the current database4
+    // Change the master password of the current database
+    private JPasswordField updateMasterPasswordTextField;
+    private JButton updateMasterPasswordButton;
 
     private JTextField stringLengthTextField;
     private JCheckBox stringLettersCheckbox;
@@ -34,11 +37,15 @@ public class Data extends Section {
     }
 
     private void initComponents(){
-        Dimension buttonDimension = new Dimension(250, 20);  // Define the dimension of any JButton
+        JPanel updateMasterPasswordPanel = new JPanel();
 
-        this.changeMasterPasswordButton = new JButton();
-        this.changeMasterPasswordButton.setText("Change the master password");
-        this.changeMasterPasswordButton.setMaximumSize(buttonDimension);
+        this.updateMasterPasswordTextField = new JPasswordField();
+        this.updateMasterPasswordTextField.setPreferredSize(getTextFieldDimension());
+        this.updateMasterPasswordTextField.putClientProperty("JTextField.placeholderText", "New master password");
+
+        this.updateMasterPasswordButton = new JButton();
+        this.updateMasterPasswordButton.setText("Change");
+        this.updateMasterPasswordButton.setMaximumSize(getButtonDimension());
 
         this.stringLengthTextField = new JTextField();
         this.stringLengthTextField.putClientProperty("JTextField.placeholderText", "String length");
@@ -54,9 +61,12 @@ public class Data extends Section {
 
         this.configureStringGenerationButton = new JButton();
         this.configureStringGenerationButton.setText("Change");
-        this.configureStringGenerationButton.setMaximumSize(buttonDimension);
+        this.configureStringGenerationButton.setMaximumSize(getButtonDimension());
 
-        addOption(this.changeMasterPasswordButton);
+        updateMasterPasswordPanel.add(this.updateMasterPasswordTextField);
+        updateMasterPasswordPanel.add(this.updateMasterPasswordButton);
+
+        addOption(updateMasterPasswordPanel);
 
         addSection("String generation:");
         addOption(this.stringLengthTextField, "grow");
@@ -67,37 +77,24 @@ public class Data extends Section {
     }
 
     private void initListeners(){
-        this.changeMasterPasswordButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Set the master password of the database before using it
-                String masterPassword = JOptionPane.showInputDialog(getRootPane(), "Enter the new master password",
-                        "");
-
-                // Initial checks on the master password entered to ensure that it is a valid string, otherwise abort the
-                // operation
-                if (masterPassword == null || masterPassword.isBlank()){
-                    return;
-                }
-
-                changeMasterPassword(masterPassword);
-            }
-        });
+        this.updateMasterPasswordButton.addActionListener(e -> updateMasterPassword());
 
         this.configureStringGenerationButton.addActionListener(e -> configureStringGeneration());
     }
 
     /**
      * Change the current master password of the database to a new one
-     * @param masterPassword The new master password
      */
-    private void changeMasterPassword(String masterPassword){
+    private void updateMasterPassword(){
+        // Retrieve the master password from the password field
+        String masterPassword = Arrays.toString(this.updateMasterPasswordTextField.getPassword());
+
         // Perform some initial conditions check on the master password
         if (!Utilities.checkMasterPassword(masterPassword.toCharArray())){
             return;
         }
 
-        Event event = new Event("change-master-password", masterPassword.toCharArray());
+        Event event = new Event("update-master-password", masterPassword.toCharArray());
         getITC().request(event);  // Wait for the end of the operations in the backend
     }
 
