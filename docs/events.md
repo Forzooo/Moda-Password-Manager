@@ -141,10 +141,10 @@ method.
 * Data received: -
 * Synchronous: not required
 
-### Google Drive deauthentication
-* Operation: `google-drive-deauthentication`
+### Google Drive unathentication
+* Operation: `google-drive-unauthenticate`
 * Sender: Frontend
-* Description: Deauthenticate from Google Drive
+* Description: Unauthenticate from Google Drive
 * Data sent: -
 * Data received: -
 * Synchronous: not required
