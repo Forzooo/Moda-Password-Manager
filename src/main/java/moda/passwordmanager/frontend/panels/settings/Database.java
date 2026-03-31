@@ -28,16 +28,13 @@ public class Database extends Section {
     }
 
     private void initComponents(){
-        Dimension textFieldDimension = new Dimension(1600, 30);  // Define the dimension of any JTextField
-        Dimension buttonDimension = new Dimension(250, 20);  // Define the dimension of any JButton
-
         JPanel databaseInUsePanel = new JPanel();
         JLabel databaseInUseLabel = new JLabel();
         databaseInUseLabel.setText("Database in use: ");
 
         this.databasePathTextField = new JTextField();
         this.databasePathTextField.setText(getCurrentDatabasePath());
-        this.databasePathTextField.setMaximumSize(textFieldDimension);
+        this.databasePathTextField.setMaximumSize(getTextFieldDimension());
         this.databasePathTextField.setEditable(false);
 
         databaseInUsePanel.add(databaseInUseLabel);
@@ -47,11 +44,11 @@ public class Database extends Section {
 
         this.newDatabaseButton = new JButton();
         this.newDatabaseButton.setText("New database");
-        this.newDatabaseButton.setMaximumSize(buttonDimension);
+        this.newDatabaseButton.setMaximumSize(getButtonDimension());
 
         this.changeDatabaseButton = new JButton();
         this.changeDatabaseButton.setText("Change database");
-        this.changeDatabaseButton.setMaximumSize(buttonDimension);
+        this.changeDatabaseButton.setMaximumSize(getButtonDimension());
 
         databaseOperations.add(this.newDatabaseButton);
         databaseOperations.add(this.changeDatabaseButton);
@@ -103,7 +100,7 @@ public class Database extends Section {
             return;
         }
 
-        Event event = new Event("change-master-password", masterPassword.toCharArray());
+        Event event = new Event("update-master-password", masterPassword.toCharArray());
         getITC().request(event);  // Wait for the end of the operations in the backend
     }
 
