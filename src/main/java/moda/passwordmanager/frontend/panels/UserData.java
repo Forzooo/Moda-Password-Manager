@@ -19,6 +19,7 @@ public class UserData extends JPanel {
 
     private final InterThreadCommunication ITC;
     private final int ID;  // The ID associated with the data
+    private String title;  // The title of the tab
 
     // Swing Components
     private UserDataField[] userDataFields;  // The fields of the data
@@ -80,7 +81,13 @@ public class UserData extends JPanel {
         this.discardChangesButton.setVisible(false);  // It's shown only in the editing state
 
         // Create the panel for each field of the data
-        String[] userData = getData().getFullUserData();  // Retrieve the data of the user to know its length
+        Data data = getData();
+        this.title = data.getSERVICE();  // The title of the tab could be retrieved from the userData array itself
+                                         // or from the userDataFields array but if in future it may occur that the index
+                                         // of the service field changes, then the title would leak sensitive information
+                                         // of the user, thus we retrieve it from the getter method of Data
+
+        String[] userData = data.getFullUserData();  // Retrieve the data of the user to know its length
         this.userDataFields = new UserDataField[userData.length];  // Set the size based on the data
         this.rollbackDataFields = new String[userData.length];  // Create the rollback array based on the data length
 
@@ -146,6 +153,13 @@ public class UserData extends JPanel {
      */
     public int getID() {
         return this.ID;
+    }
+
+    /**
+     * Get the title of the tab: the service field
+     */
+    public String getTitle(){
+        return this.title;
     }
 
     /**
