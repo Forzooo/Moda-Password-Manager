@@ -8,11 +8,11 @@ import org.apache.commons.io.FileUtils;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.TreeMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class Backend extends EventListener {
@@ -127,7 +127,7 @@ public class Backend extends EventListener {
         addOperation("get-google-drive", this::getGoogleDrive);
         addOperation("get-google-drive-synchronization", this::getGoogleDriveSynchronization);
         addOperation("google-drive-authenticate", this::authenticateGoogleDrive);
-        addOperation("google-drive-deauthenticate", this::deauthenticateGoogleDrive);
+        addOperation("google-drive-unauthenticate", this::unauthenticateGoogleDrive);
 
         // Synchronize with Google Drive and update the service fields
         addOperation("google-drive-synchronize", () -> {
@@ -559,8 +559,8 @@ public class Backend extends EventListener {
         try {
             new File(this.googleDrive.getAPI_DIRECTORY()).mkdirs();  // Create the Google Drive dir (skipped if it already exists)
 
-            // Move the file to the directory
-            Files.move(Path.of(credentialsPath), Path.of(this.googleDrive.getAPI_FILE_PATH()));
+            // Move the file to the Google Drive API directory, replacing the previous file if it existed
+            Files.move(Path.of(credentialsPath), Path.of(this.googleDrive.getAPI_FILE_PATH()), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -572,7 +572,7 @@ public class Backend extends EventListener {
     /**
      * Disable in the settings file the Google Drive synchronization and delete the stored credentials, if there's any
      */
-    private void deauthenticateGoogleDrive(){
+    private void unauthenticateGoogleDrive(){
         try {
             FileUtils.deleteDirectory(new File(this.googleDrive.getTOKENS_DIRECTORY_PATH()));
         } catch (IOException e) {
