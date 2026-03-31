@@ -100,7 +100,7 @@ public class Database extends Section {
             return;
         }
 
-        Event event = new Event("change-master-password", masterPassword.toCharArray());
+        Event event = new Event("update-master-password", masterPassword.toCharArray());
         getITC().request(event);  // Wait for the end of the operations in the backend
     }
 
