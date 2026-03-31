@@ -54,13 +54,16 @@ public class ShowData extends JPanel {
      */
     private void initPanel(){
         // A generic boxlayout can be used as it's the only component of the panel
-        setLayout(new MigLayout("insets 30 30 30 30, fill"));
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
     }
 
     /**
      * Initialize the components of the panel
      */
     private void initComponents(){
+        JPanel userDataPanel = new JPanel();  // In the userDataPanel the scrollPane and the search bar are added
+        userDataPanel.setLayout(new MigLayout("insets 10 10 10 10, fill"));
+
         this.dataTabbedPane = new JTabbedPane();
 
         // Create the JList used to show all the data saved inside the database
@@ -77,8 +80,6 @@ public class ShowData extends JPanel {
         scrollPane.setBorder(new EmptyBorder(10,10,10,10));
         scrollPane.setBackground(Color.WHITE);
 
-        this.dataTabbedPane.addTab("User Data", scrollPane);  // Add the default tab which cannot be closed
-
         int searchBarSize = 50;  // The size of the search bar
         this.searchBar = new ModaTextField(ModaTextField.TextFieldStyle.CLASSIC, searchBarSize);
 
@@ -89,8 +90,12 @@ public class ShowData extends JPanel {
 
         this.searchBar.putClientProperty("JTextField.trailingComponent", searchIconLabel);
 
-        add(this.searchBar, "span, growx, pushx, wrap");
-        add(this.dataTabbedPane, "grow, push, wrap");
+        // Add the scroll pane and the search bar into the userDataPanel to make them both in the same tab of the dataTabbedPane
+        userDataPanel.add(scrollPane, "grow, push, wrap");
+        userDataPanel.add(this.searchBar, "span, growx, pushx");
+
+        this.dataTabbedPane.addTab("User Data", userDataPanel);
+        add(this.dataTabbedPane);
     }
 
     /**
