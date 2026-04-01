@@ -1,5 +1,6 @@
 package moda.passwordmanager.frontend;
 
+import moda.passwordmanager.Application;
 import moda.passwordmanager.frontend.dialogs.Startup;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
@@ -35,6 +36,7 @@ public class Frontend extends JPanel {
         // Set the default exception handler for the Frontend threads
         Thread.setDefaultUncaughtExceptionHandler(this::exceptionHandler);
 
+        Application.applyTheme(getApplicationTheme());
         initStartup();
 
         initPanel();  // Set the properties of the panel
@@ -65,6 +67,16 @@ public class Frontend extends JPanel {
         }
         Event event = new Event("set-database", databasePath);
         this.ITC.request(event);
+    }
+
+    /**
+     * Get the theme of the application from the settings
+     */
+    private Themes getApplicationTheme(){
+        Event event = new Event("get-application-theme");
+        Event response = this.ITC.request(event);
+
+        return (Themes) response.getData().getFirst();
     }
 
     /**

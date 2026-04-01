@@ -1,8 +1,10 @@
 package moda.passwordmanager;
 
+import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import moda.passwordmanager.backend.Backend;
+import moda.passwordmanager.frontend.Themes;
 import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.Frontend;
@@ -25,14 +27,19 @@ public class Application extends JFrame {
     }
 
     /**
-     * Apply the FlatLaf look and feel to the UI and set general properties
+     * Register the FlatLaf custom default sources to load the properties files
      */
     private void initFlatLaf(){
         FlatLaf.registerCustomDefaultsSource("moda.passwordmanager");  // Register the properties files
-        try {
-            UIManager.setLookAndFeel(new FlatLightLaf());
-        } catch (UnsupportedLookAndFeelException e) {
-            throw new RuntimeException(e);
+    }
+
+    /**
+     * Apply a theme to the application
+     */
+    public static void applyTheme(Themes theme){
+        switch (theme){
+            case Light -> FlatLightLaf.setup();
+            case Dark -> FlatDarkLaf.setup();
         }
     }
 

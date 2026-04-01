@@ -1,5 +1,6 @@
 package moda.passwordmanager.backend;
 
+import moda.passwordmanager.frontend.Themes;
 import moda.passwordmanager.interthreadcommunication.EventListener;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
@@ -137,6 +138,9 @@ public class Backend extends EventListener {
         addOperation("enable-google-drive-synchronization", this::enableGoogleDriveSynchronization);
         addOperation("disable-google-drive-synchronization", this::disableGoogleDriveSynchronization);
         addOperation("get-recent-databases", this::getRecentDatabases);
+
+        addOperation("get-application-theme", this::getApplicationTheme);
+        addOperation("set-application-theme", this::setApplicationTheme);
     }
 
     /**
@@ -634,6 +638,22 @@ public class Backend extends EventListener {
         }
         recentDatabases.addFirst(path);  // Add the path as the first element of the list
         this.settings.writeListProperty("database/recent", recentDatabases);  // Write the updated list in the settings
+    }
+
+    /**
+     * Retrieve the theme of the application from the settings
+     */
+    private void getApplicationTheme(){
+        String theme = this.settings.readStringProperty("appearance/theme");
+        addResponseData(Themes.valueOf(theme));
+    }
+
+    /**
+     * Set the new theme of the application
+     */
+    private void setApplicationTheme(){
+        String theme = (String) getRequestData().getFirst();
+        this.settings.writeProperty("appearance/theme", theme.toString());
     }
 
 }

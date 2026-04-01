@@ -74,6 +74,7 @@ public class Settings extends JDialog {
         this.sectionPanel = new JPanel();
         this.sectionPanel.setLayout(new CardLayout());
 
+        addSection(new Appearance(this.ITC));
         addSection(new Data(this.ITC));
         addSection(new Database(this.ITC));
         addSection(new GoogleDrive(this.ITC));
