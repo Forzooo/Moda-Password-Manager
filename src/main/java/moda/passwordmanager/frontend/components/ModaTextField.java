@@ -38,18 +38,18 @@ public class ModaTextField extends JTextField {
 
         int arc = 30;
 
-        g2.setColor(Color.WHITE);
+        g2.setColor(UIManager.getColor("Moda.TextField.background"));
         g2.fillRoundRect(0, 0, this.getWidth(), this.getHeight(), arc, arc);
 
         float thickness = 3.0f;
 
-        g2.setColor(Color.BLACK);
+        g2.setColor(UIManager.getColor("Moda.TextField.border"));
         g2.setStroke(new BasicStroke(thickness));
 
         int offset = (int) (thickness / 2);
         g2.drawRoundRect(offset, offset, this.getWidth() - (int)thickness, this.getHeight() - (int)thickness, arc, arc);
 
-        g2.setColor(Color.BLACK);
+//        g2.setColor(Color.BLACK);
         g2.setFont(getFont());
 
         g2.dispose();

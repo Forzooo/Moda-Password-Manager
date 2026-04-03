@@ -14,7 +14,6 @@ public class ModaButton extends JButton {
 
     //Animazione diddio
     private float currentThickness;
-    private float currentFontThickness;
     private Timer timerAnimation;
 
     public ModaButton(ButtonStyle buttonStyle) {
@@ -164,7 +163,7 @@ public class ModaButton extends JButton {
         this.thickness = thickness;
     }
 
-    public enum  ButtonStyle {
+    public enum ButtonStyle {
         CLASSIC_BLACK,
         CLASSIC_WHITE,
         EMPTY,
