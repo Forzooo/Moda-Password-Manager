@@ -34,7 +34,7 @@ public class ShowData extends JPanel {
     private final DefaultListModel<String> USER_DATA_MODEL;
 
     // Swing components
-    private ModaList dataList;
+    private JList<String> dataList;
 
     public ShowData(InterThreadCommunication itc){
         super();  // Initialize the Panel
@@ -70,10 +70,11 @@ public class ShowData extends JPanel {
         this.dataTabbedPane = new JTabbedPane();
 
         // Create the JList used to show all the data saved inside the database
-        this.dataList = new ModaList(this.USER_DATA_MODEL, 20, 30);
-
+        this.dataList = new JList<>();
+        this.dataList.setModel(this.USER_DATA_MODEL);
+        this.dataList.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 20));
+        this.dataList.setFixedCellHeight(30);
         this.dataList.setBackground(null);
-        this.dataList.setSelectionBackground(Color.black);
 
         ModaScrollPane scrollPane = new ModaScrollPane(this.dataList);
         ModaScrollBarUI modaScrollBarUI = new ModaScrollBarUI();
@@ -129,6 +130,23 @@ public class ShowData extends JPanel {
 
                     addDataTab(id);
                 }
+            }
+        });
+
+        this.dataList.setCellRenderer(new DefaultListCellRenderer(){
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+                if (isSelected){  // The selected row has black background
+                    c.setBackground(UIManager.getColor("Moda.ShowData.DataList.selectionBackground"));
+                } else {  // The other rows have two different colors
+                    if (index % 2 == 0){
+                        c.setBackground(UIManager.getColor("Moda.ShowData.DataList.evenBackground"));
+                    } else {
+                        c.setBackground(UIManager.getColor("Moda.ShowData.DataList.oddBackground"));
+                    }
+                }
+                return c;
             }
         });
 
