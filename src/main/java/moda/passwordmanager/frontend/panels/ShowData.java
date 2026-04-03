@@ -72,7 +72,7 @@ public class ShowData extends JPanel {
         // Create the JList used to show all the data saved inside the database
         this.dataList = new JList<>();
         this.dataList.setModel(this.USER_DATA_MODEL);
-        this.dataList.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 20));
+        this.dataList.setFont(new Font(UIManager.getString("Moda.GeneralUseFont"), Font.PLAIN, 20));
         this.dataList.setFixedCellHeight(30);
         this.dataList.setBackground(null);
 
