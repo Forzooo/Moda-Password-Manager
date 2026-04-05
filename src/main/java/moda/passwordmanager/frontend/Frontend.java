@@ -92,7 +92,7 @@ public class Frontend extends JPanel {
      */
     private void initPanel(){
         setFocusable(true);  // Set the focus on the frame to get the keyboard inputs
-        setLayout(new MigLayout("insets 0 0 0 0"));
+        setLayout(new MigLayout("insets 0 0 0 0, fill", "[]0[]"));  // The gap between cols must be 0
     }
 
     /**
