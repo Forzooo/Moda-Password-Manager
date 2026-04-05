@@ -50,7 +50,7 @@ public class Sidebar extends JPanel {
         // Title Section
         JLabel passwordManagerLabel = new JLabel();  // Create the JLabel that displays the name of the Password Manager
         passwordManagerLabel.setText("MODA");
-        passwordManagerLabel.setFont(new Font(UIManager.getString("Moda.GeneralUseFont"), Font.PLAIN, 80));
+        passwordManagerLabel.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.PLAIN, 80));
         passwordManagerLabel.setForeground(UIManager.getColor("Moda.Sidebar.Title.foreground"));
 
         // Create the JButtons used to switch between JPanels of the dynamic part, where their width is the same as

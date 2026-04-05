@@ -51,7 +51,7 @@ public class AddData extends JPanel {
     private void initComponents(){
         JLabel addDataLabel = new JLabel();
         addDataLabel.setText("Add your data");
-        addDataLabel.setFont(new Font(UIManager.getString("Moda.GeneralUseFont"), Font.BOLD, 32));
+        addDataLabel.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, 32));
 
         Dimension textFieldDimension = new Dimension(600, 60);  // The dimension of each text field
 

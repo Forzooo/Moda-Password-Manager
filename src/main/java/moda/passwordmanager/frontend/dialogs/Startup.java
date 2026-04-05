@@ -65,7 +65,7 @@ public class Startup extends JDialog {
     private void initComponents(){
         JLabel title = new JLabel();  // Create the JLabel that displays the name of the Password Manager
         title.setText("MODA");
-        title.setFont(new Font(UIManager.getString("Moda.GeneralUseFont"), Font.PLAIN, 80));
+        title.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.PLAIN, 80));
         title.setHorizontalAlignment(JLabel.CENTER);
 
         JLabel subtitle = new JLabel();

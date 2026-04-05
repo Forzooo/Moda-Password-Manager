@@ -6,7 +6,7 @@ import java.awt.*;
 public class ModaTextField extends JTextField {
 
     public ModaTextField() {
-        this.setFont(new Font(UIManager.getString("Moda.GeneralUseFont"), Font.BOLD, 20));
+        this.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, 20));
 
         this.setOpaque(false);
         this.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 5));
@@ -14,7 +14,7 @@ public class ModaTextField extends JTextField {
 
 
     public ModaTextField(int height) {
-        this.setFont(new Font(UIManager.getString("Moda.GeneralUseFont"), Font.BOLD, 20));
+        this.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, 20));
 
         this.setOpaque(false);
         this.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 5));
@@ -23,7 +23,7 @@ public class ModaTextField extends JTextField {
     }
 
     public ModaTextField(int width, int height) {
-        this.setFont(new Font(UIManager.getString("Moda.GeneralUseFont"), Font.BOLD, 20));
+        this.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, 20));
 
         this.setOpaque(false);
         this.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 5));
