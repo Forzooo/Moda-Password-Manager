@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import moda.passwordmanager.frontend.Themes;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,10 +61,15 @@ public class Settings {
             googleDrive.put("enabled", false);
             googleDrive.put("automatic_synchronization", false);
 
+            // Set the appearance properties
+            ObjectNode appearance = this.objectMapper.createObjectNode();
+            appearance.put("theme", Themes.Light.toString());
+
             // Define the hierarchy of the JSON
             rootNode.put("database", database);
             rootNode.put("string_generation", stringGeneration);
             rootNode.put("google_drive", googleDrive);
+            rootNode.put("appearance", appearance);
 
             // Write the default data inside the settings file
             this.objectMapper.writeValue(this.SETTINGS_FILE, rootNode);

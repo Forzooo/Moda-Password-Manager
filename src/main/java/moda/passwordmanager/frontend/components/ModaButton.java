@@ -14,7 +14,6 @@ public class ModaButton extends JButton {
 
     //Animazione diddio
     private float currentThickness;
-    private float currentFontThickness;
     private Timer timerAnimation;
 
     public ModaButton(ButtonStyle buttonStyle) {
@@ -23,7 +22,7 @@ public class ModaButton extends JButton {
 
         this.currentThickness = this.thickness;
 
-        this.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 21));
+        this.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, 21));
 
         this.setContentAreaFilled(false);
         this.setBorderPainted(false);
@@ -39,7 +38,7 @@ public class ModaButton extends JButton {
 
         this.currentThickness = this.thickness;
 
-        this.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, fontSize));
+        this.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, fontSize));
 
         this.setContentAreaFilled(false);
         this.setBorderPainted(false);
@@ -57,7 +56,7 @@ public class ModaButton extends JButton {
 
         this.currentThickness = this.thickness;
 
-        this.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, fontSize));
+        this.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, fontSize));
 
         this.setContentAreaFilled(false);
         this.setBorderPainted(false);
@@ -75,7 +74,7 @@ public class ModaButton extends JButton {
 
         this.currentThickness = this.thickness;
 
-        this.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, fontSize));
+        this.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, fontSize));
 
         this.setContentAreaFilled(false);
         this.setBorderPainted(false);
@@ -164,7 +163,7 @@ public class ModaButton extends JButton {
         this.thickness = thickness;
     }
 
-    public enum  ButtonStyle {
+    public enum ButtonStyle {
         CLASSIC_BLACK,
         CLASSIC_WHITE,
         EMPTY,

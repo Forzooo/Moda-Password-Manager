@@ -1,5 +1,6 @@
 package moda.passwordmanager.frontend;
 
+import moda.passwordmanager.Application;
 import moda.passwordmanager.frontend.dialogs.Startup;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
@@ -35,6 +36,7 @@ public class Frontend extends JPanel {
         // Set the default exception handler for the Frontend threads
         Thread.setDefaultUncaughtExceptionHandler(this::exceptionHandler);
 
+        Application.applyTheme(getApplicationTheme());
         initStartup();
 
         initPanel();  // Set the properties of the panel
@@ -68,6 +70,16 @@ public class Frontend extends JPanel {
     }
 
     /**
+     * Get the theme of the application from the settings
+     */
+    private Themes getApplicationTheme(){
+        Event event = new Event("get-application-theme");
+        Event response = this.ITC.request(event);
+
+        return (Themes) response.getData().getFirst();
+    }
+
+    /**
      * Ask the user for the master password before starting to use the password manager
      */
     private void initStartup(){
@@ -80,7 +92,7 @@ public class Frontend extends JPanel {
      */
     private void initPanel(){
         setFocusable(true);  // Set the focus on the frame to get the keyboard inputs
-        setLayout(new MigLayout("insets 0 0 0 0"));
+        setLayout(new MigLayout("insets 0 0 0 0, fill", "[]0[]"));  // The gap between cols must be 0
     }
 
     /**

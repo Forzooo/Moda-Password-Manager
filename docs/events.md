@@ -210,3 +210,19 @@ whether special characters are enabled
 * Data received: _int_ length of the string, _bool_ whether letters are enabled, _bool_ whether numbers are enabled, _bool_
   whether special characters are enabled
 * Synchronous: required
+
+### Get the application theme
+* Operation: `get-application-theme`
+* Sender: Frontend
+* Description: Request the theme used by the application
+* Data sent: -
+* Data received: _Theme_ theme
+* Synchronous: required
+
+### Set the application theme
+* Operation: `set-application-theme`
+* Sender: Frontend
+* Description: Set the new theme of the application
+* Data sent: _Theme_ the new theme
+* Data received: -
+* Synchronous: not required

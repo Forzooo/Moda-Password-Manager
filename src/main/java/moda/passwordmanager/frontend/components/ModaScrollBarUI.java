@@ -9,9 +9,6 @@ public class ModaScrollBarUI extends BasicScrollBarUI {
     @Override
     protected void configureScrollBarColors() {
         super.configureScrollBarColors();
-
-        this.thumbColor = Color.WHITE;
-        this.trackColor = Color.WHITE;
     }
 
     @Override
@@ -44,7 +41,7 @@ public class ModaScrollBarUI extends BasicScrollBarUI {
         int thickness = 3;
         int margin = 1;
 
-        g2.setColor(Color.BLACK);
+        g2.setColor(UIManager.getColor("Moda.Scrollbar.colour"));
         g2.setStroke(new BasicStroke(thickness));
 
         int x = thumbBounds.x + margin;

@@ -51,21 +51,21 @@ public class AddData extends JPanel {
     private void initComponents(){
         JLabel addDataLabel = new JLabel();
         addDataLabel.setText("Add your data");
-        addDataLabel.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 32));
+        addDataLabel.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, 32));
 
         Dimension textFieldDimension = new Dimension(600, 60);  // The dimension of each text field
 
         // Create all the JTextField for the data input
-        this.usernameTextField = new ModaTextField(ModaTextField.TextFieldStyle.CLASSIC);
+        this.usernameTextField = new ModaTextField();
         this.usernameTextField.putClientProperty("JTextField.placeholderText", "Username");
         this.usernameTextField.setPreferredSize(textFieldDimension);
 
-        this.emailAddressTextField = new ModaTextField(ModaTextField.TextFieldStyle.CLASSIC);
+        this.emailAddressTextField = new ModaTextField();
         this.emailAddressTextField.putClientProperty("JTextField.placeholderText", "Email Address (email@example.com)");
         this.emailAddressTextField.setPreferredSize(textFieldDimension);
 
         // The password field is not a JPasswordField because the user needs to know the password being entered in the database
-        this.passwordTextField = new ModaTextField(ModaTextField.TextFieldStyle.CLASSIC);
+        this.passwordTextField = new ModaTextField();
         this.passwordTextField.putClientProperty("JTextField.placeholderText", "Password");
         this.passwordTextField.setPreferredSize(textFieldDimension);
 
@@ -77,11 +77,11 @@ public class AddData extends JPanel {
         Utilities.applyTrailingButtonProperties(this.generatePasswordButton);
         this.passwordTextField.putClientProperty("JTextField.trailingComponent", this.generatePasswordButton);
 
-        this.serviceTextField = new ModaTextField(ModaTextField.TextFieldStyle.CLASSIC, textFieldDimension.height);
+        this.serviceTextField = new ModaTextField(textFieldDimension.height);
         this.serviceTextField.putClientProperty("JTextField.placeholderText", "Service (Google, Microsoft, ...)");
         this.serviceTextField.setPreferredSize(textFieldDimension);
 
-        this.additionalDataTextField = new ModaTextField(ModaTextField.TextFieldStyle.CLASSIC);
+        this.additionalDataTextField = new ModaTextField();
         this.additionalDataTextField.putClientProperty("JTextField.placeholderText",
                 "Additional Data (Data not covered by the other fields)");
         this.additionalDataTextField.setPreferredSize(textFieldDimension);
