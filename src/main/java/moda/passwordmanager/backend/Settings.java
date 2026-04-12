@@ -63,6 +63,7 @@ public class Settings {
 
             // Set the appearance properties
             ObjectNode appearance = this.objectMapper.createObjectNode();
+            appearance.put("language", Helper.getSystemLanguage());
             appearance.put("theme", Themes.Light.toString());
 
             // Define the hierarchy of the JSON

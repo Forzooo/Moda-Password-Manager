@@ -216,13 +216,29 @@ whether special characters are enabled
 * Sender: Frontend
 * Description: Request the theme used by the application
 * Data sent: -
-* Data received: _Theme_ theme
+* Data received: _Themes_ theme
 * Synchronous: required
 
 ### Set the application theme
 * Operation: `set-application-theme`
 * Sender: Frontend
 * Description: Set the new theme of the application
-* Data sent: _Theme_ the new theme
+* Data sent: _Themes_ the new theme
+* Data received: -
+* Synchronous: not required
+
+### Get the application language
+* Operation: `get-application-language`
+* Sender: Frontend
+* Description: Request the language used by the application
+* Data sent: -
+* Data received: _Languages_ language
+* Synchronous: required
+
+### Set the application theme
+* Operation: `set-application-theme`
+* Sender: Frontend
+* Description: Set the new language of the application
+* Data sent: _Languages_ the new language
 * Data received: -
 * Synchronous: not required
