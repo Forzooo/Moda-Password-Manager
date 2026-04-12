@@ -33,7 +33,7 @@ public class Utilities {
     public static String openDatabaseFileChooser(){
         // Create the File Chooser that opens in the desktop view, and selects only .modb files
         SystemFileChooser fileChooser = new SystemFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-        fileChooser.setDialogTitle("Choose a database to use");
+        fileChooser.setDialogTitle(getLocaleString("Moda.Utilities.openDatabaseFileChooserTitle"));
         fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
         fileChooser.addChoosableFileFilter(new SystemFileChooser.FileNameExtensionFilter(
                 "Moda Password Manager Database","modb"));
@@ -57,7 +57,7 @@ public class Utilities {
     public static String newDatabaseFileChooser(){
         // Create the File Chooser that opens in the desktop view, and saves a .modb file
         SystemFileChooser fileChooser = new SystemFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-        fileChooser.setDialogTitle("Create a new database to use");
+        fileChooser.setDialogTitle(getLocaleString("Moda.Utilities.newDatabaseFileChooserTitle"));
         fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
         fileChooser.addChoosableFileFilter(new SystemFileChooser.FileNameExtensionFilter(
                 "Moda Password Manager Database","modb"));

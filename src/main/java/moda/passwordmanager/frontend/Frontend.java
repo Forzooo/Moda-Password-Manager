@@ -38,7 +38,7 @@ public class Frontend extends JPanel {
         // Set the default exception handler for the Frontend threads
         Thread.setDefaultUncaughtExceptionHandler(this::exceptionHandler);
 
-        Application.setApplicationLanguage(Languages.English);
+        Application.setApplicationLanguage(Languages.Italian);
         Application.applyTheme(getApplicationTheme());
         initStartup();
 
@@ -56,7 +56,7 @@ public class Frontend extends JPanel {
         String stackTrace = Utilities.getStackTrace(e);  // Get the full stack trace of the throwable
         // Show the exception as a Message Dialog with the type of error message
         JOptionPane.showMessageDialog(this, Utilities.getStackTraceRows(stackTrace, 5),
-                "The following exception occurred in the " + t.getName() + " thread", JOptionPane.ERROR_MESSAGE);
+                Utilities.getLocaleString("Moda.Frontend.exceptionHandlerTitle") + " " + t.getName(), JOptionPane.ERROR_MESSAGE);
     }
 
     /**
