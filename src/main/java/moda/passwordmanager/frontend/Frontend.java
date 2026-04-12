@@ -2,7 +2,7 @@ package moda.passwordmanager.frontend;
 
 import moda.passwordmanager.Application;
 import moda.passwordmanager.frontend.dialogs.Startup;
-import moda.passwordmanager.frontend.properties.Language;
+import moda.passwordmanager.frontend.properties.Languages;
 import moda.passwordmanager.frontend.properties.Themes;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
@@ -38,7 +38,7 @@ public class Frontend extends JPanel {
         // Set the default exception handler for the Frontend threads
         Thread.setDefaultUncaughtExceptionHandler(this::exceptionHandler);
 
-        Application.setApplicationLanguage(Language.English);
+        Application.setApplicationLanguage(Languages.English);
         Application.applyTheme(getApplicationTheme());
         initStartup();
 

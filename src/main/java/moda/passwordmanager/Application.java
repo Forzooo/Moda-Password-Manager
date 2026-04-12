@@ -4,7 +4,7 @@ import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import moda.passwordmanager.backend.Backend;
-import moda.passwordmanager.frontend.properties.Language;
+import moda.passwordmanager.frontend.properties.Languages;
 import moda.passwordmanager.frontend.properties.Themes;
 import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.interthreadcommunication.Event;
@@ -111,7 +111,7 @@ public class Application extends JFrame {
     /**
      * Set the language of the application
      */
-    public static void setApplicationLanguage(Language language) {
+    public static void setApplicationLanguage(Languages language) {
         switch (language){
             case English -> Application.locale = Locale.ENGLISH;
             case Italian -> Application.locale = Locale.ITALY;

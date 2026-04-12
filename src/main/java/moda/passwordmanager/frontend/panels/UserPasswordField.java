@@ -29,7 +29,7 @@ public class UserPasswordField extends UserDataField {
     private void initComponents(){
         this.generatePasswordButton = new JButton();
         this.generatePasswordButton.setIcon(Utilities.getIcon("generate_string.png"));
-        this.generatePasswordButton.setToolTipText("Generate a password");
+        this.generatePasswordButton.setToolTipText(Utilities.getLocaleString("Moda.UserPasswordField.generatePasswordButton"));
         Utilities.applyTrailingButtonProperties(this.generatePasswordButton);
     }
 

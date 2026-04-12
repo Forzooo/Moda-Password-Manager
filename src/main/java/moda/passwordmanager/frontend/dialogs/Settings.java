@@ -1,6 +1,7 @@
 package moda.passwordmanager.frontend.dialogs;
 
 import moda.passwordmanager.Application;
+import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.frontend.panels.settings.*;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import net.miginfocom.swing.MigLayout;
@@ -84,13 +85,13 @@ public class Settings extends JDialog {
         JPanel dialogOperations = new JPanel();
 
         this.cancelButton = new JButton();
-        this.cancelButton.setText("Cancel");
+        this.cancelButton.setText(Utilities.getLocaleString("Moda.Settings.cancelButton"));
 
         this.confirmButton = new JButton();
-        this.confirmButton.setText("Confirm");
+        this.confirmButton.setText(Utilities.getLocaleString("Moda.Settings.confirmButton"));
 
         this.applyButton = new JButton();
-        this.applyButton.setText("Apply");
+        this.applyButton.setText(Utilities.getLocaleString("Moda.Settings.applyButton"));
 
         dialogOperations.add(this.confirmButton);
         dialogOperations.add(this.cancelButton);

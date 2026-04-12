@@ -40,7 +40,7 @@ public class UserDataField extends JPanel {
         // Create the JButton to copy the data field
         this.copyButton = new JButton();
         this.copyButton.setIcon(Utilities.getIcon("copy.png"));
-        this.copyButton.setToolTipText("Copy the data.");
+        this.copyButton.setToolTipText(Utilities.getLocaleString("Moda.UserDataField.copyButtonToolTip"));
         Utilities.applyTrailingButtonProperties(this.copyButton);
 
         this.dataField.putClientProperty("JTextField.trailingComponent", this.copyButton);
@@ -67,7 +67,7 @@ public class UserDataField extends JPanel {
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 StringSelection dataToCopy = new StringSelection(dataField.getText());  // Create a Transferable
                 clipboard.setContents(dataToCopy, dataToCopy);  // Copy the transferable
-                JOptionPane.showMessageDialog(getRootPane(), "Copied the data to the clipboard.");
+                JOptionPane.showMessageDialog(getRootPane(), Utilities.getLocaleString("Moda.UserDataField.copiedDataMessageDialog"));
             }
         };
     }

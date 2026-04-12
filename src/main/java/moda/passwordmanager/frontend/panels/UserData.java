@@ -2,6 +2,7 @@ package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.Application;
 import moda.passwordmanager.backend.Data;
+import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import net.miginfocom.swing.MigLayout;
@@ -65,18 +66,18 @@ public class UserData extends JPanel {
     private void initComponents(){
         // Create all the JButton
         this.modifyButton = new JButton();
-        this.modifyButton.setText("Modify");
+        this.modifyButton.setText(Utilities.getLocaleString("Moda.UserData.modifyButton"));
 
         this.deleteButton = new JButton();
-        this.deleteButton.setText("Delete");
+        this.deleteButton.setText(Utilities.getLocaleString("Moda.UserData.deleteButton"));
 
         this.saveChangesButton = new JButton();
-        this.saveChangesButton.setText("Save Changes");
+        this.saveChangesButton.setText(Utilities.getLocaleString("Moda.UserData.saveChangesButton"));
         this.saveChangesButton.setEnabled(false);
         this.saveChangesButton.setVisible(false);  // It's shown only in the editing state
 
         this.discardChangesButton = new JButton();
-        this.discardChangesButton.setText("Discard Changes");
+        this.discardChangesButton.setText(Utilities.getLocaleString("Moda.UserData.discardChangesButton"));
         this.discardChangesButton.setEnabled(false);
         this.discardChangesButton.setVisible(false);  // It's shown only in the editing state
 
@@ -119,7 +120,7 @@ public class UserData extends JPanel {
         this.deleteButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                int result = JOptionPane.showConfirmDialog(getPanel(), "Delete the data?",
+                int result = JOptionPane.showConfirmDialog(getPanel(), Utilities.getLocaleString("Moda.UserData.deleteButtonConfirmDialog"),
                         Application.getApplicationTitle(), JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 
                 // If the result is 0 (Yes) delete the data by sending an event to the backend

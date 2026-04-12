@@ -24,7 +24,7 @@ public class Data extends Section {
     private JButton configureStringGenerationButton;
 
     public Data(InterThreadCommunication itc){
-        super("Data", itc);
+        super(Utilities.getLocaleString("Moda.Data.panelTitle"), itc);
 
         initComponents();
         initListeners();
@@ -41,26 +41,26 @@ public class Data extends Section {
 
         this.updateMasterPasswordTextField = new JPasswordField();
         this.updateMasterPasswordTextField.setPreferredSize(getTextFieldDimension());
-        this.updateMasterPasswordTextField.putClientProperty("JTextField.placeholderText", "New master password");
+        this.updateMasterPasswordTextField.putClientProperty("JTextField.placeholderText", Utilities.getLocaleString("Moda.Data.updateMasterPasswordTextFieldPlaceholder"));
 
         this.updateMasterPasswordButton = new JButton();
-        this.updateMasterPasswordButton.setText("Change");
+        this.updateMasterPasswordButton.setText(Utilities.getLocaleString("Moda.Data.updateMasterPasswordButton"));
         this.updateMasterPasswordButton.setMaximumSize(getButtonDimension());
 
         this.stringLengthTextField = new JTextField();
-        this.stringLengthTextField.putClientProperty("JTextField.placeholderText", "String length");
+        this.stringLengthTextField.putClientProperty("JTextField.placeholderText", Utilities.getLocaleString("Moda.Data.stringLengthTextField"));
 
         this.stringLettersCheckbox = new JCheckBox();
-        this.stringLettersCheckbox.setText("Include letters (a-zA-Z)");
+        this.stringLettersCheckbox.setText(Utilities.getLocaleString("Moda.Data.stringLettersCheckbox"));
 
         this.stringNumbersCheckbox = new JCheckBox();
-        this.stringNumbersCheckbox.setText("Include numbers (0-9)");
+        this.stringNumbersCheckbox.setText(Utilities.getLocaleString("Moda.Data.stringNumbersCheckbox"));
 
         this.stringSpecialCharactersCheckbox = new JCheckBox();
-        this.stringSpecialCharactersCheckbox.setText("Include special characters (!?,...)");
+        this.stringSpecialCharactersCheckbox.setText(Utilities.getLocaleString("Moda.Data.stringSpecialCharactersCheckbox"));
 
         this.configureStringGenerationButton = new JButton();
-        this.configureStringGenerationButton.setText("Change");
+        this.configureStringGenerationButton.setText(Utilities.getLocaleString("Moda.Data.configureStringGenerationButton"));
         this.configureStringGenerationButton.setMaximumSize(getButtonDimension());
 
         updateMasterPasswordPanel.add(this.updateMasterPasswordTextField);
@@ -68,7 +68,7 @@ public class Data extends Section {
 
         addOption(updateMasterPasswordPanel);
 
-        addSection("String generation:");
+        addSection(Utilities.getLocaleString("Moda.Data.stringGenerationSection"));
         addOption(this.stringLengthTextField, "grow");
         addOption(this.stringLettersCheckbox);
         addOption(this.stringNumbersCheckbox);

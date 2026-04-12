@@ -93,12 +93,13 @@ public class ShowData extends JPanel {
         searchIconLabel.setIcon(searchIcon);
 
         this.searchBar.putClientProperty("JTextField.trailingComponent", searchIconLabel);
+        this.searchBar.putClientProperty("JTextField.placeholderText", Utilities.getLocaleString("Moda.ShowData.searchBarPlaceholder"));
 
         // Add the scroll pane and the search bar into the userDataPanel to make them both in the same tab of the dataTabbedPane
         userDataPanel.add(scrollPane, "grow, push, wrap");
         userDataPanel.add(this.searchBar, "span, growx, pushx");
 
-        this.dataTabbedPane.addTab("User Data", userDataPanel);
+        this.dataTabbedPane.addTab(getPanelTitle(), userDataPanel);
         add(this.dataTabbedPane);
     }
 
@@ -199,7 +200,7 @@ public class ShowData extends JPanel {
      * Returns the title of the panel
      */
     public static String getPanelTitle() {
-        return "Show Data";
+        return Utilities.getLocaleString("Moda.ShowData.panelTitle");
     }
 
     /**
