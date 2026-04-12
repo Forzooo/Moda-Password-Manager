@@ -1,6 +1,6 @@
 package moda.passwordmanager.frontend.panels.settings;
 
-import moda.passwordmanager.frontend.Themes;
+import moda.passwordmanager.frontend.properties.Themes;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 

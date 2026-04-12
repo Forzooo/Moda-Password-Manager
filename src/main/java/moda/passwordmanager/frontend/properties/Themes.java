@@ -1,4 +1,4 @@
-package moda.passwordmanager.frontend;
+package moda.passwordmanager.frontend.properties;
 
 /**
  * The themes supported by the Application
