@@ -16,7 +16,7 @@ public class Database extends Section {
     private JButton changeDatabaseButton;
 
     public Database(InterThreadCommunication itc){
-        super("Database", itc);
+        super(Utilities.getLocaleString("Moda.Database.panelTitle"), itc);
 
         initComponents();
         initListeners();
@@ -30,7 +30,7 @@ public class Database extends Section {
     private void initComponents(){
         JPanel databaseInUsePanel = new JPanel();
         JLabel databaseInUseLabel = new JLabel();
-        databaseInUseLabel.setText("Database in use: ");
+        databaseInUseLabel.setText(Utilities.getLocaleString("Moda.Database.databaseInUseLabel"));
 
         this.databasePathTextField = new JTextField();
         this.databasePathTextField.setText(getCurrentDatabasePath());
@@ -43,11 +43,11 @@ public class Database extends Section {
         JPanel databaseOperations = new JPanel();
 
         this.newDatabaseButton = new JButton();
-        this.newDatabaseButton.setText("New database");
+        this.newDatabaseButton.setText(Utilities.getLocaleString("Moda.Database.newDatabaseButton"));
         this.newDatabaseButton.setMaximumSize(getButtonDimension());
 
         this.changeDatabaseButton = new JButton();
-        this.changeDatabaseButton.setText("Change database");
+        this.changeDatabaseButton.setText(Utilities.getLocaleString("Moda.Database.changeDatabaseButton"));
         this.changeDatabaseButton.setMaximumSize(getButtonDimension());
 
         databaseOperations.add(this.newDatabaseButton);
@@ -120,7 +120,7 @@ public class Database extends Section {
      */
     private void setNewDatabase(String databasePath){
         // Ask the user for the master password of the database before using it
-        String masterPassword = JOptionPane.showInputDialog(getRootPane(), "Enter the master password","");
+        String masterPassword = JOptionPane.showInputDialog(getRootPane(), Utilities.getLocaleString("Moda.Database.newDatabaseMasterPasswordInputDialog"),"");
 
         // Initial checks on the master password entered to ensure that it is a valid string, otherwise abort the
         // operation

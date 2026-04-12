@@ -57,40 +57,39 @@ public class AddData extends JPanel {
 
         // Create all the JTextField for the data input
         this.usernameTextField = new ModaTextField();
-        this.usernameTextField.putClientProperty("JTextField.placeholderText", "Username");
+        this.usernameTextField.putClientProperty("JTextField.placeholderText", Utilities.getLocaleString("Moda.AddData.usernameTextField"));
         this.usernameTextField.setPreferredSize(textFieldDimension);
 
         this.emailAddressTextField = new ModaTextField();
-        this.emailAddressTextField.putClientProperty("JTextField.placeholderText", "Email Address (email@example.com)");
+        this.emailAddressTextField.putClientProperty("JTextField.placeholderText", Utilities.getLocaleString("Moda.AddData.emailAddressTextField"));
         this.emailAddressTextField.setPreferredSize(textFieldDimension);
 
         // The password field is not a JPasswordField because the user needs to know the password being entered in the database
         this.passwordTextField = new ModaTextField();
-        this.passwordTextField.putClientProperty("JTextField.placeholderText", "Password");
+        this.passwordTextField.putClientProperty("JTextField.placeholderText", Utilities.getLocaleString("Moda.AddData.passwordTextField"));
         this.passwordTextField.setPreferredSize(textFieldDimension);
 
         // Create the button for the generation of a password
         this.generatePasswordButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE);
         this.generatePasswordButton.setIcon(Utilities.getIcon("generate_string.png"));
-        this.generatePasswordButton.setToolTipText("Generate a password");
+        this.generatePasswordButton.setToolTipText(Utilities.getLocaleString("Moda.AddData.generatePasswordButtonToolTip"));
 
         Utilities.applyTrailingButtonProperties(this.generatePasswordButton);
         this.passwordTextField.putClientProperty("JTextField.trailingComponent", this.generatePasswordButton);
 
         this.serviceTextField = new ModaTextField(textFieldDimension.height);
-        this.serviceTextField.putClientProperty("JTextField.placeholderText", "Service (Google, Microsoft, ...)");
+        this.serviceTextField.putClientProperty("JTextField.placeholderText", Utilities.getLocaleString("Moda.AddData.serviceTextField"));
         this.serviceTextField.setPreferredSize(textFieldDimension);
 
         this.additionalDataTextField = new ModaTextField();
-        this.additionalDataTextField.putClientProperty("JTextField.placeholderText",
-                "Additional Data (Data not covered by the other fields)");
+        this.additionalDataTextField.putClientProperty("JTextField.placeholderText", Utilities.getLocaleString("Moda.AddData.additionalDataTextField"));
         this.additionalDataTextField.setPreferredSize(textFieldDimension);
 
         this.resetButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, 60, 20);
-        this.resetButton.setText("Reset");
+        this.resetButton.setText(Utilities.getLocaleString("Moda.AddData.resetButton"));
 
         this.saveButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, 60, 20);
-        this.saveButton.setText("Save");
+        this.saveButton.setText(Utilities.getLocaleString("Moda.AddData.saveButton"));
 
         // Add all the components to the Panel
         add(addDataLabel, "span, wrap 50");
@@ -140,7 +139,7 @@ public class AddData extends JPanel {
      * Returns the title of the panel
      */
     public static String getPanelTitle(){
-        return "Add Data";
+        return Utilities.getLocaleString("Moda.AddData.panelTitle");
     }
 
     /**

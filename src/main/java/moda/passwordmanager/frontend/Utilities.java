@@ -1,6 +1,7 @@
 package moda.passwordmanager.frontend;
 
 import com.formdev.flatlaf.util.SystemFileChooser;
+import moda.passwordmanager.Application;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
@@ -9,6 +10,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ResourceBundle;
 
 /**
  * The Utilities class provides general use APIs that can be used by any Frontend class.
@@ -31,7 +33,7 @@ public class Utilities {
     public static String openDatabaseFileChooser(){
         // Create the File Chooser that opens in the desktop view, and selects only .modb files
         SystemFileChooser fileChooser = new SystemFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-        fileChooser.setDialogTitle("Choose a database to use");
+        fileChooser.setDialogTitle(getLocaleString("Moda.Utilities.openDatabaseFileChooserTitle"));
         fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
         fileChooser.addChoosableFileFilter(new SystemFileChooser.FileNameExtensionFilter(
                 "Moda Password Manager Database","modb"));
@@ -55,7 +57,7 @@ public class Utilities {
     public static String newDatabaseFileChooser(){
         // Create the File Chooser that opens in the desktop view, and saves a .modb file
         SystemFileChooser fileChooser = new SystemFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-        fileChooser.setDialogTitle("Create a new database to use");
+        fileChooser.setDialogTitle(getLocaleString("Moda.Utilities.newDatabaseFileChooserTitle"));
         fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
         fileChooser.addChoosableFileFilter(new SystemFileChooser.FileNameExtensionFilter(
                 "Moda Password Manager Database","modb"));
@@ -146,6 +148,16 @@ public class Utilities {
         Path filePath = Paths.get(path);
 
         return filePath.getFileName().toString();
+    }
+
+    /**
+     * Get a string from the locale file for the current language used
+     */
+    public static String getLocaleString(String key){
+        // Create the resource bundle using the locale defined in the Application class. As the files are in the locale
+        // directory, which is a subdirectory of resources, we need to specify it in the baseName of the getBundle method
+        ResourceBundle resourceBundle = ResourceBundle.getBundle("locales/locale", Application.getApplicationLocale());
+        return resourceBundle.getString(key);
     }
 
 }

@@ -58,10 +58,10 @@ public class Sidebar extends JPanel {
         Dimension buttonDimension = new Dimension((int) getPreferredSize().getWidth(), 70);
 
         this.addDataButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_BLACK, buttonDimension, 30);
-        this.addDataButton.setText("Add Data");
+        this.addDataButton.setText(AddData.getPanelTitle());
 
         this.showDataButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_BLACK, buttonDimension, 30);
-        this.showDataButton.setText("Show Data");
+        this.showDataButton.setText(ShowData.getPanelTitle());
 
         // Settings + Details section
         this.settingsButton = new ModaButton(ModaButton.ButtonStyle.EMPTY, buttonDimension.height/2, buttonDimension.height/2, 30);

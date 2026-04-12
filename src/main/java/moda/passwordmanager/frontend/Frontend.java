@@ -2,6 +2,8 @@ package moda.passwordmanager.frontend;
 
 import moda.passwordmanager.Application;
 import moda.passwordmanager.frontend.dialogs.Startup;
+import moda.passwordmanager.frontend.properties.Languages;
+import moda.passwordmanager.frontend.properties.Themes;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.panels.*;
@@ -36,6 +38,7 @@ public class Frontend extends JPanel {
         // Set the default exception handler for the Frontend threads
         Thread.setDefaultUncaughtExceptionHandler(this::exceptionHandler);
 
+        Application.setApplicationLanguage(getApplicationLanguage());
         Application.applyTheme(getApplicationTheme());
         initStartup();
 
@@ -53,7 +56,7 @@ public class Frontend extends JPanel {
         String stackTrace = Utilities.getStackTrace(e);  // Get the full stack trace of the throwable
         // Show the exception as a Message Dialog with the type of error message
         JOptionPane.showMessageDialog(this, Utilities.getStackTraceRows(stackTrace, 5),
-                "The following exception occurred in the " + t.getName() + " thread", JOptionPane.ERROR_MESSAGE);
+                Utilities.getLocaleString("Moda.Frontend.exceptionHandlerTitle") + " " + t.getName(), JOptionPane.ERROR_MESSAGE);
     }
 
     /**
@@ -73,10 +76,20 @@ public class Frontend extends JPanel {
      * Get the theme of the application from the settings
      */
     private Themes getApplicationTheme(){
-        Event event = new Event("get-application-theme");
-        Event response = this.ITC.request(event);
+        Event request = new Event("get-application-theme");
+        Event response = this.ITC.request(request);
 
         return (Themes) response.getData().getFirst();
+    }
+
+    /**
+     * Get the language of the application from the settings
+     */
+    private Languages getApplicationLanguage(){
+        Event request = new Event("get-application-language");
+        Event response = this.ITC.request(request);
+
+        return (Languages) response.getData().getFirst();
     }
 
     /**

@@ -1,6 +1,7 @@
 package moda.passwordmanager.frontend.panels.settings;
 
 import com.formdev.flatlaf.util.SystemFileChooser;
+import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
@@ -16,7 +17,7 @@ public class GoogleDrive extends Section {
     private JCheckBox automaticSynchronizationCheckbox;  // Enable or disable the automatic synchronization
 
     public GoogleDrive(InterThreadCommunication itc){
-        super("Google Drive", itc);
+        super(Utilities.getLocaleString("Moda.GoogleDrive.panelTitle"), itc);
 
         initComponents();
         initListeners();
@@ -31,7 +32,7 @@ public class GoogleDrive extends Section {
         this.googleDriveCheckbox = new JCheckBox();
 
         this.synchronizeButton = new JButton();
-        this.synchronizeButton.setText("Synchronize");
+        this.synchronizeButton.setText(Utilities.getLocaleString("Moda.GoogleDrive.synchronizeButton"));
         this.synchronizeButton.setMaximumSize(getButtonDimension());
         this.synchronizeButton.setEnabled(false);  // The sync is allowed only when Google Drive is enabled
 
@@ -54,11 +55,12 @@ public class GoogleDrive extends Section {
                 if (googleDriveCheckbox.isSelected()){
                     // Create the File Chooser to allow user to select the credentials.json file
                     SystemFileChooser fileChooser = new SystemFileChooser();
-                    fileChooser.setDialogTitle("Choose the OAuth credentials file");
+                    fileChooser.setDialogTitle(Utilities.getLocaleString("Moda.GoogleDrive.googleDriveCheckboxFileChooserTitle"));
                     fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
 
                     // Create the filter to choose only .modb files
-                    SystemFileChooser.FileNameExtensionFilter filter = new SystemFileChooser.FileNameExtensionFilter("OAuth Credentials (.json)",
+                    SystemFileChooser.FileNameExtensionFilter filter = new SystemFileChooser.FileNameExtensionFilter(
+                            Utilities.getLocaleString("Moda.GoogleDrive.googleDriveCheckboxFileChooserFilter") + " (.json)",
                             "json");
                     fileChooser.setFileFilter(filter);
 
@@ -110,12 +112,12 @@ public class GoogleDrive extends Section {
         boolean enabled = (boolean) response.getData().getFirst();
 
         if (enabled){
-            this.googleDriveCheckbox.setText("Disable Google Drive");
+            this.googleDriveCheckbox.setText(Utilities.getLocaleString("Moda.GoogleDrive.googleDriveCheckboxEnabled"));
             this.googleDriveCheckbox.setSelected(true);
             this.synchronizeButton.setEnabled(true);
             this.automaticSynchronizationCheckbox.setEnabled(true);
         }else{
-            this.googleDriveCheckbox.setText("Enable Google Drive");
+            this.googleDriveCheckbox.setText(Utilities.getLocaleString("Moda.GoogleDrive.googleDriveCheckboxDisabled"));
             this.googleDriveCheckbox.setSelected(false);
             this.synchronizeButton.setEnabled(false);
             this.automaticSynchronizationCheckbox.setEnabled(false);  // Is allowed only when Google Drive is enabled
@@ -127,19 +129,19 @@ public class GoogleDrive extends Section {
      */
     private void updatePreferences(){
         if (this.googleDriveCheckbox.isSelected()){
-            this.googleDriveCheckbox.setText("Disable Google Drive");
+            this.googleDriveCheckbox.setText(Utilities.getLocaleString("Moda.GoogleDrive.googleDriveCheckboxEnabled"));
             this.synchronizeButton.setEnabled(true);
             this.automaticSynchronizationCheckbox.setEnabled(true);
         }else{
-            this.googleDriveCheckbox.setText("Enable Google Drive");
+            this.googleDriveCheckbox.setText(Utilities.getLocaleString("Moda.GoogleDrive.googleDriveCheckboxDisabled"));
             this.synchronizeButton.setEnabled(false);
             this.automaticSynchronizationCheckbox.setEnabled(false);
         }
 
         if (this.automaticSynchronizationCheckbox.isSelected()){
-            this.automaticSynchronizationCheckbox.setText("Disable automatic synchronization");
+            this.automaticSynchronizationCheckbox.setText(Utilities.getLocaleString("Moda.GoogleDrive.automaticSynchronizationCheckboxEnabled"));
         }else{
-            this.automaticSynchronizationCheckbox.setText("Enable automatic synchronization");
+            this.automaticSynchronizationCheckbox.setText(Utilities.getLocaleString("Moda.GoogleDrive.automaticSynchronizationCheckboxDisabled"));
         }
     }
 
@@ -154,10 +156,10 @@ public class GoogleDrive extends Section {
         boolean enabled = (boolean) response.getData().getFirst();
 
         if (enabled){
-            this.automaticSynchronizationCheckbox.setText("Disable automatic synchronization");
+            this.automaticSynchronizationCheckbox.setText(Utilities.getLocaleString("Moda.GoogleDrive.automaticSynchronizationCheckboxEnabled"));
             this.automaticSynchronizationCheckbox.setSelected(true);
         }else{
-            this.automaticSynchronizationCheckbox.setText("Enable automatic synchronization");
+            this.automaticSynchronizationCheckbox.setText(Utilities.getLocaleString("Moda.GoogleDrive.automaticSynchronizationCheckboxDisabled"));
             this.automaticSynchronizationCheckbox.setSelected(false);
         }
     }

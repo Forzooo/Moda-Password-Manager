@@ -1,6 +1,7 @@
 package moda.passwordmanager.backend;
 
-import moda.passwordmanager.frontend.Themes;
+import moda.passwordmanager.frontend.properties.Languages;
+import moda.passwordmanager.frontend.properties.Themes;
 import moda.passwordmanager.interthreadcommunication.EventListener;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
@@ -141,6 +142,9 @@ public class Backend extends EventListener {
 
         addOperation("get-application-theme", this::getApplicationTheme);
         addOperation("set-application-theme", this::setApplicationTheme);
+
+        addOperation("get-application-language", this::getApplicationLanguage);
+        addOperation("set-application-language", this::setApplicationLanguage);
     }
 
     /**
@@ -652,8 +656,23 @@ public class Backend extends EventListener {
      * Set the new theme of the application
      */
     private void setApplicationTheme(){
-        String theme = (String) getRequestData().getFirst();
+        Themes theme = (Themes) getRequestData().getFirst();
         this.settings.writeProperty("appearance/theme", theme.toString());
     }
 
+    /**
+     * Retrieve the language of the application from the settings
+     */
+    private void getApplicationLanguage(){
+        String language = this.settings.readStringProperty("appearance/language");
+        addResponseData(Languages.valueOf(language));
+    }
+
+    /**
+     * Set the new language of the application
+     */
+    private void setApplicationLanguage(){
+        Languages language = (Languages) getRequestData().getFirst();
+        this.settings.writeProperty("appearance/language", language.toString());
+    }
 }

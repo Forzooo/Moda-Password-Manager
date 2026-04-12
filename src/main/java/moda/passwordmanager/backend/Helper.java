@@ -1,8 +1,11 @@
 package moda.passwordmanager.backend;
 
+import moda.passwordmanager.frontend.properties.Languages;
+
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -200,4 +203,20 @@ public class Helper {
         return stringBuilder;
     }
 
+    /**
+     * Returns the language used by the OS, but only if supported by the Password Manager, otherwise it returns English.
+     */
+    public static String getSystemLanguage(){
+        Locale systemLanguage = Locale.getDefault();
+
+        String passwordManagerLanguage;
+
+        switch (systemLanguage.getLanguage()){
+            case "en" -> passwordManagerLanguage = Languages.English.toString();
+            case "it" -> passwordManagerLanguage = Languages.Italian.toString();
+            default -> passwordManagerLanguage = Languages.English.toString();
+        }
+
+        return passwordManagerLanguage;
+    }
 }

@@ -74,12 +74,12 @@ public class Startup extends JDialog {
         subtitle.setHorizontalAlignment(JLabel.CENTER);
 
         JLabel loginLabel = new JLabel();
-        loginLabel.setText("Enter your master password:");
+        loginLabel.setText(Utilities.getLocaleString("Moda.Startup.loginLabel"));
 
         this.masterPasswordPasswordField = new JPasswordField(20);
 
         this.loginButton = new JButton();
-        this.loginButton.setText("Log In");
+        this.loginButton.setText(Utilities.getLocaleString("Moda.Startup.loginButton"));
 
         this.recentDatabasesList = new JList<>();
 
@@ -95,13 +95,14 @@ public class Startup extends JDialog {
 
         // Database operations panel
         this.currentDatabaseLabel = new JLabel();
-        this.currentDatabaseLabel.setText("Current database: " + Utilities.getFilenameFromPath(getCurrentDatabase()));
+        this.currentDatabaseLabel.setText(Utilities.getLocaleString("Moda.Startup.currentDatabaseLabel") + " " +
+                Utilities.getFilenameFromPath(getCurrentDatabase()));
 
         this.newDatabaseButton = new JButton();
-        this.newDatabaseButton.setText("New database");
+        this.newDatabaseButton.setText(Utilities.getLocaleString("Moda.Startup.newDatabaseButton"));
 
         this.changeDatabaseButton = new JButton();
-        this.changeDatabaseButton.setText("Change database");
+        this.changeDatabaseButton.setText(Utilities.getLocaleString("Moda.Startup.changeDatabaseButton"));
 
         add(title, "span, align center, wrap -25");  // wrap -25 allows the subtitle to be closer to the title
         add(subtitle, "span, align center, sg 1, wrap");
@@ -202,8 +203,8 @@ public class Startup extends JDialog {
 
         // Show an Error message and terminate the execution if the master password entered is wrong
         if (!masterPasswordFlag){
-            JOptionPane.showMessageDialog(this, "The master password entered is wrong.",
-                    "Login Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, Utilities.getLocaleString("Moda.Startup.setMasterPasswordErrorMessage"),
+                    Utilities.getLocaleString("Moda.Startup.setMasterPasswordErrorTitle"), JOptionPane.ERROR_MESSAGE);
             System.exit(0);
         }
     }

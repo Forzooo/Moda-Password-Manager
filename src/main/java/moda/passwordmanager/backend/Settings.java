@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import moda.passwordmanager.frontend.Themes;
+import moda.passwordmanager.frontend.properties.Themes;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,6 +63,7 @@ public class Settings {
 
             // Set the appearance properties
             ObjectNode appearance = this.objectMapper.createObjectNode();
+            appearance.put("language", Helper.getSystemLanguage());
             appearance.put("theme", Themes.Light.toString());
 
             // Define the hierarchy of the JSON
