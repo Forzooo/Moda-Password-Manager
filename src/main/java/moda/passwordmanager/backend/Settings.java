@@ -46,7 +46,7 @@ public class Settings {
             recentDatabases.add(Helper.getAppDataDirectory()+Helper.getDefaultDatabase());  // The default database used
 
             ObjectNode database = this.objectMapper.createObjectNode();  // Contains all the database values
-            database.put("path", recentDatabases.getFirst());
+            database.put("selected", recentDatabases.getFirst());
             database.putPOJO("recent", recentDatabases);  // The last 5 database used
 
             // Set the string generation configuration
@@ -82,7 +82,7 @@ public class Settings {
 
     /**
      * Retrieve a node from the path
-     * @param nodePath The path to get to the node (ex. database/path)
+     * @param nodePath The path to get to the node (ex. database/selected)
      * @return The node requested
      */
     private JsonNode retrieveNode(String nodePath){
@@ -109,7 +109,7 @@ public class Settings {
      * Retrieve a node from the path
      * @param rootNode The root node can be provided if it's required to keep the same root variable for changed to
      *                 properties
-     * @param nodePath The path to get to the node (ex. database/path)
+     * @param nodePath The path to get to the node (ex. database/selected)
      * @return The node requested
      */
     private JsonNode retrieveNode(JsonNode rootNode, String nodePath){
@@ -139,7 +139,7 @@ public class Settings {
 
     /**
      * Read a property from the settings file
-     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/path)
+     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/selected)
      * @return Value of the property
      */
     public String readStringProperty(String nodePath){
@@ -150,7 +150,7 @@ public class Settings {
 
     /**
      * Read a property from the settings file
-     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/path)
+     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/selected)
      * @return Value of the property
      */
     public int readIntProperty(String nodePath){
@@ -160,7 +160,7 @@ public class Settings {
 
     /**
      * Read a property from the settings file
-     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/path)
+     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/selected)
      * @return Value of the property
      */
     public boolean readBooleanProperty(String nodePath){
@@ -170,7 +170,7 @@ public class Settings {
 
     /**
      * Read a list property from the settings file
-     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/path)
+     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/selected)
      * @return ArrayList of the property
      */
     public ArrayList readListProperty(String nodePath){
@@ -180,7 +180,7 @@ public class Settings {
 
     /**
      * Write a property from the settings file
-     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/path)
+     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/selected)
      * @param value The new value of the property
      */
     public void writeProperty(String nodePath, Object value){

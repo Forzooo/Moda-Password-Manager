@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class SettingsTests {
 
     // The property node used by the test can be any
-    private final static String PROPERTY_NODE = "database/path";
+    private final static String PROPERTY_NODE = "database/selected";
     private final static String STRING_PROPERTY = "Test";
     private final static int INT_PROPERTY = 1;
     private final static boolean BOOLEAN_PROPERTY = true;

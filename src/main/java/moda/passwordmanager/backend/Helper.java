@@ -183,7 +183,7 @@ public class Helper {
      * @return String that indicates the path of the database
      */
     public String getDatabasePath(){
-        return this.settings.readStringProperty("database/path");  // Read the path from settings
+        return this.settings.readStringProperty("database/selected");  // Read the path from settings
     }
 
     /**

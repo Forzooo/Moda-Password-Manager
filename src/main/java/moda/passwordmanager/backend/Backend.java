@@ -478,7 +478,7 @@ public class Backend extends EventListener {
      * @param databasePath The path of the database chosen
      */
     private void setDatabasePath(String databasePath){
-        this.settings.writeProperty("database/path", databasePath);  // Set the path of the database
+        this.settings.writeProperty("database/selected", databasePath);  // Set the path of the database
         this.database.changeDatabase(databasePath);  // Set the new database to be the one used
     }
 

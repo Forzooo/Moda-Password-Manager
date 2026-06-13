@@ -6,15 +6,16 @@ import java.util.ArrayList;
 public class Database {
 
     private String databasePath;  // Path of the database current in use
-    private static final String TABLE_NAME = "moda";  // Name of the table of the database
+    private static final String DATA_TABLE = "data";  // The table that contains the Data objects
+    private static final String GROUP_TABLE = "groups";  // The table that contains the Groups
 
-    private Connection connection;  // Attribute used to handle all the database queries
+    private Connection connection;  // Attribute that handles all the database queries
 
     public Database(String databasePath){
         this.databasePath = databasePath;  // Set the path of the database
 
         initConnection();  // Connect to the database
-        createTable();  // Create the table of the database if it does not already exist
+        createTables();  // Create the tables of the Vault
     }
 
     /**
@@ -39,20 +40,31 @@ public class Database {
         }
     }
 
-    // Create a table, if it does not exist already, used to store all the data
-    private void createTable(){
+    /**
+     * Create the tables of the database, if they not exist already
+     */
+    private void createTables(){
         try {
             Statement query = this.connection.createStatement();  // Define a new query
 
             query.execute(
-                "CREATE TABLE IF NOT EXISTS "+Database.TABLE_NAME+" (" +
-                        "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                        "username TEXT," +
-                        "email_address TEXT," +
-                        "password TEXT," +
-                        "service TEXT," +
-                        "additional_data TEXT" +
-                        ");"
+                    "CREATE TABLE IF NOT EXISTS "+Database.GROUP_TABLE +" (" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE," +
+                            "name TEXT NOT NULL" +
+                            ");"
+            );
+
+            query.execute(
+                    "CREATE TABLE IF NOT EXISTS "+Database.DATA_TABLE+" (" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                            "username TEXT," +
+                            "email_address TEXT," +
+                            "password TEXT," +
+                            "service TEXT NOT NULL," +
+                            "additional_data TEXT, " +
+                            "group_id INTEGER, " +
+                            "FOREIGN KEY(group_id) REFERENCES " + Database.GROUP_TABLE + "(id)" +
+                            ");"
             );
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -73,7 +85,7 @@ public class Database {
         closeConnection();  // Close the previous connection
         this.databasePath = databasePath; // Set the new path of the database
         initConnection();  // Reinitialize the connection
-        createTable();  // Create the table inside the database
+        createTables();  // Create the table inside the database
     }
 
     /**
@@ -85,7 +97,7 @@ public class Database {
         try {
             // Create an INSERT INTO query
             PreparedStatement query = this.connection.prepareStatement(
-                    "INSERT INTO " + Database.TABLE_NAME + " " + "(username, email_address, password, service," +
+                    "INSERT INTO " + Database.DATA_TABLE + " " + "(username, email_address, password, service," +
                             " additional_data) VALUES (?, ?, ?, ?, ?)"
             );
 
@@ -113,7 +125,7 @@ public class Database {
      */
     public void deleteRecord(int id){
         try {
-            PreparedStatement query = this.connection.prepareStatement("DELETE FROM "+Database.TABLE_NAME+" WHERE id=?");
+            PreparedStatement query = this.connection.prepareStatement("DELETE FROM "+Database.DATA_TABLE +" WHERE id=?");
             query.setInt(1, id);  // Set the ID of the row
 
             query.executeUpdate();  // Execute the query
@@ -137,7 +149,7 @@ public class Database {
 
         try {
             // Read all the data from a row based on its ID
-            PreparedStatement query = this.connection.prepareStatement("SELECT * FROM "+Database.TABLE_NAME+
+            PreparedStatement query = this.connection.prepareStatement("SELECT * FROM "+Database.DATA_TABLE +
                     " WHERE id=?");
             query.setInt(1, id);
 
@@ -170,7 +182,7 @@ public class Database {
         try {
             // Create the UPDATE query and set its parameters
             PreparedStatement query = this.connection.prepareStatement(
-                    "UPDATE "+Database.TABLE_NAME+" SET username=?, email_address=?, password=?, service=?," +
+                    "UPDATE "+Database.DATA_TABLE +" SET username=?, email_address=?, password=?, service=?," +
                             " additional_data=? WHERE id=?"
             );
             query.setString(1, data.getUSERNAME());
@@ -198,7 +210,7 @@ public class Database {
         try{
             // Create the query to retrieve the service
             PreparedStatement query = this.connection.prepareStatement(
-                    "SELECT id, service FROM "+ TABLE_NAME + " LIMIT 1"
+                    "SELECT id, service FROM "+ DATA_TABLE + " LIMIT 1"
             );
             ResultSet result = query.executeQuery();  // Execute the query and retrieve the result
 
@@ -226,7 +238,7 @@ public class Database {
 
         try {
             PreparedStatement query = this.connection.prepareStatement(
-                    "SELECT id, service FROM "+TABLE_NAME
+                    "SELECT id, service FROM "+ DATA_TABLE
             );
             ResultSet queryResult = query.executeQuery();  // The set where are stored the records found in the database
 
@@ -257,7 +269,7 @@ public class Database {
 
         try {
             // Read all the records
-            PreparedStatement query = this.connection.prepareStatement("SELECT * FROM "+ Database.TABLE_NAME);
+            PreparedStatement query = this.connection.prepareStatement("SELECT * FROM "+ Database.DATA_TABLE);
 
             ResultSet queryResult = query.executeQuery();  // Execute the query and retrive all the data
 
@@ -293,7 +305,7 @@ public class Database {
     public void changeRecords(ArrayList<Data> records){
         try {
             PreparedStatement query = this.connection.prepareStatement(
-                    "UPDATE "+Database.TABLE_NAME+" SET username=?, email_address=?, password=?, service=?," +
+                    "UPDATE "+Database.DATA_TABLE +" SET username=?, email_address=?, password=?, service=?," +
                             " additional_data=? WHERE id=?"
             );
 
