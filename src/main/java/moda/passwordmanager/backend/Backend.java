@@ -48,8 +48,6 @@ public class Backend extends EventListener {
         this.SENSITIVE_SETTINGS = new SensitiveSettings(this.DATABASE, this.HELPER);
         this.GOOGLE_DRIVE = new GoogleDrive(Helper.getAppDataDirectory());
 
-        // The path of the database is retrieved from the helper
-
         startGoogleDrive();  // Initialize the connection with Google Drive only if enabled by the user
         initHandler();  // Initialize all the operations to handle
     }
@@ -124,7 +122,14 @@ public class Backend extends EventListener {
 
         addOperation("get-google-drive", this::getGoogleDrive);
         addOperation("get-google-drive-synchronization", this::getGoogleDriveSynchronization);
-        addOperation("google-drive-authenticate", this::authenticateGoogleDrive);
+        addOperation("google-drive-authenticate", () -> {
+            // If the first data is set to true, then the user wants to enable Google Drive
+            if ((boolean) getRequestData().getFirst()){
+                authenticateGoogleDrive();
+            }else{
+                unauthenticateGoogleDrive();
+            }
+        });
         addOperation("google-drive-unauthenticate", this::unauthenticateGoogleDrive);
 
         // Synchronize with Google Drive and update the service fields
@@ -560,7 +565,7 @@ public class Backend extends EventListener {
      * appdata folder, then authenticate the user
      */
     private void authenticateGoogleDrive(){
-        String credentialsPath = (String) getRequestData().getFirst();  // The path of the credentials.json file
+        String credentialsPath = (String) getRequestData().get(1);  // The path of the credentials.json file
         try {
             new File(this.GOOGLE_DRIVE.getAPI_DIRECTORY()).mkdirs();  // Create the Google Drive dir (skipped if it already exists)
 

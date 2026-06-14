@@ -75,8 +75,9 @@ public class Database {
 
             query.execute(
                     "CREATE TABLE IF NOT EXISTS "+Database.SENSITIVE_SETTINGS_TABLE +" (" +
-                            "property TEXT PRIMARY KEY NOT NULL UNIQUE," +
-                            "value TEXT NOT NULL" +
+                            "propertyPath TEXT PRIMARY KEY NOT NULL UNIQUE," +
+                            "value TEXT NOT NULL" +  // All the values are treated as text, and will be cast by Sensitive
+                                                     // Settings class
                         ");"
             );
 
@@ -136,18 +137,18 @@ public class Database {
 
     /**
      * Add a sensitive setting to the Sensitive Settings table
-     * @param property The name of the setting
+     * @param propertyPath The path of the setting (ex. google_drive/enabled)
      * @param value The value of the setting
      */
-    public void addSensitiveSettingsRecord(String property, String value){
+    public void addSensitiveSettingsRecord(String propertyPath, String value){
         try{
             // As the property field of the Sensitive Settings table is unique, if the SensitiveSettings class tries
             // to readd the same property, it is automatically skipped
             PreparedStatement query = this.connection.prepareStatement(
-                    "INSERT OR IGNORE INTO "+Database.SENSITIVE_SETTINGS_TABLE+" (property, value) VALUES (?, ?) ;"
+                    "INSERT OR IGNORE INTO "+Database.SENSITIVE_SETTINGS_TABLE+" (propertyPath, value) VALUES (?, ?) ;"
             );
 
-            query.setString(1, property);
+            query.setString(1, propertyPath);
             query.setString(2, value);
 
             query.execute();
@@ -213,7 +214,31 @@ public class Database {
     }
 
     /**
-     * Change the data fields inside a record of the Data table
+     * Get the value of a Sensitive Setting
+     * @param propertyPath The path of the property
+     * @return The encrypted value
+     */
+    public String getSensitiveSettingsValue(String propertyPath){
+        try {
+            PreparedStatement query = this.connection.prepareStatement(
+                    "SELECT value FROM " + Database.SENSITIVE_SETTINGS_TABLE + " WHERE propertyPath=?;"
+            );
+
+            query.setString(1, propertyPath);
+            ResultSet queryResult = query.executeQuery();
+
+            String value = queryResult.getString("value");
+            query.close();
+            queryResult.close();
+
+            return value;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Change the data fields of a record of the Data table
      * @param data The data to replace the previous one
      */
     public void updateDataRecord(Data data){
@@ -230,11 +255,28 @@ public class Database {
             query.setString(5, data.getADDITIONAL_DATA());
             query.setInt(6, data.getID());
 
-            query.executeUpdate();  // Execute the query
-
-            // Close the query
+            query.execute();
             query.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
+    /**
+     * Change the value field of a record of the Sensitive Settings table
+     * @param propertyPath The path of the property
+     * @param value The new encrypted value of the property
+     * */
+    public void updateSensitiveSettingsValue(String propertyPath, String value){
+        try {
+            PreparedStatement query = this.connection.prepareStatement(
+                    "UPDATE "+Database.SENSITIVE_SETTINGS_TABLE+" SET value=? WHERE propertyPath=?;"
+            );
+            query.setString(1, value);
+            query.setString(2, propertyPath);
+
+            query.execute();
+            query.close();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

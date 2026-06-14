@@ -9,12 +9,11 @@ import moda.passwordmanager.frontend.properties.Themes;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * The settings class manages all the I/O operations made to the user settings of the Password Manager
  */
-public class Settings {
+public class Settings extends AbstractSettings {
 
     private final File SETTINGS_FILE;
     private ObjectMapper objectMapper;
@@ -136,6 +135,7 @@ public class Settings {
      * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/selected)
      * @return Value of the property
      */
+    @Override
     public String readStringProperty(String nodePath){
         JsonNode property = retrieveNode(nodePath);  // Retrieve the property
 
@@ -147,6 +147,7 @@ public class Settings {
      * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/selected)
      * @return Value of the property
      */
+    @Override
     public int readIntProperty(String nodePath){
         JsonNode property = retrieveNode(nodePath);  // Retrieve the property
         return property.asInt();
@@ -157,6 +158,7 @@ public class Settings {
      * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/selected)
      * @return Value of the property
      */
+    @Override
     public boolean readBooleanProperty(String nodePath){
         JsonNode property = retrieveNode(nodePath);  // Retrieve the property
         return property.asBoolean();
@@ -167,16 +169,18 @@ public class Settings {
      * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/selected)
      * @return ArrayList of the property
      */
+    @Override
     public ArrayList readListProperty(String nodePath){
         JsonNode property = retrieveNode(nodePath);
         return this.objectMapper.convertValue(property, new TypeReference<>(){});
     }
 
     /**
-     * Write a property from the settings file
+     * Write a property to the settings file
      * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/selected)
      * @param value The new value of the property
      */
+    @Override
     public void writeProperty(String nodePath, Object value){
         try {
             // As we need to change a property we need to keep the same root node, otherwise the changes would not be saved
@@ -198,7 +202,8 @@ public class Settings {
         }
     }
 
-    public void writeListProperty(String nodePath, List values){
+    @Override
+    public void writeListProperty(String nodePath, ArrayList values){
         try {
             // As we need to change a property we need to keep the same root node, otherwise the changes would not be saved
             JsonNode rootNode = this.objectMapper.readTree(this.SETTINGS_FILE);
@@ -216,5 +221,4 @@ public class Settings {
             throw new RuntimeException(e);
         }
     }
-
 }
