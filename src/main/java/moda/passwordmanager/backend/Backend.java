@@ -122,8 +122,8 @@ public class Backend extends EventListener {
         addOperation("get-string-generation-configuration", this::getStringGenerationConfiguration);
         addOperation("update-master-password", this::updateMasterPassword);
 
+
         addOperation("get-google-drive", this::getGoogleDrive);
-        addOperation("get-google-drive-synchronization", this::getGoogleDriveSynchronization);
         addOperation("set-google-drive", () -> {
             // If the first data is set to true, then the user wants to enable Google Drive
             if (Boolean.parseBoolean(getRequestData().getFirst().toString())){
@@ -138,8 +138,15 @@ public class Backend extends EventListener {
             synchronizeGoogleDrive();
             this.HELPER.executeInBackground(this::updateServiceFields);
         });
-        addOperation("enable-google-drive-synchronization", this::enableGoogleDriveSynchronization);
-        addOperation("disable-google-drive-synchronization", this::disableGoogleDriveSynchronization);
+
+        addOperation("get-google-drive-automatic-synchronization", this::getGoogleDriveSynchronization);
+        addOperation("set-google-drive-automatic-synchronization", () -> {
+            if (Boolean.parseBoolean((getRequestData().getFirst().toString()))){
+                enableGoogleDriveAutomaticSynchronization();
+            }else{
+                disableGoogleDriveAutomaticSynchronization();
+            }
+        });
 
         addOperation("get-recent-databases", this::getRecentDatabases);
 
@@ -613,14 +620,14 @@ public class Backend extends EventListener {
     /**
      * Enable the Google Drive automatic synchronization
      */
-    private void enableGoogleDriveSynchronization(){
+    private void enableGoogleDriveAutomaticSynchronization(){
         this.SENSITIVE_SETTINGS.writeProperty("google_drive/automatic_synchronization", true);
     }
 
     /**
      * Disable the Google Drive automatic synchronization
      */
-    private void disableGoogleDriveSynchronization(){
+    private void disableGoogleDriveAutomaticSynchronization(){
         this.SENSITIVE_SETTINGS.writeProperty("google_drive/automatic_synchronization", false);
     }
 

@@ -150,29 +150,21 @@ authenticate with Google Drive (only if it has to be enabled)
 * Data received: -
 * Synchronous: required
 
-### Enable Google Drive automatic synchronization
-* Operation: `enable-google-drive-synchronization`
-* Sender: Frontend
-* Description: Enable the automatic synchronization
-* Data sent: -
-* Data received: -
-* Synchronous: not required
-
-### Disable Google Drive automatic synchronization
-* Operation: `disable-google-drive-synchronization`
-* Sender: Frontend
-* Description: Disable the automatic synchronization
-* Data sent: -
-* Data received: -
-* Synchronous: not required
-
 ### Get Google Drive automatic synchronization
-* Operation: `get-google-drive-synchronization`
+* Operation: `get-google-drive-automatic-synchronization`
 * Sender: Frontend
 * Description: Request whether the automatic synchronization is enabled
 * Data sent: -
 * Data received: _boolean_ automatic synchronization status
 * Synchronous: required
+
+### Enable Google Drive automatic synchronization
+* Operation: `set-google-drive-automatic-synchronization`
+* Sender: Frontend
+* Description: Enable or disable the automatic synchronization
+* Data sent: _boolean_ status of the automatic synchronization
+* Data received: -
+* Synchronous: not required
 
 ***
 

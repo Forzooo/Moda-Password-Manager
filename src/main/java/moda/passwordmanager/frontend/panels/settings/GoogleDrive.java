@@ -151,7 +151,7 @@ public class GoogleDrive extends Section {
      */
     private void initAutomaticSynchronizationCheckbox(){
         // Retrieve from the settings file the configuration of Google Drive synchronization visibility
-        Event event = new Event("get-google-drive-synchronization");
+        Event event = new Event("get-google-drive-automatic-synchronization");
         Event response = getITC().request(event);
         boolean enabled = (boolean) response.getData().getFirst();
 
@@ -195,7 +195,7 @@ public class GoogleDrive extends Section {
      * Enable the automatic synchronization of Google Drive
      */
     private void enableAutomaticSynchronization(){
-        Event event = new Event("enable-google-drive-synchronization");
+        Event event = new Event("set-google-drive-automatic-synchronization", true);
         getITC().request(event);
     }
 
@@ -203,7 +203,7 @@ public class GoogleDrive extends Section {
      * Disable the automatic synchronization of Google Drive
      */
     private void disableAutomaticSynchronization(){
-        Event event = new Event("disable-google-drive-synchronization");
+        Event event = new Event("set-google-drive-automatic-synchronization", true);
         getITC().request(event);
     }
 
