@@ -9,6 +9,8 @@ import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -572,17 +574,16 @@ public class Backend extends EventListener {
      * appdata folder, then authenticate the user
      */
     private void authenticateGoogleDrive(){
-        // The entire file is read and stored inside a String, then it is saved in the database encrypted
         String credentialsPath = (String) getRequestData().get(1);  // The path of the credentials.json file
-        String credentials;
+        String credentials;  // The entire file is read and stored inside a String, then it is saved in the database encrypted
         try {
-            FileReader credentialsReader = new FileReader(credentialsPath);
-            credentials = credentialsReader.readAllAsString();  // The credentials are used again in the init
-            credentialsReader.close();
-            this.SENSITIVE_SETTINGS.writeProperty("google_drive/credentials", credentials);
+            credentials = Files.readString(Path.of(credentialsPath));  // The file must be read using this method instead
+                                                     // of FileReader readAllAsString to keep compatibility with JDK 21
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        this.SENSITIVE_SETTINGS.writeProperty("google_drive/credentials", credentials);
 
         // Start the Google Drive communication where the stored credentials are null as they are not defined yet
         StoredCredential storedCredentials = this.GOOGLE_DRIVE.init(credentials, null);
