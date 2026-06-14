@@ -18,15 +18,15 @@ public class Helper {
     private final static String DEFAULT_DATABASE = "moda-password-manager.modb";
     private final static String SETTINGS_FILE = "settings.json";
 
-    private Cryptography cryptography;
-    private Settings settings;
+    private final Cryptography CRYPTOGRAPHY;
+    private final Settings SETTINGS;
 
     // Execute operations in the background
     private ScheduledExecutorService backgroundExecutor;
 
     public Helper(Cryptography cryptography, Settings settings){
-        this.cryptography = cryptography;
-        this.settings = settings;
+        this.CRYPTOGRAPHY = cryptography;
+        this.SETTINGS = settings;
 
         this.backgroundExecutor = Executors.newScheduledThreadPool(2);  // Initialize the Background Executor
     }
@@ -73,8 +73,8 @@ public class Helper {
      * @param ciphertext The string to decrypt
      * @return Decrypted string
      */
-    private String decrypt(String ciphertext){
-        return new String(this.cryptography.decrypt(decodeBase64(ciphertext)));
+    public String decrypt(String ciphertext){
+        return new String(this.CRYPTOGRAPHY.decrypt(decodeBase64(ciphertext)));
     }
 
     /**
@@ -82,8 +82,8 @@ public class Helper {
      * @param plaintext The string to encrypt
      * @return Encrypted and encoded string
      */
-    private String encrypt(String plaintext){
-        return encodeBase64(this.cryptography.encrypt(plaintext));
+    public String encrypt(String plaintext){
+        return encodeBase64(this.CRYPTOGRAPHY.encrypt(plaintext));
     }
 
     /**
@@ -140,14 +140,6 @@ public class Helper {
     }
 
     /**
-     * Decrypt a ciphertext
-     * @param ciphertext The string to be decrypted
-     */
-    public String decryptString(String ciphertext){
-        return decrypt(ciphertext);
-    }
-
-    /**
      * Read the string generation configuration from the settings file
      * @return An ArrayList containing the properties of the generation in the following order: 0 - String Length,
      * 1 - Boolean Letters, 2 - Boolean Numbers, 3 - Boolean Special
@@ -156,10 +148,10 @@ public class Helper {
         ArrayList<Object> stringGeneration = new ArrayList<>();
 
         // Read all the properties from the settings file
-        int stringLength = this.settings.readIntProperty("string_generation/length");
-        boolean letters = this.settings.readBooleanProperty("string_generation/letters");
-        boolean numbers = this.settings.readBooleanProperty("string_generation/numbers");
-        boolean special = this.settings.readBooleanProperty("string_generation/special");
+        int stringLength = this.SETTINGS.readIntProperty("string_generation/length");
+        boolean letters = this.SETTINGS.readBooleanProperty("string_generation/letters");
+        boolean numbers = this.SETTINGS.readBooleanProperty("string_generation/numbers");
+        boolean special = this.SETTINGS.readBooleanProperty("string_generation/special");
 
         // Add the properties to the ArrayList
         stringGeneration.add(stringLength);
@@ -175,7 +167,7 @@ public class Helper {
      * @return Boolean that indicates the state of Google Drive
      */
     public boolean isGoogleDriveEnabled(){
-        return this.settings.readBooleanProperty("google_drive/enabled");
+        return this.SETTINGS.readBooleanProperty("google_drive/enabled");
     }
 
     /**
@@ -183,7 +175,7 @@ public class Helper {
      * @return String that indicates the path of the database
      */
     public String getDatabasePath(){
-        return this.settings.readStringProperty("database/selected");  // Read the path from settings
+        return this.SETTINGS.readStringProperty("database/selected");  // Read the path from settings
     }
 
     /**

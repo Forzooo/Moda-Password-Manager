@@ -82,8 +82,8 @@ class DatabaseTests {
      */
     @Test
     void addReadRecord(){
-        this.database.addRecord(TEST_DATA);
-        Data record = this.database.getRecord(ID);
+        this.database.addDataRecord(TEST_DATA);
+        Data record = this.database.getDataRecord(ID);
 
         assertEquals(TEST_DATA, record);
     }
@@ -92,11 +92,11 @@ class DatabaseTests {
      * Ensure that a record is updated correctly
      */
     @Test
-    void updateRecord(){
-        this.database.addRecord(TEST_DATA);
-        this.database.updateRecord(UPDATED_TEST_DATA);
+    void updateDataRecord(){
+        this.database.addDataRecord(TEST_DATA);
+        this.database.updateDataRecord(UPDATED_TEST_DATA);
 
-        Data updatedRecord = this.database.getRecord(ID);
+        Data updatedRecord = this.database.getDataRecord(ID);
 
         assertEquals(UPDATED_TEST_DATA, updatedRecord);
     }
@@ -105,12 +105,12 @@ class DatabaseTests {
      * Ensure that a record is deleted correctly
      */
     @Test
-    void deleteRecord(){
-        this.database.addRecord(TEST_DATA);
-        this.database.deleteRecord(ID);
+    void deleteDataRecord(){
+        this.database.addDataRecord(TEST_DATA);
+        this.database.deleteDataRecord(ID);
 
         // A deleted record has only the ID set, where the other fields are null thus we use assertNull
-        Data deletedRecord = this.database.getRecord(ID);
+        Data deletedRecord = this.database.getDataRecord(ID);
 
         assertNull(deletedRecord.getUSERNAME());
         assertNull(deletedRecord.getEMAIL_ADDRESS());
@@ -124,25 +124,25 @@ class DatabaseTests {
      */
     @Test
     void changeDatabase(){
-        this.database.addRecord(TEST_DATA);  // Add the record to the first database
+        this.database.addDataRecord(TEST_DATA);  // Add the record to the first database
 
         // Change the database to another one and add a new record inside it
         this.database.changeDatabase(TEST_DIRECTORY + "\\" + SECONDARY_DATABASE_NAME);
 
         // We're using the updated data instead of the test data 2 as it will be the first record of the second database,
         // so it requires to have the ID = 1, where the test data 2 has ID = 2
-        this.database.addRecord(UPDATED_TEST_DATA);
+        this.database.addDataRecord(UPDATED_TEST_DATA);
 
         // Change the database to the first one and assert that the record inside it is the right one
         this.database.changeDatabase(TEST_DIRECTORY + "\\" + DATABASE_NAME);
 
-        Data recordFirstDatabase = this.database.getRecord(ID);
+        Data recordFirstDatabase = this.database.getDataRecord(ID);
         assertEquals(TEST_DATA, recordFirstDatabase);
 
         // Change again the database and assert that the record inside is the second one
         this.database.changeDatabase(TEST_DIRECTORY + "\\" + SECONDARY_DATABASE_NAME);
 
-        Data recordSecondDatabase = this.database.getRecord(ID);
+        Data recordSecondDatabase = this.database.getDataRecord(ID);
         assertEquals(UPDATED_TEST_DATA, recordSecondDatabase);
     }
 
@@ -150,12 +150,12 @@ class DatabaseTests {
      * Ensure that the database returns the first service field
      */
     @Test
-    void getFirstServiceField(){
+    void getDataFirstServiceField(){
         // We have to add records to the database before we're getting the first service field
-        this.database.addRecord(TEST_DATA);
-        this.database.addRecord(TEST_DATA_2);
+        this.database.addDataRecord(TEST_DATA);
+        this.database.addDataRecord(TEST_DATA_2);
 
-        Data firstServiceField = this.database.getFirstServiceField();
+        Data firstServiceField = this.database.getDataFirstServiceField();
         assertEquals(SERVICE, firstServiceField.getSERVICE());
     }
 
@@ -163,12 +163,12 @@ class DatabaseTests {
      * Ensure that the database returns all the service fields
      */
     @Test
-    void getServiceFields(){
+    void getDataServiceFields(){
         // We have to add records to the database before we're getting the first service field
-        this.database.addRecord(TEST_DATA);
-        this.database.addRecord(TEST_DATA_2);
+        this.database.addDataRecord(TEST_DATA);
+        this.database.addDataRecord(TEST_DATA_2);
 
-        ArrayList<Data> serviceFields = this.database.getServiceFields();
+        ArrayList<Data> serviceFields = this.database.getDataServiceFields();
         assertEquals(SERVICE, serviceFields.getFirst().getSERVICE());
         assertEquals(SERVICE_2, serviceFields.get(1).getSERVICE());
         assertEquals(RECORDS_NUMBER, serviceFields.size());  // Also ensure that the number of records returned is 2
@@ -178,11 +178,11 @@ class DatabaseTests {
      * Ensure that the database returns all the records inside it
      */
     @Test
-    void getRecords(){
-        this.database.addRecord(TEST_DATA);
-        this.database.addRecord(TEST_DATA_2);
+    void getDataRecords(){
+        this.database.addDataRecord(TEST_DATA);
+        this.database.addDataRecord(TEST_DATA_2);
 
-        ArrayList<Data> records = this.database.getRecords();
+        ArrayList<Data> records = this.database.getDataRecords();
         Data firstRecord = records.getFirst();
         Data secondRecord = records.get(1);
 
@@ -195,17 +195,17 @@ class DatabaseTests {
      * Ensure that the databases changes all the records inside it
      */
     @Test
-    void changeRecords(){
-        this.database.addRecord(TEST_DATA);
-        this.database.addRecord(TEST_DATA_2);
+    void changeDataRecords(){
+        this.database.addDataRecord(TEST_DATA);
+        this.database.addDataRecord(TEST_DATA_2);
 
         ArrayList<Data> records = new ArrayList<>();
         records.add(UPDATED_TEST_DATA);
         records.add(UPDATED_TEST_DATA_2);
 
-        this.database.changeRecords(records);
+        this.database.changeDataRecords(records);
 
-        ArrayList<Data> updatedRecords = this.database.getRecords();
+        ArrayList<Data> updatedRecords = this.database.getDataRecords();
 
         Data firstRecord = updatedRecords.getFirst();
         assertEquals(UPDATED_TEST_DATA, firstRecord);

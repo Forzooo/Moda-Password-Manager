@@ -56,11 +56,6 @@ public class Settings {
             stringGeneration.put("numbers", true);
             stringGeneration.put("special", true);
 
-            // Set the Google Drive properties
-            ObjectNode googleDrive = this.objectMapper.createObjectNode();
-            googleDrive.put("enabled", false);
-            googleDrive.put("automatic_synchronization", false);
-
             // Set the appearance properties
             ObjectNode appearance = this.objectMapper.createObjectNode();
             appearance.put("language", Helper.getSystemLanguage());
@@ -69,7 +64,6 @@ public class Settings {
             // Define the hierarchy of the JSON
             rootNode.put("database", database);
             rootNode.put("string_generation", stringGeneration);
-            rootNode.put("google_drive", googleDrive);
             rootNode.put("appearance", appearance);
 
             // Write the default data inside the settings file

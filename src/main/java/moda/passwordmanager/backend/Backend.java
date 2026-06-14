@@ -19,13 +19,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class Backend extends EventListener {
 
-    private Helper helper;
+    private final Helper HELPER;
 
     // Main components of the backend classes
-    private Cryptography cryptography;
-    private Database database;
-    private GoogleDrive googleDrive;
-    private Settings settings;
+    private final Cryptography CRYPTOGRAPHY;
+    private final Database DATABASE;
+    private final GoogleDrive GOOGLE_DRIVE;
+    private final Settings SETTINGS;
+    private final SensitiveSettings SENSITIVE_SETTINGS;
 
     /**
      * The servicesMap is used to map IDs with the hashCode of the service field
@@ -33,27 +34,21 @@ public class Backend extends EventListener {
     private HashMap<Integer, Integer> servicesMap;
     private final static int SERVICES_CHUNK = 4;  // The number of services sent per chunk
 
-    // The InterThreadCommunication object used to communicate with the Frontend thread
-    private final InterThreadCommunication ITC;
-
     public Backend(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue){
         // Set the name of the thread for debug purposes
         super(new InterThreadCommunication(frontendQueue, backendQueue), "Backend");
 
-        // Get the ITC from the EventListener, otherwise we would have to create two separate ITC object
-        this.ITC = getITC();
-
         createAppdataDirectory();  // Create the folder to store the configuration files inside it
 
         // Initialize all the backend components
-        this.settings = new Settings(Helper.getAppDataDirectory()+Helper.getSettingsFile());
-        this.cryptography = new Cryptography();
-        this.googleDrive = new GoogleDrive(Helper.getAppDataDirectory());
-
-        this.helper = new Helper(this.cryptography, this.settings);
+        this.SETTINGS = new Settings(Helper.getAppDataDirectory()+Helper.getSettingsFile());
+        this.DATABASE = new Database(this.SETTINGS.readStringProperty("database/selected"));
+        this.CRYPTOGRAPHY = new Cryptography();
+        this.HELPER = new Helper(this.CRYPTOGRAPHY, this.SETTINGS);
+        this.SENSITIVE_SETTINGS = new SensitiveSettings(this.DATABASE, this.HELPER);
+        this.GOOGLE_DRIVE = new GoogleDrive(Helper.getAppDataDirectory());
 
         // The path of the database is retrieved from the helper
-        this.database = new Database(this.helper.getDatabasePath());
 
         startGoogleDrive();  // Initialize the connection with Google Drive only if enabled by the user
         initHandler();  // Initialize all the operations to handle
@@ -85,27 +80,27 @@ public class Backend extends EventListener {
             boolean test = testMasterPassword();
             if (test){
                 // Initialize the Service Mapping after the Master Password has been set
-                this.helper.executeInBackground(this::initServiceMapping);
+                this.HELPER.executeInBackground(this::initServiceMapping);
             }
         });
 
         // Save the data and update the service fields
         addOperation("save-data", () -> {
             saveData((Data) getRequestData().getFirst());
-            this.helper.executeInBackground(this::updateServiceFields);
+            this.HELPER.executeInBackground(this::updateServiceFields);
         });
         addOperation("get-data", this::getData);
 
         // Delete a record from the database and update the service fields
         addOperation("delete-data", () -> {
             deleteSingleData((int) getRequestData().getFirst());
-            this.helper.executeInBackground(this::updateServiceFields);
+            this.HELPER.executeInBackground(this::updateServiceFields);
         });
 
         // Change a data and update the service fields
         addOperation("update-data", () -> {
             updateData((Data) getRequestData().getFirst());
-            this.helper.executeInBackground(this::updateServiceFields);
+            this.HELPER.executeInBackground(this::updateServiceFields);
         });
 
         addOperation("generate-string", this::generateString);
@@ -120,12 +115,13 @@ public class Backend extends EventListener {
             // As a new database is set, we need to reset the service fields to update the Frontend with the new
             // data, but updating with initServiceFields happens after the master password has been set,
             // otherwise the services would be shown as encrypted
-            this.helper.executeInBackground(this::resetServiceFields);
+            this.HELPER.executeInBackground(this::resetServiceFields);
         });
 
         addOperation("get-database", this::getDatabasePath);
         addOperation("get-string-generation-configuration", this::getStringGenerationConfiguration);
         addOperation("update-master-password", this::updateMasterPassword);
+
         addOperation("get-google-drive", this::getGoogleDrive);
         addOperation("get-google-drive-synchronization", this::getGoogleDriveSynchronization);
         addOperation("google-drive-authenticate", this::authenticateGoogleDrive);
@@ -134,10 +130,11 @@ public class Backend extends EventListener {
         // Synchronize with Google Drive and update the service fields
         addOperation("google-drive-synchronize", () -> {
             synchronizeGoogleDrive();
-            this.helper.executeInBackground(this::updateServiceFields);
+            this.HELPER.executeInBackground(this::updateServiceFields);
         });
         addOperation("enable-google-drive-synchronization", this::enableGoogleDriveSynchronization);
         addOperation("disable-google-drive-synchronization", this::disableGoogleDriveSynchronization);
+
         addOperation("get-recent-databases", this::getRecentDatabases);
 
         addOperation("get-application-theme", this::getApplicationTheme);
@@ -154,7 +151,7 @@ public class Backend extends EventListener {
     public void handleException(Thread t, Throwable e) {
         // Create the traceback file that contains the full stack trace of the exception before anything else
         createTracebackFile(t,e);
-        this.database.closeConnection();  // Close the connection with the database
+        this.DATABASE.closeConnection();  // Close the connection with the database
 
         // Before sending the exception we need to send back the event because if the request one is a synchronous
         // one, then EDT is waiting for the response before handling the exception
@@ -166,12 +163,12 @@ public class Backend extends EventListener {
         event.addData(e);
 
         // Receive the response from the frontend
-        Event frontendResponse = this.ITC.request(event);
+        Event frontendResponse = getITC().request(event);
 
         // Check whether the event response is close-connection to stop the execution
         if (frontendResponse.getOperation().equals("close-connection")){
             event = new Event("close-connection");  // Create the event to confirm the stop
-            this.ITC.send(event);  // Send the event
+            getITC().send(event);  // Send the event
         }
     }
 
@@ -209,7 +206,7 @@ public class Backend extends EventListener {
      * @param masterPassword The master password provided by the user
      */
     private void setMasterPassword(char[] masterPassword){
-        this.cryptography.setMasterPassword(new String(masterPassword).getBytes());
+        this.CRYPTOGRAPHY.setMasterPassword(new String(masterPassword).getBytes());
     }
 
     /**
@@ -217,7 +214,7 @@ public class Backend extends EventListener {
      * @return Returns a boolean value to locally indicate whether the master password is right
      */
     private boolean testMasterPassword(){
-        Data testData = this.database.getFirstServiceField();  // Get the first service to try to decrypt it
+        Data testData = this.DATABASE.getDataFirstServiceField();  // Get the first service to try to decrypt it
 
         // If the service is null, it means there isn't data in it yet, thus the master password is always correct
         if (testData.getSERVICE() == null){
@@ -229,7 +226,7 @@ public class Backend extends EventListener {
 
         // Try to decrypt it and add the data to the event based on whether an exception has been thrown
         try{
-            this.cryptography.decrypt(service);
+            this.CRYPTOGRAPHY.decrypt(service);
             addResponseData(true);
             return true;
         } catch (RuntimeException e){
@@ -246,13 +243,13 @@ public class Backend extends EventListener {
 
         // Initialize an ArrayList that stores the data objects that are sent to the Frontend
         ArrayList<Data> dataToSend = new ArrayList<>();
-        ArrayList<Data> serviceFields = this.database.getServiceFields();
+        ArrayList<Data> serviceFields = this.DATABASE.getDataServiceFields();
 
         for (int i = 0; i < serviceFields.size(); i++){
             // Check the current size of the data to send to know if a chunk size is reached to send it
             if (dataToSend.size() >= SERVICES_CHUNK){
                 Event updateService = new Event("update-service-fields", dataToSend);
-                this.ITC.send(updateService);
+                getITC().send(updateService);
 
                 // We need to recreate the dataToSend object as otherwise it would use the same address as the one sent
                 // to the FrontendEventListener which would raise a concurrent exception
@@ -265,13 +262,13 @@ public class Backend extends EventListener {
             this.servicesMap.put(data.getID(), data.getSERVICE().hashCode());
 
             // Create a Data object with the ID and the decrypted service string
-            dataToSend.add(new Data(data.getID(), this.helper.decryptString(data.getSERVICE())));
+            dataToSend.add(new Data(data.getID(), this.HELPER.decrypt(data.getSERVICE())));
         }
 
         // Create the Event with the data and send it only if the data is not empty
         if (!dataToSend.isEmpty()){
             Event updateService = new Event("update-service-fields", dataToSend);
-            this.ITC.send(updateService);
+            getITC().send(updateService);
         }
     }
 
@@ -280,7 +277,7 @@ public class Backend extends EventListener {
      * ones to send them to the frontend
      */
     private void updateServiceFields(){
-        ArrayList<Data> serviceFields = this.database.getServiceFields();  // Read the service fields from the DB
+        ArrayList<Data> serviceFields = this.DATABASE.getDataServiceFields();  // Read the service fields from the DB
         ArrayList<Data> updatedData = new ArrayList<>();  // The data to send to the frontend is stored here
 
         // It's required to initialize an ArrayList over the KeySet because otherwise we would have that updating
@@ -294,7 +291,7 @@ public class Backend extends EventListener {
             // Check the current size of the data to send to know if a chunk size is reached to send it
             if (updatedData.size() >= SERVICES_CHUNK){
                 Event updateService = new Event("update-service-fields", updatedData);
-                this.ITC.send(updateService);
+                getITC().send(updateService);
 
                 // We need to recreate the dataToSend object as otherwise it would use the same address as the one sent
                 // to the FrontendEventListener which would raise a concurrent exception
@@ -310,13 +307,13 @@ public class Backend extends EventListener {
             if (this.servicesMap.containsKey(id)){
                 // If the hashes of the service are different, then it means the service field has been updated
                 if (this.servicesMap.get(id) != hash){
-                    updatedData.add(new Data(id, this.helper.decryptString(data.getSERVICE())));
+                    updatedData.add(new Data(id, this.HELPER.decrypt(data.getSERVICE())));
                     this.servicesMap.replace(id, hash);
                 }
                 servicesMapID.remove((Integer) id);  // Remove the ID from the list because it has been found
             }else{  // Because the ID is new we can add it to the servicesMap and add it to the data to send
                 this.servicesMap.put(id, hash);
-                updatedData.add(new Data(id, this.helper.decryptString(data.getSERVICE())));
+                updatedData.add(new Data(id, this.HELPER.decrypt(data.getSERVICE())));
             }
         }
 
@@ -326,7 +323,7 @@ public class Backend extends EventListener {
             // Check the current size of the data to send to know if a chunk size is reached to send it
             if (updatedData.size() >= SERVICES_CHUNK){
                 Event updateService = new Event("update-service-fields", updatedData);
-                this.ITC.send(updateService);
+                getITC().send(updateService);
 
                 // We need to recreate the dataToSend object as otherwise it would use the same address as the one sent
                 // to the FrontendEventListener which would raise a concurrent exception
@@ -340,7 +337,7 @@ public class Backend extends EventListener {
         // Create the Event with the data and send it only if the data is not empty
         if (!updatedData.isEmpty()){
             Event updateService = new Event("update-service-fields", updatedData);
-            this.ITC.send(updateService);
+            getITC().send(updateService);
         }
     }
 
@@ -351,7 +348,7 @@ public class Backend extends EventListener {
         // Ensure that the services map is not empty, otherwise resetting the service fields is useless
         if (!this.servicesMap.isEmpty()){
             Event reset = new Event("reset-service-fields");
-            this.ITC.send(reset);
+            getITC().send(reset);
         }
     }
 
@@ -360,7 +357,7 @@ public class Backend extends EventListener {
      * @param data The data to save inside the database
      */
     private void saveData(Data data){
-        this.database.addRecord(this.helper.encryptData(data));  // Encrypt the data with the helper, then add it
+        this.DATABASE.addDataRecord(this.HELPER.encryptData(data));  // Encrypt the data with the helper, then add it
     }
 
     /**
@@ -368,9 +365,9 @@ public class Backend extends EventListener {
      */
     private void getData() {
         int id = (int) getRequestData().getFirst();  // The ID of the record to read
-        Data singleData = this.database.getRecord(id);  // Retrive the data associated with the ID
+        Data singleData = this.DATABASE.getDataRecord(id);  // Retrive the data associated with the ID
 
-        addResponseData(this.helper.decryptData(singleData));  // Decrypt the data with the helper
+        addResponseData(this.HELPER.decryptData(singleData));  // Decrypt the data with the helper
     }
 
     /**
@@ -378,7 +375,7 @@ public class Backend extends EventListener {
      * @param id The ID of the record to delete
      */
     private void deleteSingleData(int id){
-        this.database.deleteRecord(id);
+        this.DATABASE.deleteDataRecord(id);
     }
 
     /**
@@ -386,7 +383,7 @@ public class Backend extends EventListener {
      * @param data The updated data to save
      */
     private void updateData(Data data){
-        this.database.updateRecord(this.helper.encryptData(data));  // Encrypt the data with the helper before saving it
+        this.DATABASE.updateDataRecord(this.HELPER.encryptData(data));  // Encrypt the data with the helper before saving it
     }
 
     /**
@@ -394,7 +391,7 @@ public class Backend extends EventListener {
      */
     private void generateString(){
         // Retrieve the properties from the helper
-        ArrayList<Object> configuration = this.helper.getStringGenerationConfiguration();
+        ArrayList<Object> configuration = this.HELPER.getStringGenerationConfiguration();
 
         char[] stringCharacters = generateStringCharacters((Boolean) configuration.get(1), (Boolean) configuration.get(2),
                 (Boolean) configuration.get(3));  // Generate the characters
@@ -467,10 +464,10 @@ public class Backend extends EventListener {
         boolean numbers = (boolean) requestData.get(2);  // Flag to indicate whether numbers are generated
         boolean special = (boolean) requestData.get(3);  // Flag to indicate whether special characters are generated
 
-        this.settings.writeProperty("string_generation/length", length);
-        this.settings.writeProperty("string_generation/letters", letters);
-        this.settings.writeProperty("string_generation/numbers", numbers);
-        this.settings.writeProperty("string_generation/special", special);
+        this.SETTINGS.writeProperty("string_generation/length", length);
+        this.SETTINGS.writeProperty("string_generation/letters", letters);
+        this.SETTINGS.writeProperty("string_generation/numbers", numbers);
+        this.SETTINGS.writeProperty("string_generation/special", special);
     }
 
     /**
@@ -478,15 +475,15 @@ public class Backend extends EventListener {
      * @param databasePath The path of the database chosen
      */
     private void setDatabasePath(String databasePath){
-        this.settings.writeProperty("database/selected", databasePath);  // Set the path of the database
-        this.database.changeDatabase(databasePath);  // Set the new database to be the one used
+        this.SETTINGS.writeProperty("database/selected", databasePath);  // Set the path of the database
+        this.DATABASE.changeDatabase(databasePath);  // Set the new database to be the one used
     }
 
     /**
      * Retrieve the path of the database current in use
      */
     private void getDatabasePath(){
-        addResponseData(this.helper.getDatabasePath());  // Add the path to the data to send
+        addResponseData(this.HELPER.getDatabasePath());  // Add the path to the data to send
     }
 
     /**
@@ -494,7 +491,7 @@ public class Backend extends EventListener {
      */
     private void getStringGenerationConfiguration(){
         // Retrieve the properties from the helper
-        ArrayList<Object> configuration = this.helper.getStringGenerationConfiguration();
+        ArrayList<Object> configuration = this.HELPER.getStringGenerationConfiguration();
 
         addResponseData(configuration.getFirst());
         addResponseData(configuration.get(1));
@@ -508,12 +505,12 @@ public class Backend extends EventListener {
     private void updateMasterPassword(){
         char[] masterPassword = (char[]) getRequestData().getFirst();  // The new master password
 
-        ArrayList<Data> oldData = this.database.getRecords();  // Get all the data from the database
+        ArrayList<Data> oldData = this.DATABASE.getDataRecords();  // Get all the data from the database
         ArrayList<Data> newData = new ArrayList<>();  // The data re-encrypted with the new master password
 
         // Decrypt all the data and add it to newData
         for (Data data : oldData){
-            newData.add(this.helper.decryptData(data));
+            newData.add(this.HELPER.decryptData(data));
         }
 
         setMasterPassword(masterPassword);  // Set the new master password before re-encrypting the data
@@ -522,10 +519,10 @@ public class Backend extends EventListener {
         for (int i = 0; i < newData.size(); i++){
             Data data = newData.getFirst();  // Always get the first element
             newData.removeFirst();  // Remove it from the ArrayList
-            newData.addLast(this.helper.encryptData(data));  // Re-encrypt the data and add it as the last element
+            newData.addLast(this.HELPER.encryptData(data));  // Re-encrypt the data and add it as the last element
         }
 
-        this.database.changeRecords(newData);  // Change all the records of the database with the new ones
+        this.DATABASE.changeDataRecords(newData);  // Change all the records of the database with the new ones
     }
 
     /**
@@ -533,14 +530,14 @@ public class Backend extends EventListener {
      */
     private void getGoogleDrive(){
         // Retrieve from the helper whether Google Drive is enabled
-       addResponseData(this.helper.isGoogleDriveEnabled());
+       addResponseData(this.HELPER.isGoogleDriveEnabled());
     }
 
     /**
      * Retrieve from the settings file whether the automatic synchronization is enabled
      */
     private void getGoogleDriveSynchronization(){
-        boolean synchronizationEnabled = this.settings.readBooleanProperty("google_drive/automatic_synchronization");
+        boolean synchronizationEnabled = this.SETTINGS.readBooleanProperty("google_drive/automatic_synchronization");
         addResponseData(synchronizationEnabled);
     }
 
@@ -549,13 +546,13 @@ public class Backend extends EventListener {
      * file
      */
     private void startGoogleDrive(){
-        if (this.helper.isGoogleDriveEnabled()){
-            this.googleDrive.init();
+        if (this.HELPER.isGoogleDriveEnabled()){
+            this.GOOGLE_DRIVE.init();
         }
 
         // We need to schedule the synchronization even if the Google Drive module is not enabled because otherwise
         // it can happen that the synchronization is scheduled more than one time
-        this.helper.executePeriodicallyInBackground(this::automaticSynchronizeGoogleDrive, 60);
+        this.HELPER.executePeriodicallyInBackground(this::automaticSynchronizeGoogleDrive, 60);
     }
 
     /**
@@ -565,16 +562,16 @@ public class Backend extends EventListener {
     private void authenticateGoogleDrive(){
         String credentialsPath = (String) getRequestData().getFirst();  // The path of the credentials.json file
         try {
-            new File(this.googleDrive.getAPI_DIRECTORY()).mkdirs();  // Create the Google Drive dir (skipped if it already exists)
+            new File(this.GOOGLE_DRIVE.getAPI_DIRECTORY()).mkdirs();  // Create the Google Drive dir (skipped if it already exists)
 
             // Move the file to the Google Drive API directory, replacing the previous file if it existed
-            Files.move(Path.of(credentialsPath), Path.of(this.googleDrive.getAPI_FILE_PATH()), StandardCopyOption.REPLACE_EXISTING);
+            Files.move(Path.of(credentialsPath), Path.of(this.GOOGLE_DRIVE.getAPI_FILE_PATH()), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        this.googleDrive.init();  // Start the Google Drive communication
-        this.settings.writeProperty("google_drive/enabled", true);  // Set Google Drive to enabled
+        this.GOOGLE_DRIVE.init();  // Start the Google Drive communication
+        this.SETTINGS.writeProperty("google_drive/enabled", true);  // Set Google Drive to enabled
     }
 
     /**
@@ -582,18 +579,18 @@ public class Backend extends EventListener {
      */
     private void unauthenticateGoogleDrive(){
         try {
-            FileUtils.deleteDirectory(new File(this.googleDrive.getTOKENS_DIRECTORY_PATH()));
+            FileUtils.deleteDirectory(new File(this.GOOGLE_DRIVE.getTOKENS_DIRECTORY_PATH()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        this.settings.writeProperty("google_drive/enabled", false);
+        this.SETTINGS.writeProperty("google_drive/enabled", false);
     }
 
     /**
      * Synchronize the database with Google Drive
      */
     private void synchronizeGoogleDrive(){
-        this.googleDrive.sync(this.helper.getDatabasePath(), this.database.getDatabaseName());
+        this.GOOGLE_DRIVE.sync(this.HELPER.getDatabasePath(), this.DATABASE.getDatabaseName());
     }
 
     /**
@@ -601,9 +598,9 @@ public class Backend extends EventListener {
      */
     private void automaticSynchronizeGoogleDrive(){
         // Ensure that Google Drive is enabled, and the Synchronization is enabled before synchronizing
-        if (this.helper.isGoogleDriveEnabled() && this.settings.readBooleanProperty("google_drive/automatic_synchronization")){
-            this.googleDrive.sync(this.helper.getDatabasePath(), this.database.getDatabaseName());
-            this.helper.executeInBackground(this::updateServiceFields);  // Update the service fields in the Frontend
+        if (this.HELPER.isGoogleDriveEnabled() && this.SETTINGS.readBooleanProperty("google_drive/automatic_synchronization")){
+            this.GOOGLE_DRIVE.sync(this.HELPER.getDatabasePath(), this.DATABASE.getDatabaseName());
+            this.HELPER.executeInBackground(this::updateServiceFields);  // Update the service fields in the Frontend
         }
     }
 
@@ -611,21 +608,21 @@ public class Backend extends EventListener {
      * Enable the Google Drive automatic synchronization
      */
     private void enableGoogleDriveSynchronization(){
-        this.settings.writeProperty("google_drive/automatic_synchronization", true);
+        this.SETTINGS.writeProperty("google_drive/automatic_synchronization", true);
     }
 
     /**
      * Disable the Google Drive automatic synchronization
      */
     private void disableGoogleDriveSynchronization(){
-        this.settings.writeProperty("google_drive/automatic_synchronization", false);
+        this.SETTINGS.writeProperty("google_drive/automatic_synchronization", false);
     }
 
     /**
      * Get the last databases used from the settings file
      */
     private void getRecentDatabases(){
-        ArrayList<String> recentDatabases = this.settings.readListProperty("database/recent");
+        ArrayList<String> recentDatabases = this.SETTINGS.readListProperty("database/recent");
         addResponseData(recentDatabases);
     }
 
@@ -633,7 +630,7 @@ public class Backend extends EventListener {
      * Add to the recent databases the one with the path provided, otherwise if it already exists set it to be first
      */
     private void updateRecentDatabases(String path){
-        ArrayList<String> recentDatabases = this.settings.readListProperty("database/recent");
+        ArrayList<String> recentDatabases = this.SETTINGS.readListProperty("database/recent");
         int pathIndex = recentDatabases.indexOf(path);  // Get the index of the path from the list
 
         // If the index of the path is not -1, it means that the path has already been added to the list
@@ -641,14 +638,14 @@ public class Backend extends EventListener {
             recentDatabases.remove(pathIndex);
         }
         recentDatabases.addFirst(path);  // Add the path as the first element of the list
-        this.settings.writeListProperty("database/recent", recentDatabases);  // Write the updated list in the settings
+        this.SETTINGS.writeListProperty("database/recent", recentDatabases);  // Write the updated list in the settings
     }
 
     /**
      * Retrieve the theme of the application from the settings
      */
     private void getApplicationTheme(){
-        String theme = this.settings.readStringProperty("appearance/theme");
+        String theme = this.SETTINGS.readStringProperty("appearance/theme");
         addResponseData(Themes.valueOf(theme));
     }
 
@@ -657,14 +654,14 @@ public class Backend extends EventListener {
      */
     private void setApplicationTheme(){
         Themes theme = (Themes) getRequestData().getFirst();
-        this.settings.writeProperty("appearance/theme", theme.toString());
+        this.SETTINGS.writeProperty("appearance/theme", theme.toString());
     }
 
     /**
      * Retrieve the language of the application from the settings
      */
     private void getApplicationLanguage(){
-        String language = this.settings.readStringProperty("appearance/language");
+        String language = this.SETTINGS.readStringProperty("appearance/language");
         addResponseData(Languages.valueOf(language));
     }
 
@@ -673,6 +670,6 @@ public class Backend extends EventListener {
      */
     private void setApplicationLanguage(){
         Languages language = (Languages) getRequestData().getFirst();
-        this.settings.writeProperty("appearance/language", language.toString());
+        this.SETTINGS.writeProperty("appearance/language", language.toString());
     }
 }
