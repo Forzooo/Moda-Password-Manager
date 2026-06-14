@@ -6,6 +6,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -22,23 +23,21 @@ class HelperTests {
     // String generation test attributes
     private final static String STRING_GENERATION_SETTINGS_ROOT_NODE = "string_generation/";
 
-    // Google Drive test attributes
-    private final static String GOOGLE_DRIVE_ROOT_NODE = "google_drive/";
-
     // Database test attributes
     private final static String DATABASE_ROOT_NODE = "database/";
 
     // Decryption test attributes
+    private final static String MASTER_PASSWORD = "dev";
     private final static String STRING_PLAINTEXT = "Test";
-    private final static String STRING_CIPHERTEXT = "aCRSwS7aFZXmixeSRHPxgLwHLXejH22ZkJAxfxDtqxtJWZBxhdQyyFGuM3+UNI3Z";
+    private final static String STRING_CIPHERTEXT = "yrflaOOdfwumdECCw4OaxY+R+myhKKr1XU843ieinqMx1Y7BGItZBL3+ybitpPbH";
     private final static Data DATA_PLAINTEXT = new Data(STRING_PLAINTEXT, STRING_PLAINTEXT, STRING_PLAINTEXT,
             STRING_PLAINTEXT, STRING_PLAINTEXT);
     private final static Data DATA_CIPHERTEXT = new Data(
-            "SvZNvHkFLzlNyYnAfiubsivzoD8kDCxs+WN1L6XObeQfRbSL469P+sWWZvLiB3+v",
-            "hqm3IG7983V5gbfxsyixvo4ZO6Ziajr9Hlds0zjgYstxcZqv6rhT2vfWHMqUWcPY",
-            "4X7xLUCgUs+5bDORr6mTUCAeDqR0NaCM53f+wuppHDMY6kNnE1uGIvBGQepRbtFZ",
-            "tmWEn5QoLbzoLOW4tGNCTSYHhgbQ9JGFfZnlIhRCVnPNKt+N0IpNTcair2KYVliI",
-            "m5pMeoBQ++fmEO/5FedHYXG5HkYdAYXczoSGOrkBZ25h2uzk+/NCWNeU/Wfu5YHm"
+            "cJ2pjIGv3/xrxKbcC+kf3Xdwj4eC6MFozR3ffiT5asBNCQkEBZn/JuixAYJYJmQP",
+            "YoIOEHEf5Bb+PSuaKa0Ctk6c/2SJqs90IWllpemEJp0KuGyDrQbKXE3T1tLW2m/d",
+            "sDTNHKDmEsrCCz/lFTUzptcwb3ZyWMDSqif/OvaNDjOTomCVrNHM+w92tNVQ97xS",
+            "jeMOllUlPG0P8YWzZ78Np5dH8KkXyvn4H+IkDiPq+aRgCMRuBAuPx3myq9/SkOTq",
+            "B12TW0JIRTJH5o12kVkWpo7v1rttKILjetBplc1RmnBr6I4cwoy9FLbU7js0t/Ac"
     );
 
     /**
@@ -51,6 +50,7 @@ class HelperTests {
     @BeforeEach
     void init(){
         Cryptography cryptography = new Cryptography();
+        cryptography.setMasterPassword(MASTER_PASSWORD.getBytes());
         this.settings = new Settings(TEST_DIRECTORY+"\\"+Helper.getSettingsFile());
         this.helper = new Helper(cryptography, settings);
     }
@@ -89,21 +89,12 @@ class HelperTests {
     }
 
     /**
-     * Ensure that the Helper returns the current state of Google Drive
-     */
-    @Test
-    void isGoogleDriveEnabled(){
-        boolean googleDriveState = this.helper.isGoogleDriveEnabled();
-        assertEquals(this.settings.readBooleanProperty(GOOGLE_DRIVE_ROOT_NODE+"enabled"), googleDriveState);
-    }
-
-    /**
      * Ensure that the Helper returns the path of the database
      */
     @Test
     void getDatabasePath(){
         String databasePath = this.helper.getDatabasePath();
-        assertEquals(this.settings.readStringProperty(DATABASE_ROOT_NODE+"path"), databasePath);
+        assertEquals(this.settings.readStringProperty(DATABASE_ROOT_NODE+"selected"), databasePath);
     }
 
     /**
@@ -111,7 +102,7 @@ class HelperTests {
      */
     @Test
     void decryptString(){
-        assertEquals(STRING_PLAINTEXT, this.helper.decryptString(STRING_CIPHERTEXT));
+        assertEquals(STRING_PLAINTEXT, this.helper.decrypt(STRING_CIPHERTEXT));
     }
 
     @Test

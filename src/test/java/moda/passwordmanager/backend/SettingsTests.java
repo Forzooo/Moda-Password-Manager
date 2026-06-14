@@ -6,18 +6,17 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SettingsTests {
 
     // The property node used by the test can be any
-    private final static String PROPERTY_NODE = "database/path";
+    private final static String PROPERTY_NODE = "database/selected";
     private final static String STRING_PROPERTY = "Test";
     private final static int INT_PROPERTY = 1;
     private final static boolean BOOLEAN_PROPERTY = true;
-    private final static List LIST_PROPERTY = new ArrayList();
+    private final static ArrayList LIST_PROPERTY = new ArrayList();
 
     /**
      * The temporary directory where the settings file will be placed. It must not be a static attribute as otherwise the

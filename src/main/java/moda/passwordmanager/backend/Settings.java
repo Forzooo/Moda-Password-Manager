@@ -9,12 +9,11 @@ import moda.passwordmanager.frontend.properties.Themes;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * The settings class manages all the I/O operations made to the user settings of the Password Manager
  */
-public class Settings {
+public class Settings extends AbstractSettings {
 
     private final File SETTINGS_FILE;
     private ObjectMapper objectMapper;
@@ -46,7 +45,7 @@ public class Settings {
             recentDatabases.add(Helper.getAppDataDirectory()+Helper.getDefaultDatabase());  // The default database used
 
             ObjectNode database = this.objectMapper.createObjectNode();  // Contains all the database values
-            database.put("path", recentDatabases.getFirst());
+            database.put("selected", recentDatabases.getFirst());
             database.putPOJO("recent", recentDatabases);  // The last 5 database used
 
             // Set the string generation configuration
@@ -56,11 +55,6 @@ public class Settings {
             stringGeneration.put("numbers", true);
             stringGeneration.put("special", true);
 
-            // Set the Google Drive properties
-            ObjectNode googleDrive = this.objectMapper.createObjectNode();
-            googleDrive.put("enabled", false);
-            googleDrive.put("automatic_synchronization", false);
-
             // Set the appearance properties
             ObjectNode appearance = this.objectMapper.createObjectNode();
             appearance.put("language", Helper.getSystemLanguage());
@@ -69,7 +63,6 @@ public class Settings {
             // Define the hierarchy of the JSON
             rootNode.put("database", database);
             rootNode.put("string_generation", stringGeneration);
-            rootNode.put("google_drive", googleDrive);
             rootNode.put("appearance", appearance);
 
             // Write the default data inside the settings file
@@ -82,7 +75,7 @@ public class Settings {
 
     /**
      * Retrieve a node from the path
-     * @param nodePath The path to get to the node (ex. database/path)
+     * @param nodePath The path to get to the node (ex. database/selected)
      * @return The node requested
      */
     private JsonNode retrieveNode(String nodePath){
@@ -109,7 +102,7 @@ public class Settings {
      * Retrieve a node from the path
      * @param rootNode The root node can be provided if it's required to keep the same root variable for changed to
      *                 properties
-     * @param nodePath The path to get to the node (ex. database/path)
+     * @param nodePath The path to get to the node (ex. database/selected)
      * @return The node requested
      */
     private JsonNode retrieveNode(JsonNode rootNode, String nodePath){
@@ -139,9 +132,10 @@ public class Settings {
 
     /**
      * Read a property from the settings file
-     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/path)
+     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/selected)
      * @return Value of the property
      */
+    @Override
     public String readStringProperty(String nodePath){
         JsonNode property = retrieveNode(nodePath);  // Retrieve the property
 
@@ -150,9 +144,10 @@ public class Settings {
 
     /**
      * Read a property from the settings file
-     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/path)
+     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/selected)
      * @return Value of the property
      */
+    @Override
     public int readIntProperty(String nodePath){
         JsonNode property = retrieveNode(nodePath);  // Retrieve the property
         return property.asInt();
@@ -160,9 +155,10 @@ public class Settings {
 
     /**
      * Read a property from the settings file
-     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/path)
+     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/selected)
      * @return Value of the property
      */
+    @Override
     public boolean readBooleanProperty(String nodePath){
         JsonNode property = retrieveNode(nodePath);  // Retrieve the property
         return property.asBoolean();
@@ -170,19 +166,21 @@ public class Settings {
 
     /**
      * Read a list property from the settings file
-     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/path)
+     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/selected)
      * @return ArrayList of the property
      */
+    @Override
     public ArrayList readListProperty(String nodePath){
         JsonNode property = retrieveNode(nodePath);
         return this.objectMapper.convertValue(property, new TypeReference<>(){});
     }
 
     /**
-     * Write a property from the settings file
-     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/path)
+     * Write a property to the settings file
+     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/selected)
      * @param value The new value of the property
      */
+    @Override
     public void writeProperty(String nodePath, Object value){
         try {
             // As we need to change a property we need to keep the same root node, otherwise the changes would not be saved
@@ -204,7 +202,8 @@ public class Settings {
         }
     }
 
-    public void writeListProperty(String nodePath, List values){
+    @Override
+    public void writeListProperty(String nodePath, ArrayList values){
         try {
             // As we need to change a property we need to keep the same root node, otherwise the changes would not be saved
             JsonNode rootNode = this.objectMapper.readTree(this.SETTINGS_FILE);
@@ -222,5 +221,4 @@ public class Settings {
             throw new RuntimeException(e);
         }
     }
-
 }

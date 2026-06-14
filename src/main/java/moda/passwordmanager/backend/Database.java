@@ -6,15 +6,22 @@ import java.util.ArrayList;
 public class Database {
 
     private String databasePath;  // Path of the database current in use
-    private static final String TABLE_NAME = "moda";  // Name of the table of the database
+    private static final String DATA_TABLE = "data";  // The table that contains the Data objects
+    private static final String GROUP_TABLE = "groups";  // The table that contains the Groups
 
-    private Connection connection;  // Attribute used to handle all the database queries
+    /**
+    The table that contains the sensitive settings of the application, which cannot be stored on the settings.json file.
+    Lastly, the records are handled by the SensitiveSettings class
+     */
+    private static final String SENSITIVE_SETTINGS_TABLE = "sensitive_settings";
+
+    private Connection connection;  // Attribute that handles all the database queries
 
     public Database(String databasePath){
         this.databasePath = databasePath;  // Set the path of the database
 
         initConnection();  // Connect to the database
-        createTable();  // Create the table of the database if it does not already exist
+        createTables();  // Create the tables of the Vault
     }
 
     /**
@@ -39,21 +46,42 @@ public class Database {
         }
     }
 
-    // Create a table, if it does not exist already, used to store all the data
-    private void createTable(){
+    /**
+     * Create the tables of the database, if they not exist already
+     */
+    private void createTables(){
         try {
             Statement query = this.connection.createStatement();  // Define a new query
 
             query.execute(
-                "CREATE TABLE IF NOT EXISTS "+Database.TABLE_NAME+" (" +
-                        "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                        "username TEXT," +
-                        "email_address TEXT," +
-                        "password TEXT," +
-                        "service TEXT," +
-                        "additional_data TEXT" +
+                    "CREATE TABLE IF NOT EXISTS "+Database.GROUP_TABLE+" (" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE, " +
+                            "name TEXT NOT NULL" +
                         ");"
             );
+
+            query.execute(
+                    "CREATE TABLE IF NOT EXISTS "+Database.DATA_TABLE+" (" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                            "username TEXT, " +
+                            "email_address TEXT, " +
+                            "password TEXT, " +
+                            "service TEXT NOT NULL, " +
+                            "additional_data TEXT, " +
+                            "group_id INTEGER, " +
+                            "FOREIGN KEY(group_id) REFERENCES "+Database.GROUP_TABLE+"(id)" +
+                        ");"
+            );
+
+            query.execute(
+                    "CREATE TABLE IF NOT EXISTS "+Database.SENSITIVE_SETTINGS_TABLE +" (" +
+                            "propertyPath TEXT PRIMARY KEY NOT NULL UNIQUE," +
+                            "value TEXT NOT NULL" +  // All the values are treated as text, and will be cast by Sensitive
+                                                     // Settings class
+                        ");"
+            );
+
+            query.close();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -73,19 +101,19 @@ public class Database {
         closeConnection();  // Close the previous connection
         this.databasePath = databasePath; // Set the new path of the database
         initConnection();  // Reinitialize the connection
-        createTable();  // Create the table inside the database
+        createTables();  // Create the table inside the database
     }
 
     /**
-     * Add a record to the table
+     * Add a record to the Data table
      * @param data Data object to add
      */
-    public void addRecord(Data data){
+    public void addDataRecord(Data data){
 
         try {
             // Create an INSERT INTO query
             PreparedStatement query = this.connection.prepareStatement(
-                    "INSERT INTO " + Database.TABLE_NAME + " " + "(username, email_address, password, service," +
+                    "INSERT INTO " + Database.DATA_TABLE + " (username, email_address, password, service," +
                             " additional_data) VALUES (?, ?, ?, ?, ?)"
             );
 
@@ -97,7 +125,7 @@ public class Database {
             query.setString(5, data.getADDITIONAL_DATA());
 
             // Execute the query
-            query.executeUpdate();
+            query.execute();
 
             // Close the query
             query.close();
@@ -108,12 +136,35 @@ public class Database {
     }
 
     /**
-     * Delete a record from the table
+     * Add a sensitive setting to the Sensitive Settings table
+     * @param propertyPath The path of the setting (ex. google_drive/enabled)
+     * @param value The value of the setting
+     */
+    public void addSensitiveSettingsRecord(String propertyPath, String value){
+        try{
+            // As the property field of the Sensitive Settings table is unique, if the SensitiveSettings class tries
+            // to readd the same property, it is automatically skipped
+            PreparedStatement query = this.connection.prepareStatement(
+                    "INSERT OR IGNORE INTO "+Database.SENSITIVE_SETTINGS_TABLE+" (propertyPath, value) VALUES (?, ?) ;"
+            );
+
+            query.setString(1, propertyPath);
+            query.setString(2, value);
+
+            query.execute();
+            query.close();
+        }catch (SQLException e){
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Delete a record from the Data table
      * @param id The record ID
      */
-    public void deleteRecord(int id){
+    public void deleteDataRecord(int id){
         try {
-            PreparedStatement query = this.connection.prepareStatement("DELETE FROM "+Database.TABLE_NAME+" WHERE id=?");
+            PreparedStatement query = this.connection.prepareStatement("DELETE FROM "+Database.DATA_TABLE +" WHERE id=?");
             query.setInt(1, id);  // Set the ID of the row
 
             query.executeUpdate();  // Execute the query
@@ -128,16 +179,16 @@ public class Database {
     }
 
     /**
-     * Retrieve all the Data from a record
+     * Retrieve all the data from a record of the Data table
      * @param id The record ID
      * @return Data object
      */
-    public Data getRecord(int id){
+    public Data getDataRecord(int id){
         String[] data = new String[5];
 
         try {
             // Read all the data from a row based on its ID
-            PreparedStatement query = this.connection.prepareStatement("SELECT * FROM "+Database.TABLE_NAME+
+            PreparedStatement query = this.connection.prepareStatement("SELECT * FROM "+Database.DATA_TABLE +
                     " WHERE id=?");
             query.setInt(1, id);
 
@@ -163,14 +214,38 @@ public class Database {
     }
 
     /**
-     * Change the data fields inside a record
+     * Get the value of a Sensitive Setting
+     * @param propertyPath The path of the property
+     * @return The encrypted value
+     */
+    public String getSensitiveSettingsValue(String propertyPath){
+        try {
+            PreparedStatement query = this.connection.prepareStatement(
+                    "SELECT value FROM " + Database.SENSITIVE_SETTINGS_TABLE + " WHERE propertyPath=?;"
+            );
+
+            query.setString(1, propertyPath);
+            ResultSet queryResult = query.executeQuery();
+
+            String value = queryResult.getString("value");
+            query.close();
+            queryResult.close();
+
+            return value;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Change the data fields of a record of the Data table
      * @param data The data to replace the previous one
      */
-    public void updateRecord(Data data){
+    public void updateDataRecord(Data data){
         try {
             // Create the UPDATE query and set its parameters
             PreparedStatement query = this.connection.prepareStatement(
-                    "UPDATE "+Database.TABLE_NAME+" SET username=?, email_address=?, password=?, service=?," +
+                    "UPDATE "+Database.DATA_TABLE +" SET username=?, email_address=?, password=?, service=?," +
                             " additional_data=? WHERE id=?"
             );
             query.setString(1, data.getUSERNAME());
@@ -180,25 +255,42 @@ public class Database {
             query.setString(5, data.getADDITIONAL_DATA());
             query.setInt(6, data.getID());
 
-            query.executeUpdate();  // Execute the query
-
-            // Close the query
+            query.execute();
             query.close();
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
     /**
-     * Retrieve the first service field from the table
+     * Change the value field of a record of the Sensitive Settings table
+     * @param propertyPath The path of the property
+     * @param value The new encrypted value of the property
+     * */
+    public void updateSensitiveSettingsValue(String propertyPath, String value){
+        try {
+            PreparedStatement query = this.connection.prepareStatement(
+                    "UPDATE "+Database.SENSITIVE_SETTINGS_TABLE+" SET value=? WHERE propertyPath=?;"
+            );
+            query.setString(1, value);
+            query.setString(2, propertyPath);
+
+            query.execute();
+            query.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Retrieve the first service field from the Data table
      * @return Data containing the encrypted service field
      */
-    public Data getFirstServiceField(){
+    public Data getDataFirstServiceField(){
         try{
             // Create the query to retrieve the service
             PreparedStatement query = this.connection.prepareStatement(
-                    "SELECT id, service FROM "+ TABLE_NAME + " LIMIT 1"
+                    "SELECT id, service FROM "+ DATA_TABLE + " LIMIT 1"
             );
             ResultSet result = query.executeQuery();  // Execute the query and retrieve the result
 
@@ -218,15 +310,15 @@ public class Database {
 
 
     /**
-     * Retrieve each service field with its ID from the table
+     * Retrieve each service field with its ID from the Data table
      * @return An ArrayList of Data object
      */
-    public ArrayList<Data> getServiceFields(){
+    public ArrayList<Data> getDataServiceFields(){
         ArrayList<Data> serviceFields = new ArrayList<>();  // The service fields are stored here
 
         try {
             PreparedStatement query = this.connection.prepareStatement(
-                    "SELECT id, service FROM "+TABLE_NAME
+                    "SELECT id, service FROM "+ DATA_TABLE
             );
             ResultSet queryResult = query.executeQuery();  // The set where are stored the records found in the database
 
@@ -249,15 +341,15 @@ public class Database {
     }
 
     /**
-     * Retrieve all the records inside the database
-     * @return ArrayList containing all the data
+     * Retrieve all the records inside the Data table
+     * @return ArrayList containing all the Data objects
      */
-    public ArrayList<Data> getRecords(){
+    public ArrayList<Data> getDataRecords(){
         ArrayList<Data> records = new ArrayList<>();
 
         try {
             // Read all the records
-            PreparedStatement query = this.connection.prepareStatement("SELECT * FROM "+ Database.TABLE_NAME);
+            PreparedStatement query = this.connection.prepareStatement("SELECT * FROM "+ Database.DATA_TABLE);
 
             ResultSet queryResult = query.executeQuery();  // Execute the query and retrive all the data
 
@@ -290,10 +382,10 @@ public class Database {
      * Change all the records inside the database
      * @param records The new records
      */
-    public void changeRecords(ArrayList<Data> records){
+    public void changeDataRecords(ArrayList<Data> records){
         try {
             PreparedStatement query = this.connection.prepareStatement(
-                    "UPDATE "+Database.TABLE_NAME+" SET username=?, email_address=?, password=?, service=?," +
+                    "UPDATE "+Database.DATA_TABLE +" SET username=?, email_address=?, password=?, service=?," +
                             " additional_data=? WHERE id=?"
             );
 

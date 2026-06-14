@@ -133,19 +133,12 @@ method.
 * Data received:  _boolean_ google drive synchronizations status
 * Synchronous: required
 
-### Google Drive authentication
-* Operation: `google-drive-authenticate`
+### Google Drive Status
+* Operation: `set-google-drive`
 * Sender: Frontend
-* Description: Send the path of the JSON credentials file used to authenticate with Google Drive
-* Data sent: _String_ path of "credentials.json"
-* Data received: -
-* Synchronous: not required
-
-### Google Drive unathentication
-* Operation: `google-drive-unauthenticate`
-* Sender: Frontend
-* Description: Unauthenticate from Google Drive
-* Data sent: -
+* Description: Enable or disable the Google Drive service, which also requires the JSON credentials file used to 
+authenticate with Google Drive (only if it has to be enabled)
+* Data sent: _boolean_ status of Google Drive, _String_ path of "credentials.json" (only if the status is set to true)
 * Data received: -
 * Synchronous: not required
 
@@ -157,29 +150,21 @@ method.
 * Data received: -
 * Synchronous: required
 
-### Enable Google Drive automatic synchronization
-* Operation: `enable-google-drive-synchronization`
-* Sender: Frontend
-* Description: Enable the automatic synchronization
-* Data sent: -
-* Data received: -
-* Synchronous: not required
-
-### Disable Google Drive automatic synchronization
-* Operation: `disable-google-drive-synchronization`
-* Sender: Frontend
-* Description: Disable the automatic synchronization
-* Data sent: -
-* Data received: -
-* Synchronous: not required
-
 ### Get Google Drive automatic synchronization
-* Operation: `get-google-drive-synchronization`
+* Operation: `get-google-drive-automatic-synchronization`
 * Sender: Frontend
 * Description: Request whether the automatic synchronization is enabled
 * Data sent: -
 * Data received: _boolean_ automatic synchronization status
 * Synchronous: required
+
+### Enable Google Drive automatic synchronization
+* Operation: `set-google-drive-automatic-synchronization`
+* Sender: Frontend
+* Description: Enable or disable the automatic synchronization
+* Data sent: _boolean_ status of the automatic synchronization
+* Data received: -
+* Synchronous: not required
 
 ***
 

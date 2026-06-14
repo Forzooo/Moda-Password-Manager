@@ -151,7 +151,7 @@ public class GoogleDrive extends Section {
      */
     private void initAutomaticSynchronizationCheckbox(){
         // Retrieve from the settings file the configuration of Google Drive synchronization visibility
-        Event event = new Event("get-google-drive-synchronization");
+        Event event = new Event("get-google-drive-automatic-synchronization");
         Event response = getITC().request(event);
         boolean enabled = (boolean) response.getData().getFirst();
 
@@ -169,7 +169,9 @@ public class GoogleDrive extends Section {
      * @param credentialsPath The path of the OAuth credentials used for the authentication
      */
     private void enableGoogleDrive(String credentialsPath){
-        Event event = new Event("google-drive-authenticate", credentialsPath);
+        Event event = new Event("set-google-drive");
+        event.addData(true);  // It allows the authentication
+        event.addData(credentialsPath);
         getITC().request(event);
     }
 
@@ -177,7 +179,7 @@ public class GoogleDrive extends Section {
      * Disable the Google Drive synchronization
      */
     private void disableGoogleDrive(){
-        Event event = new Event("google-drive-unauthenticate");
+        Event event = new Event("set-google-drive", false);
         getITC().request(event);  // Wait for the end of operations before disabling the button
     }
 
@@ -193,7 +195,7 @@ public class GoogleDrive extends Section {
      * Enable the automatic synchronization of Google Drive
      */
     private void enableAutomaticSynchronization(){
-        Event event = new Event("enable-google-drive-synchronization");
+        Event event = new Event("set-google-drive-automatic-synchronization", true);
         getITC().request(event);
     }
 
@@ -201,7 +203,7 @@ public class GoogleDrive extends Section {
      * Disable the automatic synchronization of Google Drive
      */
     private void disableAutomaticSynchronization(){
-        Event event = new Event("disable-google-drive-synchronization");
+        Event event = new Event("set-google-drive-automatic-synchronization", true);
         getITC().request(event);
     }
 

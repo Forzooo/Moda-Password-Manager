@@ -1,6 +1,7 @@
 package moda.passwordmanager.backend;
 
 import com.google.api.client.auth.oauth2.Credential;
+import com.google.api.client.auth.oauth2.StoredCredential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
@@ -10,7 +11,8 @@ import com.google.api.client.http.FileContent;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.client.util.store.FileDataStoreFactory;
+import com.google.api.client.util.store.DataStore;
+import com.google.api.client.util.store.MemoryDataStoreFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
@@ -20,21 +22,12 @@ import java.io.*;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class GoogleDrive {
 
     // The name of the Drive service
     private static final String APPLICATION_NAME = "Moda Password Manager - Google Drive API";
-
-    // The absolute path of the directory where all the files related to drive are stored
-    private final String API_DIRECTORY;
-
-    // Path of the directory where the authentication token is stored
-    // Authentication tokens are used to not authenticate each time the software is opened
-    private static final String TOKENS_DIRECTORY_NAME = "tokens";
-
-    // Path of the JSON file where there is the API key (inside "/resources")
-    private static final String API_FILE_NAME = "credentials.json";
 
     // Define the scopes of the API
     private static final List<String> SCOPES = Collections.singletonList(DriveScopes.DRIVE_FILE);
@@ -43,9 +36,6 @@ public class GoogleDrive {
     private static final String ROOT_DIRECTORY = ".moda";
     private static final String PASSWORD_MANAGER_DIRECTORY = "password-manager";
 
-    private final String API_FILE_PATH;  // The absolute path of the credentials.json file
-    private final String TOKENS_DIRECTORY_PATH;  // The absolute path of the tokes directory
-
     private Drive drive;  // The Google Drive service
     private JsonFactory jsonFactory;  // Used to handle all the data of the JSON
 
@@ -53,55 +43,44 @@ public class GoogleDrive {
     private String rootDirectoryID;
     private String passwordManagerDirectoryID;
 
-    public GoogleDrive(String appDataDirectory){
+    public GoogleDrive(){
         this.jsonFactory = GsonFactory.getDefaultInstance();
 
         // The ID of the directories are set in the init method
         this.rootDirectoryID = null;
         this.passwordManagerDirectoryID = null;
-
-        // Set the absolutes paths based on the path of the AppData directory retrieved from the Settings class
-        this.API_DIRECTORY = appDataDirectory+"google-drive\\";
-        this.API_FILE_PATH = API_DIRECTORY+API_FILE_NAME;
-        this.TOKENS_DIRECTORY_PATH = API_DIRECTORY+TOKENS_DIRECTORY_NAME;
-    }
-
-    public String getAPI_DIRECTORY() {
-        return API_DIRECTORY;
-    }
-
-    public String getTOKENS_DIRECTORY_PATH() {
-        return TOKENS_DIRECTORY_PATH;
-    }
-
-    public String getAPI_FILE_PATH() {
-        return this.API_FILE_PATH;
     }
 
     /**
      * Initialize the Google Drive modules
+     * @return The stored credentials
      */
-    public void init(){
-        initDriveService();
+    public StoredCredential init(String apiData, String storedCredentials){
+        StoredCredential credential = initDriveService(apiData, storedCredentials);
         this.rootDirectoryID = retrieveRootDirectoryID();
         this.passwordManagerDirectoryID = retrievePasswordManagerDirectoryID();
         createRootDirectory();
         createPasswordManagerDirectory();
+
+        return credential;
     }
 
     /**
      * Initialize the connection with the Drive API
      */
-    private void initDriveService(){
+    private StoredCredential initDriveService(String apiData, String storedCredentials){
         try {
             // Create an HTTP transport object to handle all the HTTP operations
             NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-            Credential credentials = authentication(httpTransport);  // Retrieve the credentials from the authentication
+
+            // Retrieve the credentials from the authentication
+            Object[] authenticationResults = authentication(httpTransport, apiData, storedCredentials);
 
             // Create the Drive object based on the HTTP transport and the credentials retrieved
-            this.drive = new Drive.Builder(httpTransport, this.jsonFactory, credentials)
+            this.drive = new Drive.Builder(httpTransport, this.jsonFactory, (Credential) authenticationResults[0])
                     .setApplicationName(GoogleDrive.APPLICATION_NAME).build();
 
+            return ((DataStore<StoredCredential>) authenticationResults[1]).get("user");  // The update stored credentials are returned
         } catch (GeneralSecurityException | IOException e) {
             throw new RuntimeException(e);
         }
@@ -109,36 +88,50 @@ public class GoogleDrive {
 
     /**
      * Authorize the Password Manager using OAuth and return the credentials
-     * @return User credentials
+     * @return Index 0: Credential object, Index 1: User credentials
      */
-    private Credential authentication(NetHttpTransport httpTransport){
-
-        Credential credential; // Define the credential to be returned before the try-catch block
-
+    private Object[] authentication(NetHttpTransport httpTransport, String apiData, String storedCredentials){
         try {
-            // Read the API key from the file
-            InputStream inputStream = new FileInputStream(this.API_FILE_PATH);
-
             // Create the client secrets from the API key
-            GoogleClientSecrets googleClientSecrets = GoogleClientSecrets.load(this.jsonFactory, new InputStreamReader(inputStream));
+            GoogleClientSecrets googleClientSecrets = GoogleClientSecrets.load(this.jsonFactory, new StringReader(apiData));
+
+            MemoryDataStoreFactory memoryDataStoreFactory = MemoryDataStoreFactory.getDefaultInstance();
+
+            // If a stored credential has already been created, then we can use it instead of generating another one
+            if (storedCredentials != null){
+                // When the stored credential has been saved inside the database, it had to be converted to a Java Map
+                // to be parsed to JSON. Now we have to do the inverse process to allow the memory data store factory
+                // to use the stored credential as there is not right now a simpler way to do it
+                Map<String, Object> storedCredentialsMap = this.jsonFactory.fromString(storedCredentials, Map.class);
+                StoredCredential credential = new StoredCredential()
+                        .setAccessToken((String) storedCredentialsMap.get("accessToken"))
+                        .setExpirationTimeMilliseconds(((Number) storedCredentialsMap.get("expirationTimeMilliseconds")).longValue())
+                        .setRefreshToken((String) storedCredentialsMap.get("refreshToken"));
+
+                memoryDataStoreFactory.getDataStore("StoredCredential").set("user", credential);
+            }
 
             // Create the Authorization Flow used to exchange the authorization code for a token
             GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
                     httpTransport, this.jsonFactory, googleClientSecrets, SCOPES)
                     // Set the directory where the token will be stored
-                    .setDataStoreFactory(new FileDataStoreFactory(new java.io.File(this.TOKENS_DIRECTORY_PATH)))
+                    .setDataStoreFactory(memoryDataStoreFactory)
                     .setAccessType("offline")  // Set the Access Type to offline to have a token that lasts longer
                     .build();
 
             // Create a local server used for the authentication
             LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8888).build();
-            credential = new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
 
+            // As both are required by other methods, the return must be a Object array
+            Object[] returnObjects = new Object[2];
+            returnObjects[0] = new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
+            returnObjects[1] = memoryDataStoreFactory.getDataStore("StoredCredential");
+
+            // Return the credentials given by the OAuth
+            return returnObjects;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return credential;  // Return the credentials given by the OAuth
-
     }
 
     /**
