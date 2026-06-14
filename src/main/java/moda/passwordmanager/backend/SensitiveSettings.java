@@ -14,6 +14,12 @@ public class SensitiveSettings extends AbstractSettings {
         this.DATABASE = database;
         this.HELPER = helper;
 
+    }
+
+    /**
+     * The Sensitive Settings must be initialized separately as they require the
+     */
+    public void init(){
         initRecords();
     }
 

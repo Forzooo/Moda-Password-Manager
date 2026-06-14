@@ -48,7 +48,6 @@ public class Backend extends EventListener {
         this.SENSITIVE_SETTINGS = new SensitiveSettings(this.DATABASE, this.HELPER);
         this.GOOGLE_DRIVE = new GoogleDrive(Helper.getAppDataDirectory());
 
-        startGoogleDrive();  // Initialize the connection with Google Drive only if enabled by the user
         initHandler();  // Initialize all the operations to handle
     }
 
@@ -77,8 +76,11 @@ public class Backend extends EventListener {
             // We need to store the result of testMasterPassword to initialize the ServiceMapping
             boolean test = testMasterPassword();
             if (test){
-                // Initialize the Service Mapping after the Master Password has been set
+                // All this operations require the master password to be set
                 this.HELPER.executeInBackground(this::initServiceMapping);
+                this.HELPER.executeInBackground(this.SENSITIVE_SETTINGS::init);
+                this.HELPER.executeInBackground(this::startGoogleDrive);  // Initialize the connection with Google Drive
+                                                                          // only if enabled by the user
             }
         });
 
@@ -122,15 +124,14 @@ public class Backend extends EventListener {
 
         addOperation("get-google-drive", this::getGoogleDrive);
         addOperation("get-google-drive-synchronization", this::getGoogleDriveSynchronization);
-        addOperation("google-drive-authenticate", () -> {
+        addOperation("set-google-drive", () -> {
             // If the first data is set to true, then the user wants to enable Google Drive
-            if ((boolean) getRequestData().getFirst()){
+            if (Boolean.parseBoolean(getRequestData().getFirst().toString())){
                 authenticateGoogleDrive();
             }else{
                 unauthenticateGoogleDrive();
             }
         });
-        addOperation("google-drive-unauthenticate", this::unauthenticateGoogleDrive);
 
         // Synchronize with Google Drive and update the service fields
         addOperation("google-drive-synchronize", () -> {
@@ -531,27 +532,26 @@ public class Backend extends EventListener {
     }
 
     /**
-     * Retrieve from the settings file whether Google Drive is enabled
+     * Retrieve from the Sensitive Settings whether Google Drive is enabled
      */
     private void getGoogleDrive(){
-        // Retrieve from the helper whether Google Drive is enabled
-       addResponseData(this.HELPER.isGoogleDriveEnabled());
+       addResponseData(this.SENSITIVE_SETTINGS.readBooleanProperty("google_drive/enabled"));
     }
 
     /**
-     * Retrieve from the settings file whether the automatic synchronization is enabled
+     * Retrieve from the Sensitive Settings whether the automatic synchronization is enabled
      */
     private void getGoogleDriveSynchronization(){
-        boolean synchronizationEnabled = this.SETTINGS.readBooleanProperty("google_drive/automatic_synchronization");
+        boolean synchronizationEnabled = this.SENSITIVE_SETTINGS.readBooleanProperty("google_drive/automatic_synchronization");
         addResponseData(synchronizationEnabled);
     }
 
     /**
-     * Start the Google Drive communication and the automatic synchronization only if they're enabled in the settings
-     * file
+     * Start the Google Drive communication and the automatic synchronization only if they're enabled in the Sensitive
+     * Settings
      */
     private void startGoogleDrive(){
-        if (this.HELPER.isGoogleDriveEnabled()){
+        if (this.SENSITIVE_SETTINGS.readBooleanProperty("google_drive/enabled")){
             this.GOOGLE_DRIVE.init();
         }
 
@@ -561,7 +561,7 @@ public class Backend extends EventListener {
     }
 
     /**
-     * Enable in the settings file the Google Drive synchronization and move the user credentials.json into the local
+     * Enable in the Sensitive Settings the Google Drive synchronization and move the user credentials.json into the local
      * appdata folder, then authenticate the user
      */
     private void authenticateGoogleDrive(){
@@ -576,11 +576,11 @@ public class Backend extends EventListener {
         }
 
         this.GOOGLE_DRIVE.init();  // Start the Google Drive communication
-        this.SETTINGS.writeProperty("google_drive/enabled", true);  // Set Google Drive to enabled
+        this.SENSITIVE_SETTINGS.writeProperty("google_drive/enabled", true);  // Set Google Drive to enabled
     }
 
     /**
-     * Disable in the settings file the Google Drive synchronization and delete the stored credentials, if there's any
+     * Disable in the Sensitive Settings the Google Drive synchronization and delete the stored credentials, if there's any
      */
     private void unauthenticateGoogleDrive(){
         try {
@@ -588,7 +588,7 @@ public class Backend extends EventListener {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        this.SETTINGS.writeProperty("google_drive/enabled", false);
+        this.SENSITIVE_SETTINGS.writeProperty("google_drive/enabled", false);
     }
 
     /**
@@ -603,7 +603,8 @@ public class Backend extends EventListener {
      */
     private void automaticSynchronizeGoogleDrive(){
         // Ensure that Google Drive is enabled, and the Synchronization is enabled before synchronizing
-        if (this.HELPER.isGoogleDriveEnabled() && this.SETTINGS.readBooleanProperty("google_drive/automatic_synchronization")){
+        if (this.SENSITIVE_SETTINGS.readBooleanProperty("google_drive/enabled") &&
+                this.SENSITIVE_SETTINGS.readBooleanProperty("google_drive/automatic_synchronization")){
             this.GOOGLE_DRIVE.sync(this.HELPER.getDatabasePath(), this.DATABASE.getDatabaseName());
             this.HELPER.executeInBackground(this::updateServiceFields);  // Update the service fields in the Frontend
         }
@@ -613,14 +614,14 @@ public class Backend extends EventListener {
      * Enable the Google Drive automatic synchronization
      */
     private void enableGoogleDriveSynchronization(){
-        this.SETTINGS.writeProperty("google_drive/automatic_synchronization", true);
+        this.SENSITIVE_SETTINGS.writeProperty("google_drive/automatic_synchronization", true);
     }
 
     /**
      * Disable the Google Drive automatic synchronization
      */
     private void disableGoogleDriveSynchronization(){
-        this.SETTINGS.writeProperty("google_drive/automatic_synchronization", false);
+        this.SENSITIVE_SETTINGS.writeProperty("google_drive/automatic_synchronization", false);
     }
 
     /**

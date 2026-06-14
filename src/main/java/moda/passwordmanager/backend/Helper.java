@@ -163,14 +163,6 @@ public class Helper {
     }
 
     /**
-     * Retrieve from the settings file whether Google Drive has been enabled
-     * @return Boolean that indicates the state of Google Drive
-     */
-    public boolean isGoogleDriveEnabled(){
-        return this.SETTINGS.readBooleanProperty("google_drive/enabled");
-    }
-
-    /**
      * Retrieve from the settings file the path of the database
      * @return String that indicates the path of the database
      */

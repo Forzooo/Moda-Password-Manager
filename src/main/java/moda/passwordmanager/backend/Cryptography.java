@@ -24,26 +24,15 @@ public class Cryptography {
     // AES-GCM Settings
     private final static int AES_KEY_SIZE = 32;  // The length is set to bytes for better compatibility
     private final static int AES_IV_SIZE = 12;
-    private final static int AES_GMC_TAG_SIZE = 128;  // The length is set to bytes
+    private final static int AES_GMC_TAG_SIZE = 128;  // The length is set to bits
 
     // Class attributes
     private byte[] masterPassword;  // The master password that allows encryption/decryption
     private SecureRandom secureRandom;
-    private Argon2Parameters.Builder hashBuilder;  // The builder for hash generation
 
     public Cryptography(){
         this.masterPassword = null;  // The master password is set only with the set method
         this.secureRandom = new SecureRandom();
-
-        initCryptography();
-    }
-
-    private void initCryptography(){
-        // Set the Argon2 builder with the settings specified in the attributes of the class
-        this.hashBuilder = new Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
-                .withIterations(Cryptography.ARGON_ITERATIONS)  // Set the number of iterations
-                .withMemoryAsKB(Cryptography.ARGON_MEMORY*1000)  // Set the RAM usage of Argon in KiloBytes
-                .withParallelism(Cryptography.ARGON_PARALLELISM);  // Set the number of threads
     }
 
     /**
@@ -64,6 +53,12 @@ public class Cryptography {
     * </ul>
     */
     public byte[] encrypt(String plaintext){
+        // If by mistake a cryptography dependant operation is executed before setting the master password, then an
+        // exception is arisen to let the developer know the issue
+        if (this.masterPassword == null){
+            throw new RuntimeException("The master password must be set before executing any cryptographical operation.");
+        }
+
         reseed();  // Reseed the Random Generator before any operations
 
         byte[] plaintextBytes = plaintext.getBytes();  // Convert the plaintext string to bytes
@@ -79,14 +74,20 @@ public class Cryptography {
         byte[] ciphertext = computeAES(plaintextBytes, hash, iv, Cipher.ENCRYPT_MODE);
 
         // Add the Initialization Vector and the Salt to the ciphertext byte array
-        ciphertext = addData(ciphertext, iv);
-        ciphertext = addData(ciphertext, salt);
+        ciphertext = addHeader(ciphertext, iv);
+        ciphertext = addHeader(ciphertext, salt);
 
         return ciphertext;  // Return the encrypted data
     }
 
     // Removes all the headers from the ciphertext and decrypts it
     public byte[] decrypt(byte[] encryptedData){
+        // If by mistake a cryptography dependant operation is executed before setting the master password, then an
+        // exception is arisen to let the developer know the issue
+        if (this.masterPassword == null){
+            throw new RuntimeException("The master password must be set before executing any cryptographical operation.");
+        }
+
         byte[] salt = readHeader(encryptedData, ARGON_SALT_SIZE);
         encryptedData = removeHeader(encryptedData, ARGON_SALT_SIZE);
 
@@ -115,19 +116,22 @@ public class Cryptography {
         this.secureRandom.reseed();
     }
 
-    // Hash the master password with a salt using Argon2id with the above settings
-
     /**
      * Generate an Hash using the Argon2id algorithm
      * @param salt A randomically generated salt
      * @return Random hash generated with Argon2id
      */
     private byte[] hash(byte[] salt){
-        this.hashBuilder.withSalt(salt);  // Set the salt of the hash generator
+        // The parameters and the hashGenerator have to be created locally, otherwise a race condition can happen
+        Argon2Parameters parameters = new Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
+                .withIterations(Cryptography.ARGON_ITERATIONS)  // Set the number of iterations
+                .withMemoryAsKB(Cryptography.ARGON_MEMORY*1000)  // Set the RAM usage of Argon in KiloBytes
+                .withParallelism(Cryptography.ARGON_PARALLELISM)  // Set the number of threads
+                .withSalt(salt)  // Set the salt of the hash generator
+                .build();
 
-        // The hashGenerator has to be created locally, otherwise a race condition can happen
         Argon2BytesGenerator hashGenerator = new Argon2BytesGenerator();
-        hashGenerator.init(this.hashBuilder.build());
+        hashGenerator.init(parameters);
 
         byte[] hash = new byte[Cryptography.AES_KEY_SIZE];  // Create the array of bytes where the hash will be stored
         hashGenerator.generateBytes(this.masterPassword, hash);  // Compute the hashes using the master password
@@ -168,18 +172,18 @@ public class Cryptography {
     }
 
     /**
-     * Add data in byte array to another one
-     * @param array The array which data will be copied to
-     * @param data The data to copy
+     * Add a header to the end of a byte array
+     * @param data The array which data will be copied to
+     * @param header The data to copy
      * @return A new byte array with both the arrays
      */
-    private byte[] addData(byte[] array, byte[] data){
+    private byte[] addHeader(byte[] data, byte[] header){
         // The ByteArrayOutputStream allows to write each array into its stream before getting back a byte array
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream(array.length + data.length);  // Set the len
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length + header.length);  // Set the len
         try {
             // Write the arrays into the stream
-            outputStream.write(array);
             outputStream.write(data);
+            outputStream.write(header);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

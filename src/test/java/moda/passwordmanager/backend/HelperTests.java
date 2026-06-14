@@ -22,9 +22,6 @@ class HelperTests {
     // String generation test attributes
     private final static String STRING_GENERATION_SETTINGS_ROOT_NODE = "string_generation/";
 
-    // Google Drive test attributes
-    private final static String GOOGLE_DRIVE_ROOT_NODE = "google_drive/";
-
     // Database test attributes
     private final static String DATABASE_ROOT_NODE = "database/";
 
@@ -89,15 +86,6 @@ class HelperTests {
     }
 
     /**
-     * Ensure that the Helper returns the current state of Google Drive
-     */
-    @Test
-    void isGoogleDriveEnabled(){
-        boolean googleDriveState = this.helper.isGoogleDriveEnabled();
-        assertEquals(this.settings.readBooleanProperty(GOOGLE_DRIVE_ROOT_NODE+"enabled"), googleDriveState);
-    }
-
-    /**
      * Ensure that the Helper returns the path of the database
      */
     @Test
@@ -111,7 +99,7 @@ class HelperTests {
      */
     @Test
     void decryptString(){
-        assertEquals(STRING_PLAINTEXT, this.helper.decryptString(STRING_CIPHERTEXT));
+        assertEquals(STRING_PLAINTEXT, this.helper.decrypt(STRING_CIPHERTEXT));
     }
 
     @Test

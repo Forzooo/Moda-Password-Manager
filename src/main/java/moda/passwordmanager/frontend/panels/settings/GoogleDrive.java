@@ -169,7 +169,9 @@ public class GoogleDrive extends Section {
      * @param credentialsPath The path of the OAuth credentials used for the authentication
      */
     private void enableGoogleDrive(String credentialsPath){
-        Event event = new Event("google-drive-authenticate", credentialsPath);
+        Event event = new Event("set-google-drive");
+        event.addData(true);  // It allows the authentication
+        event.addData(credentialsPath);
         getITC().request(event);
     }
 
@@ -177,7 +179,7 @@ public class GoogleDrive extends Section {
      * Disable the Google Drive synchronization
      */
     private void disableGoogleDrive(){
-        Event event = new Event("google-drive-unauthenticate");
+        Event event = new Event("set-google-drive", false);
         getITC().request(event);  // Wait for the end of operations before disabling the button
     }
 
