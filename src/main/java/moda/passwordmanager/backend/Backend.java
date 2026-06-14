@@ -1,20 +1,19 @@
 package moda.passwordmanager.backend;
 
+import com.google.api.client.auth.oauth2.StoredCredential;
+import com.google.api.client.json.gson.GsonFactory;
 import moda.passwordmanager.frontend.properties.Languages;
 import moda.passwordmanager.frontend.properties.Themes;
 import moda.passwordmanager.interthreadcommunication.EventListener;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
-import org.apache.commons.io.FileUtils;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class Backend extends EventListener {
@@ -46,7 +45,7 @@ public class Backend extends EventListener {
         this.CRYPTOGRAPHY = new Cryptography();
         this.HELPER = new Helper(this.CRYPTOGRAPHY, this.SETTINGS);
         this.SENSITIVE_SETTINGS = new SensitiveSettings(this.DATABASE, this.HELPER);
-        this.GOOGLE_DRIVE = new GoogleDrive(Helper.getAppDataDirectory());
+        this.GOOGLE_DRIVE = new GoogleDrive();
 
         initHandler();  // Initialize all the operations to handle
     }
@@ -559,7 +558,8 @@ public class Backend extends EventListener {
      */
     private void startGoogleDrive(){
         if (this.SENSITIVE_SETTINGS.readBooleanProperty("google_drive/enabled")){
-            this.GOOGLE_DRIVE.init();
+            this.GOOGLE_DRIVE.init(this.SENSITIVE_SETTINGS.readStringProperty("google_drive/credentials"),
+                    this.SENSITIVE_SETTINGS.readStringProperty("google_drive/stored_credentials"));
         }
 
         // We need to schedule the synchronization even if the Google Drive module is not enabled because otherwise
@@ -572,30 +572,46 @@ public class Backend extends EventListener {
      * appdata folder, then authenticate the user
      */
     private void authenticateGoogleDrive(){
+        // The entire file is read and stored inside a String, then it is saved in the database encrypted
         String credentialsPath = (String) getRequestData().get(1);  // The path of the credentials.json file
+        String credentials;
         try {
-            new File(this.GOOGLE_DRIVE.getAPI_DIRECTORY()).mkdirs();  // Create the Google Drive dir (skipped if it already exists)
-
-            // Move the file to the Google Drive API directory, replacing the previous file if it existed
-            Files.move(Path.of(credentialsPath), Path.of(this.GOOGLE_DRIVE.getAPI_FILE_PATH()), StandardCopyOption.REPLACE_EXISTING);
+            FileReader credentialsReader = new FileReader(credentialsPath);
+            credentials = credentialsReader.readAllAsString();  // The credentials are used again in the init
+            credentialsReader.close();
+            this.SENSITIVE_SETTINGS.writeProperty("google_drive/credentials", credentials);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        this.GOOGLE_DRIVE.init();  // Start the Google Drive communication
+        // Start the Google Drive communication where the stored credentials are null as they are not defined yet
+        StoredCredential storedCredentials = this.GOOGLE_DRIVE.init(credentials, null);
+        new File(credentialsPath).delete();  // Delete the file to avoid leaving the keys in plaintext
+
+        // To allow the credentials to be parsed to JSON, as the GoogleDrive.authentication method requires, they first
+        // need to be converted to a Map object, otherwise it cannot be parsed
+        Map<String, Object> storedCredentialsMap = new HashMap<>();
+        storedCredentialsMap.put("accessToken", storedCredentials.getAccessToken());
+        storedCredentialsMap.put("refreshToken", storedCredentials.getRefreshToken());
+        storedCredentialsMap.put("expirationTimeMilliseconds", storedCredentials.getExpirationTimeMilliseconds());
+
+
         this.SENSITIVE_SETTINGS.writeProperty("google_drive/enabled", true);  // Set Google Drive to enabled
+        try {
+            this.SENSITIVE_SETTINGS.writeProperty("google_drive/stored_credentials",
+                    new GsonFactory().toString(storedCredentialsMap));  // The Map has to be parsed using a Gson factory
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
-     * Disable in the Sensitive Settings the Google Drive synchronization and delete the stored credentials, if there's any
+     * Disable in the Sensitive Settings the Google Drive synchronization and delete the stored credentials
      */
     private void unauthenticateGoogleDrive(){
-        try {
-            FileUtils.deleteDirectory(new File(this.GOOGLE_DRIVE.getTOKENS_DIRECTORY_PATH()));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
         this.SENSITIVE_SETTINGS.writeProperty("google_drive/enabled", false);
+        this.SENSITIVE_SETTINGS.writeProperty("google_drive/credentials", "");
+        this.SENSITIVE_SETTINGS.writeProperty("google_drive/stored_credentials", "");
     }
 
     /**

@@ -29,7 +29,7 @@ public class SensitiveSettings extends AbstractSettings {
     private void initRecords(){
         this.DATABASE.addSensitiveSettingsRecord("google_drive/enabled", this.HELPER.encrypt("false"));
         this.DATABASE.addSensitiveSettingsRecord("google_drive/credentials", this.HELPER.encrypt(""));
-        this.DATABASE.addSensitiveSettingsRecord("google_drive/storedCredential", this.HELPER.encrypt(""));
+        this.DATABASE.addSensitiveSettingsRecord("google_drive/stored_credentials", this.HELPER.encrypt(""));
         this.DATABASE.addSensitiveSettingsRecord("google_drive/automatic_synchronization", this.HELPER.encrypt("false"));
     }
 
