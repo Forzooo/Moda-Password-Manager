@@ -12,7 +12,6 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.store.DataStore;
-import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.client.util.store.MemoryDataStoreFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
@@ -37,12 +36,14 @@ public class GoogleDrive {
 
     private Drive drive;  // The Google Drive service
     private final JsonFactory JSON_FACTORY;  // Used to handle all the data of the JSON
+    private final Helper HELPER;  // The helper is used for the cryptographic operations
 
     // The IDs of the directories used by the password manager to perform operations on the databases
     private String rootDirectoryID;
     private String passwordManagerDirectoryID;
 
-    public GoogleDrive(){
+    public GoogleDrive(Helper helper){
+        this.HELPER = helper;
         this.JSON_FACTORY = GsonFactory.getDefaultInstance();
 
         // The ID of the directories are retrieved when the init method is called
@@ -242,7 +243,7 @@ public class GoogleDrive {
         try {
             String databaseID = getDatabaseID(databaseName);
             if (!databaseID.isBlank()){  // If the database ID is not blank, then a database must exist
-                this.drive.files().delete(databaseID).execute();
+                this.drive.files().delete(databaseID).execute();  // TODO: Update the file instead of recreating it
             }
 
             // Upload the file to Drive and set its id and its parents
@@ -254,13 +255,15 @@ public class GoogleDrive {
 
     /**
      * Download the database from Drive and saves it locally
-     * @param databasePath The path where the database will be saved
      * @param databaseName The name of the database that will be downloaded
+     * @param remoteDatabasePath The path where the remote database will be stored
      */
-    private void downloadDatabase(String databasePath, String databaseName){
+    private Database downloadDatabase(String databaseName, String remoteDatabasePath){
         OutputStream outputStream;
         try {
-            outputStream = new FileOutputStream(databasePath);  // Define the path where the DB will be saved
+            // The database will temporally be stored inside the password manager AppdData directory to be
+            // opened by the Database object
+            outputStream = new FileOutputStream(remoteDatabasePath);
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -273,6 +276,8 @@ public class GoogleDrive {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        return new Database(remoteDatabasePath);
     }
 
     /**
@@ -306,10 +311,19 @@ public class GoogleDrive {
     public void sync(String databasePath, String databaseName){
         // If the remote database and the local one have the same checksum it means that no changes have been made,
         // thus we can avoid further operations
-        if (!getDatabaseChecksum(databaseName).equals(Helper.calculateFileMD5(databasePath))){
-            uploadDatabase(databasePath, databaseName);  // TODO: Right now the local database is assumed to be
-                                                         // the updated one, and it will be until further developments
-                                                         // occur
+        String remoteDatabaseChecksum = getDatabaseChecksum(databaseName);
+
+        if (!remoteDatabaseChecksum.equals(Helper.calculateFileMD5(databasePath)) && !remoteDatabaseChecksum.isBlank()){
+            // The name of the remote database is the checksum of the remote database to ensure that there
+            // are no duplicate files (hash collision are rare)
+            String downloadedDatabasePath = Helper.getPasswordManagerAppDataPath()+remoteDatabaseChecksum+".modb";
+
+            Database remoteDatabase = downloadDatabase(databaseName, downloadedDatabasePath);
+
+            // After all the operations on the remote database are done, we can delete it from the file system
+//            java.io.File remoteDatabaseFile = new java.io.File(downloadedDatabasePath);
+//            remoteDatabaseFile.delete();
+
         }
     }
 }

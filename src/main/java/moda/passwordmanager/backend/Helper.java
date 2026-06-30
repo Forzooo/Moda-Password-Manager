@@ -36,9 +36,9 @@ public class Helper {
     }
 
     /**
-     * Return the path of the AppData directory for the current user
+     * Return the path of "%appdata%/Moda/Password-Manager/" directory for the current user
      */
-    public static String getAppDataDirectory() {
+    public static String getPasswordManagerAppDataPath() {
         return System.getenv("APPDATA")+"\\Moda\\Password-Manager\\";
     }
 

@@ -42,12 +42,12 @@ public class Backend extends EventListener {
         createAppdataDirectory();  // Create the folder to store the configuration files inside it
 
         // Initialize all the backend components
-        this.SETTINGS = new Settings(Helper.getAppDataDirectory()+Helper.getSettingsFile());
+        this.SETTINGS = new Settings(Helper.getPasswordManagerAppDataPath()+Helper.getSettingsFile());
         this.DATABASE = new Database(this.SETTINGS.readStringProperty("database/selected"));
         this.CRYPTOGRAPHY = new Cryptography();
         this.HELPER = new Helper(this.CRYPTOGRAPHY, this.SETTINGS);
         this.SENSITIVE_SETTINGS = new SensitiveSettings(this.DATABASE, this.HELPER);
-        this.GOOGLE_DRIVE = new GoogleDrive();
+        this.GOOGLE_DRIVE = new GoogleDrive(this.HELPER);
 
         initHandler();  // Initialize all the operations to handle
     }
@@ -56,7 +56,7 @@ public class Backend extends EventListener {
      * Create the Appdata folder for the software to store inside it files
      */
     private void createAppdataDirectory(){
-        File appdataDirectory = new File(Helper.getAppDataDirectory());
+        File appdataDirectory = new File(Helper.getPasswordManagerAppDataPath());
 
         // Check whether the directory already exists to avoid recreating it
         if (appdataDirectory.exists()){
@@ -200,7 +200,7 @@ public class Backend extends EventListener {
         String timestamp = new SimpleDateFormat("yyyy-M-dd-HH-mm-ss").format(new Date());
 
         try {
-            File traceback = new File(Helper.getAppDataDirectory()+"traceback-"+
+            File traceback = new File(Helper.getPasswordManagerAppDataPath()+"traceback-"+
                     timestamp+".txt");
             traceback.createNewFile();  // Create the traceback file
 
