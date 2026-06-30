@@ -1,7 +1,11 @@
 package moda.passwordmanager.backend;
 
 import moda.passwordmanager.frontend.properties.Languages;
+import org.apache.commons.codec.digest.DigestUtils;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -202,5 +206,17 @@ public class Helper {
         }
 
         return passwordManagerLanguage;
+    }
+
+    /**
+     * Calculates the MD5 Hash of the content of a file
+     */
+    public static String calculateFileMD5(String filepath){
+        try {
+            // Read the file content and calculate the MD5 using Apache Commons library
+            return DigestUtils.md5Hex(Files.readAllBytes(Path.of(filepath)));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
