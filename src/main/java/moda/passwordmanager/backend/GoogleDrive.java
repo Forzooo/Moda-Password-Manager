@@ -36,14 +36,15 @@ public class GoogleDrive {
 
     private Drive drive;  // The Google Drive service
     private final JsonFactory JSON_FACTORY;  // Used to handle all the data of the JSON
-    private final Helper HELPER;  // The helper is used for the cryptographic operations
+    private boolean conflictsSolved;  // The conflicts can happen on the synchronization if the two database don't have
+                                      // same MD5 checksum. Only when they are solved, the local database can be uploaded
+                                      // to Google Drive
 
     // The IDs of the directories used by the password manager to perform operations on the databases
     private String rootDirectoryID;
     private String passwordManagerDirectoryID;
 
-    public GoogleDrive(Helper helper){
-        this.HELPER = helper;
+    public GoogleDrive(){
         this.JSON_FACTORY = GsonFactory.getDefaultInstance();
 
         // The ID of the directories are retrieved when the init method is called
@@ -309,20 +310,82 @@ public class GoogleDrive {
      * @param databaseName The name of the database in use
      */
     public void sync(String databasePath, String databaseName){
-        // If the remote database and the local one have the same checksum it means that no changes have been made,
-        // thus we can avoid further operations
+        // TODO: Analyze whether it is worth to use an Enum to indicate the states of the synchronization: to perform,
+        // TODO: conflicts found and conflicts solved. It could avoid recalculating the conflicts if the automatic
+        // TODO: synchronization is enabled
+        // If the conflicts of the synchronization are solved, then the local database can be uploaded to Google Drive
+        if (this.conflictsSolved){
+            uploadDatabase(databasePath, databaseName);
+            this.conflictsSolved = false;  // The conflicts are set again to false to avoid to re-enter this if statement
+                                           // without checking for differences with the remote database
+        }
+
         String remoteDatabaseChecksum = getDatabaseChecksum(databaseName);
 
+        // If the remote database and the local one have the same checksum it means that no changes have been made,
+        // thus we can avoid further operations
         if (!remoteDatabaseChecksum.equals(Helper.calculateFileMD5(databasePath)) && !remoteDatabaseChecksum.isBlank()){
-            // The name of the remote database is the checksum of the remote database to ensure that there
+            // The name of the remote database in the path is the checksum of the remote database to ensure that there
             // are no duplicate files (hash collision are rare)
-            String downloadedDatabasePath = Helper.getPasswordManagerAppDataPath()+remoteDatabaseChecksum+".modb";
+            Database remoteDatabase = downloadDatabase(databaseName,
+                    Helper.getPasswordManagerAppDataPath()+remoteDatabaseChecksum+".modb");
+            ArrayList<Data> remoteDataRecords = remoteDatabase.getDataRecords();
+            remoteDatabase.closeConnection();
 
-            Database remoteDatabase = downloadDatabase(databaseName, downloadedDatabasePath);
+            // After the remote records are obtained, we can delete the remote database from the file system
+            java.io.File remoteDatabaseFile = new java.io.File(remoteDatabase.getPath());
+            remoteDatabaseFile.delete();
 
-            // After all the operations on the remote database are done, we can delete it from the file system
-//            java.io.File remoteDatabaseFile = new java.io.File(downloadedDatabasePath);
-//            remoteDatabaseFile.delete();
+            Database localDatabase = new Database(databasePath);
+            ArrayList<Data> localDataRecords = localDatabase.getDataRecords();
+            localDatabase.closeConnection();
+
+            // We remove the data that are still the same on the remote database
+            // And for the iteration we have to do it backwards for the outer loop as if we remove Data objects from
+            // the start, the ArrayList automatically re-indexes itself, thus skipping some objects
+            for (int i = remoteDataRecords.size()-1; i >= 0; i--){
+                Data remoteData = remoteDataRecords.get(i);
+
+                // The inner loop can use a foreach because if we find a matching Data object we will break
+                // the iteration and we will restart it from the new ArrayList in the next outer iteration,
+                // ignoring the re-index problem
+                for (Data localData : localDataRecords){
+                    if (localData.getID() == remoteData.getID() && localData.hashCode() == remoteData.hashCode()){
+                        remoteDataRecords.remove(remoteData);
+                        localDataRecords.remove(localData);
+                        break;
+                    }
+                }
+            }
+
+            // We iterate over the local Data objects to look for any that are not inside the remote database: they
+            // could either be new or it has been deleted in the remote one
+            for (Data localData : localDataRecords){
+                boolean notOnRemote = true;
+
+                for (Data remoteData : remoteDataRecords){
+                    if (remoteData.getID() == localData.getID()){
+                        notOnRemote = false;
+                    }
+                }
+
+                // If the data is not on the remote database, then we set its service attribute to be an empty string
+                // to indicate that the record is either new or it has been deleted. Hence, when solving the conflict
+                // it will be read from the local database to show it to the user
+                if (notOnRemote){
+                    remoteDataRecords.add(new Data(localData.getID(), ""));
+                }
+            }
+
+            // If the remote data records are empty it means that no update has been made to the Data table (probably
+            // it has to the sensitive settings) thus we can set the conflicts solved to true
+            if (remoteDataRecords.isEmpty()){
+                this.conflictsSolved = true;
+            }else{
+                this.conflictsSolved = false;
+                // TODO: An event has to be sent that notifies the Frontend that the synchronization encountered some
+                // TODO: conflicts. Lastly, it has to include the remoteDataRecords array
+            }
 
         }
     }

@@ -73,8 +73,8 @@ class DatabaseTests {
      * Ensure that the getDatabaseName returns the name of the database
      */
     @Test
-    void getDatabaseName(){
-        assertEquals(DATABASE_NAME, this.database.getDatabaseName());
+    void getName(){
+        assertEquals(DATABASE_NAME, this.database.getName());
     }
 
     /**
@@ -123,24 +123,24 @@ class DatabaseTests {
      * Ensure that changing a database works properly
      */
     @Test
-    void changeDatabase(){
+    void change(){
         this.database.addDataRecord(TEST_DATA);  // Add the record to the first database
 
         // Change the database to another one and add a new record inside it
-        this.database.changeDatabase(TEST_DIRECTORY + "\\" + SECONDARY_DATABASE_NAME);
+        this.database.change(TEST_DIRECTORY + "\\" + SECONDARY_DATABASE_NAME);
 
         // We're using the updated data instead of the test data 2 as it will be the first record of the second database,
         // so it requires to have the ID = 1, where the test data 2 has ID = 2
         this.database.addDataRecord(UPDATED_TEST_DATA);
 
         // Change the database to the first one and assert that the record inside it is the right one
-        this.database.changeDatabase(TEST_DIRECTORY + "\\" + DATABASE_NAME);
+        this.database.change(TEST_DIRECTORY + "\\" + DATABASE_NAME);
 
         Data recordFirstDatabase = this.database.getDataRecord(ID);
         assertEquals(TEST_DATA, recordFirstDatabase);
 
         // Change again the database and assert that the record inside is the second one
-        this.database.changeDatabase(TEST_DIRECTORY + "\\" + SECONDARY_DATABASE_NAME);
+        this.database.change(TEST_DIRECTORY + "\\" + SECONDARY_DATABASE_NAME);
 
         Data recordSecondDatabase = this.database.getDataRecord(ID);
         assertEquals(UPDATED_TEST_DATA, recordSecondDatabase);

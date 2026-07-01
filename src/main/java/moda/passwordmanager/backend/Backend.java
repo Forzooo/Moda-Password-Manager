@@ -47,7 +47,7 @@ public class Backend extends EventListener {
         this.CRYPTOGRAPHY = new Cryptography();
         this.HELPER = new Helper(this.CRYPTOGRAPHY, this.SETTINGS);
         this.SENSITIVE_SETTINGS = new SensitiveSettings(this.DATABASE, this.HELPER);
-        this.GOOGLE_DRIVE = new GoogleDrive(this.HELPER);
+        this.GOOGLE_DRIVE = new GoogleDrive();
 
         initHandler();  // Initialize all the operations to handle
     }
@@ -490,7 +490,7 @@ public class Backend extends EventListener {
      */
     private void setDatabasePath(String databasePath){
         this.SETTINGS.writeProperty("database/selected", databasePath);  // Set the path of the database
-        this.DATABASE.changeDatabase(databasePath);  // Set the new database to be the one used
+        this.DATABASE.change(databasePath);  // Set the new database to be the one used
     }
 
     /**
@@ -619,7 +619,7 @@ public class Backend extends EventListener {
      * Synchronize the database with Google Drive
      */
     private void synchronizeGoogleDrive(){
-        this.GOOGLE_DRIVE.sync(this.HELPER.getDatabasePath(), this.DATABASE.getDatabaseName());
+        this.GOOGLE_DRIVE.sync(this.HELPER.getDatabasePath(), this.DATABASE.getName());
     }
 
     /**
@@ -629,7 +629,7 @@ public class Backend extends EventListener {
         // Ensure that Google Drive is enabled, and the Synchronization is enabled before synchronizing
         if (this.SENSITIVE_SETTINGS.readBooleanProperty("google_drive/enabled") &&
                 this.SENSITIVE_SETTINGS.readBooleanProperty("google_drive/automatic_synchronization")){
-            this.GOOGLE_DRIVE.sync(this.HELPER.getDatabasePath(), this.DATABASE.getDatabaseName());
+            this.GOOGLE_DRIVE.sync(this.HELPER.getDatabasePath(), this.DATABASE.getName());
             this.HELPER.executeInBackground(this::updateServiceFields);  // Update the service fields in the Frontend
         }
     }

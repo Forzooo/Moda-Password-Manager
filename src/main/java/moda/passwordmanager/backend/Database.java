@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class Database {
 
-    private String databasePath;  // Path of the database current in use
+    private String path;  // Path of the database current in use
     private static final String DATA_TABLE = "data";  // The table that contains the Data objects
     private static final String GROUP_TABLE = "groups";  // The table that contains the Groups
 
@@ -17,8 +17,8 @@ public class Database {
 
     private Connection connection;  // Attribute that handles all the database queries
 
-    public Database(String databasePath){
-        this.databasePath = databasePath;  // Set the path of the database
+    public Database(String path){
+        this.path = path;  // Set the path of the database
 
         initConnection();  // Connect to the database
         createTables();  // Create the tables of the Vault
@@ -29,7 +29,7 @@ public class Database {
      */
     private void initConnection(){
         try {
-            this.connection = DriverManager.getConnection("jdbc:sqlite:"+this.databasePath);
+            this.connection = DriverManager.getConnection("jdbc:sqlite:"+this.path);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -88,18 +88,29 @@ public class Database {
     }
 
     /**
+     * Retrieve the path of the database in use
+     */
+    public String getPath(){
+        return this.path;
+    }
+
+    /**
      * Retrieve the name of the database, including the file extension, from the database path
      * @return String containing the name of the current database
      */
-    public String getDatabaseName(){
+    public String getName(){
         // The name of the database is gotten from the last slash of the path, and the +1 is required to
         // remove the slash from the name
-        return this.databasePath.substring(this.databasePath.lastIndexOf("\\")+1);
+        return this.path.substring(this.path.lastIndexOf("\\")+1);
     }
 
-    public void changeDatabase(String databasePath){
+    /**
+     * Change the database in use
+     * @param databasePath The path of the new database to use
+     */
+    public void change(String databasePath){
         closeConnection();  // Close the previous connection
-        this.databasePath = databasePath; // Set the new path of the database
+        this.path = databasePath; // Set the new path of the database
         initConnection();  // Reinitialize the connection
         createTables();  // Create the table inside the database
     }
