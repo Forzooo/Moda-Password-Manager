@@ -125,7 +125,7 @@ method.
 ***
 
 ## Google Drive
-### Get Google Drive
+### Get Google Drive Status
 * Operation: `get-google-drive`
 * Sender: Frontend
 * Description: Requests whether Google Drive synchronization is enabled
@@ -133,7 +133,7 @@ method.
 * Data received:  _boolean_ google drive synchronizations status
 * Synchronous: required
 
-### Google Drive Status
+### Set Google Drive Status
 * Operation: `set-google-drive`
 * Sender: Frontend
 * Description: Enable or disable the Google Drive service, which also requires the JSON credentials file used to 
@@ -148,7 +148,25 @@ authenticate with Google Drive (only if it has to be enabled)
 * Description: Perform a synchronization with Google Drive
 * Data sent: -
 * Data received: -
-* Synchronous: required
+* Synchronous: not required
+
+### Google Drive synchronization conflicts
+* Operation: `google-drive-synchronization-conflicts`
+* Sender: Backend
+* Description: During the synchronization some conflicts between the local database and the remote one have been found.
+  The user has to solve them by updating the local database with the changes he wants.
+* Data sent: _ArrayList<Data>_ the conflict data
+* Data received: -
+* Synchronous: not required
+
+### Google Drive synchronization conflicts solved
+* Operation: `google-drive-synchronization-conflicts-solved`
+* Sender: Frontend
+* Description: The synchronization conflicts found have been solved, thus the local database has been updated, and the
+  synchronization can be performed.
+* Data sent: -
+* Data received: -
+* Synchronous: not required
 
 ### Get Google Drive automatic synchronization
 * Operation: `get-google-drive-automatic-synchronization`

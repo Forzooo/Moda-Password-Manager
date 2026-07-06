@@ -47,7 +47,7 @@ public class Backend extends EventListener {
         this.CRYPTOGRAPHY = new Cryptography();
         this.HELPER = new Helper(this.CRYPTOGRAPHY, this.SETTINGS);
         this.SENSITIVE_SETTINGS = new SensitiveSettings(this.DATABASE, this.HELPER);
-        this.GOOGLE_DRIVE = new GoogleDrive();
+        this.GOOGLE_DRIVE = new GoogleDrive(getITC());
 
         initHandler();  // Initialize all the operations to handle
     }
@@ -139,6 +139,8 @@ public class Backend extends EventListener {
             synchronizeGoogleDrive();
             this.HELPER.executeInBackground(this::updateServiceFields);
         });
+
+        addOperation("google-drive-synchronization-conflicts-solved", this.GOOGLE_DRIVE::setConflictsSolved);
 
         addOperation("get-google-drive-automatic-synchronization", this::getGoogleDriveSynchronization);
         addOperation("set-google-drive-automatic-synchronization", () -> {

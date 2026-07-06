@@ -7,6 +7,7 @@ import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.FileContent;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
@@ -17,6 +18,8 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
+import moda.passwordmanager.interthreadcommunication.Event;
+import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
 import java.io.*;
 import java.security.GeneralSecurityException;
@@ -34,6 +37,7 @@ public class GoogleDrive {
     private static final String ROOT_DIRECTORY = ".moda";
     private static final String PASSWORD_MANAGER_DIRECTORY = "password-manager";
 
+    private final InterThreadCommunication ITC;
     private Drive drive;  // The Google Drive service
     private final JsonFactory JSON_FACTORY;  // Used to handle all the data of the JSON
     private boolean conflictsSolved;  // The conflicts can happen on the synchronization if the two database don't have
@@ -44,7 +48,8 @@ public class GoogleDrive {
     private String rootDirectoryID;
     private String passwordManagerDirectoryID;
 
-    public GoogleDrive(){
+    public GoogleDrive(InterThreadCommunication itc){
+        this.ITC = itc;
         this.JSON_FACTORY = GsonFactory.getDefaultInstance();
 
         // The ID of the directories are retrieved when the init method is called
@@ -210,7 +215,14 @@ public class GoogleDrive {
                     .execute();
 
             files = result.getFiles();
-        } catch (IOException e) {
+        } catch (GoogleJsonResponseException e){
+            // If the status code returned is 404, it means the database does not exist on Drive
+            // So we can return an empty string
+            if (e.getStatusCode() == 404){
+                return "";
+            }
+            throw new RuntimeException(e);
+        }catch (IOException e) {
             throw new RuntimeException(e);
         }
 
@@ -234,9 +246,8 @@ public class GoogleDrive {
         // Create the metadata of the database for the Drive upload
         File databaseMetadata = new File();
         databaseMetadata.setName(databaseName);
-
-        // Specify that the database has to be uploaded inside the database directory
-        databaseMetadata.setParents(Collections.singletonList(this.passwordManagerDirectoryID));
+        databaseMetadata.setParents(Collections.singletonList(this.passwordManagerDirectoryID));  // Specify that the
+                                                          // database has to be uploaded inside the database directory
 
         // Specify how the file should be sent
         FileContent fileContent = new FileContent("application/octet-stream", database);
@@ -248,7 +259,7 @@ public class GoogleDrive {
             }
 
             // Upload the file to Drive and set its id and its parents
-            this.drive.files().create(databaseMetadata, fileContent).setFields("id, parents").execute();
+            this.drive.files().create(databaseMetadata, fileContent).setFields("name, parents").execute();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -322,9 +333,16 @@ public class GoogleDrive {
 
         String remoteDatabaseChecksum = getDatabaseChecksum(databaseName);
 
+        // If the remote database checksum is blank it means that the database does not exist remotely, thus we can
+        // upload it to Drive
+        if (remoteDatabaseChecksum.isBlank()){
+            uploadDatabase(databasePath, databaseName);
+            return;
+        }
+
         // If the remote database and the local one have the same checksum it means that no changes have been made,
         // thus we can avoid further operations
-        if (!remoteDatabaseChecksum.equals(Helper.calculateFileMD5(databasePath)) && !remoteDatabaseChecksum.isBlank()){
+        if (!remoteDatabaseChecksum.equals(Helper.calculateFileMD5(databasePath))){
             // The name of the remote database in the path is the checksum of the remote database to ensure that there
             // are no duplicate files (hash collision are rare)
             Database remoteDatabase = downloadDatabase(databaseName,
@@ -381,12 +399,19 @@ public class GoogleDrive {
             // it has to the sensitive settings) thus we can set the conflicts solved to true
             if (remoteDataRecords.isEmpty()){
                 this.conflictsSolved = true;
-            }else{
+            }else{  // Otherwise, the user has to solve the conflicts before Google Drive is allowed to upload the
+                    // database
                 this.conflictsSolved = false;
-                // TODO: An event has to be sent that notifies the Frontend that the synchronization encountered some
-                // TODO: conflicts. Lastly, it has to include the remoteDataRecords array
+                this.ITC.send(new Event("google-drive-synchronization-conflicts", remoteDataRecords));
             }
 
         }
+    }
+
+    /**
+     * Tell Google Drive that the conflicts have been solved
+     */
+    public void setConflictsSolved(){
+        this.conflictsSolved = true;
     }
 }

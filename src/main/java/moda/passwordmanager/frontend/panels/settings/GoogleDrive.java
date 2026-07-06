@@ -188,7 +188,7 @@ public class GoogleDrive extends Section {
      */
     private void synchronizeGoogleDrive(){
         Event event = new Event("google-drive-synchronize");
-        getITC().request(event);
+        getITC().send(event);
     }
 
     /**
