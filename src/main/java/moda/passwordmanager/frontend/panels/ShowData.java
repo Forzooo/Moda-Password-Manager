@@ -77,10 +77,6 @@ public class ShowData extends JPanel {
         this.dataList.setBackground(null);
 
         ModaScrollPane scrollPane = new ModaScrollPane(this.dataList);
-        ModaScrollBarUI modaScrollBarUI = new ModaScrollBarUI();
-
-        scrollPane.getVerticalScrollBar().setUI(modaScrollBarUI);
-
         scrollPane.setBorder(new EmptyBorder(10,10,10,10));
         scrollPane.setBackground(Color.WHITE);
 
