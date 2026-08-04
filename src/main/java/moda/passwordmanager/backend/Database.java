@@ -95,6 +95,13 @@ public class Database {
     }
 
     /**
+     * Get the file extension of any database file of the password manager
+     */
+    public static String getFileExtension(){
+        return ".modb";
+    }
+
+    /**
      * Retrieve the name of the database, including the file extension, from the database path
      * @return String containing the name of the current database
      */

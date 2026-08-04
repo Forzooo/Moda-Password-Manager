@@ -19,6 +19,7 @@ class DatabaseTests {
      */
     @TempDir
     private Path TEST_DIRECTORY;
+    private final static String DATABASE_FILE_EXTENSION = ".modb";
     private final static String DATABASE_NAME = "test.modb";
     private final static String SECONDARY_DATABASE_NAME = "test2.modb";
 
@@ -67,6 +68,14 @@ class DatabaseTests {
     @AfterEach
     void cleanup(){
         this.database.closeConnection();
+    }
+
+    /**
+     * Ensure that the Database class has .modb as its file extension
+     */
+    @Test
+    void getFileExtension(){
+        assertEquals(DATABASE_FILE_EXTENSION, Database.getFileExtension());
     }
 
     /**

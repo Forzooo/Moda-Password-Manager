@@ -4,6 +4,7 @@ import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import moda.passwordmanager.backend.Backend;
+import moda.passwordmanager.backend.Database;
 import moda.passwordmanager.frontend.properties.Languages;
 import moda.passwordmanager.frontend.properties.Themes;
 import moda.passwordmanager.frontend.Utilities;
@@ -76,7 +77,7 @@ public class Application extends JFrame {
 
         for (String arg : args){
             // The databases that the Password Manager use have the extension ".modb"
-            if (arg.endsWith(".modb")){
+            if (arg.endsWith(Database.getFileExtension())){
                 databasePath = arg;
                 break;
             }

@@ -346,7 +346,7 @@ public class GoogleDrive {
             // The name of the remote database in the path is the checksum of the remote database to ensure that there
             // are no duplicate files (hash collision are rare)
             Database remoteDatabase = downloadDatabase(databaseName,
-                    Helper.getPasswordManagerAppDataPath()+remoteDatabaseChecksum+".modb");
+                    Helper.getPasswordManagerAppDataPath()+remoteDatabaseChecksum+Database.getFileExtension());
             ArrayList<Data> remoteDataRecords = remoteDatabase.getDataRecords();
             remoteDatabase.closeConnection();
 

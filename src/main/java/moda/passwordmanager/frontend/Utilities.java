@@ -2,6 +2,7 @@ package moda.passwordmanager.frontend;
 
 import com.formdev.flatlaf.util.SystemFileChooser;
 import moda.passwordmanager.Application;
+import moda.passwordmanager.backend.Database;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
@@ -69,8 +70,8 @@ public class Utilities {
             // Check whether the database has been chosen
             if (!path.isEmpty()){
                 // If the file has been saved without setting the extension, set it automatically
-                if (!path.endsWith(".modb")){
-                    path = path+".modb";
+                if (!path.endsWith(Database.getFileExtension())){
+                    path = path+Database.getFileExtension();
                 }
                 return path;
             }

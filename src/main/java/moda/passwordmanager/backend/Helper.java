@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class Helper {
 
-    private final static String DEFAULT_DATABASE = "moda-password-manager.modb";
+    private final static String DEFAULT_DATABASE = "moda-password-manager"+Database.getFileExtension();
     private final static String SETTINGS_FILE = "settings.json";
 
     private final Cryptography CRYPTOGRAPHY;

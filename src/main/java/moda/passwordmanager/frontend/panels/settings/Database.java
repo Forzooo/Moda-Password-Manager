@@ -69,8 +69,8 @@ public class Database extends Section {
                 // Check whether the database has been chosen
                 if (!path.isEmpty()){
                     // If the file has been saved without setting the extension, set it automatically
-                    if (!path.endsWith(".modb")){
-                        path = path+".modb";
+                    if (!path.endsWith(moda.passwordmanager.backend.Database.getFileExtension())){
+                        path = path+ moda.passwordmanager.backend.Database.getFileExtension();
                     }
                     setNewDatabase(path);
                 }
