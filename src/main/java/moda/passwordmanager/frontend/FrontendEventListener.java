@@ -1,8 +1,8 @@
 package moda.passwordmanager.frontend;
 
 import moda.passwordmanager.backend.Data;
+import moda.passwordmanager.frontend.dialogs.GoogleDriveSynchronization;
 import moda.passwordmanager.frontend.panels.ShowData;
-import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.EventListener;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
@@ -12,12 +12,10 @@ import java.util.ArrayList;
 
 public class FrontendEventListener extends EventListener {
 
-    private final InterThreadCommunication ITC;
     private ShowData showData;  // The EventListener needs the Show Data Panel to call the service fields
 
     public FrontendEventListener(InterThreadCommunication itc, ShowData showData){
         super(itc, "Frontend Event Listener");  // Set the name of the thread for debug purposes
-        this.ITC = itc;
         this.showData = showData;
 
         initHandler();  // Initialize all the operations to handle
@@ -30,7 +28,7 @@ public class FrontendEventListener extends EventListener {
         addOperation("exception-raised", this::exceptionRaised);
         addOperation("update-service-fields", this::updateServiceFields);
         addOperation("reset-service-fields", this::resetServiceFields);
-        addOperation("google-drive-synchronization-conflicts", this::googleDriveSynchronizationConflicts);
+        addOperation("google-drive-synchronization-conflicts", this::openGoogleDriveSynchronizationDialog);
     }
 
     /**
@@ -96,13 +94,16 @@ public class FrontendEventListener extends EventListener {
         this.showData.getUSER_DATA_MODEL().clear();
     }
 
-    private void googleDriveSynchronizationConflicts(){
+    /**
+     * Open the Google Drive Synchronization dialog with the conflicted data
+     */
+    private void openGoogleDriveSynchronizationDialog(){
         ArrayList<Data> conflictData = (ArrayList<Data>) getRequestData().getFirst();
 
-        // TODO
-//        EventQueue.invokeLater(() -> {
-//
-//        });
+        EventQueue.invokeLater(() -> {
+            GoogleDriveSynchronization googleDriveSynchronization = new GoogleDriveSynchronization(getITC(), conflictData);
+            googleDriveSynchronization.setVisible(true);
+        });
 
     }
 

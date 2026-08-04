@@ -376,24 +376,25 @@ public class GoogleDrive {
                 }
             }
 
+            // TODO: To redo
             // We iterate over the local Data objects to look for any that are not inside the remote database: they
             // could either be new or it has been deleted in the remote one
-            for (Data localData : localDataRecords){
-                boolean notOnRemote = true;
-
-                for (Data remoteData : remoteDataRecords){
-                    if (remoteData.getID() == localData.getID()){
-                        notOnRemote = false;
-                    }
-                }
-
-                // If the data is not on the remote database, then we set its service attribute to be an empty string
-                // to indicate that the record is either new or it has been deleted. Hence, when solving the conflict
-                // it will be read from the local database to show it to the user
-                if (notOnRemote){
-                    remoteDataRecords.add(new Data(localData.getID(), ""));
-                }
-            }
+//            for (Data localData : localDataRecords){
+//                boolean notOnRemote = true;
+//
+//                for (Data remoteData : remoteDataRecords){
+//                    if (remoteData.getID() == localData.getID()){
+//                        notOnRemote = false;
+//                    }
+//                }
+//
+//                // If the data is not on the remote database, then we set its service attribute to be an empty string
+//                // to indicate that the record is either new or it has been deleted. Hence, when solving the conflict
+//                // it will be read from the local database to show it to the user
+//                if (notOnRemote){
+//                    remoteDataRecords.add(new Data(localData.getID(), ""));
+//                }
+//            }
 
             // If the remote data records are empty it means that no update has been made to the Data table (probably
             // it has to the sensitive settings) thus we can set the conflicts solved to true

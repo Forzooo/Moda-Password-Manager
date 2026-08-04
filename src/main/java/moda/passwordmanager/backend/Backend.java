@@ -104,6 +104,8 @@ public class Backend extends EventListener {
             this.HELPER.executeInBackground(this::updateServiceFields);
         });
 
+        addOperation("decrypt-data", () -> addResponseData(this.HELPER.decryptData((Data) getRequestData().getFirst())));
+
         addOperation("generate-string", this::generateString);
         addOperation("configure-string-generation", this::configureStringGeneration);
 
@@ -140,7 +142,12 @@ public class Backend extends EventListener {
             this.HELPER.executeInBackground(this::updateServiceFields);
         });
 
-        addOperation("google-drive-synchronization-conflicts-solved", this.GOOGLE_DRIVE::setConflictsSolved);
+        addOperation("google-drive-synchronization-conflicts-solved", () -> {
+            this.GOOGLE_DRIVE.setConflictsSolved();
+
+            // After the conflicts are solved, we can resynchronize
+            this.GOOGLE_DRIVE.sync(this.HELPER.getDatabasePath(), this.DATABASE.getName());
+        });
 
         addOperation("get-google-drive-automatic-synchronization", this::getGoogleDriveSynchronization);
         addOperation("set-google-drive-automatic-synchronization", () -> {

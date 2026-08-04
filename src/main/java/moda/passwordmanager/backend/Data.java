@@ -1,6 +1,7 @@
 package moda.passwordmanager.backend;
 
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.Objects;
 
 public class Data {
@@ -90,8 +91,23 @@ public class Data {
      * easily over them.
      * @return String array of 5 elements
      */
+    @Deprecated
     public String[] getFullUserData(){
         return new String[]{this.USERNAME, this.EMAIL_ADDRESS, this.PASSWORD, this.SERVICE, this.ADDITIONAL_DATA};
+    }
+
+    /**
+     * Get all the attributes as a linked hash map object to perform operations easily over them
+     */
+    public LinkedHashMap<String, String> getAsLinkedHashMap(){
+        LinkedHashMap<String, String> data = new LinkedHashMap<>();
+        data.put("id", String.valueOf(this.ID));
+        data.put("username", this.USERNAME);
+        data.put("email_address", this.EMAIL_ADDRESS);
+        data.put("password", this.PASSWORD);
+        data.put("service", this.SERVICE);
+        data.put("additional_data", this.ADDITIONAL_DATA);
+        return data;
     }
 
     @Override

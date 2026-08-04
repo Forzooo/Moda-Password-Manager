@@ -35,7 +35,7 @@ method.
 * Operation: `set-master-password`
 * Sender: Frontend
 * Description: Sends the master password entered by the user
-* Dati: _char[]_ masterPassword
+* Data: _char[]_ masterPassword
 * Data received: _boolean_ flag that is set to true only if the master password entered is the right one
 * Synchronous: required
 
@@ -95,6 +95,14 @@ method.
 * Data received: -
 * Synchronous: required
 
+### Decrypt Data
+* Operation: `decrypt-data`
+* Sender: Frontend
+* Description: Decrypt an encrypted _Data_ object
+* Data sent: _Data_ the encrypt data
+* Data received: _Data_ the decrypted data
+* Synchronous: required
+
 ***
 
 ## Database Operations
@@ -114,7 +122,7 @@ method.
 * Data received: _String_ path
 * Synchronous: required
 
-### get-recent-databases
+### Get the recent databases
 * Operation: `get-recent-databases`
 * Sender: Frontend
 * Description: Get the paths of the last databases used
@@ -166,7 +174,7 @@ authenticate with Google Drive (only if it has to be enabled)
   synchronization can be performed.
 * Data sent: -
 * Data received: -
-* Synchronous: not required
+* Synchronous: required
 
 ### Get Google Drive automatic synchronization
 * Operation: `get-google-drive-automatic-synchronization`
