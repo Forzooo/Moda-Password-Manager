@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -111,18 +112,17 @@ public class Helper {
      * @return The decrypted data
      */
     public Data decryptData(Data data){
-        ArrayList<String> fields = new ArrayList<>();  // Store the encrypted fields here before setting them in Data
+        LinkedHashMap<String, String> fields = data.asLinkedHashMap();
 
         // Iterate over all the fields and decrypt them if they are strings, otherwise add them as null
-        for (String field : data.getFullUserData()){
-            if (field == null){
-                fields.add(null);
-            }else{
-                fields.add(decrypt(field));
+        for (String key : fields.keySet()){
+            if (fields.get(key) != null && !key.equals("id")){
+                fields.put(key, decrypt(fields.get(key)));
             }
         }
 
-        return new Data(data.getID(), fields.getFirst(), fields.get(1), fields.get(2), fields.get(3), fields.get(4));
+        return new Data(data.getID(), fields.get("username"), fields.get("email_address"), fields.get("password"),
+                fields.get("service"), fields.get("additional_data"));
     }
 
     /**

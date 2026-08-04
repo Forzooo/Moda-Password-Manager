@@ -117,8 +117,8 @@ public class GoogleDriveSynchronization extends JDialog {
             Data localData = getData(remoteData.getID());  // The local data must have the same ID of the remote one
             remoteData = getData(remoteData);
 
-            LinkedHashMap<String, String> localUserData = localData.getAsLinkedHashMap();
-            LinkedHashMap<String, String> remoteUserData = remoteData.getAsLinkedHashMap();
+            LinkedHashMap<String, String> localUserData = localData.asLinkedHashMap();
+            LinkedHashMap<String, String> remoteUserData = remoteData.asLinkedHashMap();
 
             this.SOLVED_DATA.put(localData.getID(), localUserData);  // By default, the local one is always chosen
 
