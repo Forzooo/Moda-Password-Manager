@@ -31,7 +31,7 @@ public class Application extends JFrame {
     }
 
     /**
-     * Register the FlatLaf custom default sources to load the properties files
+     * Register the FlatLaf custom defaultatta sources to load the properties files
      */
     private void initFlatLaf(){
         FlatLaf.registerCustomDefaultsSource("moda.passwordmanager");  // Register the properties files
