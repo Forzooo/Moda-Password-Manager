@@ -1,5 +1,6 @@
 package moda.passwordmanager.backend;
 
+import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
 
@@ -44,6 +45,16 @@ public class Database {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Closes the connection with the database and deletes it from the file system
+     * @return Whether it has been deleted successfully
+     */
+    public boolean delete(){
+        closeConnection();  // First we close the connection to avoid further errors
+        File database = new File(this.path);
+        return database.delete();
     }
 
     /**
@@ -229,6 +240,24 @@ public class Database {
 
         // Return a Data object containing all the data retrieved
         return new Data(id, data[0], data[1], data[2], data[3], data[4]);
+    }
+
+    /**
+     * Get the autoincrement integer value of the Data table
+     * @return
+     */
+    public int getAutoincrementDataTable(){
+        try {
+            // To retrieve the value we have to use the columns name and seq of the table sqlite_sequence
+            PreparedStatement query = this.connection.prepareStatement("SELECT seq FROM sqlite_sequence WHERE" +
+                    " name=?;");
+            query.setString(1, DATA_TABLE);
+
+            ResultSet resultSet = query.executeQuery();
+            return resultSet.getInt("seq");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

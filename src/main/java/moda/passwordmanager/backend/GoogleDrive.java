@@ -348,15 +348,41 @@ public class GoogleDrive {
             Database remoteDatabase = downloadDatabase(databaseName,
                     Helper.getPasswordManagerAppDataPath()+remoteDatabaseChecksum+Database.getFileExtension());
             ArrayList<Data> remoteDataRecords = remoteDatabase.getDataRecords();
-            remoteDatabase.closeConnection();
-
-            // After the remote records are obtained, we can delete the remote database from the file system
-            java.io.File remoteDatabaseFile = new java.io.File(remoteDatabase.getPath());
-            remoteDatabaseFile.delete();
+            int remoteDataAutoincrement = remoteDatabase.getAutoincrementDataTable();  // We need it to check for any
+                                                                                       // record deleted on the remote
+            remoteDatabase.delete();  // After the remote records are obtained, we can
+                                      // delete the remote database from the file system
 
             Database localDatabase = new Database(databasePath);
             ArrayList<Data> localDataRecords = localDatabase.getDataRecords();
             localDatabase.closeConnection();
+
+            // We iterate over the local Data objects to look for any that are not inside the remote database: we want
+            // to know if there is any record that has been deleted on the remote database
+            for (int i = localDataRecords.size()-1; i >= 0; i--){
+                boolean existsOnRemote = false;
+                Data localData = localDataRecords.get(i);
+
+                // If we find a matching ID: we can skip it
+                for (Data remoteData : remoteDataRecords){
+                    if (localData.getID() == remoteData.getID()){
+                        existsOnRemote = true;
+                        break;
+                    }
+                }
+
+                // If the data is not on the remote database and its ID is less than or equal to the remote database
+                // autoincrement value we know that it has been deleted, otherwise if the ID is greater the data has been
+                // created on the local database, thus we can ignore it
+                if (!existsOnRemote && localData.getID() <= remoteDataAutoincrement){
+                    // So, we set its service attribute to null to let the frontend know that it is a record that has
+                    // been deleted
+                    remoteDataRecords.add(new Data(localData.getID(), null));
+                    localDataRecords.remove(localData);  // The data is removed from the local records as otherwise when
+                                                         // we are looking for records that have the same hashcode
+                                                         // it could occur that they could be removed
+                }
+            }
 
             // We remove the data that are still the same on the remote database
             // And for the iteration we have to do it backwards for the outer loop as if we remove Data objects from
@@ -376,26 +402,6 @@ public class GoogleDrive {
                 }
             }
 
-            // TODO: To redo
-            // We iterate over the local Data objects to look for any that are not inside the remote database: they
-            // could either be new or it has been deleted in the remote one
-//            for (Data localData : localDataRecords){
-//                boolean notOnRemote = true;
-//
-//                for (Data remoteData : remoteDataRecords){
-//                    if (remoteData.getID() == localData.getID()){
-//                        notOnRemote = false;
-//                    }
-//                }
-//
-//                // If the data is not on the remote database, then we set its service attribute to be an empty string
-//                // to indicate that the record is either new or it has been deleted. Hence, when solving the conflict
-//                // it will be read from the local database to show it to the user
-//                if (notOnRemote){
-//                    remoteDataRecords.add(new Data(localData.getID(), ""));
-//                }
-//            }
-
             // If the remote data records are empty it means that no update has been made to the Data table (probably
             // it has to the sensitive settings) thus we can set the conflicts solved to true
             if (remoteDataRecords.isEmpty()){
@@ -405,7 +411,6 @@ public class GoogleDrive {
                 this.conflictsSolved = false;
                 this.ITC.send(new Event("google-drive-synchronization-conflicts", remoteDataRecords));
             }
-
         }
     }
 

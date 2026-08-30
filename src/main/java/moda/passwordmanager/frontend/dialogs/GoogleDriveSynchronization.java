@@ -87,14 +87,25 @@ public class GoogleDriveSynchronization extends JDialog {
             @Override
             public void actionPerformed(ActionEvent e){
                 // We iterate over the HashMap, and we create a Data object for each of them
-                // Then we update it in the database by using the "update-data" event
                 for (int id : SOLVED_DATA.keySet()){
-                    LinkedHashMap<String, String> updatedData = SOLVED_DATA.get(id);
-                    Data data = new Data(id, updatedData.get("username"), updatedData.get("email_address"),
+                    // It is set to null only when the record has already been deleted on the remote, and the user has
+                    // chosen to delete it locally too
+                    if (SOLVED_DATA.get(id) == null){
+                        ITC.request(new Event("delete-data", id));
+                    }else{
+                        LinkedHashMap<String, String> updatedData = SOLVED_DATA.get(id);
+                        Data data = new Data(id, updatedData.get("username"), updatedData.get("email_address"),
                             updatedData.get("password"), updatedData.get("service"), updatedData.get("additional_data"));
 
-                    Event event = new Event("update-data", data);
-                    ITC.request(event);
+                        // We add the record in the local database has it has been added only to the remote one yet
+                        if (SOLVED_DATA.get(id).containsKey("addedRemote")){
+                            ITC.request(new Event("add-data", data));  // TODO. Check whether ID are kept even
+                                                                                // TODO. if added without setting it
+                                                                                // TODO. from the remote one
+                        }else{  // We update the record in the database
+                            ITC.request(new Event("update-data", data));
+                        }
+                    }
                 }
 
                 // After all the conflicts have been solved, we can update the Google Drive status to complete the
@@ -113,50 +124,88 @@ public class GoogleDriveSynchronization extends JDialog {
      */
     private void addConflictedData(){
         for (Data remoteData : this.CONFLICT_DATA){
-            // Decrypt in the backend the data to compare them
             Data localData = getData(remoteData.getID());  // The local data must have the same ID of the remote one
-            remoteData = getData(remoteData);
-
-            LinkedHashMap<String, String> localUserData = localData.asLinkedHashMap();
-            LinkedHashMap<String, String> remoteUserData = remoteData.asLinkedHashMap();
-
-            this.SOLVED_DATA.put(localData.getID(), localUserData);  // By default, the local one is always chosen
 
             // Each data has its own panel where the conflicted fields are shown
             JPanel conflictedDataPanel = new JPanel();
             conflictedDataPanel.setLayout(new MigLayout());
-            conflictedDataPanel.add(new JLabel(localData.getSERVICE()), "span, wrap");
 
-            // Iterate over each field and show only the ones that are different
-            for (String key : localUserData.keySet()){
-                if (!localUserData.get(key).equals(remoteUserData.get(key))){
-                    // The button group allows to select only of the two radio buttons
-                    ButtonGroup buttonGroup = new ButtonGroup();
+            // If the service is set to null then it means that the data has been deleted on the remote
+            if (remoteData.getSERVICE() == null){
+                conflictedDataPanel.add(new JLabel(localData.getSERVICE() + " (Deleted on remote)"),
+                        "span, wrap");
+                // The button group allows to select only of the two radio buttons
+                ButtonGroup buttonGroup = new ButtonGroup();
 
-                    JRadioButton localDataRadio = new JRadioButton();
-                    localDataRadio.setText(localUserData.get(key));
-                    localDataRadio.setSelected(true);  // By default, the local one is always chosen to avoid having to
-                                                       // check whether all the conflicts have been solved: in this way
-                                                       // the solve button is already enabled
+                JRadioButton restoreRadio = new JRadioButton();
+                restoreRadio.setText("Restore");
+                restoreRadio.setSelected(true);  // By default, the data is restored
+                restoreRadio.addActionListener(e -> this.SOLVED_DATA.put(localData.getID(),
+                        localData.asLinkedHashMap()));
 
-                    // If the radio button is selected, then we update it in the solved data: the HashMap that will be
-                    // used to update the database in the backend
-                    localDataRadio.addActionListener(
-                            e -> SOLVED_DATA.get(localData.getID()).put(key, localUserData.get(key))
-                    );
+                JRadioButton removeRadio = new JRadioButton();
+                removeRadio.setText("Remove");
 
-                    JRadioButton remoteDataRadio = new JRadioButton();
-                    remoteDataRadio.setText(remoteUserData.get(key));
-                    remoteDataRadio.addActionListener(
-                            e -> SOLVED_DATA.get(localData.getID()).put(key, remoteUserData.get(key))
-                    );
+                // If the user chooses Remove then in the solved data hash map we set its linked hash map as null
+                // to let solve button listener know that it needs to be deleted
+                removeRadio.addActionListener(e -> this.SOLVED_DATA.put(localData.getID(), null));
 
-                    buttonGroup.add(localDataRadio);
-                    buttonGroup.add(remoteDataRadio);
+                buttonGroup.add(restoreRadio);
+                buttonGroup.add(removeRadio);
 
-                    conflictedDataPanel.add(new JLabel(key), "wrap");  // The name of the field to compare
-                    conflictedDataPanel.add(localDataRadio, "wrap");
-                    conflictedDataPanel.add(remoteDataRadio, "wrap");
+                conflictedDataPanel.add(restoreRadio, "span, wrap");
+                conflictedDataPanel.add(removeRadio, "span, wrap");
+
+            }else if (localData.getSERVICE() == null){  // If the service is set to null it means that the data has
+                                                        // been added on the remote
+                // Decrypt the remote data to add it automatically to the database once the user has clicked
+                // the solve button
+                remoteData = getData(remoteData);
+                LinkedHashMap<String, String> remoteUserData = remoteData.asLinkedHashMap();
+                remoteUserData.put("addedRemote", "");  // We need to have a flag set on the linked hash map to know
+                                                        // that the data has been added on remote to call the event
+                                                        // add-data instead of update-data
+                this.SOLVED_DATA.put(remoteData.getID(), remoteUserData);
+
+            }else{  // The default case where the data has been modified on local/remote
+                conflictedDataPanel.add(new JLabel(localData.getSERVICE()), "span, wrap");
+                remoteData = getData(remoteData);  // Decrypt in the backend the data to compare them
+                LinkedHashMap<String, String> localUserData = localData.asLinkedHashMap();
+                LinkedHashMap<String, String> remoteUserData = remoteData.asLinkedHashMap();
+
+                this.SOLVED_DATA.put(localData.getID(), localUserData);  // By default, the local one is always chosen
+
+                // Iterate over each field and show only the ones that are different
+                for (String key : localUserData.keySet()){
+                    if (!localUserData.get(key).equals(remoteUserData.get(key))){
+                        // The button group allows to select only of the two radio buttons
+                        ButtonGroup buttonGroup = new ButtonGroup();
+
+                        JRadioButton localDataRadio = new JRadioButton();
+                            localDataRadio.setText(localUserData.get(key) + " (Local)");
+                        localDataRadio.setSelected(true);  // By default, the local one is always chosen to avoid having to
+                                                           // check whether all the conflicts have been solved: in this way
+                                                           // the solve button is already enabled
+
+                        // If the radio button is selected, then we update it in the solved data: the HashMap that will be
+                        // used to update the database in the backend
+                        localDataRadio.addActionListener(
+                                e -> SOLVED_DATA.get(localData.getID()).put(key, localUserData.get(key))
+                        );
+
+                        JRadioButton remoteDataRadio = new JRadioButton();
+                            remoteDataRadio.setText(remoteUserData.get(key) + " (Remote)");
+                        remoteDataRadio.addActionListener(
+                                e -> SOLVED_DATA.get(localData.getID()).put(key, remoteUserData.get(key))
+                        );
+
+                        buttonGroup.add(localDataRadio);
+                        buttonGroup.add(remoteDataRadio);
+
+                        conflictedDataPanel.add(new JLabel(key), "wrap");  // The name of the field to compare
+                        conflictedDataPanel.add(localDataRadio, "wrap");
+                        conflictedDataPanel.add(remoteDataRadio, "wrap");
+                    }
                 }
             }
             this.conflictsPanel.add(conflictedDataPanel, "wrap");
