@@ -42,7 +42,7 @@ public class Settings extends JDialog {
     }
 
     /**
-     * Configurate the properties of the JPanel
+     * Configurate the properties of the dialog
      */
     private void initDialog(){
         setTitle(Application.getApplicationTitle());
@@ -56,7 +56,7 @@ public class Settings extends JDialog {
     }
 
     /**
-     * Initialize the components of the panel
+     * Initialize the components of the dialog
      */
     private void initComponents(){
         JPanel sidebarPanel = new JPanel();

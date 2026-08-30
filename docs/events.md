@@ -35,7 +35,7 @@ method.
 * Operation: `set-master-password`
 * Sender: Frontend
 * Description: Sends the master password entered by the user
-* Dati: _char[]_ masterPassword
+* Data: _char[]_ masterPassword
 * Data received: _boolean_ flag that is set to true only if the master password entered is the right one
 * Synchronous: required
 
@@ -71,8 +71,8 @@ method.
 * Data received: _Data_ decrypted data
 * Synchronous: required
 
-### Save Data
-* Operation: `save-data`
+### Add Data
+* Operation: `add-data`
 * Sender: Frontend
 * Description: Send the data to the backend to save it inside the database
 * Data sent: _Data_ data entered by the user
@@ -95,6 +95,14 @@ method.
 * Data received: -
 * Synchronous: required
 
+### Decrypt Data
+* Operation: `decrypt-data`
+* Sender: Frontend
+* Description: Decrypt an encrypted _Data_ object
+* Data sent: _Data_ the encrypt data
+* Data received: _Data_ the decrypted data
+* Synchronous: required
+
 ***
 
 ## Database Operations
@@ -114,7 +122,7 @@ method.
 * Data received: _String_ path
 * Synchronous: required
 
-### get-recent-databases
+### Get the recent databases
 * Operation: `get-recent-databases`
 * Sender: Frontend
 * Description: Get the paths of the last databases used
@@ -125,7 +133,7 @@ method.
 ***
 
 ## Google Drive
-### Get Google Drive
+### Get Google Drive Status
 * Operation: `get-google-drive`
 * Sender: Frontend
 * Description: Requests whether Google Drive synchronization is enabled
@@ -133,7 +141,7 @@ method.
 * Data received:  _boolean_ google drive synchronizations status
 * Synchronous: required
 
-### Google Drive Status
+### Set Google Drive Status
 * Operation: `set-google-drive`
 * Sender: Frontend
 * Description: Enable or disable the Google Drive service, which also requires the JSON credentials file used to 
@@ -146,6 +154,24 @@ authenticate with Google Drive (only if it has to be enabled)
 * Operation: `google-drive-synchronize`
 * Sender: Frontend
 * Description: Perform a synchronization with Google Drive
+* Data sent: -
+* Data received: -
+* Synchronous: not required
+
+### Google Drive synchronization conflicts
+* Operation: `google-drive-synchronization-conflicts`
+* Sender: Backend
+* Description: During the synchronization some conflicts between the local database and the remote one have been found.
+  The user has to solve them by updating the local database with the changes he wants.
+* Data sent: _ArrayList<Data>_ the conflict data
+* Data received: -
+* Synchronous: not required
+
+### Google Drive synchronization conflicts solved
+* Operation: `google-drive-synchronization-conflicts-solved`
+* Sender: Frontend
+* Description: The synchronization conflicts found have been solved, thus the local database has been updated, and the
+  synchronization can be performed.
 * Data sent: -
 * Data received: -
 * Synchronous: required

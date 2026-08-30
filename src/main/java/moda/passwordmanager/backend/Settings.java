@@ -42,7 +42,7 @@ public class Settings extends AbstractSettings {
 
             // Set all the database values
             ArrayList<String> recentDatabases = new ArrayList<>();
-            recentDatabases.add(Helper.getAppDataDirectory()+Helper.getDefaultDatabase());  // The default database used
+            recentDatabases.add(Helper.getPasswordManagerAppDataPath()+Helper.getDefaultDatabase());  // The default database used
 
             ObjectNode database = this.objectMapper.createObjectNode();  // Contains all the database values
             database.put("selected", recentDatabases.getFirst());

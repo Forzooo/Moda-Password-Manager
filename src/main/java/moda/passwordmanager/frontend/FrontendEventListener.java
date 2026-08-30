@@ -1,22 +1,21 @@
 package moda.passwordmanager.frontend;
 
 import moda.passwordmanager.backend.Data;
+import moda.passwordmanager.frontend.dialogs.GoogleDriveSynchronization;
 import moda.passwordmanager.frontend.panels.ShowData;
-import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.EventListener;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 
 public class FrontendEventListener extends EventListener {
 
-    private final InterThreadCommunication ITC;
     private ShowData showData;  // The EventListener needs the Show Data Panel to call the service fields
 
     public FrontendEventListener(InterThreadCommunication itc, ShowData showData){
         super(itc, "Frontend Event Listener");  // Set the name of the thread for debug purposes
-        this.ITC = itc;
         this.showData = showData;
 
         initHandler();  // Initialize all the operations to handle
@@ -29,6 +28,7 @@ public class FrontendEventListener extends EventListener {
         addOperation("exception-raised", this::exceptionRaised);
         addOperation("update-service-fields", this::updateServiceFields);
         addOperation("reset-service-fields", this::resetServiceFields);
+        addOperation("google-drive-synchronization-conflicts", this::openGoogleDriveSynchronizationDialog);
     }
 
     /**
@@ -92,6 +92,19 @@ public class FrontendEventListener extends EventListener {
     private void resetServiceFields(){
         this.showData.getUSER_DATA().clear();
         this.showData.getUSER_DATA_MODEL().clear();
+    }
+
+    /**
+     * Open the Google Drive Synchronization dialog with the conflicted data
+     */
+    private void openGoogleDriveSynchronizationDialog(){
+        ArrayList<Data> conflictData = (ArrayList<Data>) getRequestData().getFirst();
+
+        EventQueue.invokeLater(() -> {
+            GoogleDriveSynchronization googleDriveSynchronization = new GoogleDriveSynchronization(getITC(), conflictData);
+            googleDriveSynchronization.setVisible(true);
+        });
+
     }
 
 }

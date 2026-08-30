@@ -2,6 +2,8 @@ package moda.passwordmanager.backend;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.LinkedHashMap;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class DataTests {
@@ -40,19 +42,19 @@ class DataTests {
     }
 
     /**
-     * Ensure that the method 'getFullUserData' returns the data of the object in the following order: username, email
-     * address, password, service, additional data.
+     * Ensure that the method 'asLinkedHashMap' returns all the fields of the Data object
      */
     @Test
-    void getFullUserData(){
+    void asLinkedHashMap(){
         Data data = new Data(ID, USERNAME, EMAIL_ADDRESS, PASSWORD, SERVICE, ADDITIONAL_DATA);
-        String[] fullUserData = data.getFullUserData();
+        LinkedHashMap<String, String> userData = data.asLinkedHashMap();
 
-        assertEquals(USERNAME, fullUserData[0]);
-        assertEquals(EMAIL_ADDRESS, fullUserData[1]);
-        assertEquals(PASSWORD, fullUserData[2]);
-        assertEquals(SERVICE, fullUserData[3]);
-        assertEquals(ADDITIONAL_DATA, fullUserData[4]);
+        assertEquals(ID, Integer.parseInt(userData.get("id")));
+        assertEquals(USERNAME, userData.get("username"));
+        assertEquals(EMAIL_ADDRESS, userData.get("email_address"));
+        assertEquals(PASSWORD, userData.get("password"));
+        assertEquals(SERVICE, userData.get("service"));
+        assertEquals(ADDITIONAL_DATA, userData.get("additional_data"));
     }
 
 }

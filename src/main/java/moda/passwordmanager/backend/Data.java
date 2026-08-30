@@ -1,6 +1,7 @@
 package moda.passwordmanager.backend;
 
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.Objects;
 
 public class Data {
@@ -17,13 +18,13 @@ public class Data {
     private final String SERVICE;
     private final String ADDITIONAL_DATA;
 
-    public Data(int id, String username, String emailAddress, String password, String service, String additional){
+    public Data(int id, String username, String emailAddress, String password, String service, String additionalData){
         this.ID = id;
         this.USERNAME = username;
         this.EMAIL_ADDRESS = emailAddress;
         this.PASSWORD = password;
         this.SERVICE = service;
-        this.ADDITIONAL_DATA = additional;
+        this.ADDITIONAL_DATA = additionalData;
     }
 
     /**
@@ -39,27 +40,23 @@ public class Data {
 
     }
 
-    public Data(byte[] username, byte[] emailAddress, byte[] password, byte[] service, byte[] additional){
+    public Data(byte[] username, byte[] emailAddress, byte[] password, byte[] service, byte[] additionalData){
         this.ID = ID_NOT_SET;  // Set the ID as -1 as it won't be used when this constructor is called
         this.USERNAME = new String(username, StandardCharsets.UTF_8);
         this.EMAIL_ADDRESS = new String(emailAddress, StandardCharsets.UTF_8);
         this.PASSWORD = new String(password, StandardCharsets.UTF_8);
         this.SERVICE = new String(service, StandardCharsets.UTF_8);
-        this.ADDITIONAL_DATA = new String(additional, StandardCharsets.UTF_8);
+        this.ADDITIONAL_DATA = new String(additionalData, StandardCharsets.UTF_8);
     }
 
-    public Data(String username, String emailAddress, String password, String service, String additional){
+    public Data(String username, String emailAddress, String password, String service, String additionalData){
         this.ID = ID_NOT_SET;  // Set the ID as -1 as it won't be used when this constructor is called
         this.USERNAME = username;
         this.EMAIL_ADDRESS = emailAddress;
         this.PASSWORD = password;
         this.SERVICE = service;
-        this.ADDITIONAL_DATA = additional;
+        this.ADDITIONAL_DATA = additionalData;
     }
-
-    /*
-     * Get section for all the data to be able to be read from other classes.
-     */
 
     public int getID() {
         return this.ID;
@@ -86,12 +83,18 @@ public class Data {
     }
 
     /**
-     * Return a String array which includes all the data of a record, not including the ID, to iterate more
-     * easily over them.
-     * @return String array of 5 elements
+     * Get all the attributes as a linked hash map object to perform operations easily over them, where also the ID
+     * is saved as a String object
      */
-    public String[] getFullUserData(){
-        return new String[]{this.USERNAME, this.EMAIL_ADDRESS, this.PASSWORD, this.SERVICE, this.ADDITIONAL_DATA};
+    public LinkedHashMap<String, String> asLinkedHashMap(){
+        LinkedHashMap<String, String> data = new LinkedHashMap<>();
+        data.put("id", String.valueOf(this.ID));
+        data.put("username", this.USERNAME);
+        data.put("email_address", this.EMAIL_ADDRESS);
+        data.put("password", this.PASSWORD);
+        data.put("service", this.SERVICE);
+        data.put("additional_data", this.ADDITIONAL_DATA);
+        return data;
     }
 
     @Override

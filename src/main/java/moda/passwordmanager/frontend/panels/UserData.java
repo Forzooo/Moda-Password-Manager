@@ -12,6 +12,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 
 /**
  * A JPanel that shows the all the information related to an ID of a record of the database
@@ -27,7 +28,7 @@ public class UserData extends JPanel {
 
     // The fields before the editing state is enabled, thus added only inside "enableEditing"
     // They are used when "Discard Changes" button is clicked to restore the previous values, and it will clear the array
-    private String[] rollbackDataFields;
+    private LinkedHashMap<String, String> rollbackDataFields;
 
     private JButton modifyButton;
     private JButton deleteButton;
@@ -88,20 +89,25 @@ public class UserData extends JPanel {
                                          // of the service field changes, then the title would leak sensitive information
                                          // of the user, thus we retrieve it from the getter method of Data
 
-        String[] userData = data.getFullUserData();  // Retrieve the data of the user to know its length
-        this.userDataFields = new UserDataField[userData.length];  // Set the size based on the data
-        this.rollbackDataFields = new String[userData.length];  // Create the rollback array based on the data length
+        LinkedHashMap<String, String> userData = data.asLinkedHashMap();  // Retrieve the data of the user to know its length
+        this.userDataFields = new UserDataField[userData.size()-1];  // Set the size based on the user data length - 1
+                                                                     // (the ID is excluded)
+        this.rollbackDataFields = new LinkedHashMap<>();  // Create the rollback array based on the data length
 
-        for (int i = 0; i < this.userDataFields.length; i++){
+        int i = 0; // The counter that enumerates the number of panels
+        for (String key : userData.keySet()){
             // As the password field requires its own panel we need to check each time the value of i to know
             // the field we are creating
             UserDataField userDataField;
-            if (i != 2){
-                userDataField = new UserDataField(userData[i]);
+            if (key.equals("id")){  // The ID has to be skipped
+                continue;
+            }else if (key.equals("password")){
+                userDataField = new UserPasswordField(userData.get(key), this.ITC);
             }else{
-                userDataField = new UserPasswordField(userData[i], this.ITC);
+                userDataField = new UserDataField(userData.get(key));
             }
-            this.userDataFields[i] = userDataField;  // Set the panel to the array
+            this.rollbackDataFields.put(key, userData.get(key));
+            this.userDataFields[i++] = userDataField;  // Set the panel to the array and increment the panel counter
             add(userDataField, "span, align center, wrap");  // Add the panel to the GUI
         }
 
@@ -168,9 +174,8 @@ public class UserData extends JPanel {
      */
     private void enableEditing(){
         // Set the DataFields to be editable to allow changes
-        for (int i = 0; i < this.userDataFields.length; i++){
-            this.rollbackDataFields[i] = this.userDataFields[i].getData();  // Save the data for rollback purposes
-            this.userDataFields[i].enableEditing();
+        for (UserDataField userDataField : this.userDataFields){
+            userDataField.enableEditing();  // Also increment the counter
         }
 
         // Disable and hide the buttons that cannot be used while in editing state
@@ -190,8 +195,6 @@ public class UserData extends JPanel {
      * Set the data to not be edited
      */
     private void disableEditing(){
-        Arrays.fill(this.rollbackDataFields, "");  // Remove the previous data as it is not required anymore
-
         // Set the DataFields to not be editable to disable changes
         for (UserDataField dataField : this.userDataFields){
             dataField.disableEditing();
@@ -228,6 +231,12 @@ public class UserData extends JPanel {
             return;
         }
 
+        // Updates the rollback hashmap to the new values
+        int i = 0;
+        for (String key : this.rollbackDataFields.keySet()){
+            this.rollbackDataFields.put(key, updatedData[i++]);  // Also increment the counter of the data field
+        }
+
         // Disable the editing and send the data to the backend
         disableEditing();
         updateData(new Data(this.ID, updatedData[0], updatedData[1], updatedData[2], updatedData[3], updatedData[4]));
@@ -239,8 +248,9 @@ public class UserData extends JPanel {
     private void discardChanges(){
         // Rollback each TextField to its previous value, where their clipboard is automatically updated when editing
         // mode is disabled
-        for (int i = 0; i < this.userDataFields.length; i++){
-            this.userDataFields[i].setText(this.rollbackDataFields[i]);
+        int i = 0;
+        for (String field : this.rollbackDataFields.values()){
+            this.userDataFields[i++].setText(field);  // Also increment the counter of the data field
         }
         disableEditing();  // Disable editing, which also clears the rollback array
     }

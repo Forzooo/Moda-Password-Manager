@@ -1,10 +1,15 @@
 package moda.passwordmanager.backend;
 
 import moda.passwordmanager.frontend.properties.Languages;
+import org.apache.commons.codec.digest.DigestUtils;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -15,7 +20,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class Helper {
 
-    private final static String DEFAULT_DATABASE = "moda-password-manager.modb";
+    private final static String DEFAULT_DATABASE = "moda-password-manager"+Database.getFileExtension();
     private final static String SETTINGS_FILE = "settings.json";
 
     private final Cryptography CRYPTOGRAPHY;
@@ -32,9 +37,9 @@ public class Helper {
     }
 
     /**
-     * Return the path of the AppData directory for the current user
+     * Return the path of "%appdata%/Moda/Password-Manager/" directory for the current user
      */
-    public static String getAppDataDirectory() {
+    public static String getPasswordManagerAppDataPath() {
         return System.getenv("APPDATA")+"\\Moda\\Password-Manager\\";
     }
 
@@ -107,18 +112,17 @@ public class Helper {
      * @return The decrypted data
      */
     public Data decryptData(Data data){
-        ArrayList<String> fields = new ArrayList<>();  // Store the encrypted fields here before setting them in Data
+        LinkedHashMap<String, String> fields = data.asLinkedHashMap();
 
         // Iterate over all the fields and decrypt them if they are strings, otherwise add them as null
-        for (String field : data.getFullUserData()){
-            if (field == null){
-                fields.add(null);
-            }else{
-                fields.add(decrypt(field));
+        for (String key : fields.keySet()){
+            if (fields.get(key) != null && !key.equals("id")){
+                fields.put(key, decrypt(fields.get(key)));
             }
         }
 
-        return new Data(data.getID(), fields.getFirst(), fields.get(1), fields.get(2), fields.get(3), fields.get(4));
+        return new Data(data.getID(), fields.get("username"), fields.get("email_address"), fields.get("password"),
+                fields.get("service"), fields.get("additional_data"));
     }
 
     /**
@@ -202,5 +206,17 @@ public class Helper {
         }
 
         return passwordManagerLanguage;
+    }
+
+    /**
+     * Calculates the MD5 Hash of the content of a file
+     */
+    public static String calculateFileMD5(String filepath){
+        try {
+            // Read the file content and calculate the MD5 using Apache Commons library
+            return DigestUtils.md5Hex(Files.readAllBytes(Path.of(filepath)));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
