@@ -160,9 +160,7 @@ public class AddData extends JPanel {
         // Create the Data object with the user data to send to the backend
         Data userData = new Data(username, emailAddress, password, service, additionalData);
 
-        // Create the Event to send to the backend
-        Event saveData = new Event("save-data", userData);
-        this.ITC.send(saveData);
+        this.ITC.send(new Event("add-data", userData));
 //        notifyUser();  // Example method to show the user a messagebox with the operation status
     }
 

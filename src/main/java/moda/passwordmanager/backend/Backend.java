@@ -86,7 +86,7 @@ public class Backend extends EventListener {
         });
 
         // Save the data and update the service fields
-        addOperation("save-data", () -> {
+        addOperation("add-data", () -> {
             saveData((Data) getRequestData().getFirst());
             this.HELPER.executeInBackground(this::updateServiceFields);
         });

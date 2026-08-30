@@ -71,8 +71,8 @@ method.
 * Data received: _Data_ decrypted data
 * Synchronous: required
 
-### Save Data
-* Operation: `save-data`
+### Add Data
+* Operation: `add-data`
 * Sender: Frontend
 * Description: Send the data to the backend to save it inside the database
 * Data sent: _Data_ data entered by the user
