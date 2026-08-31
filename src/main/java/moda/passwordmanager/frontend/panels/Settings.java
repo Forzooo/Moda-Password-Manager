@@ -6,6 +6,7 @@ import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 
 public class Settings extends JPanel {
 
@@ -17,24 +18,25 @@ public class Settings extends JPanel {
         this.ITC = itc;
 
         initPanel();
-        initComponents();
-        initListeners();
+        initSections();
     }
 
+    /**
+     * Initialize the panel
+     */
     private void initPanel(){
-        setLayout(new MigLayout());
+        setLayout(new MigLayout("debug"));
+        setBorder(new EmptyBorder(10, 10, 10, 10));
     }
 
-    private void initComponents(){
+    /**
+     * Initialize the sections
+     */
+    private void initSections(){
+        addSection(new About(this.ITC));
         addSection(new Appearance(this.ITC));
         addSection(new Data(this.ITC));
-        addSection(new Database(this.ITC));
         addSection(new GoogleDrive(this.ITC));
-        addSection(new About(this.ITC));
-    }
-
-    private void initListeners(){
-
     }
 
     /**
@@ -49,9 +51,8 @@ public class Settings extends JPanel {
         JSeparator separator = new JSeparator(SwingConstants.HORIZONTAL);
         JLabel sectionName = new JLabel(section.getTitle());
 
-        add(separator, "span");
         add(sectionName, "span");
-        add(separator, "span, wrap");
+        add(separator, "span, grow, wrap");
         add(section, "span");
     }
 }
