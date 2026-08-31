@@ -3,7 +3,6 @@ package moda.passwordmanager.frontend.panels;
 import moda.passwordmanager.frontend.Frontend;
 import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.frontend.components.ModaButton;
-import moda.passwordmanager.frontend.dialogs.Settings;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import net.miginfocom.swing.MigLayout;
 
@@ -87,7 +86,7 @@ public class Sidebar extends JPanel {
         this.showDataButton.addActionListener(e -> switchPanel(ShowData.getPanelTitle()));
 //        setHoverEffect(this.showDataButton);
 
-        this.settingsButton.addActionListener(e -> openSettings());
+        this.settingsButton.addActionListener(e -> switchPanel(Settings.getPanelTitle()));
 //        setHoverEffect(this.settingsButton);
     }
 
@@ -99,14 +98,6 @@ public class Sidebar extends JPanel {
         // switchPanel that is inside the Frontend
         Frontend frontend = (Frontend) getParent();
         frontend.switchPanel(panelTitle);
-    }
-
-    /**
-     * Open the settings dialog
-     */
-    private void openSettings(){
-        Settings settingsDialog = new Settings(this.ITC);
-        settingsDialog.setVisible(true);
     }
 
     /**

@@ -18,6 +18,7 @@ import java.util.LinkedHashMap;
  * The Google Drive Synchronization dialog lets the user solve the conflicts related to synchronizing with Google Drive.
  */
 public class GoogleDriveSynchronization extends JDialog {
+    // TODO. Add the locale for the translation
 
     private final InterThreadCommunication ITC;
     private final ArrayList<Data> CONFLICT_DATA;  // The remote data that needs its conflicts to be solved

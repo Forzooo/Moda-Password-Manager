@@ -28,7 +28,7 @@ public abstract class Section extends JPanel {
      */
     private JPanel currentSection;
 
-    public Section(String title, InterThreadCommunication itc){
+    protected Section(String title, InterThreadCommunication itc){
         this.SECTION_TITLE = title;
         this.ITC = itc;
 
@@ -46,7 +46,7 @@ public abstract class Section extends JPanel {
     /**
      * Get the title of the section
      */
-    public String getSectionTitle(){
+    public String getTitle(){
         return this.SECTION_TITLE;
     }
 
