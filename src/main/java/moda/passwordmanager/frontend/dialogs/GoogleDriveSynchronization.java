@@ -2,6 +2,7 @@ package moda.passwordmanager.frontend.dialogs;
 
 import moda.passwordmanager.Application;
 import moda.passwordmanager.backend.Data;
+import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import net.miginfocom.swing.MigLayout;
@@ -18,7 +19,6 @@ import java.util.LinkedHashMap;
  * The Google Drive Synchronization dialog lets the user solve the conflicts related to synchronizing with Google Drive.
  */
 public class GoogleDriveSynchronization extends JDialog {
-    // TODO. Add the locale for the translation
 
     private final InterThreadCommunication ITC;
     private final ArrayList<Data> CONFLICT_DATA;  // The remote data that needs its conflicts to be solved
@@ -49,7 +49,7 @@ public class GoogleDriveSynchronization extends JDialog {
      * Configurate the properties of the dialog
      */
     private void initDialog(){
-        setTitle(Application.getApplicationTitle() + " - Google Drive Synchronization Conflicts");
+        setTitle(Application.getApplicationTitle() + " - " + Utilities.getLocaleString("Moda.GoogleDriveSynchronizationConflicts.title"));
         setIconImage(Application.getIcon());
         setSize(new Dimension(800, 700));
         setModal(true);
@@ -67,10 +67,10 @@ public class GoogleDriveSynchronization extends JDialog {
 
         JPanel dialogOperations = new JPanel();
         this.solveButton = new JButton();
-        this.solveButton.setText("Solve");
+        this.solveButton.setText(Utilities.getLocaleString("Moda.GoogleDriveSynchronizationConflicts.solveButton"));
 
         this.cancelButton = new JButton();
-        this.cancelButton.setText("Cancel");
+        this.cancelButton.setText(Utilities.getLocaleString("Moda.GoogleDriveSynchronizationConflicts.cancelButton"));
 
         dialogOperations.add(this.solveButton);
         dialogOperations.add(this.cancelButton);
@@ -133,19 +133,20 @@ public class GoogleDriveSynchronization extends JDialog {
 
             // If the service is set to null then it means that the data has been deleted on the remote
             if (remoteData.getSERVICE() == null){
-                conflictedDataPanel.add(new JLabel(localData.getSERVICE() + " (Deleted on remote)"),
-                        "span, wrap");
+                conflictedDataPanel.add(new JLabel(localData.getSERVICE() + " (" +
+                        Utilities.getLocaleString("Moda.GoogleDriveSynchronizationConflicts.deletedOnRemote") + ")"),
+                "span, wrap");
                 // The button group allows to select only of the two radio buttons
                 ButtonGroup buttonGroup = new ButtonGroup();
 
                 JRadioButton restoreRadio = new JRadioButton();
-                restoreRadio.setText("Restore");
+                restoreRadio.setText(Utilities.getLocaleString("Moda.GoogleDriveSynchronizationConflicts.restoreRadio"));
                 restoreRadio.setSelected(true);  // By default, the data is restored
                 restoreRadio.addActionListener(e -> this.SOLVED_DATA.put(localData.getID(),
                         localData.asLinkedHashMap()));
 
                 JRadioButton removeRadio = new JRadioButton();
-                removeRadio.setText("Remove");
+                removeRadio.setText(Utilities.getLocaleString("Moda.GoogleDriveSynchronizationConflicts.removeRadio"));
 
                 // If the user chooses Remove then in the solved data hash map we set its linked hash map as null
                 // to let solve button listener know that it needs to be deleted
@@ -183,7 +184,9 @@ public class GoogleDriveSynchronization extends JDialog {
                         ButtonGroup buttonGroup = new ButtonGroup();
 
                         JRadioButton localDataRadio = new JRadioButton();
-                            localDataRadio.setText(localUserData.get(key) + " (Local)");
+                            localDataRadio.setText(localUserData.get(key) + " (" +
+                                    Utilities.getLocaleString("Moda.GoogleDriveSynchronizationConflicts.localDataRadio")
+                                    + ")");
                         localDataRadio.setSelected(true);  // By default, the local one is always chosen to avoid having to
                                                            // check whether all the conflicts have been solved: in this way
                                                            // the solve button is already enabled
@@ -195,7 +198,9 @@ public class GoogleDriveSynchronization extends JDialog {
                         );
 
                         JRadioButton remoteDataRadio = new JRadioButton();
-                            remoteDataRadio.setText(remoteUserData.get(key) + " (Remote)");
+                            remoteDataRadio.setText(remoteUserData.get(key) + " (" +
+                                    Utilities.getLocaleString("Moda.GoogleDriveSynchronizationConflicts.remoteDataRadio")
+                                    + ")");
                         remoteDataRadio.addActionListener(
                                 e -> SOLVED_DATA.get(localData.getID()).put(key, remoteUserData.get(key))
                         );
