@@ -1,4 +1,7 @@
-package moda.passwordmanager.backend;
+package moda.passwordmanager.backend.settings;
+
+import moda.passwordmanager.backend.Database;
+import moda.passwordmanager.backend.Helper;
 
 import java.util.ArrayList;
 
@@ -17,7 +20,7 @@ public class SensitiveSettings extends AbstractSettings {
     }
 
     /**
-     * The Sensitive Settings must be initialized separately as they require the
+     * The Sensitive Settings must be initialized separately as they require the master password to be used
      */
     public void init(){
         initRecords();

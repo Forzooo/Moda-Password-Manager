@@ -2,6 +2,8 @@ package moda.passwordmanager.backend;
 
 import com.google.api.client.auth.oauth2.StoredCredential;
 import com.google.api.client.json.gson.GsonFactory;
+import moda.passwordmanager.backend.settings.SensitiveSettings;
+import moda.passwordmanager.backend.settings.Settings;
 import moda.passwordmanager.frontend.properties.Languages;
 import moda.passwordmanager.frontend.properties.Themes;
 import moda.passwordmanager.interthreadcommunication.EventListener;
