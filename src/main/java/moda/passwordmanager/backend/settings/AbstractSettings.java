@@ -1,4 +1,4 @@
-package moda.passwordmanager.backend;
+package moda.passwordmanager.backend.settings;
 
 import java.util.ArrayList;
 

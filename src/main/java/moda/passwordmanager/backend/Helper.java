@@ -1,5 +1,6 @@
 package moda.passwordmanager.backend;
 
+import moda.passwordmanager.backend.settings.Settings;
 import moda.passwordmanager.frontend.properties.Languages;
 import org.apache.commons.codec.digest.DigestUtils;
 

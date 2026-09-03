@@ -39,6 +39,9 @@ public class Data extends Section {
     private void initComponents(){
         JPanel updateMasterPasswordPanel = new JPanel();
 
+        JLabel updateMasterPasswordLabel = new JLabel();
+        updateMasterPasswordLabel.setText(Utilities.getLocaleString("Moda.Data.updateMasterPasswordLabel"));
+
         this.updateMasterPasswordTextField = new JPasswordField();
         this.updateMasterPasswordTextField.setPreferredSize(getTextFieldDimension());
         this.updateMasterPasswordTextField.putClientProperty("JTextField.placeholderText", Utilities.getLocaleString("Moda.Data.updateMasterPasswordTextFieldPlaceholder"));
@@ -66,6 +69,7 @@ public class Data extends Section {
         updateMasterPasswordPanel.add(this.updateMasterPasswordTextField);
         updateMasterPasswordPanel.add(this.updateMasterPasswordButton);
 
+        addOption(updateMasterPasswordLabel);
         addOption(updateMasterPasswordPanel);
 
         addSection(Utilities.getLocaleString("Moda.Data.stringGenerationSection"));

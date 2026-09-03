@@ -14,16 +14,12 @@ public class About extends Section{
     }
 
     private void initComponents(){
-        JLabel nameLabel = new JLabel();
-        nameLabel.setText("Moda Password Manager");
-
         JLabel authorsLabel = new JLabel();
         authorsLabel.setText(Utilities.getLocaleString("Moda.About.authorsLabel") + " Forzo, Bronte");
 
         JLabel versionLabel = new JLabel();
         versionLabel.setText(Utilities.getLocaleString("Moda.About.versionLabel") + " " + Application.getVersion());
 
-        addOption(nameLabel);
         addOption(authorsLabel);
         addOption(versionLabel);
     }
