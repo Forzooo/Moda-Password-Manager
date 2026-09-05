@@ -6,12 +6,12 @@ import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import net.miginfocom.swing.MigLayout;
+import raven.modal.Toast;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 
 /**
@@ -271,6 +271,7 @@ public class UserData extends JPanel {
     private void deleteData(){
         Event event = new Event("delete-data", this.ID);
         this.ITC.request(event);
+        Utilities.showToast(getParent(), Toast.Type.SUCCESS, Utilities.getLocaleString("Moda.Toast.deletedDataSuccessful"));
     }
 
     /**

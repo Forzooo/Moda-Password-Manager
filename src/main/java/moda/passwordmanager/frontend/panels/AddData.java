@@ -7,6 +7,7 @@ import moda.passwordmanager.frontend.components.ModaTextField;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import net.miginfocom.swing.MigLayout;
+import raven.modal.Toast;
 
 import javax.swing.*;
 import java.awt.*;
@@ -161,7 +162,7 @@ public class AddData extends JPanel {
         Data userData = new Data(username, emailAddress, password, service, additionalData);
 
         this.ITC.send(new Event("add-data", userData));
-//        notifyUser();  // Example method to show the user a messagebox with the operation status
+        Utilities.showToast(getParent(), Toast.Type.SUCCESS, Utilities.getLocaleString("Moda.Toast.addDataSuccessful"));
     }
 
     /**

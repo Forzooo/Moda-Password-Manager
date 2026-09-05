@@ -101,7 +101,11 @@ public class FrontendEventListener extends EventListener {
         ArrayList<Data> conflictData = (ArrayList<Data>) getRequestData().getFirst();
 
         EventQueue.invokeLater(() -> {
-            GoogleDriveSynchronization googleDriveSynchronization = new GoogleDriveSynchronization(getITC(), conflictData);
+            // To get the Frontend frame we have to use the getFrames method of the Frame class as we don't have a
+            // reference for it
+            // Also, it is always the first index as there are no other JFrame
+            GoogleDriveSynchronization googleDriveSynchronization = new GoogleDriveSynchronization(java.awt.Frame.getFrames()[0],
+                    getITC(), conflictData);
             googleDriveSynchronization.setVisible(true);
         });
 
