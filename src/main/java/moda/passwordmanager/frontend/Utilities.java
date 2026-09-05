@@ -3,6 +3,9 @@ package moda.passwordmanager.frontend;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import moda.passwordmanager.Application;
 import moda.passwordmanager.backend.Database;
+import raven.modal.Toast;
+import raven.modal.toast.option.ToastLocation;
+import raven.modal.toast.option.ToastOption;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
@@ -159,6 +162,16 @@ public class Utilities {
         // directory, which is a subdirectory of resources, we need to specify it in the baseName of the getBundle method
         ResourceBundle resourceBundle = ResourceBundle.getBundle("locales/locale", Application.getApplicationLocale());
         return resourceBundle.getString(key);
+    }
+
+    /**
+     * Show a Toast (notification) in the bottom right section of the application
+     */
+    public static void showToast(Component component, Toast.Type type, String message){
+        ToastOption toastOption = Toast.createOption();
+        toastOption.getLayoutOption().setLocation(ToastLocation.BOTTOM_TRAILING);
+
+        Toast.show(component, type, message, toastOption);
     }
 
 }

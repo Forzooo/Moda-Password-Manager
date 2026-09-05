@@ -6,6 +6,7 @@ import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import net.miginfocom.swing.MigLayout;
+import raven.modal.Toast;
 
 import javax.swing.*;
 import java.awt.*;
@@ -34,7 +35,9 @@ public class GoogleDriveSynchronization extends JDialog {
     private JButton solveButton;  // The conflicts have been solved, an ITC event will be sent with the results
     private JButton cancelButton;  // The conflicts have been ignored and the dialog will be disposed
 
-    public GoogleDriveSynchronization(InterThreadCommunication itc, ArrayList<Data> conflictData){
+    public GoogleDriveSynchronization(Frame owner, InterThreadCommunication itc, ArrayList<Data> conflictData){
+        super(owner);  // We have to set the owner of the frame to use notifications inside the frame and not in dialog
+
         this.ITC = itc;
         this.CONFLICT_DATA = conflictData;
         this.SOLVED_DATA = new HashMap<>();
@@ -112,7 +115,7 @@ public class GoogleDriveSynchronization extends JDialog {
                 // After all the conflicts have been solved, we can update the Google Drive status to complete the
                 // synchronization
                 ITC.request(new Event("google-drive-synchronization-conflicts-solved"));
-                // TODO. Add a notification to let the user know that the conflicts have been solved correctly
+                Utilities.showToast(getOwner(), Toast.Type.SUCCESS, Utilities.getLocaleString("Moda.Toast.solvedGoogleDriveConflicts"));
                 dispose();  // The dialog is destroyed as it's not required anymore
             }
         });
