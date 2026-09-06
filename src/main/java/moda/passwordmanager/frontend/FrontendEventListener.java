@@ -9,6 +9,7 @@ import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.List;
 
 public class FrontendEventListener extends EventListener {
 
@@ -37,7 +38,7 @@ public class FrontendEventListener extends EventListener {
      */
     private void exceptionRaised(){
         // Retrieve the data from the request
-        ArrayList<Object> requestData = getRequestData();
+        List<Object> requestData = getRequestData();
         String threadName = (String) requestData.getFirst();  // The name of the thread where the exception occurred
         Throwable throwable = (Throwable) requestData.get(1);  // The stack trace of the exception
 
@@ -105,7 +106,7 @@ public class FrontendEventListener extends EventListener {
             // reference for it
             // Also, it is always the first index as there are no other JFrame
             GoogleDriveSynchronization googleDriveSynchronization = new GoogleDriveSynchronization(java.awt.Frame.getFrames()[0],
-                    getITC(), conflictData);
+                    getItc(), conflictData);
             googleDriveSynchronization.setVisible(true);
         });
 

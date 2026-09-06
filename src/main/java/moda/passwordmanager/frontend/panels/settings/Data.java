@@ -10,6 +10,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class Data extends Section {
 
@@ -130,7 +131,7 @@ public class Data extends Section {
         Event event = new Event("get-string-generation-configuration");
         Event backendResponse = getITC().request(event);
 
-        ArrayList<Object> data = backendResponse.getData();  // Retrieve the data
+        List<Object> data = backendResponse.getData();  // Retrieve the data
 
         // Set the data to the components
         this.stringLengthTextField.setText(String.valueOf(data.getFirst()));

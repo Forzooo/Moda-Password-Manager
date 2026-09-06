@@ -14,10 +14,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class Backend extends EventListener {
@@ -49,7 +46,7 @@ public class Backend extends EventListener {
         this.CRYPTOGRAPHY = new Cryptography();
         this.HELPER = new Helper(this.CRYPTOGRAPHY, this.SETTINGS);
         this.SENSITIVE_SETTINGS = new SensitiveSettings(this.DATABASE, this.HELPER);
-        this.GOOGLE_DRIVE = new GoogleDrive(getITC());
+        this.GOOGLE_DRIVE = new GoogleDrive(getItc());
 
         initHandler();  // Initialize all the operations to handle
     }
@@ -188,12 +185,12 @@ public class Backend extends EventListener {
         event.addData(e);
 
         // Receive the response from the frontend
-        Event frontendResponse = getITC().request(event);
+        Event frontendResponse = getItc().request(event);
 
         // Check whether the event response is close-connection to stop the execution
         if (frontendResponse.getOperation().equals("close-connection")){
             event = new Event("close-connection");  // Create the event to confirm the stop
-            getITC().send(event);  // Send the event
+            getItc().send(event);  // Send the event
         }
     }
 
@@ -274,7 +271,7 @@ public class Backend extends EventListener {
             // Check the current size of the data to send to know if a chunk size is reached to send it
             if (dataToSend.size() >= SERVICES_CHUNK){
                 Event updateService = new Event("update-service-fields", dataToSend);
-                getITC().send(updateService);
+                getItc().send(updateService);
 
                 // We need to recreate the dataToSend object as otherwise it would use the same address as the one sent
                 // to the FrontendEventListener which would raise a concurrent exception
@@ -293,7 +290,7 @@ public class Backend extends EventListener {
         // Create the Event with the data and send it only if the data is not empty
         if (!dataToSend.isEmpty()){
             Event updateService = new Event("update-service-fields", dataToSend);
-            getITC().send(updateService);
+            getItc().send(updateService);
         }
     }
 
@@ -316,7 +313,7 @@ public class Backend extends EventListener {
             // Check the current size of the data to send to know if a chunk size is reached to send it
             if (updatedData.size() >= SERVICES_CHUNK){
                 Event updateService = new Event("update-service-fields", updatedData);
-                getITC().send(updateService);
+                getItc().send(updateService);
 
                 // We need to recreate the dataToSend object as otherwise it would use the same address as the one sent
                 // to the FrontendEventListener which would raise a concurrent exception
@@ -348,7 +345,7 @@ public class Backend extends EventListener {
             // Check the current size of the data to send to know if a chunk size is reached to send it
             if (updatedData.size() >= SERVICES_CHUNK){
                 Event updateService = new Event("update-service-fields", updatedData);
-                getITC().send(updateService);
+                getItc().send(updateService);
 
                 // We need to recreate the dataToSend object as otherwise it would use the same address as the one sent
                 // to the FrontendEventListener which would raise a concurrent exception
@@ -362,7 +359,7 @@ public class Backend extends EventListener {
         // Create the Event with the data and send it only if the data is not empty
         if (!updatedData.isEmpty()){
             Event updateService = new Event("update-service-fields", updatedData);
-            getITC().send(updateService);
+            getItc().send(updateService);
         }
     }
 
@@ -373,7 +370,7 @@ public class Backend extends EventListener {
         // Ensure that the services map is not empty, otherwise resetting the service fields is useless
         if (!this.servicesMap.isEmpty()){
             Event reset = new Event("reset-service-fields");
-            getITC().send(reset);
+            getItc().send(reset);
         }
     }
 
@@ -482,7 +479,7 @@ public class Backend extends EventListener {
      * Set in the settings file the user preferences for the generation of strings
      */
     private void configureStringGeneration(){
-        ArrayList<Object> requestData = getRequestData();
+        List<Object> requestData = getRequestData();
 
         int length = (int) requestData.getFirst();  // The length of the string
         boolean letters = (boolean) requestData.get(1);  // Flag to indicate whether letters are generated
