@@ -6,8 +6,6 @@ import org.bouncycastle.crypto.params.Argon2Parameters;
 import javax.crypto.*;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -16,19 +14,19 @@ import java.security.SecureRandom;
 public class Cryptography {
 
     // Argon2id Settings
-    private final static int ARGON_MEMORY = 64;  // The memory is converted to KB in the hash function (Assuming is always in MB)
-    private final static int ARGON_PARALLELISM = 2;
-    private final static int ARGON_ITERATIONS = 3;
-    private final static int ARGON_SALT_SIZE = 16;
+    private static final int ARGON_MEMORY = 64000;  // The memory usage is in KB
+    private static final int ARGON_PARALLELISM = 2;
+    private static final int ARGON_ITERATIONS = 3;
+    private static final int ARGON_SALT_SIZE = 16;
 
     // AES-GCM Settings
-    private final static int AES_KEY_SIZE = 32;  // The length is set to bytes for better compatibility
-    private final static int AES_IV_SIZE = 12;
-    private final static int AES_GMC_TAG_SIZE = 128;  // The length is set to bits
+    private static final int AES_KEY_SIZE = 32;  // The length is set to bytes for better compatibility
+    private static final int AES_IV_SIZE = 12;
+    private static final int AES_GMC_TAG_SIZE = 128;  // The length is set to bits
 
     // Class attributes
     private byte[] masterPassword;  // The master password that allows encryption/decryption
-    private SecureRandom secureRandom;
+    private final SecureRandom secureRandom;
 
     public Cryptography(){
         this.masterPassword = null;  // The master password is set only with the set method
@@ -44,19 +42,14 @@ public class Cryptography {
     }
 
     /**
-    * Generate and return a String, which contains in the following order:
-    * <ul>
-    *     <li>Ciphertext of the plaintext data</li>
-    *     <li>GMC Tag, used to check that the ciphertext hasn't been changed by an error or an attacker</li>
-    *     <li>IV, used to generate the ciphertext</li>
-    *     <li>Salt, used to compute the Encryption Key for the decryption (16 bytes)</li>
-    * </ul>
-    */
+     * Encrypts the plaintext using AES with the given Master Password
+     * @return A bytes array containing in the following order the ciphertext, the GCM Tag, the IV and the salt
+     */
     public byte[] encrypt(String plaintext){
         // If by mistake a cryptography dependant operation is executed before setting the master password, then an
         // exception is arisen to let the developer know the issue
         if (this.masterPassword == null){
-            throw new RuntimeException("The master password must be set before executing any cryptographical operation.");
+            throw new MasterPasswordNotSet("The master password must be set before executing any cryptographical operation.");
         }
 
         reseed();  // Reseed the Random Generator before any operations
@@ -80,12 +73,17 @@ public class Cryptography {
         return ciphertext;  // Return the encrypted data
     }
 
-    // Removes all the headers from the ciphertext and decrypts it
+    /**
+     * Decrypts the ciphertext using AES with the given Master Password
+     * @param encryptedData The encrypted data must contain in the following order the ciphertext, the GCM Tag, the IV
+     *                      and the salt to allow the decryption
+     * @return The plaintext
+     */
     public byte[] decrypt(byte[] encryptedData){
         // If by mistake a cryptography dependant operation is executed before setting the master password, then an
         // exception is arisen to let the developer know the issue
         if (this.masterPassword == null){
-            throw new RuntimeException("The master password must be set before executing any cryptographical operation.");
+            throw new MasterPasswordNotSet("The master password must be set before executing any cryptographical operation.");
         }
 
         byte[] salt = readHeader(encryptedData, ARGON_SALT_SIZE);
@@ -96,9 +94,7 @@ public class Cryptography {
 
         byte[] hash = hash(salt); // Regenerate the hash, which will be the Decryption Key for AES, using Argon2id
 
-        byte[] plaintextData = computeAES(encryptedData, hash, iv, Cipher.DECRYPT_MODE);
-
-        return plaintextData;
+        return computeAES(encryptedData, hash, iv, Cipher.DECRYPT_MODE);  // Return the plaintext data
     }
 
     /**
@@ -117,15 +113,14 @@ public class Cryptography {
     }
 
     /**
-     * Generate an Hash using the Argon2id algorithm
-     * @param salt A randomically generated salt
-     * @return Random hash generated with Argon2id
+     * Generate a random hash using the Argon2id algorithm
+     * @param salt A randomly generated salt
      */
     private byte[] hash(byte[] salt){
         // The parameters and the hashGenerator have to be created locally, otherwise a race condition can happen
         Argon2Parameters parameters = new Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
                 .withIterations(Cryptography.ARGON_ITERATIONS)  // Set the number of iterations
-                .withMemoryAsKB(Cryptography.ARGON_MEMORY*1000)  // Set the RAM usage of Argon in KiloBytes
+                .withMemoryAsKB(Cryptography.ARGON_MEMORY)  // Set the RAM usage of Argon
                 .withParallelism(Cryptography.ARGON_PARALLELISM)  // Set the number of threads
                 .withSalt(salt)  // Set the salt of the hash generator
                 .build();
@@ -178,48 +173,31 @@ public class Cryptography {
      * @return A new byte array with both the arrays
      */
     private byte[] addHeader(byte[] data, byte[] header){
-        // The ByteArrayOutputStream allows to write each array into its stream before getting back a byte array
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length + header.length);  // Set the len
-        try {
-            // Write the arrays into the stream
-            outputStream.write(data);
-            outputStream.write(header);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        byte[] newData = new byte[data.length+header.length];
 
-        return outputStream.toByteArray();
+        System.arraycopy(data, 0, newData, 0, data.length);
+        System.arraycopy(header, 0, newData, data.length, header.length);
+
+        return newData;
     }
 
     /**
-     * Read a header from the encrypted data
-     * @param data The encrypted data
-     * @param headerLength The length of the header
-     * @return The header read from the last byte to the (last byte - length)
+     * Read a header from the end of the bytes array
+     * @param headerLength The length of the header to be read
      */
     private byte[] readHeader(byte[] data, int headerLength){
         byte[] header = new byte[headerLength];
-
-        for (int i = 0; i < headerLength; i++){
-            header[i] = data[data.length-headerLength+i];
-        }
-
+        System.arraycopy(data, data.length-headerLength, header, 0, headerLength);
         return header;
     }
 
     /**
-     * Remove a header from the data
-     * @param data The encrypted data
+     * Remove a header from the end of the bytes array
      * @param headerLength The length of the header to be removed
-     * @return The data without the header which is removed from the last byte to the (last byte - length)
      */
     private byte[] removeHeader(byte[] data, int headerLength){
-        byte[] newData = new byte[data.length - headerLength];
-
-        for (int i = 0; i < newData.length; i++){
-            newData[i] = data[i];
-        }
-
+        byte[] newData = new byte[data.length-headerLength];
+        System.arraycopy(data, 0, newData, 0, data.length-headerLength);
         return newData;
     }
 
