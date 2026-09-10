@@ -114,9 +114,9 @@ public class ShowData extends JPanel {
                     // because otherwise the selectedIndex would not match the ID of USER_DATA
                     int id;
                     if (searchBar.getText().trim().isBlank()){
-                        id = USER_DATA.get(dataList.getSelectedIndex()).getID();
+                        id = USER_DATA.get(dataList.getSelectedIndex()).getId();
                     }else{
-                        id = USER_FILTERED_DATA.get(dataList.getSelectedIndex()).getID();
+                        id = USER_FILTERED_DATA.get(dataList.getSelectedIndex()).getId();
                     }
 
                     // If the tab exists, then set it to be the selected one instead of creating a new tab for it
@@ -175,7 +175,7 @@ public class ShowData extends JPanel {
                 // If the search text is empty, add all the services to the model
                 if (searchText.isEmpty()) {
                     for (Data data : USER_DATA) {
-                        USER_DATA_MODEL.addElement(data.getSERVICE());
+                        USER_DATA_MODEL.addElement(data.getService());
                         USER_FILTERED_DATA.add(data);
                     }
                     return;
@@ -183,8 +183,8 @@ public class ShowData extends JPanel {
 
                 // Iterate over all the data and add the services that starts with the input of the user
                 for (Data data : USER_DATA) {
-                    if (data.getSERVICE().toLowerCase().trim().startsWith(searchText)) {
-                        USER_DATA_MODEL.addElement(data.getSERVICE());
+                    if (data.getService().toLowerCase().trim().startsWith(searchText)) {
+                        USER_DATA_MODEL.addElement(data.getService());
                         USER_FILTERED_DATA.add(data);
                     }
                 }
@@ -243,7 +243,7 @@ public class ShowData extends JPanel {
      */
     public int indexOfUserData(int id){
         for (int i = 0; i < this.USER_DATA.size(); i++){
-            if (this.USER_DATA.get(i).getID() == id) {
+            if (this.USER_DATA.get(i).getId() == id) {
                 return i;
             }
         }

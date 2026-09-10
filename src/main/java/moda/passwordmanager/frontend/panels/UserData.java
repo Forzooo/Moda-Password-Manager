@@ -84,7 +84,7 @@ public class UserData extends JPanel {
 
         // Create the panel for each field of the data
         Data data = getData();
-        this.title = data.getSERVICE();  // The title of the tab could be retrieved from the userData array itself
+        this.title = data.getService();  // The title of the tab could be retrieved from the userData array itself
                                          // or from the userDataFields array but if in future it may occur that the index
                                          // of the service field changes, then the title would leak sensitive information
                                          // of the user, thus we retrieve it from the getter method of Data

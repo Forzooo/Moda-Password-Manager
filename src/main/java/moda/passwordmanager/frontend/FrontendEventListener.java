@@ -70,19 +70,19 @@ public class FrontendEventListener extends EventListener {
 
         for (Data data : backendData){
             // Retrieve the indexes of the Data objects that have the same ID
-            int userDataIndex = this.showData.indexOfUserData(data.getID());
+            int userDataIndex = this.showData.indexOfUserData(data.getId());
 
             // If the ID has not been found, then add the Data object
             if (userDataIndex == -1){
                 userData.add(data);
-                userDataModel.addElement(data.getSERVICE());
-            }else if (data.getSERVICE().isEmpty()){
+                userDataModel.addElement(data.getService());
+            }else if (data.getService().isEmpty()){
             // If the service field is empty that means the record has been deleted, and it has to be removed from the list
                 userData.remove(userDataIndex);
                 userDataModel.remove(userDataIndex);
             }else{  // Otherwise update the current data where the index is the same for the data and the data model
                 userData.set(userDataIndex, data);
-                userDataModel.set(userDataIndex, data.getSERVICE());
+                userDataModel.set(userDataIndex, data.getService());
             }
         }
     }

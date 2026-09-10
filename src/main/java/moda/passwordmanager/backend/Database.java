@@ -1,12 +1,17 @@
 package moda.passwordmanager.backend;
 
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Database {
 
     private String path;  // Path of the database current in use
+    private static final String FILE_EXTENSION = ".modb";  // The extension of any password manager database
+
     private static final String DATA_TABLE = "data";  // The table that contains the Data objects
     private static final String GROUP_TABLE = "groups";  // The table that contains the Groups
 
@@ -49,12 +54,14 @@ public class Database {
 
     /**
      * Closes the connection with the database and deletes it from the file system
-     * @return Whether it has been deleted successfully
      */
-    public boolean delete(){
+    public void delete(){
         closeConnection();  // First we close the connection to avoid further errors
-        File database = new File(this.path);
-        return database.delete();
+        try {
+            Files.delete(Path.of(this.path));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -109,7 +116,7 @@ public class Database {
      * Get the file extension of any database file of the password manager
      */
     public static String getFileExtension(){
-        return ".modb";
+        return FILE_EXTENSION;
     }
 
     /**
@@ -147,11 +154,11 @@ public class Database {
             );
 
             // Add all the data to the query
-            query.setString(1, data.getUSERNAME());
-            query.setString(2, data.getEMAIL_ADDRESS());
-            query.setString(3, data.getPASSWORD());
-            query.setString(4, data.getSERVICE());
-            query.setString(5, data.getADDITIONAL_DATA());
+            query.setString(1, data.getUsername());
+            query.setString(2, data.getEmailAddress());
+            query.setString(3, data.getPassword());
+            query.setString(4, data.getService());
+            query.setString(5, data.getAdditionalData());
 
             // Execute the query
             query.execute();
@@ -254,6 +261,8 @@ public class Database {
             query.setString(1, DATA_TABLE);
 
             ResultSet resultSet = query.executeQuery();
+            query.close();
+
             return resultSet.getInt("seq");
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -295,12 +304,12 @@ public class Database {
                     "UPDATE "+Database.DATA_TABLE +" SET username=?, email_address=?, password=?, service=?," +
                             " additional_data=? WHERE id=?"
             );
-            query.setString(1, data.getUSERNAME());
-            query.setString(2, data.getEMAIL_ADDRESS());
-            query.setString(3, data.getPASSWORD());
-            query.setString(4, data.getSERVICE());
-            query.setString(5, data.getADDITIONAL_DATA());
-            query.setInt(6, data.getID());
+            query.setString(1, data.getUsername());
+            query.setString(2, data.getEmailAddress());
+            query.setString(3, data.getPassword());
+            query.setString(4, data.getService());
+            query.setString(5, data.getAdditionalData());
+            query.setInt(6, data.getId());
 
             query.execute();
             query.close();
@@ -358,9 +367,8 @@ public class Database {
 
     /**
      * Retrieve each service field with its ID from the Data table
-     * @return An ArrayList of Data object
      */
-    public ArrayList<Data> getDataServiceFields(){
+    public List<Data> getDataServiceFields(){
         ArrayList<Data> serviceFields = new ArrayList<>();  // The service fields are stored here
 
         try {
@@ -391,7 +399,7 @@ public class Database {
      * Retrieve all the records inside the Data table
      * @return ArrayList containing all the Data objects
      */
-    public ArrayList<Data> getDataRecords(){
+    public List<Data> getDataRecords(){
         ArrayList<Data> records = new ArrayList<>();
 
         try {
@@ -429,7 +437,7 @@ public class Database {
      * Change all the records inside the database
      * @param records The new records
      */
-    public void changeDataRecords(ArrayList<Data> records){
+    public void changeDataRecords(List<Data> records){
         try {
             PreparedStatement query = this.connection.prepareStatement(
                     "UPDATE "+Database.DATA_TABLE +" SET username=?, email_address=?, password=?, service=?," +
@@ -441,12 +449,12 @@ public class Database {
 
             // Iterate over all the data to commit them together
             for (Data data : records){
-                query.setString(1, data.getUSERNAME());
-                query.setString(2, data.getEMAIL_ADDRESS());
-                query.setString(3, data.getPASSWORD());
-                query.setString(4, data.getSERVICE());
-                query.setString(5, data.getADDITIONAL_DATA());
-                query.setInt(6, data.getID());
+                query.setString(1, data.getUsername());
+                query.setString(2, data.getEmailAddress());
+                query.setString(3, data.getPassword());
+                query.setString(4, data.getService());
+                query.setString(5, data.getAdditionalData());
+                query.setInt(6, data.getId());
                 query.addBatch();  // Add the data to the set of the query
             }
 

@@ -1,6 +1,5 @@
 package moda.passwordmanager.backend;
 
-import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Objects;
 
@@ -9,77 +8,68 @@ public class Data {
     /**
      * The value of the ID if it has not been set by the constructor
      */
-    private final static int ID_NOT_SET = -1;
+    private static final int ID_NOT_SET = -1;
 
-    private final int ID;
-    private final String USERNAME;
-    private final String EMAIL_ADDRESS;
-    private final String PASSWORD;
-    private final String SERVICE;
-    private final String ADDITIONAL_DATA;
+    private final int id;
+    private final String username;
+    private final String emailAddress;
+    private final String password;
+    private final String service;
+    private final String additionalData;
 
     public Data(int id, String username, String emailAddress, String password, String service, String additionalData){
-        this.ID = id;
-        this.USERNAME = username;
-        this.EMAIL_ADDRESS = emailAddress;
-        this.PASSWORD = password;
-        this.SERVICE = service;
-        this.ADDITIONAL_DATA = additionalData;
+        this.id = id;
+        this.username = username;
+        this.emailAddress = emailAddress;
+        this.password = password;
+        this.service = service;
+        this.additionalData = additionalData;
     }
 
     /**
      * Constructor used for the JList of "Show Data" of Frontend where only ID and service are used
      */
     public Data(int id, String service){
-        this.ID = id;
-        this.USERNAME = null;
-        this.EMAIL_ADDRESS = null;
-        this.PASSWORD = null;
-        this.SERVICE = service;
-        this.ADDITIONAL_DATA = null;
+        this.id = id;
+        this.username = null;
+        this.emailAddress = null;
+        this.password = null;
+        this.service = service;
+        this.additionalData = null;
 
-    }
-
-    public Data(byte[] username, byte[] emailAddress, byte[] password, byte[] service, byte[] additionalData){
-        this.ID = ID_NOT_SET;  // Set the ID as -1 as it won't be used when this constructor is called
-        this.USERNAME = new String(username, StandardCharsets.UTF_8);
-        this.EMAIL_ADDRESS = new String(emailAddress, StandardCharsets.UTF_8);
-        this.PASSWORD = new String(password, StandardCharsets.UTF_8);
-        this.SERVICE = new String(service, StandardCharsets.UTF_8);
-        this.ADDITIONAL_DATA = new String(additionalData, StandardCharsets.UTF_8);
     }
 
     public Data(String username, String emailAddress, String password, String service, String additionalData){
-        this.ID = ID_NOT_SET;  // Set the ID as -1 as it won't be used when this constructor is called
-        this.USERNAME = username;
-        this.EMAIL_ADDRESS = emailAddress;
-        this.PASSWORD = password;
-        this.SERVICE = service;
-        this.ADDITIONAL_DATA = additionalData;
+        this.id = ID_NOT_SET;  // Set the ID as -1 as it won't be used when this constructor is called
+        this.username = username;
+        this.emailAddress = emailAddress;
+        this.password = password;
+        this.service = service;
+        this.additionalData = additionalData;
     }
 
-    public int getID() {
-        return this.ID;
+    public int getId() {
+        return this.id;
     }
 
-    public String getUSERNAME() {
-        return this.USERNAME;
+    public String getUsername() {
+        return this.username;
     }
 
-    public String getEMAIL_ADDRESS() {
-        return this.EMAIL_ADDRESS;
+    public String getEmailAddress() {
+        return this.emailAddress;
     }
 
-    public String getPASSWORD() {
-        return this.PASSWORD;
+    public String getPassword() {
+        return this.password;
     }
 
-    public String getSERVICE() {
-        return this.SERVICE;
+    public String getService() {
+        return this.service;
     }
 
-    public String getADDITIONAL_DATA() {
-        return this.ADDITIONAL_DATA;
+    public String getAdditionalData() {
+        return this.additionalData;
     }
 
     /**
@@ -88,12 +78,12 @@ public class Data {
      */
     public LinkedHashMap<String, String> asLinkedHashMap(){
         LinkedHashMap<String, String> data = new LinkedHashMap<>();
-        data.put("id", String.valueOf(this.ID));
-        data.put("username", this.USERNAME);
-        data.put("email_address", this.EMAIL_ADDRESS);
-        data.put("password", this.PASSWORD);
-        data.put("service", this.SERVICE);
-        data.put("additional_data", this.ADDITIONAL_DATA);
+        data.put("id", String.valueOf(this.id));
+        data.put("username", this.username);
+        data.put("email_address", this.emailAddress);
+        data.put("password", this.password);
+        data.put("service", this.service);
+        data.put("additional_data", this.additionalData);
         return data;
     }
 
@@ -101,15 +91,15 @@ public class Data {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Data data = (Data) o;
-        return this.ID == data.ID && Objects.equals(this.USERNAME, data.getUSERNAME()) &&
-                Objects.equals(this.EMAIL_ADDRESS, data.getEMAIL_ADDRESS()) &&
-                Objects.equals(this.PASSWORD, data.getPASSWORD()) && Objects.equals(this.SERVICE, data.getSERVICE()) &&
-                Objects.equals(this.ADDITIONAL_DATA, data.getADDITIONAL_DATA());
+        return this.id == data.id && Objects.equals(this.username, data.getUsername()) &&
+                Objects.equals(this.emailAddress, data.getEmailAddress()) &&
+                Objects.equals(this.password, data.getPassword()) && Objects.equals(this.service, data.getService()) &&
+                Objects.equals(this.additionalData, data.getAdditionalData());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.ID, this.USERNAME, this.EMAIL_ADDRESS, this.PASSWORD, this.SERVICE,
-                this.ADDITIONAL_DATA);
+        return Objects.hash(this.id, this.username, this.emailAddress, this.password, this.service,
+                this.additionalData);
     }
 }

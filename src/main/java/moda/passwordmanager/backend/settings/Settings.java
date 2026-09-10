@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -23,17 +24,17 @@ public class Settings extends AbstractSettings {
      * that the version does not match the application's one as the setting's version updates only when they are
      * modified.
      */
-    private final static String SETTINGS_VERSION = "0.6.0";
-    private final ObjectMapper OBJECT_MAPPER;
-    private final File SETTINGS_FILE;
+    private static final String SETTINGS_VERSION = "0.6.0";
+    private final ObjectMapper objectMapper;
+    private final File settingsFile;
 
     public Settings(String settingsPath){
-        this.OBJECT_MAPPER = new ObjectMapper();  // Create the object mapper used to write/read from the settings file
-        this.SETTINGS_FILE = new File(settingsPath);
+        this.objectMapper = new ObjectMapper();  // Create the object mapper used to write/read from the settings file
+        this.settingsFile = new File(settingsPath);
 
         try {
             // If the file does not exist yet, create it
-            if (this.SETTINGS_FILE.createNewFile()) {
+            if (this.settingsFile.createNewFile()) {
                 updateSettingsFile(getDefaultSettings());  // Update the file with the default settings
             }
             // TODO. The version check has to be used after 0.6.0 because every user needs to already have the
@@ -51,25 +52,25 @@ public class Settings extends AbstractSettings {
      * Retrieve the current default settings for the application
      */
     private ObjectNode getDefaultSettings(){
-        ObjectNode rootNode = this.OBJECT_MAPPER.createObjectNode();  // The root of all the JSON nodes
+        ObjectNode rootNode = this.objectMapper.createObjectNode();  // The root of all the JSON nodes
 
         // Set all the database values
         ArrayList<String> recentDatabases = new ArrayList<>();
         recentDatabases.add(Helper.getPasswordManagerAppDataPath()+Helper.getDefaultDatabase());  // The default database used
 
-        ObjectNode database = this.OBJECT_MAPPER.createObjectNode();  // Contains all the database values
+        ObjectNode database = this.objectMapper.createObjectNode();  // Contains all the database values
         database.put("selected", recentDatabases.getFirst());
         database.putPOJO("recent", recentDatabases);  // The last 5 database used
 
         // Set the string generation configuration
-        ObjectNode stringGeneration = this.OBJECT_MAPPER.createObjectNode();
+        ObjectNode stringGeneration = this.objectMapper.createObjectNode();
         stringGeneration.put("length", 32);
         stringGeneration.put("letters", true);
         stringGeneration.put("numbers", true);
         stringGeneration.put("special", true);
 
         // Set the appearance properties
-        ObjectNode appearance = this.OBJECT_MAPPER.createObjectNode();
+        ObjectNode appearance = this.objectMapper.createObjectNode();
         appearance.put("language", Helper.getSystemLanguage());
         appearance.put("theme", Themes.Light.toString());
 
@@ -87,65 +88,65 @@ public class Settings extends AbstractSettings {
      */
     private JsonNode updateFromOldVersion(){
         // We convert both the JSON to Map object to handle the data operations easily
-        Map<String, Object> defaultSettings = this.OBJECT_MAPPER.convertValue(getDefaultSettings(), new TypeReference<>(){});
+        Map<String, Object> defaultSettings = this.objectMapper.convertValue(getDefaultSettings(), new TypeReference<>(){});
+        Map<String, Object> oldSettings;
         try {
-            Map<String, Object> oldSettings = this.OBJECT_MAPPER.readValue(this.SETTINGS_FILE, new TypeReference<>(){});
-
-            // We iterate over the old settings file and we remove all the old properties that have been removed in
-            // newer version
-            for (String property : oldSettings.keySet()){
-                // If the newer settings file does not contain the property we remove them
-                if (!defaultSettings.containsKey(property)){
-                    oldSettings.remove(property);
-                }else{
-                    // Check whether the properties contain a subproperty to check if they have to be removed
-                    if (oldSettings.get(property) instanceof LinkedHashMap<?,?>){
-                        LinkedHashMap<String, Object> defaultSetting = (LinkedHashMap<String, Object>) defaultSettings.get(property);
-                        LinkedHashMap<String, Object> oldSetting = (LinkedHashMap<String, Object>) oldSettings.get(property);
-
-                        // The subproperties that have to be removed they first need to be saved in an array to avoid
-                        // a Concurrent Modification Exception
-                        ArrayList<String> oldSubproperties = new ArrayList<>();
-
-                        // Iterate over the subproperties to remove the ones that are not inside the newer one
-                        for (String subproperty : oldSetting.keySet()){
-                            if (!defaultSetting.containsKey(subproperty)){
-                                oldSubproperties.add(subproperty);
-                            }
-                        }
-
-                        for (String subproperty : oldSubproperties){
-                            oldSetting.remove(subproperty);
-                        }
-                    }
-                }
-            }
-
-            // We iterate over the new settings and we add the to the old one all the properties that aren't in it yet
-            for (String property : defaultSettings.keySet()){
-                // If the old file does not contain a property we add it
-                if (!oldSettings.containsKey(property)){
-                    oldSettings.put(property, defaultSettings.get(property));
-                }else{
-                    // Check whether the properties contain a subproperty to check if they have to be added
-                    if (defaultSettings.get(property) instanceof LinkedHashMap<?,?>){
-                        LinkedHashMap<String, Object> defaultSetting = (LinkedHashMap<String, Object>) defaultSettings.get(property);
-                        LinkedHashMap<String, Object> oldSetting = (LinkedHashMap<String, Object>) oldSettings.get(property);
-
-                        // Iterate over the subproperties to add the ones that are not inside the old settings yet
-                        for (String subproperty : defaultSetting.keySet()){
-                            if (!oldSetting.containsKey(subproperty)){
-                                oldSetting.put(subproperty, defaultSetting.get(subproperty));
-                            }
-                        }
-                    }
-                }
-            }
-
-            return this.OBJECT_MAPPER.valueToTree(oldSettings);  // Convert the map back to a JsonNode
+            oldSettings = this.objectMapper.readValue(this.settingsFile, new TypeReference<>(){});
         }catch (IOException e) {
             throw new RuntimeException(e);
         }
+        // We iterate over the old settings file and we remove all the old properties that have been removed in
+        // newer version
+        for (Map.Entry<String, Object> property : oldSettings.entrySet()){
+            // If the newer settings file does not contain the property we remove them
+            if (!defaultSettings.containsKey(property.getKey())){
+                oldSettings.remove(property.getKey());
+            }else{
+                // Check whether the properties contain a subproperty to check if they have to be removed
+                if (property.getValue() instanceof LinkedHashMap<?,?>){
+                    LinkedHashMap<String, Object> defaultSetting = (LinkedHashMap<String, Object>) defaultSettings.get(property.getKey());
+                    LinkedHashMap<String, Object> oldSetting = (LinkedHashMap<String, Object>) property.getValue();
+
+                    // The subproperties that have to be removed they first need to be saved in an array to avoid
+                    // a Concurrent Modification Exception
+                    ArrayList<String> oldSubproperties = new ArrayList<>();
+
+                    // Iterate over the subproperties to remove the ones that are not inside the newer one
+                    for (String subproperty : oldSetting.keySet()){
+                        if (!defaultSetting.containsKey(subproperty)){
+                            oldSubproperties.add(subproperty);
+                        }
+                    }
+
+                    for (String subproperty : oldSubproperties){
+                        oldSetting.remove(subproperty);
+                    }
+                }
+            }
+        }
+
+        // We iterate over the new settings and we add the to the old one all the properties that aren't in it yet
+        for (Map.Entry<String, Object> property : defaultSettings.entrySet()){
+            // If the old file does not contain a property we add it
+            if (!oldSettings.containsKey(property.getKey())){
+                oldSettings.put(property.getKey(), property.getValue());
+            }else{
+                // Check whether the properties contain a subproperty to check if they have to be added
+                if (property.getValue() instanceof LinkedHashMap<?,?>){
+                    LinkedHashMap<String, Object> defaultSetting = (LinkedHashMap<String, Object>) property.getValue();
+                    LinkedHashMap<String, Object> oldSetting = (LinkedHashMap<String, Object>) oldSettings.get(property.getKey());
+
+                    // Iterate over the subproperties to add the ones that are not inside the old settings yet
+                    for (Map.Entry<String, Object> subproperty : defaultSetting.entrySet()){
+                        if (!oldSetting.containsKey(subproperty.getKey())){
+                            oldSetting.put(subproperty.getKey(), subproperty.getValue());
+                        }
+                    }
+                }
+            }
+        }
+
+        return this.objectMapper.valueToTree(oldSettings);  // Convert the map back to a JsonNode
     }
 
     /**
@@ -158,7 +159,7 @@ public class Settings extends AbstractSettings {
 
         try {
             String[] nodes = nodePath.split("/");  // Split each node
-            JsonNode rootNode = this.OBJECT_MAPPER.readTree(this.SETTINGS_FILE);  // Read the settings
+            JsonNode rootNode = this.objectMapper.readTree(this.settingsFile);  // Read the settings
 
             // To get to the desired node the current node is updated with each iteration to get to the final one
             currentNode = rootNode.deepCopy();
@@ -198,7 +199,7 @@ public class Settings extends AbstractSettings {
      */
     private void updateSettingsFile(JsonNode rootNode){
         try {
-            this.OBJECT_MAPPER.writeValue(this.SETTINGS_FILE, rootNode);
+            this.objectMapper.writeValue(this.settingsFile, rootNode);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -241,12 +242,11 @@ public class Settings extends AbstractSettings {
     /**
      * Read a list property from the settings file
      * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/selected)
-     * @return ArrayList of the property
      */
     @Override
-    public ArrayList readListProperty(String nodePath){
+    public List<Object> readListProperty(String nodePath){
         JsonNode property = retrieveNode(nodePath);
-        return this.OBJECT_MAPPER.convertValue(property, new TypeReference<>(){});
+        return this.objectMapper.convertValue(property, new TypeReference<>(){});
     }
 
     /**
@@ -258,7 +258,7 @@ public class Settings extends AbstractSettings {
     public void writeProperty(String nodePath, Object value){
         try {
             // As we need to change a property we need to keep the same root node, otherwise the changes would not be saved
-            JsonNode rootNode = this.OBJECT_MAPPER.readTree(this.SETTINGS_FILE);
+            JsonNode rootNode = this.objectMapper.readTree(this.settingsFile);
 
             // To set the new value we first need to get to the node previous to the one we want to change
             // so we have to split the nodePath based on the last '/' provided
@@ -267,7 +267,7 @@ public class Settings extends AbstractSettings {
             ObjectNode node = (ObjectNode) retrieveNode(rootNode, nodePath);  // Cast to ObjectNode otherwise it cannot be modified
 
             // Convert the value to a JsonNode because there is no method to handle Object in ObjectNode
-            node.put(nodeName, this.OBJECT_MAPPER.valueToTree(value));
+            node.put(nodeName, this.objectMapper.valueToTree(value));
 
             updateSettingsFile(rootNode);  // Update the file
 
@@ -277,10 +277,10 @@ public class Settings extends AbstractSettings {
     }
 
     @Override
-    public void writeListProperty(String nodePath, ArrayList values){
+    public void writeListProperty(String nodePath, List<Object> values){
         try {
             // As we need to change a property we need to keep the same root node, otherwise the changes would not be saved
-            JsonNode rootNode = this.OBJECT_MAPPER.readTree(this.SETTINGS_FILE);
+            JsonNode rootNode = this.objectMapper.readTree(this.settingsFile);
 
             // To set the new value we first need to get to the node previous to the one we want to change
             // so we have to split the nodePath based on the last '/' provided

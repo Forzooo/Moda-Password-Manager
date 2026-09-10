@@ -17,28 +17,12 @@ class DataTests {
     private final static String ADDITIONAL_DATA = "Data";
 
     /**
-     * Ensure that when creating a Data object, where the data are passed as a byte array, the ID is set to -1 and the
-     * byte arrays are encoded to UTF-8
-     */
-    @Test
-    void byteConstructor(){
-        Data data = new Data(USERNAME.getBytes(), EMAIL_ADDRESS.getBytes(), PASSWORD.getBytes(), SERVICE.getBytes(),
-                ADDITIONAL_DATA.getBytes());
-        assertEquals(USERNAME, data.getUSERNAME());
-        assertEquals(EMAIL_ADDRESS, data.getEMAIL_ADDRESS());
-        assertEquals(PASSWORD, data.getPASSWORD());
-        assertEquals(SERVICE, data.getSERVICE());
-        assertEquals(ADDITIONAL_DATA, data.getADDITIONAL_DATA());
-        assertEquals(ID_NOT_SET, data.getID());
-    }
-
-    /**
      * Ensure that when creating a Data object without providing an ID, it is set to -1
      */
     @Test
     void stringConstructor(){
         Data data = new Data(USERNAME, EMAIL_ADDRESS, PASSWORD, SERVICE, ADDITIONAL_DATA);
-        assertEquals(ID_NOT_SET, data.getID());
+        assertEquals(ID_NOT_SET, data.getId());
     }
 
     /**

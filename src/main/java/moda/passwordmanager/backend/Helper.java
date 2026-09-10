@@ -8,10 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.LinkedHashMap;
-import java.util.Locale;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -21,18 +18,18 @@ import java.util.concurrent.TimeUnit;
  */
 public class Helper {
 
-    private final static String DEFAULT_DATABASE = "moda-password-manager"+Database.getFileExtension();
-    private final static String SETTINGS_FILE = "settings.json";
+    private static final String DEFAULT_DATABASE = "moda-password-manager"+Database.getFileExtension();
+    private static final String SETTINGS_FILE = "settings.json";
 
-    private final Cryptography CRYPTOGRAPHY;
-    private final Settings SETTINGS;
+    private final Cryptography cryptography;
+    private final Settings settings;
 
     // Execute operations in the background
-    private ScheduledExecutorService backgroundExecutor;
+    private final ScheduledExecutorService backgroundExecutor;
 
     public Helper(Cryptography cryptography, Settings settings){
-        this.CRYPTOGRAPHY = cryptography;
-        this.SETTINGS = settings;
+        this.cryptography = cryptography;
+        this.settings = settings;
 
         this.backgroundExecutor = Executors.newScheduledThreadPool(2);  // Initialize the Background Executor
     }
@@ -80,7 +77,7 @@ public class Helper {
      * @return Decrypted string
      */
     public String decrypt(String ciphertext){
-        return new String(this.CRYPTOGRAPHY.decrypt(decodeBase64(ciphertext)));
+        return new String(this.cryptography.decrypt(decodeBase64(ciphertext)));
     }
 
     /**
@@ -89,7 +86,7 @@ public class Helper {
      * @return Encrypted and encoded string
      */
     public String encrypt(String plaintext){
-        return encodeBase64(this.CRYPTOGRAPHY.encrypt(plaintext));
+        return encodeBase64(this.cryptography.encrypt(plaintext));
     }
 
     /**
@@ -98,13 +95,13 @@ public class Helper {
      * @return The encrypted data
      */
     public Data encryptData(Data data){
-        String username = encrypt(data.getUSERNAME());
-        String emailAddress = encrypt(data.getEMAIL_ADDRESS());
-        String password = encrypt(data.getPASSWORD());
-        String service = encrypt(data.getSERVICE());
-        String additionalData = encrypt(data.getADDITIONAL_DATA());
+        String username = encrypt(data.getUsername());
+        String emailAddress = encrypt(data.getEmailAddress());
+        String password = encrypt(data.getPassword());
+        String service = encrypt(data.getService());
+        String additionalData = encrypt(data.getAdditionalData());
 
-        return new Data(data.getID(), username, emailAddress, password, service, additionalData);
+        return new Data(data.getId(), username, emailAddress, password, service, additionalData);
     }
 
     /**
@@ -115,14 +112,13 @@ public class Helper {
     public Data decryptData(Data data){
         LinkedHashMap<String, String> fields = data.asLinkedHashMap();
 
-        // Iterate over all the fields and decrypt them if they are strings, otherwise add them as null
-        for (String key : fields.keySet()){
-            if (fields.get(key) != null && !key.equals("id")){
-                fields.put(key, decrypt(fields.get(key)));
+        for (Map.Entry<String, String> entry : fields.entrySet()){
+            if (entry.getValue() != null && !entry.getKey().equals("id")){
+                fields.put(entry.getKey(), decrypt(entry.getValue()));
             }
         }
 
-        return new Data(data.getID(), fields.get("username"), fields.get("email_address"), fields.get("password"),
+        return new Data(data.getId(), fields.get("username"), fields.get("email_address"), fields.get("password"),
                 fields.get("service"), fields.get("additional_data"));
     }
 
@@ -149,14 +145,14 @@ public class Helper {
      * @return An ArrayList containing the properties of the generation in the following order: 0 - String Length,
      * 1 - Boolean Letters, 2 - Boolean Numbers, 3 - Boolean Special
      */
-    public ArrayList<Object> getStringGenerationConfiguration(){
+    public List<Object> getStringGenerationConfiguration(){
         ArrayList<Object> stringGeneration = new ArrayList<>();
 
         // Read all the properties from the settings file
-        int stringLength = this.SETTINGS.readIntProperty("string_generation/length");
-        boolean letters = this.SETTINGS.readBooleanProperty("string_generation/letters");
-        boolean numbers = this.SETTINGS.readBooleanProperty("string_generation/numbers");
-        boolean special = this.SETTINGS.readBooleanProperty("string_generation/special");
+        int stringLength = this.settings.readIntProperty("string_generation/length");
+        boolean letters = this.settings.readBooleanProperty("string_generation/letters");
+        boolean numbers = this.settings.readBooleanProperty("string_generation/numbers");
+        boolean special = this.settings.readBooleanProperty("string_generation/special");
 
         // Add the properties to the ArrayList
         stringGeneration.add(stringLength);
@@ -172,7 +168,7 @@ public class Helper {
      * @return String that indicates the path of the database
      */
     public String getDatabasePath(){
-        return this.SETTINGS.readStringProperty("database/selected");  // Read the path from settings
+        return this.settings.readStringProperty("database/selected");  // Read the path from settings
     }
 
     /**

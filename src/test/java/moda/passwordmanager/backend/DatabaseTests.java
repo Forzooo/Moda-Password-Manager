@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
 
 class DatabaseTests {
 
@@ -121,11 +122,11 @@ class DatabaseTests {
         // A deleted record has only the ID set, where the other fields are null thus we use assertNull
         Data deletedRecord = this.database.getDataRecord(ID);
 
-        assertNull(deletedRecord.getUSERNAME());
-        assertNull(deletedRecord.getEMAIL_ADDRESS());
-        assertNull(deletedRecord.getPASSWORD());
-        assertNull(deletedRecord.getSERVICE());
-        assertNull(deletedRecord.getADDITIONAL_DATA());
+        assertNull(deletedRecord.getUsername());
+        assertNull(deletedRecord.getEmailAddress());
+        assertNull(deletedRecord.getPassword());
+        assertNull(deletedRecord.getService());
+        assertNull(deletedRecord.getAdditionalData());
     }
 
     /**
@@ -165,7 +166,7 @@ class DatabaseTests {
         this.database.addDataRecord(TEST_DATA_2);
 
         Data firstServiceField = this.database.getDataFirstServiceField();
-        assertEquals(SERVICE, firstServiceField.getSERVICE());
+        assertEquals(SERVICE, firstServiceField.getService());
     }
 
     /**
@@ -177,9 +178,9 @@ class DatabaseTests {
         this.database.addDataRecord(TEST_DATA);
         this.database.addDataRecord(TEST_DATA_2);
 
-        ArrayList<Data> serviceFields = this.database.getDataServiceFields();
-        assertEquals(SERVICE, serviceFields.getFirst().getSERVICE());
-        assertEquals(SERVICE_2, serviceFields.get(1).getSERVICE());
+        List<Data> serviceFields = this.database.getDataServiceFields();
+        assertEquals(SERVICE, serviceFields.getFirst().getService());
+        assertEquals(SERVICE_2, serviceFields.get(1).getService());
         assertEquals(RECORDS_NUMBER, serviceFields.size());  // Also ensure that the number of records returned is 2
     }
 
@@ -191,7 +192,7 @@ class DatabaseTests {
         this.database.addDataRecord(TEST_DATA);
         this.database.addDataRecord(TEST_DATA_2);
 
-        ArrayList<Data> records = this.database.getDataRecords();
+        List<Data> records = this.database.getDataRecords();
         Data firstRecord = records.getFirst();
         Data secondRecord = records.get(1);
 
@@ -214,7 +215,7 @@ class DatabaseTests {
 
         this.database.changeDataRecords(records);
 
-        ArrayList<Data> updatedRecords = this.database.getDataRecords();
+        List<Data> updatedRecords = this.database.getDataRecords();
 
         Data firstRecord = updatedRecords.getFirst();
         assertEquals(UPDATED_TEST_DATA, firstRecord);
