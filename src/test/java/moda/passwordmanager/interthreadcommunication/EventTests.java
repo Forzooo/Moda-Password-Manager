@@ -7,10 +7,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class EventTests {
 
-    private final static String OPERATION = "Test";
-    private final static int COMMUNICATION_ID = 1;
-    private final static int EVENT_COMMUNICATION_ID_NOT_SET = -1;
-    private final static int EXPECTED_SEQUENCE_NUMBER = 1;
+    private static final String OPERATION = "Test";
+    private static final int COMMUNICATION_ID = 1;
+    private static final int EVENT_COMMUNICATION_ID_NOT_SET = -1;
+    private static final int EXPECTED_SEQUENCE_NUMBER = 1;
     private Event event;
 
     /**
@@ -26,7 +26,7 @@ class EventTests {
      */
     @Test
     void defaultCommunicationID(){
-        assertEquals(-1, this.event.getCommunicationID());
+        assertEquals(EVENT_COMMUNICATION_ID_NOT_SET, this.event.getCommunicationID());
     }
 
     /**

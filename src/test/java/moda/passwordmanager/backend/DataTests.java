@@ -8,13 +8,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class DataTests {
 
-    private final static int ID = 1;
-    private final static int ID_NOT_SET = -1;
-    private final static String USERNAME = "username";
-    private final static String EMAIL_ADDRESS = "email@example.com";
-    private final static String PASSWORD = "password";
-    private final static String SERVICE = "service";
-    private final static String ADDITIONAL_DATA = "Data";
+    private static final int ID = 1;
+    private static final int ID_NOT_SET = -1;
+    private static final String USERNAME = "username";
+    private static final String EMAIL_ADDRESS = "email@example.com";
+    private static final String PASSWORD = "password";
+    private static final String SERVICE = "service";
+    private static final String ADDITIONAL_DATA = "Data";
 
     /**
      * Ensure that when creating a Data object without providing an ID, it is set to -1
