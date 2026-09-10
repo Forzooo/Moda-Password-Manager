@@ -13,11 +13,11 @@ import java.util.ArrayList;
 
 public class Startup extends JDialog {
 
-    private InterThreadCommunication itc;
-    private final static Dimension DIALOG_DIMENSION = new Dimension(475, 550);
+    private final InterThreadCommunication itc;
+    private static final Dimension DIALOG_DIMENSION = new Dimension(475, 550);
 
     // The number of recent databases to show in the recentDatabasesList before a JScrollPane appears
-    private final static int RECENT_DATABASES_VISIBLE = 5;
+    private static final int RECENT_DATABASES_VISIBLE = 5;
 
     private JPasswordField masterPasswordPasswordField;
     private JButton loginButton;
@@ -39,6 +39,7 @@ public class Startup extends JDialog {
 
         initDialog();
         initComponents();
+        getRecentDatabases();  // Update the model with the recent databases
         initListeners();
     }
 
@@ -66,12 +67,12 @@ public class Startup extends JDialog {
         JLabel title = new JLabel();  // Create the JLabel that displays the name of the Password Manager
         title.setText("MODA");
         title.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.PLAIN, 80));
-        title.setHorizontalAlignment(JLabel.CENTER);
+        title.setHorizontalAlignment(SwingConstants.CENTER);
 
         JLabel subtitle = new JLabel();
         subtitle.setText("Password Manager");
         subtitle.setFont(new Font("Arial Bold", Font.PLAIN, 32));
-        subtitle.setHorizontalAlignment(JLabel.CENTER);
+        subtitle.setHorizontalAlignment(SwingConstants.CENTER);
 
         JLabel loginLabel = new JLabel();
         loginLabel.setText(Utilities.getLocaleString("Moda.Startup.loginLabel"));
@@ -87,8 +88,6 @@ public class Startup extends JDialog {
         this.recentDatabasesList.setVisibleRowCount(RECENT_DATABASES_VISIBLE);
         this.recentDatabasesModel = new DefaultListModel<>();
         this.recentDatabasesList.setModel(this.recentDatabasesModel);
-
-        getRecentDatabases();  // Update the model with the recent databases
 
         // Add a scrollbar to the JList and add it to the panel
         JScrollPane databaseScrollPane = new JScrollPane(this.recentDatabasesList);
@@ -128,27 +127,19 @@ public class Startup extends JDialog {
         });
 
         // Action Listener for the 'Enter' key pressed
-        this.masterPasswordPasswordField.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                char[] masterPasswordChar = masterPasswordPasswordField.getPassword();
-                if (!Utilities.checkMasterPassword(masterPasswordChar)) {
-                    return;
-                }
+        this.masterPasswordPasswordField.addActionListener(e -> {
+            char[] masterPasswordChar = masterPasswordPasswordField.getPassword();
+            if (Utilities.checkMasterPassword(masterPasswordChar)) {
                 sendMasterPassword(masterPasswordPasswordField.getPassword());
-                dispose();  // Close the window
+                dispose();  // Closes the dialog
             }
         });
 
-        this.loginButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                char[] masterPasswordChar = masterPasswordPasswordField.getPassword();
-                if (!Utilities.checkMasterPassword(masterPasswordChar)) {
-                    return;
-                }
+        this.loginButton.addActionListener(e -> {
+            char[] masterPasswordChar = masterPasswordPasswordField.getPassword();
+            if (Utilities.checkMasterPassword(masterPasswordChar)) {
                 sendMasterPassword(masterPasswordChar);
-                dispose();  // Close the window
+                dispose();  // Closes the dialog
             }
         });
 
@@ -164,27 +155,21 @@ public class Startup extends JDialog {
             }
         });
 
-        this.newDatabaseButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String path = Utilities.newDatabaseFileChooser();
+        this.newDatabaseButton.addActionListener(e -> {
+            String path = Utilities.newDatabaseFileChooser();
 
-                // Check if the user has created a database
-                if (!path.isBlank()){
-                    setDatabase(path);
-                }
+            // Check if the user has created a database
+            if (!path.isBlank()){
+                setDatabase(path);
             }
         });
 
-        this.changeDatabaseButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String path = Utilities.openDatabaseFileChooser();
+        this.changeDatabaseButton.addActionListener(e -> {
+            String path = Utilities.openDatabaseFileChooser();
 
-                // Check if the user has selected a database
-                if (!path.isBlank()){
-                    setDatabase(path);
-                }
+            // Check if the user has selected a database
+            if (!path.isBlank()){
+                setDatabase(path);
             }
         });
     }
@@ -211,17 +196,12 @@ public class Startup extends JDialog {
 
     /**
      * Get the path of the database in use
-     * @return Database in unse
      */
     private String getCurrentDatabase(){
-        // Create the event and send it to the backend
-        Event event = new Event("get-database");
-
         // Receive the path of the database from the backend
-        Event databasePathEvent = this.itc.request(event);
-        String databasePath = (String) databasePathEvent.getData().getFirst();
+        Event databasePathEvent = this.itc.request(new Event("get-database"));
 
-        return databasePath;
+        return (String) databasePathEvent.getData().getFirst();
     }
 
     /**
@@ -229,18 +209,20 @@ public class Startup extends JDialog {
      */
     private String formatPath(String path){
         StringBuilder formattedPath = new StringBuilder();
-        String[] splittedPath = path.split("\\\\");
+        String[] splitPath = path.split("\\\\");
 
-        if (splittedPath.length <= 3){
+        if (splitPath.length <= 3){
             return path;
         }
 
-        formattedPath.append(splittedPath[0]).append("\\...\\");  // Append the drive to the path
+        formattedPath.append(splitPath[0]).append("\\...\\");  // Append the drive to the path
 
-        for (int i = splittedPath.length-3; i < splittedPath.length-1; i++){
-            formattedPath.append(splittedPath[i]).append("\\");
+        for (int i = splitPath.length-3; i < splitPath.length-1; i++){
+            formattedPath.append(splitPath[i]).append("\\");
         }
-        formattedPath.append(splittedPath[splittedPath.length-1]);
+
+        formattedPath.append(splitPath[splitPath.length-1]);  // We have to add the filename and extension outside of
+                                                              // for loop as it adds a backslash for each iteration
 
         return formattedPath.toString();
     }
@@ -250,8 +232,8 @@ public class Startup extends JDialog {
      * @param databasePath The path of the database to use
      */
     private void setDatabase(String databasePath){
-        Event event = new Event("set-database", databasePath);
-        this.itc.request(event);  // Wait for the operations to finish before setting the path in the label
+        this.itc.request(new Event("set-database", databasePath));  // Wait for the operations to finish before
+                                                                             // setting the path in the label
         this.currentDatabaseLabel.setText(formatPath(databasePath));  // Set the new path of the database into the label
         getRecentDatabases();  // Update the recent databases list
     }
@@ -260,10 +242,9 @@ public class Startup extends JDialog {
      * Get the last databases used by the user
      */
     private void getRecentDatabases(){
-        Event event = new Event("get-recent-databases");
-        Event response = this.itc.request(event);
+        Event getRecentDatabasesEvent = this.itc.request(new Event("get-recent-databases"));
 
-        this.recentDatabases = (ArrayList<String>) response.getData().getFirst();
+        this.recentDatabases = (ArrayList<String>) getRecentDatabasesEvent.getData().getFirst();
 
         this.recentDatabasesModel.clear();  // Clear the model before adding all the elements
         for (String path : this.recentDatabases){

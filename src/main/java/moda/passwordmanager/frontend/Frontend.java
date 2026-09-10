@@ -17,10 +17,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class Frontend extends JPanel {
 
     // The InterThreadCommunication objects used to communicate with the Backend thread
-    private final InterThreadCommunication ITC;
-
-    // The Frontend Event Listener used to receive and handle requests from the backend
-    private FrontendEventListener eventListener;
+    private final InterThreadCommunication itc;
 
     // The panel that contains the one being shown in the frontend and is used to retrieve its CardLayout to switch
     // between panels, which have to implement the PanelTitle interface
@@ -32,7 +29,7 @@ public class Frontend extends JPanel {
                     String databasePath){
 
         // Start the communication between the backend and the frontend
-        this.ITC = new InterThreadCommunication(backendQueue, frontendQueue);
+        this.itc = new InterThreadCommunication(backendQueue, frontendQueue);
 
         setInitialDatabase(databasePath);  // Set, if not empty, the database to use
 
@@ -45,8 +42,10 @@ public class Frontend extends JPanel {
 
         initPanel();  // Set the properties of the panel
         initComponents();  // Initialize all the JPanels
-        initEventListener();  // Initialize the Event Listener only after all the frontend components have been init
 
+        // The Frontend Event Listener used to receive and handle requests from the backend, it must be initialized
+        // after all the frontend components have been set up
+        new FrontendEventListener(this.itc, this.showDataPanel).start();
     }
 
     /**
@@ -70,7 +69,7 @@ public class Frontend extends JPanel {
             return;
         }
         Event event = new Event("set-database", databasePath);
-        this.ITC.request(event);
+        this.itc.request(event);
     }
 
     /**
@@ -78,7 +77,7 @@ public class Frontend extends JPanel {
      */
     private Themes getApplicationTheme(){
         Event request = new Event("get-application-theme");
-        Event response = this.ITC.request(request);
+        Event response = this.itc.request(request);
 
         return (Themes) response.getData().getFirst();
     }
@@ -88,7 +87,7 @@ public class Frontend extends JPanel {
      */
     private Languages getApplicationLanguage(){
         Event request = new Event("get-application-language");
-        Event response = this.ITC.request(request);
+        Event response = this.itc.request(request);
 
         return (Languages) response.getData().getFirst();
     }
@@ -97,7 +96,7 @@ public class Frontend extends JPanel {
      * Ask the user for the master password before starting to use the password manager
      */
     private void initStartup(){
-        Startup startup = new Startup(this.ITC);
+        Startup startup = new Startup(this.itc);
         startup.setVisible(true);
     }
 
@@ -110,27 +109,19 @@ public class Frontend extends JPanel {
     }
 
     /**
-     * Initialize the Frontend event listener
-     */
-    private void initEventListener(){
-        this.eventListener = new FrontendEventListener(this.ITC, this.showDataPanel);
-        this.eventListener.start();
-    }
-
-    /**
      * Initialize the components
      */
     private void initComponents(){
-        Sidebar sidebar = new Sidebar(this.ITC);
+        Sidebar sidebar = new Sidebar();
 
         this.frontendPanel = new JPanel();
         this.frontendPanel.setLayout(new CardLayout());
 
-        this.showDataPanel = new ShowData(this.ITC);
+        this.showDataPanel = new ShowData(this.itc);
         this.frontendPanel.add(this.showDataPanel, ShowData.getPanelTitle());
-        this.frontendPanel.add(new AddData(this.ITC), AddData.getPanelTitle());
+        this.frontendPanel.add(new AddData(this.itc), AddData.getPanelTitle());
 
-        ModaScrollPane settingsScrollPane = new ModaScrollPane(new Settings(this.ITC));
+        ModaScrollPane settingsScrollPane = new ModaScrollPane(new Settings(this.itc));
         this.frontendPanel.add(settingsScrollPane, Settings.getPanelTitle());
 
         add(sidebar, "grow");

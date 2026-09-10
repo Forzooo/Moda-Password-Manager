@@ -72,7 +72,7 @@ public class Settings extends AbstractSettings {
         // Set the appearance properties
         ObjectNode appearance = this.objectMapper.createObjectNode();
         appearance.put("language", Helper.getSystemLanguage());
-        appearance.put("theme", Themes.Light.toString());
+        appearance.put("theme", Themes.LIGHT.toString());
 
         // Define the hierarchy of the JSON
         rootNode.put("version", SETTINGS_VERSION);

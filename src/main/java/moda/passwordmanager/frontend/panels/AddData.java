@@ -11,12 +11,10 @@ import raven.modal.Toast;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class AddData extends JPanel {
 
-    private final InterThreadCommunication ITC;
+    private final InterThreadCommunication itc;
 
     private ModaTextField usernameTextField;
     private ModaTextField emailAddressTextField;
@@ -31,7 +29,7 @@ public class AddData extends JPanel {
     public AddData(InterThreadCommunication itc){
         super();  // Initialize the Panel
 
-        this.ITC = itc;
+        this.itc = itc;
 
         initPanel();
         initComponents();
@@ -111,29 +109,21 @@ public class AddData extends JPanel {
         this.resetButton.addActionListener(e -> resetTextFields());
 
         // Save the data entered in the JTextFields in the database by calling the backend
-        this.saveButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // The service must be set before adding the data as it needs to be shown in the "Show Data" section
-                if (serviceTextField.getText().isBlank()) {
-                    return;
-                }
-
-                // Call the save data function to tell the backend to save the data into the database
-                saveData(usernameTextField.getText(), emailAddressTextField.getText(),
-                        passwordTextField.getText(), serviceTextField.getText(),
-                        additionalDataTextField.getText());
-
-                resetTextFields();  // Reset all the text fields after the data has been saved
+        this.saveButton.addActionListener(e -> {
+            // The service must be set before adding the data as it needs to be shown in the "Show Data" section
+            if (serviceTextField.getText().isBlank()) {
+                return;
             }
+
+            // Call the save data function to tell the backend to save the data into the database
+            saveData(usernameTextField.getText(), emailAddressTextField.getText(),
+                    passwordTextField.getText(), serviceTextField.getText(),
+                    additionalDataTextField.getText());
+
+            resetTextFields();  // Reset all the text fields after the data has been saved
         });
 
-        this.generatePasswordButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                passwordTextField.setText(generateString());  // Generate the password
-            }
-        });
+        this.generatePasswordButton.addActionListener(e ->passwordTextField.setText(generateString()));
     }
 
     /**
@@ -161,7 +151,7 @@ public class AddData extends JPanel {
         // Create the Data object with the user data to send to the backend
         Data userData = new Data(username, emailAddress, password, service, additionalData);
 
-        this.ITC.send(new Event("add-data", userData));
+        this.itc.send(new Event("add-data", userData));
         Utilities.showToast(getParent(), Toast.Type.SUCCESS, Utilities.getLocaleString("Moda.Toast.addDataSuccessful"));
     }
 
@@ -170,7 +160,7 @@ public class AddData extends JPanel {
      */
     private String generateString(){
         Event generatePassword = new Event("generate-string");
-        Event response = this.ITC.request(generatePassword);  // Wait for the result
+        Event response = this.itc.request(generatePassword);  // Wait for the result
 
         return (String) response.getData().getFirst();  // Return the string generated
     }

@@ -19,7 +19,7 @@ import java.util.function.IntConsumer;
 public class ShowData extends JPanel {
 
     // Attribute to communicate with the backend
-    private final InterThreadCommunication ITC;
+    private final InterThreadCommunication itc;
 
     private JTabbedPane dataTabbedPane;  // The tabbed pane shows the dataList and the data the user has selected
 
@@ -28,10 +28,10 @@ public class ShowData extends JPanel {
     /**
      * The service fields shown in the JList, which are updated by the FrontendEventListener
      */
-    private final ArrayList<Data> USER_DATA;  // A Data object is required as each service shown needs to be associated with its ID
-    private final ArrayList<Data> USER_FILTERED_DATA;  // The Data objects that match the selection IDs of the USER_DATA_MODEL
+    private final ArrayList<Data> userData;  // A Data object is required as each service shown needs to be associated with its ID
+    private final ArrayList<Data> userFilteredData;  // The Data objects that match the selection IDs of the USER_DATA_MODEL
                                                        // because using the USER_DATA one would not match the indexes
-    private final DefaultListModel<String> USER_DATA_MODEL;
+    private final DefaultListModel<String> userDataModel;
 
     // Swing components
     private JList<String> dataList;
@@ -40,12 +40,12 @@ public class ShowData extends JPanel {
         super();  // Initialize the Panel
 
         // Set the attributes given by the JFrame
-        this.ITC = itc;
+        this.itc = itc;
 
         // Initialize the user data ArrayList and Model
-        this.USER_DATA = new ArrayList<>();
-        this.USER_FILTERED_DATA = new ArrayList<>();
-        this.USER_DATA_MODEL = new DefaultListModel<>();
+        this.userData = new ArrayList<>();
+        this.userFilteredData = new ArrayList<>();
+        this.userDataModel = new DefaultListModel<>();
 
         initPanel();
         initComponents();
@@ -71,7 +71,7 @@ public class ShowData extends JPanel {
 
         // Create the JList used to show all the data saved inside the database
         this.dataList = new JList<>();
-        this.dataList.setModel(this.USER_DATA_MODEL);
+        this.dataList.setModel(this.userDataModel);
         this.dataList.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.PLAIN, 20));
         this.dataList.setFixedCellHeight(30);
         this.dataList.setBackground(null);
@@ -114,9 +114,9 @@ public class ShowData extends JPanel {
                     // because otherwise the selectedIndex would not match the ID of USER_DATA
                     int id;
                     if (searchBar.getText().trim().isBlank()){
-                        id = USER_DATA.get(dataList.getSelectedIndex()).getId();
+                        id = userData.get(dataList.getSelectedIndex()).getId();
                     }else{
-                        id = USER_FILTERED_DATA.get(dataList.getSelectedIndex()).getId();
+                        id = userFilteredData.get(dataList.getSelectedIndex()).getId();
                     }
 
                     // If the tab exists, then set it to be the selected one instead of creating a new tab for it
@@ -131,17 +131,16 @@ public class ShowData extends JPanel {
         });
 
         this.dataList.setCellRenderer(new DefaultListCellRenderer(){
+            @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
                 if (isSelected){  // The selected row has black background
                     c.setBackground(UIManager.getColor("Moda.ShowData.DataList.selectionBackground"));
-                } else {  // The other rows have two different colors
-                    if (index % 2 == 0){
+                } else if (index % 2 == 0) {  // The other rows have two different colors based on the index
                         c.setBackground(UIManager.getColor("Moda.ShowData.DataList.evenBackground"));
-                    } else {
-                        c.setBackground(UIManager.getColor("Moda.ShowData.DataList.oddBackground"));
-                    }
+                } else {
+                    c.setBackground(UIManager.getColor("Moda.ShowData.DataList.oddBackground"));
                 }
                 return c;
             }
@@ -169,23 +168,23 @@ public class ShowData extends JPanel {
             private void filter(){
                 String searchText = searchBar.getText().toLowerCase().trim();  // Get the input of the user
 
-                USER_DATA_MODEL.clear();  // Clear the model to add only services that start with the input of the user
-                USER_FILTERED_DATA.clear();
+                userDataModel.clear();  // Clear the model to add only services that start with the input of the user
+                userFilteredData.clear();
 
                 // If the search text is empty, add all the services to the model
                 if (searchText.isEmpty()) {
-                    for (Data data : USER_DATA) {
-                        USER_DATA_MODEL.addElement(data.getService());
-                        USER_FILTERED_DATA.add(data);
+                    for (Data data : userData) {
+                        userDataModel.addElement(data.getService());
+                        userFilteredData.add(data);
                     }
                     return;
                 }
 
                 // Iterate over all the data and add the services that starts with the input of the user
-                for (Data data : USER_DATA) {
+                for (Data data : userData) {
                     if (data.getService().toLowerCase().trim().startsWith(searchText)) {
-                        USER_DATA_MODEL.addElement(data.getService());
-                        USER_FILTERED_DATA.add(data);
+                        userDataModel.addElement(data.getService());
+                        userFilteredData.add(data);
                     }
                 }
             }
@@ -206,10 +205,8 @@ public class ShowData extends JPanel {
         // Iterate over all the UserData tabs and check if their ID is the same as the one given
         for (int i = 1; i < this.dataTabbedPane.getTabCount(); i++){
             Component tab = this.dataTabbedPane.getComponentAt(i);
-            if (tab.getClass() == UserData.class){  // Ensure that the tab is a UserData one
-                if (((UserData) tab).getID() == id){
+            if (tab.getClass() == UserData.class && ((UserData) tab).getId() == id){  // Ensure that the tab is a UserData one
                     return true;
-                }
             }
         }
         return false;
@@ -219,7 +216,7 @@ public class ShowData extends JPanel {
      * Add a tab to the TabbedPane with the service selected by the user
      */
     private void addDataTab(int id){
-        UserData userDataTab = new UserData(this.ITC, id);
+        UserData userDataTab = new UserData(this.itc, id);
         userDataTab.putClientProperty("JTabbedPane.tabClosable", true);  // Set only the tab to be closeable, not the
                                                                          // entire JTabbedPane
         userDataTab.putClientProperty("JTabbedPane.tabCloseCallback",
@@ -230,20 +227,20 @@ public class ShowData extends JPanel {
         this.dataTabbedPane.setSelectedComponent(userDataTab);  // Set the tab to be shown to be the one created
     }
 
-    public ArrayList<Data> getUSER_DATA() {
-        return this.USER_DATA;
+    public ArrayList<Data> getUserData() {
+        return this.userData;
     }
 
-    public DefaultListModel<String> getUSER_DATA_MODEL() {
-        return this.USER_DATA_MODEL;
+    public DefaultListModel<String> getUserDataModel() {
+        return this.userDataModel;
     }
 
     /**
      * Return the index of the Data object of UserData that has the same ID. -1 is returned if it does not exist
      */
     public int indexOfUserData(int id){
-        for (int i = 0; i < this.USER_DATA.size(); i++){
-            if (this.USER_DATA.get(i).getId() == id) {
+        for (int i = 0; i < this.userData.size(); i++){
+            if (this.userData.get(i).getId() == id) {
                 return i;
             }
         }
@@ -258,12 +255,11 @@ public class ShowData extends JPanel {
         for (int i = 0; i < this.dataTabbedPane.getTabCount(); i++){
             Component tab = this.dataTabbedPane.getComponentAt(i);
             if (tab.getClass() == UserData.class){  // Ensure that the tab is a UserData one
-                if (((UserData) tab).getID() == id){
+                if (((UserData) tab).getId() == id){
                     return i;
                 }
             }
         }
         return -1;
     }
-
 }

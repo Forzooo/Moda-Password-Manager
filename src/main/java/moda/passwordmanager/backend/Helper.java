@@ -197,9 +197,9 @@ public class Helper {
         String passwordManagerLanguage;
 
         switch (systemLanguage.getLanguage()){
-            case "en" -> passwordManagerLanguage = Languages.English.toString();
-            case "it" -> passwordManagerLanguage = Languages.Italian.toString();
-            default -> passwordManagerLanguage = Languages.English.toString();
+            case "en" -> passwordManagerLanguage = Languages.ENGLISH.toString();
+            case "it" -> passwordManagerLanguage = Languages.ITALIAN.toString();
+            default -> passwordManagerLanguage = Languages.ENGLISH.toString();
         }
 
         return passwordManagerLanguage;

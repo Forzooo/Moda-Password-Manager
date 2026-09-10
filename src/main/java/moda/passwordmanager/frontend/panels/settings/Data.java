@@ -5,10 +5,6 @@ import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -100,7 +96,7 @@ public class Data extends Section {
         }
 
         Event event = new Event("update-master-password", masterPassword.toCharArray());
-        getITC().request(event);  // Wait for the end of the operations in the backend
+        getItc().request(event);  // Wait for the end of the operations in the backend
     }
 
     /**
@@ -120,7 +116,7 @@ public class Data extends Section {
         event.addData(numbersSelected);
         event.addData(specialCharactersSelected);
 
-        getITC().send(event);  // Send the event
+        getItc().send(event);  // Send the event
     }
 
     /**
@@ -129,7 +125,7 @@ public class Data extends Section {
     private void setDefaultStringGenerationConfiguration(){
         // Create the event and wait for the data
         Event event = new Event("get-string-generation-configuration");
-        Event backendResponse = getITC().request(event);
+        Event backendResponse = getItc().request(event);
 
         List<Object> data = backendResponse.getData();  // Retrieve the data
 

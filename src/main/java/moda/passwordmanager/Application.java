@@ -20,9 +20,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class Application extends JFrame {
 
-    private final static String TITLE = "MODA - Password Manager";
-    private final static String VERSION = "0.6.0";  // The current version of the software
-    private static Locale locale;  // The language used by the application
+    private static final String TITLE = "MODA - Password Manager";
+    private static final String VERSION = "0.6.0";  // The current version of the software
+    private static Locale applicationLocale;  // The language used by the application
 
     public Application(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
                        String databaseToUse){
@@ -42,8 +42,8 @@ public class Application extends JFrame {
      */
     public static void applyTheme(Themes theme){
         switch (theme){
-            case Light -> FlatLightLaf.setup();
-            case Dark -> FlatDarkLaf.setup();
+            case LIGHT -> FlatLightLaf.setup();
+            case DARK -> FlatDarkLaf.setup();
         }
     }
 
@@ -114,8 +114,8 @@ public class Application extends JFrame {
      */
     public static void setApplicationLanguage(Languages language) {
         switch (language){
-            case English -> Application.locale = Locale.ENGLISH;
-            case Italian -> Application.locale = Locale.ITALY;
+            case ENGLISH -> Application.applicationLocale = Locale.ENGLISH;
+            case ITALIAN -> Application.applicationLocale = Locale.ITALY;
         }
     }
 
@@ -123,7 +123,7 @@ public class Application extends JFrame {
      * Get the current language of the translation
      */
     public static Locale getApplicationLocale(){
-        return Application.locale;
+        return Application.applicationLocale;
     }
 
     public static void main(String[] args){

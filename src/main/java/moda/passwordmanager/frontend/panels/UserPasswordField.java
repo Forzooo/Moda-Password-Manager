@@ -5,11 +5,10 @@ import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
 import javax.swing.*;
-import java.awt.*;
 
 public class UserPasswordField extends UserDataField {
 
-    private final InterThreadCommunication ITC;
+    private final InterThreadCommunication itc;
     private JButton generatePasswordButton;
 
     /**
@@ -17,10 +16,10 @@ public class UserPasswordField extends UserDataField {
      */
     public UserPasswordField(String dataField, InterThreadCommunication itc) {
         super(dataField);
-        this.ITC = itc;
+        this.itc = itc;
 
         initComponents();
-        initListeners();
+        initListener();
     }
 
     /**
@@ -34,9 +33,9 @@ public class UserPasswordField extends UserDataField {
     }
 
     /**
-     * Initialize all the listeners on the components
+     * Initialize the listener on the component
      */
-    private void initListeners(){
+    private void initListener(){
         this.generatePasswordButton.addActionListener(e -> generatePassword());
     }
 
@@ -44,7 +43,7 @@ public class UserPasswordField extends UserDataField {
      * Generate a password and set the password text field to it
      */
     private void generatePassword(){
-        Event event = this.ITC.request(new Event("generate-string"));
+        Event event = this.itc.request(new Event("generate-string"));
         String password = (String) event.getData().getFirst();
         setText(password);  // Set the text to be the generated password
     }

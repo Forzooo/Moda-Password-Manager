@@ -12,16 +12,16 @@ import java.awt.*;
  */
 public abstract class Section extends JPanel {
 
-    private final static Dimension BUTTON_DIMENSION = new Dimension(250, 20);
-    private final static Dimension TEXT_FIELD_DIMENSION = new Dimension(300, 20);
+    private static final Dimension BUTTON_DIMENSION = new Dimension(250, 20);
+    private static final Dimension TEXT_FIELD_DIMENSION = new Dimension(300, 20);
 
     /**
      * Defines the title of the section. <br>
      * It is displayed inside the Settings dialog.
      */
-    private final String SECTION_TITLE;
+    private final String sectionTitle;
 
-    private final InterThreadCommunication ITC;
+    private final InterThreadCommunication itc;
 
     /**
      * The current section is the panel where the options are added
@@ -29,8 +29,8 @@ public abstract class Section extends JPanel {
     private JPanel currentSection;
 
     protected Section(String title, InterThreadCommunication itc){
-        this.SECTION_TITLE = title;
-        this.ITC = itc;
+        this.sectionTitle = title;
+        this.itc = itc;
 
         initPanel();
     }
@@ -47,7 +47,7 @@ public abstract class Section extends JPanel {
      * Get the title of the section
      */
     public String getTitle(){
-        return this.SECTION_TITLE;
+        return this.sectionTitle;
     }
 
     /**
@@ -96,8 +96,8 @@ public abstract class Section extends JPanel {
     /**
      * Get the ITC object used to communicate
      */
-    protected InterThreadCommunication getITC(){
-        return this.ITC;
+    protected InterThreadCommunication getItc(){
+        return this.itc;
     }
 
     /**

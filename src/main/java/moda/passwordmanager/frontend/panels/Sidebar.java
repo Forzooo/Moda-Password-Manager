@@ -3,28 +3,20 @@ package moda.passwordmanager.frontend.panels;
 import moda.passwordmanager.frontend.Frontend;
 import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.frontend.components.ModaButton;
-import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 public class Sidebar extends JPanel {
-
-    private final InterThreadCommunication ITC;
 
     // Swing components
     private ModaButton addDataButton;
     private ModaButton showDataButton;
     private ModaButton settingsButton;
 
-    public Sidebar(InterThreadCommunication itc){
+    public Sidebar(){
         super();  // Initialize the Panel
-
-        // Set the attributes given by the JFrame
-        this.ITC = itc;
 
         initPanel();
         initComponents();
@@ -64,10 +56,10 @@ public class Sidebar extends JPanel {
 
         // Settings + Details section
         this.settingsButton = new ModaButton(ModaButton.ButtonStyle.EMPTY, buttonDimension.height/2, buttonDimension.height/2, 30);
-        ImageIcon settings_icon = Utilities.getIcon("settings_icon.png");
-        settings_icon.setImage(settings_icon.getImage().getScaledInstance(buttonDimension.height/2,
+        ImageIcon settingsIcon = Utilities.getIcon("settings_icon.png");
+        settingsIcon.setImage(settingsIcon.getImage().getScaledInstance(buttonDimension.height/2,
                 buttonDimension.height/2, Image.SCALE_SMOOTH));
-        this.settingsButton.setIcon(settings_icon);
+        this.settingsButton.setIcon(settingsIcon);
         this.settingsButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         add(passwordManagerLabel, "al center, wrap 150");
@@ -81,13 +73,10 @@ public class Sidebar extends JPanel {
      */
     private void initListeners(){
         this.addDataButton.addActionListener(e -> switchPanel(AddData.getPanelTitle()));
-//        setHoverEffect(this.addDataButton);
 
         this.showDataButton.addActionListener(e -> switchPanel(ShowData.getPanelTitle()));
-//        setHoverEffect(this.showDataButton);
 
         this.settingsButton.addActionListener(e -> switchPanel(Settings.getPanelTitle()));
-//        setHoverEffect(this.settingsButton);
     }
 
     /**
@@ -98,24 +87,5 @@ public class Sidebar extends JPanel {
         // switchPanel that is inside the Frontend
         Frontend frontend = (Frontend) getParent();
         frontend.switchPanel(panelTitle);
-    }
-
-    /**
-     * Set a hover effect on a JButton
-     */
-    private void setHoverEffect(JButton button){
-        button.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                super.mouseEntered(e);
-                button.setBackground(Color.gray);
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                super.mouseExited(e);
-                button.setBackground(null);
-            }
-        });
     }
 }

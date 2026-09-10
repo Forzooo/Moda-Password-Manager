@@ -10,12 +10,12 @@ import javax.swing.border.EmptyBorder;
 
 public class Settings extends JPanel {
 
-    private final InterThreadCommunication ITC;
+    private final InterThreadCommunication itc;
 
     public Settings(InterThreadCommunication itc){
         super();
 
-        this.ITC = itc;
+        this.itc = itc;
 
         initPanel();
         initSections();
@@ -33,10 +33,10 @@ public class Settings extends JPanel {
      * Initialize the sections
      */
     private void initSections(){
-        addSection(new Appearance(this.ITC));
-        addSection(new Data(this.ITC));
-        addSection(new GoogleDrive(this.ITC));
-        addSection(new About(this.ITC));
+        addSection(new Appearance(this.itc));
+        addSection(new Data(this.itc));
+        addSection(new GoogleDrive(this.itc));
+        addSection(new About(this.itc));
     }
 
     /**

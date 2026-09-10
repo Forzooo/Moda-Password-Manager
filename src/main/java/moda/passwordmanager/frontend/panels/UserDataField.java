@@ -6,7 +6,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class UserDataField extends JPanel {
@@ -60,15 +59,12 @@ public class UserDataField extends JPanel {
      * @return ActionListener with actionPerformed method
      */
     private ActionListener getCopyDataActionListener(){
-        return new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Get the clipboard from the system
-                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                StringSelection dataToCopy = new StringSelection(dataField.getText());  // Create a Transferable
-                clipboard.setContents(dataToCopy, dataToCopy);  // Copy the transferable
-                JOptionPane.showMessageDialog(getRootPane(), Utilities.getLocaleString("Moda.UserDataField.copiedDataMessageDialog"));
-            }
+        return e -> {
+            // Get the clipboard from the system
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            StringSelection dataToCopy = new StringSelection(dataField.getText());  // Create a Transferable
+            clipboard.setContents(dataToCopy, dataToCopy);  // Copy the transferable
+            JOptionPane.showMessageDialog(getRootPane(), Utilities.getLocaleString("Moda.UserDataField.copiedDataMessageDialog"));
         };
     }
 

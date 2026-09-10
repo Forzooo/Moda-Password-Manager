@@ -6,9 +6,6 @@ import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class GoogleDrive extends Section {
 
@@ -49,55 +46,45 @@ public class GoogleDrive extends Section {
 
     private void initListeners(){
         // Let the user choose its credential.json file for the authentication, then send an Event to the backend
-        this.googleDriveCheckbox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (googleDriveCheckbox.isSelected()){
-                    // Create the File Chooser to allow user to select the credentials.json file
-                    SystemFileChooser fileChooser = new SystemFileChooser();
-                    fileChooser.setDialogTitle(Utilities.getLocaleString("Moda.GoogleDrive.googleDriveCheckboxFileChooserTitle"));
-                    fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
+        this.googleDriveCheckbox.addActionListener(e -> {
+            if (googleDriveCheckbox.isSelected()){
+                // Create the File Chooser to allow user to select the credentials.json file
+                SystemFileChooser fileChooser = new SystemFileChooser();
+                fileChooser.setDialogTitle(Utilities.getLocaleString("Moda.GoogleDrive.googleDriveCheckboxFileChooserTitle"));
+                fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
 
-                    // Create the filter to choose only .modb files
-                    SystemFileChooser.FileNameExtensionFilter filter = new SystemFileChooser.FileNameExtensionFilter(
-                            Utilities.getLocaleString("Moda.GoogleDrive.googleDriveCheckboxFileChooserFilter") + " (.json)",
-                            "json");
-                    fileChooser.setFileFilter(filter);
+                // Create the filter to choose only .modb files
+                SystemFileChooser.FileNameExtensionFilter filter = new SystemFileChooser.FileNameExtensionFilter(
+                        Utilities.getLocaleString("Moda.GoogleDrive.googleDriveCheckboxFileChooserFilter") + " (.json)",
+                        "json");
+                fileChooser.setFileFilter(filter);
 
-                    // Open the file chooser
-                    if (fileChooser.showOpenDialog(getPanel()) == SystemFileChooser.APPROVE_OPTION){
-                        String path = fileChooser.getSelectedFile().getAbsolutePath();  // Retrieve the path chosen
+                // Open the file chooser
+                if (fileChooser.showOpenDialog(getPanel()) == SystemFileChooser.APPROVE_OPTION){
+                    String path = fileChooser.getSelectedFile().getAbsolutePath();  // Retrieve the path chosen
 
-                        // Check whether the database has been chosen
-                        if (!path.isBlank()){
-                            enableGoogleDrive(path);
-                        }else{
-                            // The operation was aborted or failed, so we deselect the checkbox
-                            googleDriveCheckbox.setSelected(false);
-                        }
+                    // Check whether the database has been chosen
+                    if (!path.isBlank()){
+                        enableGoogleDrive(path);
                     }else{
                         // The operation was aborted or failed, so we deselect the checkbox
                         googleDriveCheckbox.setSelected(false);
                     }
                 }else{
-                    disableGoogleDrive();
+                    // The operation was aborted or failed, so we deselect the checkbox
+                    googleDriveCheckbox.setSelected(false);
                 }
-                updatePreferences();
+            }else{
+                disableGoogleDrive();
             }
+            updatePreferences();
         });
 
         this.synchronizeButton.addActionListener(e -> synchronizeGoogleDrive());
 
-        this.automaticSynchronizationCheckbox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (automaticSynchronizationCheckbox.isSelected()){
-                    enableAutomaticSynchronization();
-                }else{
-                    disableAutomaticSynchronization();
-                }
-                updatePreferences();
-            }
+        this.automaticSynchronizationCheckbox.addActionListener(e -> {
+            setAutomaticSynchronization(automaticSynchronizationCheckbox.isSelected());
+            updatePreferences();
         });
     }
 
@@ -108,7 +95,7 @@ public class GoogleDrive extends Section {
     private void initGoogleDriveCheckbox(){
         // Retrieve from the settings file the configuration of Google Drive visibility
         Event event = new Event("get-google-drive");
-        Event response = getITC().request(event);
+        Event response = getItc().request(event);
         boolean enabled = (boolean) response.getData().getFirst();
 
         if (enabled){
@@ -152,7 +139,7 @@ public class GoogleDrive extends Section {
     private void initAutomaticSynchronizationCheckbox(){
         // Retrieve from the settings file the configuration of Google Drive synchronization visibility
         Event event = new Event("get-google-drive-automatic-synchronization");
-        Event response = getITC().request(event);
+        Event response = getItc().request(event);
         boolean enabled = (boolean) response.getData().getFirst();
 
         if (enabled){
@@ -172,7 +159,7 @@ public class GoogleDrive extends Section {
         Event event = new Event("set-google-drive");
         event.addData(true);  // It allows the authentication
         event.addData(credentialsPath);
-        getITC().request(event);
+        getItc().request(event);
     }
 
     /**
@@ -180,7 +167,7 @@ public class GoogleDrive extends Section {
      */
     private void disableGoogleDrive(){
         Event event = new Event("set-google-drive", false);
-        getITC().request(event);  // Wait for the end of operations before disabling the button
+        getItc().request(event);  // Wait for the end of operations before disabling the button
     }
 
     /**
@@ -188,23 +175,14 @@ public class GoogleDrive extends Section {
      */
     private void synchronizeGoogleDrive(){
         Event event = new Event("google-drive-synchronize");
-        getITC().send(event);
+        getItc().send(event);
     }
 
     /**
-     * Enable the automatic synchronization of Google Drive
+     * Set the automatic synchronization of Google Drive
      */
-    private void enableAutomaticSynchronization(){
-        Event event = new Event("set-google-drive-automatic-synchronization", true);
-        getITC().request(event);
+    private void setAutomaticSynchronization(boolean state){
+        Event event = new Event("set-google-drive-automatic-synchronization", state);
+        getItc().request(event);
     }
-
-    /**
-     * Disable the automatic synchronization of Google Drive
-     */
-    private void disableAutomaticSynchronization(){
-        Event event = new Event("set-google-drive-automatic-synchronization", true);
-        getITC().request(event);
-    }
-
 }

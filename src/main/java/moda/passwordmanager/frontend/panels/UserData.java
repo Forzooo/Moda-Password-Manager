@@ -10,17 +10,16 @@ import raven.modal.Toast;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * A JPanel that shows the all the information related to an ID of a record of the database
  */
 public class UserData extends JPanel {
 
-    private final InterThreadCommunication ITC;
-    private final int ID;  // The ID associated with the data
+    private final InterThreadCommunication itc;
+    private final int id;  // The ID associated with the data
     private String title;  // The title of the tab
 
     // Swing Components
@@ -38,8 +37,8 @@ public class UserData extends JPanel {
     public UserData(InterThreadCommunication itc, int id) {
         super();  // Initialize the Panel
 
-        this.ITC = itc;
-        this.ID = id;
+        this.itc = itc;
+        this.id = id;
 
         initPanel();
         initComponents();
@@ -95,18 +94,18 @@ public class UserData extends JPanel {
         this.rollbackDataFields = new LinkedHashMap<>();  // Create the rollback array based on the data length
 
         int i = 0; // The counter that enumerates the number of panels
-        for (String key : userData.keySet()){
+        for (Map.Entry<String, String> entry : userData.entrySet()){
             // As the password field requires its own panel we need to check each time the value of i to know
             // the field we are creating
             UserDataField userDataField;
-            if (key.equals("id")){  // The ID has to be skipped
+            if (entry.getKey().equals("id")){  // The ID has to be skipped
                 continue;
-            }else if (key.equals("password")){
-                userDataField = new UserPasswordField(userData.get(key), this.ITC);
+            }else if (entry.getKey().equals("password")){
+                userDataField = new UserPasswordField(entry.getValue(), this.itc);
             }else{
-                userDataField = new UserDataField(userData.get(key));
+                userDataField = new UserDataField(entry.getValue());
             }
-            this.rollbackDataFields.put(key, userData.get(key));
+            this.rollbackDataFields.put(entry.getKey(), entry.getValue());
             this.userDataFields[i++] = userDataField;  // Set the panel to the array and increment the panel counter
             add(userDataField, "span, align center, wrap");  // Add the panel to the GUI
         }
@@ -123,17 +122,14 @@ public class UserData extends JPanel {
     private void initListeners() {
         this.modifyButton.addActionListener(e -> enableEditing());
 
-        this.deleteButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                int result = JOptionPane.showConfirmDialog(getPanel(), Utilities.getLocaleString("Moda.UserData.deleteButtonConfirmDialog"),
-                        Application.getApplicationTitle(), JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        this.deleteButton.addActionListener(e -> {
+            int result = JOptionPane.showConfirmDialog(getPanel(), Utilities.getLocaleString("Moda.UserData.deleteButtonConfirmDialog"),
+                    Application.getApplicationTitle(), JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 
-                // If the result is 0 (Yes) delete the data by sending an event to the backend
-                if (result == 0) {
-                    deleteData();
-                    closeTab();
-                }
+            // If the result is 0 (Yes) delete the data by sending an event to the backend
+            if (result == 0) {
+                deleteData();
+                closeTab();
             }
         });
 
@@ -145,21 +141,16 @@ public class UserData extends JPanel {
      * Retrieve the data associated with the ID given in the constructor
      */
     private Data getData(){
-        // Create the event to send to the backend
-        Event getData = new Event("get-data", this.ID);
+        Event getSingleDataCompleted = this.itc.request(new Event("get-data", this.id));
 
-        // Wait for the response
-        Event getSingleDataCompleted = this.ITC.request(getData);
-
-        Data userData = (Data) getSingleDataCompleted.getData().getFirst();  // Get the user data
-        return userData;
+        return (Data) getSingleDataCompleted.getData().getFirst();  // Get the user data
     }
 
     /**
      * Get the ID associated with this UserData tab
      */
-    public int getID() {
-        return this.ID;
+    public int getId() {
+        return this.id;
     }
 
     /**
@@ -239,7 +230,7 @@ public class UserData extends JPanel {
 
         // Disable the editing and send the data to the backend
         disableEditing();
-        updateData(new Data(this.ID, updatedData[0], updatedData[1], updatedData[2], updatedData[3], updatedData[4]));
+        updateData(new Data(this.id, updatedData[0], updatedData[1], updatedData[2], updatedData[3], updatedData[4]));
     }
 
     /**
@@ -262,15 +253,15 @@ public class UserData extends JPanel {
     private void updateData(Data data){
         // Create and send the event
         Event event = new Event("update-data", data);
-        this.ITC.request(event);  // Wait for the response of the backend
+        this.itc.request(event);  // Wait for the response of the backend
     }
 
     /**
      * Send an event to the backend to delete this data record
      */
     private void deleteData(){
-        Event event = new Event("delete-data", this.ID);
-        this.ITC.request(event);
+        Event event = new Event("delete-data", this.id);
+        this.itc.request(event);
         Utilities.showToast(getParent(), Toast.Type.SUCCESS, Utilities.getLocaleString("Moda.Toast.deletedDataSuccessful"));
     }
 

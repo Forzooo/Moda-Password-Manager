@@ -13,7 +13,7 @@ import java.util.List;
 
 public class FrontendEventListener extends EventListener {
 
-    private ShowData showData;  // The EventListener needs the Show Data Panel to call the service fields
+    private final ShowData showData;  // The EventListener needs the Show Data Panel to call the service fields
 
     public FrontendEventListener(InterThreadCommunication itc, ShowData showData){
         super(itc, "Frontend Event Listener");  // Set the name of the thread for debug purposes
@@ -65,8 +65,8 @@ public class FrontendEventListener extends EventListener {
         ArrayList<Data> backendData = (ArrayList<Data>) getRequestData().getFirst();
 
         // Get the User Data and its model to update them with the changes
-        ArrayList<Data> userData = this.showData.getUSER_DATA();
-        DefaultListModel<String> userDataModel = this.showData.getUSER_DATA_MODEL();
+        ArrayList<Data> userData = this.showData.getUserData();
+        DefaultListModel<String> userDataModel = this.showData.getUserDataModel();
 
         for (Data data : backendData){
             // Retrieve the indexes of the Data objects that have the same ID
@@ -91,8 +91,8 @@ public class FrontendEventListener extends EventListener {
      * Reset the service data
      */
     private void resetServiceFields(){
-        this.showData.getUSER_DATA().clear();
-        this.showData.getUSER_DATA_MODEL().clear();
+        this.showData.getUserData().clear();
+        this.showData.getUserDataModel().clear();
     }
 
     /**
