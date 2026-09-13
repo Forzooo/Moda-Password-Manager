@@ -4,6 +4,7 @@ import moda.passwordmanager.Application;
 import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
+import raven.modal.Toast;
 
 import javax.swing.*;
 
@@ -50,7 +51,7 @@ public class About extends Section{
      * Initialize all the listeners
      */
     private void initListeners(){
-        this.checkVersionButton.addActionListener(e -> getItc().send(new Event("check-new-version")));
+        this.checkVersionButton.addActionListener(e -> checkNewVersion());
 
         this.checkVersionStartupCheckbox.addActionListener(e -> getItc().send(
                 new Event("set-check-new-version-on-startup", checkVersionStartupCheckbox.isSelected()))
@@ -58,9 +59,25 @@ public class About extends Section{
     }
 
     /**
+     * Check for a new version and show a toast to let the user know the result
+     */
+    private void checkNewVersion(){
+        Event checkVersionEvent = getItc().request(new Event("check-new-version"));
+
+        if ((boolean) checkVersionEvent.getData().getFirst()) {
+            Utilities.showToast(getParent(), Toast.Type.INFO,
+                    Utilities.getLocaleString("Moda.Toast.checkNewVersionAvailable") + " "
+                            + checkVersionEvent.getData().get(1));
+        }else{
+            Utilities.showToast(getParent(), Toast.Type.INFO,
+                    Utilities.getLocaleString("Moda.Toast.checkNewVersionUnavailable"));
+        }
+    }
+
+    /**
      * Get whether the check version on startup is enabled in the settings
      */
-    public boolean getCheckVersionStartup(){
+    private boolean getCheckVersionStartup(){
         Event getVersion = getItc().request(new Event("is-check-new-version-on-startup"));
 
         return (boolean) getVersion.getData().getFirst();

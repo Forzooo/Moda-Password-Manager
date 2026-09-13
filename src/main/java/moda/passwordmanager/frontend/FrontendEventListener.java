@@ -3,11 +3,12 @@ package moda.passwordmanager.frontend;
 import moda.passwordmanager.backend.Data;
 import moda.passwordmanager.frontend.dialogs.GoogleDriveSynchronization;
 import moda.passwordmanager.frontend.panels.ShowData;
+import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.EventListener;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
+import raven.modal.Toast;
 
 import javax.swing.*;
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +30,7 @@ public class FrontendEventListener extends EventListener {
         addOperation("exception-raised", this::exceptionRaised);
         addOperation("update-service-fields", this::updateServiceFields);
         addOperation("google-drive-synchronization-conflicts", this::openGoogleDriveSynchronizationDialog);
+        addOperation("check-new-version", this::checkNewVersion);
     }
 
     /**
@@ -79,7 +81,7 @@ public class FrontendEventListener extends EventListener {
     private void openGoogleDriveSynchronizationDialog(){
         ArrayList<Data> conflictData = (ArrayList<Data>) getRequestData().getFirst();
 
-        EventQueue.invokeLater(() -> {
+        SwingUtilities.invokeLater(() -> {
             // To get the Frontend frame we have to use the getFrames method of the Frame class as we don't have a
             // reference for it
             // Also, it is always the first index as there are no other JFrame
@@ -87,7 +89,20 @@ public class FrontendEventListener extends EventListener {
                     getItc(), conflictData);
             googleDriveSynchronization.setVisible(true);
         });
-
     }
 
+    /**
+     * Let the user know the result of a version check
+     */
+    private void checkNewVersion(){
+        // If a new version exists, we show the version number too
+        if ((boolean) getRequestData().getFirst()) {
+            SwingUtilities.invokeLater(() -> Utilities.showToast(this.showData.getParent(), Toast.Type.INFO,
+                    Utilities.getLocaleString("Moda.Toast.checkNewVersionAvailable") + " "
+                            + getRequestData().get(1)));
+        }else{
+            SwingUtilities.invokeLater(() -> Utilities.showToast(this.showData.getParent(), Toast.Type.INFO,
+                    Utilities.getLocaleString("Moda.Toast.checkNewVersionUnavailable")));
+        }
+    }
 }
