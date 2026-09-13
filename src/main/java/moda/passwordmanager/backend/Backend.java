@@ -165,6 +165,10 @@ public class Backend extends EventListener {
 
         addOperation("get-application-language", this::getApplicationLanguage);
         addOperation("set-application-language", this::setApplicationLanguage);
+
+        addOperation("check-new-version", this::checkNewVersion);
+        addOperation("is-check-new-version-on-startup", this::isCheckNewVersionOnStartup);
+        addOperation("set-check-new-version-on-startup", this::setCheckNewVersionOnStartup);
     }
 
     /**
@@ -472,10 +476,10 @@ public class Backend extends EventListener {
         boolean numbers = (boolean) requestData.get(2);  // Flag to indicate whether numbers are generated
         boolean special = (boolean) requestData.get(3);  // Flag to indicate whether special characters are generated
 
-        this.settings.writeProperty("string_generation/length", length);
-        this.settings.writeProperty("string_generation/letters", letters);
-        this.settings.writeProperty("string_generation/numbers", numbers);
-        this.settings.writeProperty("string_generation/special", special);
+        this.settings.writeSubproperty("string_generation/length", length);
+        this.settings.writeSubproperty("string_generation/letters", letters);
+        this.settings.writeSubproperty("string_generation/numbers", numbers);
+        this.settings.writeSubproperty("string_generation/special", special);
     }
 
     /**
@@ -483,7 +487,7 @@ public class Backend extends EventListener {
      * @param databasePath The path of the database chosen
      */
     private void setDatabasePath(String databasePath){
-        this.settings.writeProperty("database/selected", databasePath);  // Set the path of the database
+        this.settings.writeSubproperty("database/selected", databasePath);  // Set the path of the database
         this.database.change(databasePath);  // Set the new database to be the one used
     }
 
@@ -666,7 +670,7 @@ public class Backend extends EventListener {
             recentDatabases.remove(pathIndex);
         }
         recentDatabases.addFirst(path);  // Add the path as the first element of the list
-        this.settings.writeListProperty("database/recent", recentDatabases);  // Write the updated list in the settings
+        this.settings.writeListSubproperty("database/recent", recentDatabases);  // Write the updated list in the settings
     }
 
     /**
@@ -682,7 +686,7 @@ public class Backend extends EventListener {
      */
     private void setApplicationTheme(){
         Themes theme = (Themes) getRequestData().getFirst();
-        this.settings.writeProperty("appearance/theme", theme.toString());
+        this.settings.writeSubproperty("appearance/theme", theme.toString());
     }
 
     /**
@@ -698,6 +702,24 @@ public class Backend extends EventListener {
      */
     private void setApplicationLanguage(){
         Languages language = (Languages) getRequestData().getFirst();
-        this.settings.writeProperty("appearance/language", language.toString());
+        this.settings.writeSubproperty("appearance/language", language.toString());
+    }
+
+    private void checkNewVersion(){
+
+    }
+
+    /**
+     * Get the status of the check version on startup property
+     */
+    private void isCheckNewVersionOnStartup(){
+        addResponseData(this.settings.readBooleanProperty("check_version_on_startup"));
+    }
+
+    /**
+     * Set the status of the check version on startup property
+     */
+    private void setCheckNewVersionOnStartup(){
+        this.settings.writeProperty("check_version_on_startup", getRequestData().getFirst());
     }
 }

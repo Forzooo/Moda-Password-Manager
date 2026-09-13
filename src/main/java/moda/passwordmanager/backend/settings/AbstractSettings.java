@@ -10,6 +10,8 @@ public abstract class AbstractSettings {
     public abstract int readIntProperty(String propertyPath);
     public abstract boolean readBooleanProperty(String propertyPath);
     public abstract List<Object> readListProperty(String propertyPath);
-    public abstract void writeProperty(String propertyPath, Object value);
-    public abstract void writeListProperty(String propertyPath, List<Object> values);
+    public abstract void writeProperty(String property, Object value);
+    public abstract void writeSubproperty(String propertyPath, Object value);
+    public abstract void writeListProperty(String property, List<Object> values);
+    public abstract void writeListSubproperty(String propertyPath, List<Object> values);
 }
