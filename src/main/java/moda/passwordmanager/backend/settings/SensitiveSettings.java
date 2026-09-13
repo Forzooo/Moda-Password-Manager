@@ -91,7 +91,17 @@ public class SensitiveSettings extends AbstractSettings {
     }
 
     @Override
-    public void writeListProperty(String propertyPath, List<Object> values){
+    public void writeSubproperty(String propertyPath, Object value) {
+        throw new UnsupportedOperationException();
+    }
 
+    @Override
+    public void writeListProperty(String propertyPath, List<Object> values){
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void writeListSubproperty(String propertyPath, List<Object> values) {
+        throw new UnsupportedOperationException();
     }
 }

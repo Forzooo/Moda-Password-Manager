@@ -76,6 +76,7 @@ public class Settings extends AbstractSettings {
 
         // Define the hierarchy of the JSON
         rootNode.put("version", SETTINGS_VERSION);
+        rootNode.put("check_version_on_startup", true);
         rootNode.put("database", database);
         rootNode.put("string_generation", stringGeneration);
         rootNode.put("appearance", appearance);
@@ -251,11 +252,33 @@ public class Settings extends AbstractSettings {
 
     /**
      * Write a property to the settings file
+     * @param property The name of the property inside the root
+     * @param value The new value of the property
+     */
+    @Override
+    public void writeProperty(String property, Object value){
+        if (property.contains("/")){
+            throw new IllegalArgumentException("The property must be the name of a property accessible from the root,"
+                    + " thus it cannot contain a /");
+        }
+
+        try {
+            // As the property is inside the root we have to use the put method directly on rootNode itself
+            ObjectNode rootNode = (ObjectNode) this.objectMapper.readTree(this.settingsFile);
+            rootNode.put(property, value.toString());
+            updateSettingsFile(rootNode);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Write a property to the settings file
      * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/selected)
      * @param value The new value of the property
      */
     @Override
-    public void writeProperty(String nodePath, Object value){
+    public void writeSubproperty(String nodePath, Object value){
         try {
             // As we need to change a property we need to keep the same root node, otherwise the changes would not be saved
             JsonNode rootNode = this.objectMapper.readTree(this.settingsFile);
@@ -270,14 +293,40 @@ public class Settings extends AbstractSettings {
             node.put(nodeName, this.objectMapper.valueToTree(value));
 
             updateSettingsFile(rootNode);  // Update the file
-
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
+    /**
+     * Write a property to the settings file
+     * @param property The name of the property inside the root
+     * @param values The new values of the property
+     */
     @Override
-    public void writeListProperty(String nodePath, List<Object> values){
+    public void writeListProperty(String property, List<Object> values) {
+        if (property.contains("/")){
+            throw new IllegalArgumentException("The property must be the name of a property accessible from the root,"
+                    + " thus it cannot contain a /");
+        }
+
+        try {
+            // As the property is inside the root we have to use the putPOJO method directly on rootNode itself
+            ObjectNode rootNode = (ObjectNode) this.objectMapper.readTree(this.settingsFile);
+            rootNode.putPOJO(property, values);
+            updateSettingsFile(rootNode);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Write a property to the settings file
+     * @param nodePath A string where contains the path to the property: each node is divided by a '/' (database/recent_databases)
+     * @param values The new values of the property
+     */
+    @Override
+    public void writeListSubproperty(String nodePath, List<Object> values){
         try {
             // As we need to change a property we need to keep the same root node, otherwise the changes would not be saved
             JsonNode rootNode = this.objectMapper.readTree(this.settingsFile);

@@ -245,3 +245,27 @@ whether special characters are enabled
 * Data sent: _Languages_ the new language
 * Data received: -
 * Synchronous: not required
+
+### Check for a new version
+* Operation: `check-new-version`
+* Sender: Frontend
+* Description: Check for a new version of the application
+* Data sent: 
+* Data received: _bool_ newVersion, _int_ version (if newVersion is true)
+* Synchronous: not required
+
+### Is the control for a new version on startup enabled
+* Operation: `is-check-new-version-on-startup`
+* Sender: Frontend
+* Description: Get the control status saved in the settings
+* Data sent: -
+* Data received: _bool_ status
+* Synchronous: not required
+
+### Set the control for a new version on startup
+* Operation: `set-check-new-version-on-startup`
+* Sender: Frontend
+* Description: Set the control for a new version on startup
+* Data sent: _bool_ status
+* Data received: -
+* Synchronous: not required

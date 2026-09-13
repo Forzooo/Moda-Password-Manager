@@ -1,7 +1,10 @@
 package moda.passwordmanager.backend;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.auth.oauth2.StoredCredential;
 import com.google.api.client.json.gson.GsonFactory;
+import moda.passwordmanager.Application;
 import moda.passwordmanager.backend.settings.SensitiveSettings;
 import moda.passwordmanager.backend.settings.Settings;
 import moda.passwordmanager.frontend.properties.Languages;
@@ -11,6 +14,10 @@ import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 
 import java.io.*;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -78,11 +85,29 @@ public class Backend extends EventListener {
             // We need to store the result of testMasterPassword to initialize the ServiceMapping
             boolean test = testMasterPassword();
             if (test){
-                // All this operations require the master password to be set
+                // All these operations require the master password to be set
                 this.helper.executeInBackground(this::initServiceMapping);
                 this.helper.executeInBackground(this.sensitiveSettings::init);
                 this.helper.executeInBackground(this::startGoogleDrive);  // Initialize the connection with Google Drive
                                                                           // only if enabled by the user
+
+                // If the version control on startup is enabled then we check it in the background and send the result
+                // to the FrontendEventListener
+                if (this.settings.readBooleanProperty("check_version_on_startup")){
+                    this.helper.executeInBackground(() -> {
+                        Event checkVersionEvent = new Event("check-new-version");
+                        String latestVersion = checkNewVersion();
+
+                        if (latestVersion.equals(Application.getVersion())){
+                            checkVersionEvent.addData(false);
+                        }else{  // If the version is not the latest we sent the new version number too
+                            checkVersionEvent.addData(true);
+                            checkVersionEvent.addData(latestVersion);
+                        }
+
+                        getItc().send(checkVersionEvent);
+                    });
+                }
             }
         });
 
@@ -165,6 +190,20 @@ public class Backend extends EventListener {
 
         addOperation("get-application-language", this::getApplicationLanguage);
         addOperation("set-application-language", this::setApplicationLanguage);
+
+        addOperation("check-new-version", () -> {
+            String latestVersion = checkNewVersion();
+
+            // We have to add the data here to allow the method to be used by the Helper's executeInBackground method too
+            if (latestVersion.equals(Application.getVersion())){
+                addResponseData(false);
+            }else{  // If the version is not the latest we sent the new version number too
+                addResponseData(true);
+                addResponseData(latestVersion);
+            }
+        });
+        addOperation("is-check-new-version-on-startup", this::isCheckNewVersionOnStartup);
+        addOperation("set-check-new-version-on-startup", this::setCheckNewVersionOnStartup);
     }
 
     /**
@@ -395,7 +434,7 @@ public class Backend extends EventListener {
     }
 
     /**
-     * Randomically generate a string of a certain length
+     * Randomly generate a string of a certain length
      */
     private void generateString(){
         // Retrieve the properties from the helper
@@ -472,10 +511,10 @@ public class Backend extends EventListener {
         boolean numbers = (boolean) requestData.get(2);  // Flag to indicate whether numbers are generated
         boolean special = (boolean) requestData.get(3);  // Flag to indicate whether special characters are generated
 
-        this.settings.writeProperty("string_generation/length", length);
-        this.settings.writeProperty("string_generation/letters", letters);
-        this.settings.writeProperty("string_generation/numbers", numbers);
-        this.settings.writeProperty("string_generation/special", special);
+        this.settings.writeSubproperty("string_generation/length", length);
+        this.settings.writeSubproperty("string_generation/letters", letters);
+        this.settings.writeSubproperty("string_generation/numbers", numbers);
+        this.settings.writeSubproperty("string_generation/special", special);
     }
 
     /**
@@ -483,7 +522,7 @@ public class Backend extends EventListener {
      * @param databasePath The path of the database chosen
      */
     private void setDatabasePath(String databasePath){
-        this.settings.writeProperty("database/selected", databasePath);  // Set the path of the database
+        this.settings.writeSubproperty("database/selected", databasePath);  // Set the path of the database
         this.database.change(databasePath);  // Set the new database to be the one used
     }
 
@@ -666,7 +705,7 @@ public class Backend extends EventListener {
             recentDatabases.remove(pathIndex);
         }
         recentDatabases.addFirst(path);  // Add the path as the first element of the list
-        this.settings.writeListProperty("database/recent", recentDatabases);  // Write the updated list in the settings
+        this.settings.writeListSubproperty("database/recent", recentDatabases);  // Write the updated list in the settings
     }
 
     /**
@@ -682,7 +721,7 @@ public class Backend extends EventListener {
      */
     private void setApplicationTheme(){
         Themes theme = (Themes) getRequestData().getFirst();
-        this.settings.writeProperty("appearance/theme", theme.toString());
+        this.settings.writeSubproperty("appearance/theme", theme.toString());
     }
 
     /**
@@ -698,6 +737,46 @@ public class Backend extends EventListener {
      */
     private void setApplicationLanguage(){
         Languages language = (Languages) getRequestData().getFirst();
-        this.settings.writeProperty("appearance/language", language.toString());
+        this.settings.writeSubproperty("appearance/language", language.toString());
+    }
+
+    /**
+     * Check a new version of the application using the GitHub API
+     */
+    private String checkNewVersion(){
+        HttpClient httpClient = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest
+                .newBuilder(URI.create("https://api.github.com/repos/forzooo/Moda-Password-Manager/releases"))
+                .GET()
+                .setHeader("Content-Type", "application/json")
+                .build();
+
+        try {
+            HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
+
+            // Instantiate an object mapper to parse the JSON and retrieve the latest version
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode content = objectMapper.readTree(response.body());
+
+            httpClient.close();  // The client can be closed after the body of the response is read
+
+            return content.get(0).get("tag_name").asText();
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Get the status of the check version on startup property
+     */
+    private void isCheckNewVersionOnStartup(){
+        addResponseData(this.settings.readBooleanProperty("check_version_on_startup"));
+    }
+
+    /**
+     * Set the status of the check version on startup property
+     */
+    private void setCheckNewVersionOnStartup(){
+        this.settings.writeProperty("check_version_on_startup", getRequestData().getFirst());
     }
 }
