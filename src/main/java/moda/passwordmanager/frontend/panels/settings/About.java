@@ -24,18 +24,21 @@ public class About extends Section{
      */
     private void initComponents(){
         JLabel authorsLabel = new JLabel();
-        authorsLabel.setText(Utilities.getLocaleString("Moda.About.authorsLabel") + " Forzo, Bronte");
+        authorsLabel.setText(Utilities.getLocaleString("Moda.About.authorsLabel") + ": Forzo, Bronte");
+
+        JLabel licenseLabel = new JLabel();
+        licenseLabel.setText(Utilities.getLocaleString("Moda.About.licenseLabel") + ": GPL-3.0 license");
 
         JPanel versionPanel = new JPanel();
 
         JLabel versionLabel = new JLabel();
-        versionLabel.setText(Utilities.getLocaleString("Moda.About.versionLabel") + " " + Application.getVersion());
+        versionLabel.setText(Utilities.getLocaleString("Moda.About.versionLabel") + ": " + Application.getVersion());
 
         this.checkVersionButton = new JButton();
-        this.checkVersionButton.setText("Check new version");
+        this.checkVersionButton.setText(Utilities.getLocaleString("Moda.About.checkVersionButton"));
 
         this.checkVersionStartupCheckbox = new JCheckBox();
-        this.checkVersionStartupCheckbox.setText("Check version on startup");
+        this.checkVersionStartupCheckbox.setText(Utilities.getLocaleString("Moda.About.checkVersionStartupCheckbox"));
         this.checkVersionStartupCheckbox.setSelected(getCheckVersionStartup());  // Set the initial status based on the
                                                                                  // settings file
 
@@ -43,6 +46,7 @@ public class About extends Section{
         versionPanel.add(this.checkVersionButton);
 
         addOption(authorsLabel);
+        addOption(licenseLabel);
         addOption(versionPanel);
         addOption(this.checkVersionStartupCheckbox);
     }
