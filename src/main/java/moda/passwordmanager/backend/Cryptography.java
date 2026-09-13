@@ -52,8 +52,6 @@ public class Cryptography {
             throw new MasterPasswordNotSet("The master password must be set before executing any cryptographical operation.");
         }
 
-        reseed();  // Reseed the Random Generator before any operations
-
         byte[] plaintextBytes = plaintext.getBytes();  // Convert the plaintext string to bytes
 
         // Generate a random salt for the hash and an IV for AES
@@ -103,13 +101,6 @@ public class Cryptography {
      */
     private void generateBytes(byte[] array){
          this.secureRandom.nextBytes(array);
-    }
-
-    /**
-     * Reseed the secure random generator
-     */
-    private void reseed(){
-        this.secureRandom.reseed();
     }
 
     /**
