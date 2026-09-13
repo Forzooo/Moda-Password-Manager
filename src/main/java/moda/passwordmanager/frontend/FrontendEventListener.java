@@ -65,24 +65,14 @@ public class FrontendEventListener extends EventListener {
         ArrayList<Data> backendData = (ArrayList<Data>) getRequestData().getFirst();
 
         // Get the User Data and its model to update them with the changes
-        ArrayList<Data> userData = this.showData.getUserData();
-        DefaultListModel<String> userDataModel = this.showData.getUserDataModel();
+        DefaultListModel<Data> userDataModel = this.showData.getUserDataModel();
 
         for (Data data : backendData){
-            // Retrieve the indexes of the Data objects that have the same ID
-            int userDataIndex = this.showData.indexOfUserData(data.getId());
-
-            // If the ID has not been found, then add the Data object
-            if (userDataIndex == -1){
-                userData.add(data);
-                userDataModel.addElement(data.getService());
-            }else if (data.getService().isEmpty()){
             // If the service field is empty that means the record has been deleted, and it has to be removed from the list
-                userData.remove(userDataIndex);
-                userDataModel.remove(userDataIndex);
-            }else{  // Otherwise update the current data where the index is the same for the data and the data model
-                userData.set(userDataIndex, data);
-                userDataModel.set(userDataIndex, data.getService());
+            if (data.getService().isBlank()){
+                userDataModel.removeElement(data);
+            }else{  // Otherwise add/update the Map object with the ID and its service
+                userDataModel.addElement(data);
             }
         }
     }
@@ -91,7 +81,6 @@ public class FrontendEventListener extends EventListener {
      * Reset the service data
      */
     private void resetServiceFields(){
-        this.showData.getUserData().clear();
         this.showData.getUserDataModel().clear();
     }
 

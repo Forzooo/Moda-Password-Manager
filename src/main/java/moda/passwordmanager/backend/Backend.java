@@ -364,6 +364,7 @@ public class Backend extends EventListener {
     /**
      * Reset the service fields data shown in the Frontend
      */
+    @Deprecated
     private void resetServiceFields(){
         // Ensure that the services map is not empty, otherwise resetting the service fields is useless
         if (!this.servicesMap.isEmpty()){
