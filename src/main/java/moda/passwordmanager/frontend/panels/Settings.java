@@ -25,7 +25,7 @@ public class Settings extends JPanel {
      * Initialize the panel
      */
     private void initPanel(){
-        setLayout(new MigLayout("debug"));
+        setLayout(new MigLayout());
         setBorder(new EmptyBorder(10, 10, 10, 10));
     }
 

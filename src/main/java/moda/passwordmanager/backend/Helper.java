@@ -110,21 +110,21 @@ public class Helper {
      * @return The decrypted data
      */
     public Data decryptData(Data data){
-        LinkedHashMap<String, String> fields = data.asLinkedHashMap();
+        LinkedHashMap<Data.Fields, String> fields = data.asLinkedHashMap();
 
-        for (Map.Entry<String, String> entry : fields.entrySet()){
-            if (entry.getValue() != null && !entry.getKey().equals("id")){
-                fields.put(entry.getKey(), decrypt(entry.getValue()));
+        for (Map.Entry<Data.Fields, String> entry : fields.entrySet()){
+            if (entry.getValue() != null && !entry.getKey().equals(Data.Fields.ID)){
+                fields.put(entry.getKey(), decrypt(entry.getValue()));  // Update each field with its decrypted value
             }
         }
 
-        return new Data(data.getId(), fields.get("username"), fields.get("email_address"), fields.get("password"),
-                fields.get("service"), fields.get("additional_data"));
+        // We put the ID inside the fields to use a cleaner Data constructor
+        fields.put(Data.Fields.ID, String.valueOf(data.getId()));
+        return new Data(fields);
     }
 
     /**
      * Encode any given data, in byte array format, to a Base64 format string
-     * @param data
      * @return A Base64 encoded string
      */
     public static String encodeBase64(byte[] data){
@@ -133,7 +133,6 @@ public class Helper {
 
     /**
      * Decode any given data, in Base64 byte array format
-     * @param data
      * @return A byte array
      */
     public static byte[] decodeBase64(String data){

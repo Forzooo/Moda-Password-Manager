@@ -24,7 +24,7 @@ public class GoogleDriveSynchronization extends JDialog {
     // As the Data object are final, and we need to update it over time based on the user behaviour, we can use a
     // temporary HashMap to map the ID to the various fields
     // In this way we can easily create Data objects to use when the "Solve" button is clicked
-    private final HashMap<Integer, LinkedHashMap<String, String>> solvedData;
+    private final HashMap<Integer, LinkedHashMap<Data.Fields, String>> solvedData;
 
     private JPanel conflictsPanel;
 
@@ -86,18 +86,19 @@ public class GoogleDriveSynchronization extends JDialog {
     private void initListeners(){
         this.solveButton.addActionListener(e -> {
             // We iterate over the HashMap (ID->Data fields), and we create a Data object for each of them
-            for (Map.Entry<Integer, LinkedHashMap<String, String>> dataEntry : solvedData.entrySet()){
+            for (Map.Entry<Integer, LinkedHashMap<Data.Fields, String>> dataEntry : solvedData.entrySet()){
                 // It is set to null only when the record has already been deleted on the remote, and the user has
                 // chosen to delete it locally too
                 if (dataEntry.getValue() == null){
                     itc.request(new Event("delete-data", dataEntry.getKey()));
                 }else{
-                    LinkedHashMap<String, String> updatedData = solvedData.get(dataEntry.getKey());
-                    Data data = new Data(dataEntry.getKey(), updatedData.get("username"), updatedData.get("email_address"),
-                        updatedData.get("password"), updatedData.get("service"), updatedData.get("additional_data"));
+                    // To create the Daa object we set the ID in the updatedData to use a cleaner Data constructor
+                    LinkedHashMap<Data.Fields, String> updatedData = solvedData.get(dataEntry.getKey());
+                    updatedData.put(Data.Fields.ID, String.valueOf(dataEntry.getKey()));
+                    Data data = new Data(updatedData);
 
                     // We add the record in the local database has it has been added only to the remote one yet
-                    if (solvedData.get(dataEntry.getKey()).containsKey("addedRemote")){
+                    if (solvedData.get(dataEntry.getKey()).containsKey(Data.Fields.ADDED_ON_REMOTE)){
                         itc.request(new Event("add-data", data));  // TODO. Check whether ID are kept even
                                                                             // TODO. if added without setting it
                                                                             // TODO. from the remote one
@@ -160,8 +161,8 @@ public class GoogleDriveSynchronization extends JDialog {
                 // Decrypt the remote data to add it automatically to the database once the user has clicked
                 // the solve button
                 remoteData = getData(remoteData);
-                LinkedHashMap<String, String> remoteUserData = remoteData.asLinkedHashMap();
-                remoteUserData.put("addedRemote", "");  // We need to have a flag set on the linked hash map to know
+                LinkedHashMap<Data.Fields, String> remoteUserData = remoteData.asLinkedHashMap();
+                remoteUserData.put(Data.Fields.ADDED_ON_REMOTE, "");  // We need to have a flag set on the linked hash map to know
                                                         // that the data has been added on remote to call the event
                                                         // add-data instead of update-data
                 this.solvedData.put(remoteData.getId(), remoteUserData);
@@ -169,13 +170,13 @@ public class GoogleDriveSynchronization extends JDialog {
             }else{  // The default case where the data has been modified on local/remote
                 conflictedDataPanel.add(new JLabel(localData.getService()), "span, wrap");
                 remoteData = getData(remoteData);  // Decrypt in the backend the data to compare them
-                LinkedHashMap<String, String> localUserData = localData.asLinkedHashMap();
-                LinkedHashMap<String, String> remoteUserData = remoteData.asLinkedHashMap();
+                LinkedHashMap<Data.Fields, String> localUserData = localData.asLinkedHashMap();
+                LinkedHashMap<Data.Fields, String> remoteUserData = remoteData.asLinkedHashMap();
 
                 this.solvedData.put(localData.getId(), localUserData);  // By default, the local one is always chosen
 
                 // Iterate over each field and show only the ones that are different
-                for (Map.Entry<String, String> localDataEntry : localUserData.entrySet()){
+                for (Map.Entry<Data.Fields, String> localDataEntry : localUserData.entrySet()){
                     if (!localDataEntry.getValue().equals(remoteUserData.get(localDataEntry.getKey()))){
                         // The button group allows to select only of the two radio buttons
                         ButtonGroup buttonGroup = new ButtonGroup();
@@ -205,7 +206,7 @@ public class GoogleDriveSynchronization extends JDialog {
                         buttonGroup.add(localDataRadio);
                         buttonGroup.add(remoteDataRadio);
 
-                        conflictedDataPanel.add(new JLabel(localDataEntry.getKey()), "wrap");  // The name of the field to compare
+                        conflictedDataPanel.add(new JLabel(localDataEntry.getKey().toString()), "wrap");  // The name of the field to compare
                         conflictedDataPanel.add(localDataRadio, "wrap");
                         conflictedDataPanel.add(remoteDataRadio, "wrap");
                     }

@@ -10,6 +10,7 @@ import raven.modal.Toast;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -23,11 +24,11 @@ public class UserData extends JPanel {
     private String title;  // The title of the tab
 
     // Swing Components
-    private UserDataField[] userDataFields;  // The fields of the data
+    private EnumMap<Data.Fields, UserDataField> userDataFields;  // The fields of the data
 
     // The fields before the editing state is enabled, thus added only inside "enableEditing"
     // They are used when "Discard Changes" button is clicked to restore the previous values, and it will clear the array
-    private LinkedHashMap<String, String> rollbackDataFields;
+    private EnumMap<Data.Fields, String> rollbackData;
 
     private JButton modifyButton;
     private JButton deleteButton;
@@ -64,7 +65,37 @@ public class UserData extends JPanel {
      * Initialize the components of the panel
      */
     private void initComponents(){
-        // Create all the JButton
+        Data data = getData();  // We get the data associated with the ID given in the constructor
+        this.title = data.getService();  // The title of the tab could be retrieved from the userData array itself
+                                         // or from the userDataFields array but if in future it may occur that the index
+                                         // of the service field changes, then the title would leak sensitive information
+                                         // of the user, thus we retrieve it from the getter method of Data
+
+        LinkedHashMap<Data.Fields, String> userData = data.asLinkedHashMap();
+
+        this.userDataFields = new EnumMap<>(Data.Fields.class);
+        this.rollbackData = new EnumMap<>(Data.Fields.class);
+
+        // Iterate over the fields of the data to create a JPanel for each field
+        for (Map.Entry<Data.Fields, String> field : userData.entrySet()){
+            UserDataField userDataField;
+
+            // The ID has to be skipped as it does not require a panel
+            if (field.getKey().equals(Data.Fields.ID)){
+                continue;
+            }else if (field.getKey().equals(Data.Fields.PASSWORD)){  // The password panel has its own class
+                userDataField = new UserPasswordField(field.getValue(), this.itc);
+            }else{
+                userDataField = new UserDataField(field.getValue());
+            }
+
+            this.rollbackData.put(field.getKey(), field.getValue());  // We add the field to the rollback map
+
+            this.userDataFields.put(field.getKey(), userDataField);
+            add(userDataField, "span, align center, wrap");  // Add the panel to the GUI
+        }
+
+        // Create all the buttons to handle the data
         this.modifyButton = new JButton();
         this.modifyButton.setText(Utilities.getLocaleString("Moda.UserData.modifyButton"));
 
@@ -80,35 +111,6 @@ public class UserData extends JPanel {
         this.discardChangesButton.setText(Utilities.getLocaleString("Moda.UserData.discardChangesButton"));
         this.discardChangesButton.setEnabled(false);
         this.discardChangesButton.setVisible(false);  // It's shown only in the editing state
-
-        // Create the panel for each field of the data
-        Data data = getData();
-        this.title = data.getService();  // The title of the tab could be retrieved from the userData array itself
-                                         // or from the userDataFields array but if in future it may occur that the index
-                                         // of the service field changes, then the title would leak sensitive information
-                                         // of the user, thus we retrieve it from the getter method of Data
-
-        LinkedHashMap<String, String> userData = data.asLinkedHashMap();  // Retrieve the data of the user to know its length
-        this.userDataFields = new UserDataField[userData.size()-1];  // Set the size based on the user data length - 1
-                                                                     // (the ID is excluded)
-        this.rollbackDataFields = new LinkedHashMap<>();  // Create the rollback array based on the data length
-
-        int i = 0; // The counter that enumerates the number of panels
-        for (Map.Entry<String, String> entry : userData.entrySet()){
-            // As the password field requires its own panel we need to check each time the value of i to know
-            // the field we are creating
-            UserDataField userDataField;
-            if (entry.getKey().equals("id")){  // The ID has to be skipped
-                continue;
-            }else if (entry.getKey().equals("password")){
-                userDataField = new UserPasswordField(entry.getValue(), this.itc);
-            }else{
-                userDataField = new UserDataField(entry.getValue());
-            }
-            this.rollbackDataFields.put(entry.getKey(), entry.getValue());
-            this.userDataFields[i++] = userDataField;  // Set the panel to the array and increment the panel counter
-            add(userDataField, "span, align center, wrap");  // Add the panel to the GUI
-        }
 
         add(this.modifyButton, "split 2, align center");
         add(this.deleteButton, "wrap");
@@ -165,8 +167,8 @@ public class UserData extends JPanel {
      */
     private void enableEditing(){
         // Set the DataFields to be editable to allow changes
-        for (UserDataField userDataField : this.userDataFields){
-            userDataField.enableEditing();  // Also increment the counter
+        for (UserDataField userDataField : this.userDataFields.values()){
+            userDataField.enableEditing();
         }
 
         // Disable and hide the buttons that cannot be used while in editing state
@@ -187,7 +189,7 @@ public class UserData extends JPanel {
      */
     private void disableEditing(){
         // Set the DataFields to not be editable to disable changes
-        for (UserDataField dataField : this.userDataFields){
+        for (UserDataField dataField : this.userDataFields.values()){
             dataField.disableEditing();
         }
 
@@ -209,28 +211,27 @@ public class UserData extends JPanel {
      */
     private void saveChanges(){
         // The updatedData is used to update the backend with the new data
-        String[] updatedData = new String[5];
+        EnumMap<Data.Fields, String> updatedData = new EnumMap<>(Data.Fields.class);
 
-        // Iterate over the data fields to get their data and set them not to be editable
-        // Set the new data to the copy button and enable it again
-        for (int i = 0; i < this.userDataFields.length; i++){
-            updatedData[i] = this.userDataFields[i].getData();
+        // Iterate over the data fields to get their data
+        for (Map.Entry<Data.Fields, UserDataField> entry : this.userDataFields.entrySet()){
+            updatedData.put(entry.getKey(), entry.getValue().getData());
         }
 
-        // Ensure that the service field is not empty
-        if (updatedData[3].isEmpty()){
+        // Ensure that the service field is not empty, otherwise we cannot allow the data to be saved
+        if (updatedData.get(Data.Fields.SERVICE).isBlank()){
             return;
         }
 
-        // Updates the rollback hashmap to the new values
-        int i = 0;
-        for (String key : this.rollbackDataFields.keySet()){
-            this.rollbackDataFields.put(key, updatedData[i++]);  // Also increment the counter of the data field
-        }
+        // Updates the rollback map to the new values
+        this.rollbackData.replaceAll((k, v) -> updatedData.get(k));
 
         // Disable the editing and send the data to the backend
         disableEditing();
-        updateData(new Data(this.id, updatedData[0], updatedData[1], updatedData[2], updatedData[3], updatedData[4]));
+
+        updatedData.put(Data.Fields.ID, String.valueOf(this.id));  // We put the ID inside the updated Data to use a
+                                                                   // a cleaner Data constructor
+        updateData(new Data(updatedData));
     }
 
     /**
@@ -239,9 +240,8 @@ public class UserData extends JPanel {
     private void discardChanges(){
         // Rollback each TextField to its previous value, where their clipboard is automatically updated when editing
         // mode is disabled
-        int i = 0;
-        for (String field : this.rollbackDataFields.values()){
-            this.userDataFields[i++].setText(field);  // Also increment the counter of the data field
+        for (Map.Entry<Data.Fields, String> entry : this.rollbackData.entrySet()){
+            this.userDataFields.get(entry.getKey()).setText(entry.getValue());
         }
         disableEditing();  // Disable editing, which also clears the rollback array
     }
