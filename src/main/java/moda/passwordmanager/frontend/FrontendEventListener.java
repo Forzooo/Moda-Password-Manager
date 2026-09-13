@@ -9,10 +9,11 @@ import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.List;
 
 public class FrontendEventListener extends EventListener {
 
-    private ShowData showData;  // The EventListener needs the Show Data Panel to call the service fields
+    private final ShowData showData;  // The EventListener needs the Show Data Panel to call the service fields
 
     public FrontendEventListener(InterThreadCommunication itc, ShowData showData){
         super(itc, "Frontend Event Listener");  // Set the name of the thread for debug purposes
@@ -27,7 +28,6 @@ public class FrontendEventListener extends EventListener {
     private void initHandler(){
         addOperation("exception-raised", this::exceptionRaised);
         addOperation("update-service-fields", this::updateServiceFields);
-        addOperation("reset-service-fields", this::resetServiceFields);
         addOperation("google-drive-synchronization-conflicts", this::openGoogleDriveSynchronizationDialog);
     }
 
@@ -37,7 +37,7 @@ public class FrontendEventListener extends EventListener {
      */
     private void exceptionRaised(){
         // Retrieve the data from the request
-        ArrayList<Object> requestData = getRequestData();
+        List<Object> requestData = getRequestData();
         String threadName = (String) requestData.getFirst();  // The name of the thread where the exception occurred
         Throwable throwable = (Throwable) requestData.get(1);  // The stack trace of the exception
 
@@ -63,35 +63,14 @@ public class FrontendEventListener extends EventListener {
         // The updated service data from the backend
         ArrayList<Data> backendData = (ArrayList<Data>) getRequestData().getFirst();
 
-        // Get the User Data and its model to update them with the changes
-        ArrayList<Data> userData = this.showData.getUSER_DATA();
-        DefaultListModel<String> userDataModel = this.showData.getUSER_DATA_MODEL();
-
         for (Data data : backendData){
-            // Retrieve the indexes of the Data objects that have the same ID
-            int userDataIndex = this.showData.indexOfUserData(data.getID());
-
-            // If the ID has not been found, then add the Data object
-            if (userDataIndex == -1){
-                userData.add(data);
-                userDataModel.addElement(data.getSERVICE());
-            }else if (data.getSERVICE().isEmpty()){
             // If the service field is empty that means the record has been deleted, and it has to be removed from the list
-                userData.remove(userDataIndex);
-                userDataModel.remove(userDataIndex);
-            }else{  // Otherwise update the current data where the index is the same for the data and the data model
-                userData.set(userDataIndex, data);
-                userDataModel.set(userDataIndex, data.getSERVICE());
+            if (data.getService().isBlank()){
+                this.showData.removeData(data);
+            }else{  // Otherwise add/update the Map object with the ID and its service
+                this.showData.addData(data);
             }
         }
-    }
-
-    /**
-     * Reset the service data
-     */
-    private void resetServiceFields(){
-        this.showData.getUSER_DATA().clear();
-        this.showData.getUSER_DATA_MODEL().clear();
     }
 
     /**
@@ -105,7 +84,7 @@ public class FrontendEventListener extends EventListener {
             // reference for it
             // Also, it is always the first index as there are no other JFrame
             GoogleDriveSynchronization googleDriveSynchronization = new GoogleDriveSynchronization(java.awt.Frame.getFrames()[0],
-                    getITC(), conflictData);
+                    getItc(), conflictData);
             googleDriveSynchronization.setVisible(true);
         });
 

@@ -10,8 +10,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class EventListenerTests {
 
-    private final static String EVENT_NAME = "Test";
-    private final static String EVENT_NAME_2 = "Test_2";
+    private static final String EVENT_NAME = "Test";
+    private static final String EVENT_NAME_2 = "Test_2";
     private InterThreadCommunication sender;
     private EventListener eventListener;
 

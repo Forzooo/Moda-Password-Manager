@@ -37,9 +37,9 @@ public class GoogleDrive {
     private static final String ROOT_DIRECTORY = ".moda";
     private static final String PASSWORD_MANAGER_DIRECTORY = "password-manager";
 
-    private final InterThreadCommunication ITC;
+    private final InterThreadCommunication itc;
     private Drive drive;  // The Google Drive service
-    private final JsonFactory JSON_FACTORY;  // Used to handle all the data of the JSON
+    private final JsonFactory jsonFactory;  // Used to handle all the data of the JSON
     private boolean conflictsSolved;  // The conflicts can happen on the synchronization if the two database don't have
                                       // same MD5 checksum. Only when they are solved, the local database can be uploaded
                                       // to Google Drive
@@ -49,8 +49,8 @@ public class GoogleDrive {
     private String passwordManagerDirectoryID;
 
     public GoogleDrive(InterThreadCommunication itc){
-        this.ITC = itc;
-        this.JSON_FACTORY = GsonFactory.getDefaultInstance();
+        this.itc = itc;
+        this.jsonFactory = GsonFactory.getDefaultInstance();
 
         // The ID of the directories are retrieved when the init method is called
         this.rootDirectoryID = "";
@@ -91,7 +91,7 @@ public class GoogleDrive {
             Object[] authenticationResults = authentication(httpTransport, apiData, storedCredentials);
 
             // Create the Drive object based on the HTTP transport and the credentials retrieved
-            this.drive = new Drive.Builder(httpTransport, this.JSON_FACTORY, (Credential) authenticationResults[0])
+            this.drive = new Drive.Builder(httpTransport, this.jsonFactory, (Credential) authenticationResults[0])
                     .setApplicationName(GoogleDrive.APPLICATION_NAME).build();
 
             return ((DataStore<StoredCredential>) authenticationResults[1]).get("user");  // The update stored credentials are returned
@@ -107,7 +107,7 @@ public class GoogleDrive {
     private Object[] authentication(NetHttpTransport httpTransport, String apiData, String storedCredentials){
         try {
             // Create the client secrets from the API key
-            GoogleClientSecrets googleClientSecrets = GoogleClientSecrets.load(this.JSON_FACTORY, new StringReader(apiData));
+            GoogleClientSecrets googleClientSecrets = GoogleClientSecrets.load(this.jsonFactory, new StringReader(apiData));
 
             MemoryDataStoreFactory memoryDataStoreFactory = MemoryDataStoreFactory.getDefaultInstance();
 
@@ -116,7 +116,7 @@ public class GoogleDrive {
                 // When the stored credential has been saved inside the database, it had to be converted to a Java Map
                 // to be parsed to JSON. Now we have to do the inverse process to allow the memory data store factory
                 // to use the stored credential as there is not right now a simpler way to do it
-                Map<String, Object> storedCredentialsMap = this.JSON_FACTORY.fromString(storedCredentials, Map.class);
+                Map<String, Object> storedCredentialsMap = this.jsonFactory.fromString(storedCredentials, Map.class);
                 StoredCredential credential = new StoredCredential()
                         .setAccessToken((String) storedCredentialsMap.get("accessToken"))
                         .setExpirationTimeMilliseconds(((Number) storedCredentialsMap.get("expirationTimeMilliseconds")).longValue())
@@ -127,7 +127,7 @@ public class GoogleDrive {
 
             // Create the Authorization Flow used to exchange the authorization code for a token
             GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
-                    httpTransport, this.JSON_FACTORY, googleClientSecrets, SCOPES)
+                    httpTransport, this.jsonFactory, googleClientSecrets, SCOPES)
                     // Set the directory where the token will be stored
                     .setDataStoreFactory(memoryDataStoreFactory)
                     .setAccessType("offline")  // Set the Access Type to offline to have a token that lasts longer
@@ -329,6 +329,7 @@ public class GoogleDrive {
             uploadDatabase(databasePath, databaseName);
             this.conflictsSolved = false;  // The conflicts are set again to false to avoid to re-enter this if statement
                                            // without checking for differences with the remote database
+            return;
         }
 
         String remoteDatabaseChecksum = getDatabaseChecksum(databaseName);
@@ -347,14 +348,14 @@ public class GoogleDrive {
             // are no duplicate files (hash collision are rare)
             Database remoteDatabase = downloadDatabase(databaseName,
                     Helper.getPasswordManagerAppDataPath()+remoteDatabaseChecksum+Database.getFileExtension());
-            ArrayList<Data> remoteDataRecords = remoteDatabase.getDataRecords();
+            List<Data> remoteDataRecords = remoteDatabase.getDataRecords();
             int remoteDataAutoincrement = remoteDatabase.getAutoincrementDataTable();  // We need it to check for any
                                                                                        // record deleted on the remote
             remoteDatabase.delete();  // After the remote records are obtained, we can
                                       // delete the remote database from the file system
 
             Database localDatabase = new Database(databasePath);
-            ArrayList<Data> localDataRecords = localDatabase.getDataRecords();
+            List<Data> localDataRecords = localDatabase.getDataRecords();
             localDatabase.closeConnection();
 
             // We iterate over the local Data objects to look for any that are not inside the remote database: we want
@@ -365,7 +366,7 @@ public class GoogleDrive {
 
                 // If we find a matching ID: we can skip it
                 for (Data remoteData : remoteDataRecords){
-                    if (localData.getID() == remoteData.getID()){
+                    if (localData.getId() == remoteData.getId()){
                         existsOnRemote = true;
                         break;
                     }
@@ -374,10 +375,10 @@ public class GoogleDrive {
                 // If the data is not on the remote database and its ID is less than or equal to the remote database
                 // autoincrement value we know that it has been deleted, otherwise if the ID is greater the data has been
                 // created on the local database, thus we can ignore it
-                if (!existsOnRemote && localData.getID() <= remoteDataAutoincrement){
+                if (!existsOnRemote && localData.getId() <= remoteDataAutoincrement){
                     // So, we set its service attribute to null to let the frontend know that it is a record that has
                     // been deleted
-                    remoteDataRecords.add(new Data(localData.getID(), null));
+                    remoteDataRecords.add(new Data(localData.getId(), null));
                     localDataRecords.remove(localData);  // The data is removed from the local records as otherwise when
                                                          // we are looking for records that have the same hashcode
                                                          // it could occur that they could be removed
@@ -394,7 +395,7 @@ public class GoogleDrive {
                 // the iteration and we will restart it from the new ArrayList in the next outer iteration,
                 // ignoring the re-index problem
                 for (Data localData : localDataRecords){
-                    if (localData.getID() == remoteData.getID() && localData.hashCode() == remoteData.hashCode()){
+                    if (localData.getId() == remoteData.getId() && localData.hashCode() == remoteData.hashCode()){
                         remoteDataRecords.remove(remoteData);
                         localDataRecords.remove(localData);
                         break;
@@ -409,7 +410,7 @@ public class GoogleDrive {
             }else{  // Otherwise, the user has to solve the conflicts before Google Drive is allowed to upload the
                     // database
                 this.conflictsSolved = false;
-                this.ITC.send(new Event("google-drive-synchronization-conflicts", remoteDataRecords));
+                this.itc.send(new Event("google-drive-synchronization-conflicts", remoteDataRecords));
             }
         }
     }

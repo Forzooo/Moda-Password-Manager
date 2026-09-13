@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -17,22 +17,22 @@ class HelperTests {
     private Settings settings;
     private Helper helper;
 
-    private final static String TEST_STRING = "Test";
-    private final static String TEST_STRING_BASE64 = "VGVzdA==";
+    private static final String TEST_STRING = "Test";
+    private static final String TEST_STRING_BASE64 = "VGVzdA==";
 
     // String generation test attributes
-    private final static String STRING_GENERATION_SETTINGS_ROOT_NODE = "string_generation/";
+    private static final String STRING_GENERATION_SETTINGS_ROOT_NODE = "string_generation/";
 
     // Database test attributes
-    private final static String DATABASE_ROOT_NODE = "database/";
+    private static final String DATABASE_ROOT_NODE = "database/";
 
     // Decryption test attributes
-    private final static String MASTER_PASSWORD = "dev";
-    private final static String STRING_PLAINTEXT = "Test";
-    private final static String STRING_CIPHERTEXT = "yrflaOOdfwumdECCw4OaxY+R+myhKKr1XU843ieinqMx1Y7BGItZBL3+ybitpPbH";
-    private final static Data DATA_PLAINTEXT = new Data(STRING_PLAINTEXT, STRING_PLAINTEXT, STRING_PLAINTEXT,
+    private static final String MASTER_PASSWORD = "dev";
+    private static final String STRING_PLAINTEXT = "Test";
+    private static final String STRING_CIPHERTEXT = "yrflaOOdfwumdECCw4OaxY+R+myhKKr1XU843ieinqMx1Y7BGItZBL3+ybitpPbH";
+    private static final Data DATA_PLAINTEXT = new Data(STRING_PLAINTEXT, STRING_PLAINTEXT, STRING_PLAINTEXT,
             STRING_PLAINTEXT, STRING_PLAINTEXT);
-    private final static Data DATA_CIPHERTEXT = new Data(
+    private static final Data DATA_CIPHERTEXT = new Data(
             "cJ2pjIGv3/xrxKbcC+kf3Xdwj4eC6MFozR3ffiT5asBNCQkEBZn/JuixAYJYJmQP",
             "YoIOEHEf5Bb+PSuaKa0Ctk6c/2SJqs90IWllpemEJp0KuGyDrQbKXE3T1tLW2m/d",
             "sDTNHKDmEsrCCz/lFTUzptcwb3ZyWMDSqif/OvaNDjOTomCVrNHM+w92tNVQ97xS",
@@ -45,13 +45,13 @@ class HelperTests {
      * path would be the same for each test case. Lastly, the directory is destroyed after each test.
      */
     @TempDir
-    private Path TEST_DIRECTORY;
+    private Path testDirectory;
 
     @BeforeEach
     void init(){
         Cryptography cryptography = new Cryptography();
         cryptography.setMasterPassword(MASTER_PASSWORD.getBytes());
-        this.settings = new Settings(TEST_DIRECTORY+"\\"+Helper.getSettingsFile());
+        this.settings = new Settings(testDirectory +"\\"+Helper.getSettingsFile());
         this.helper = new Helper(cryptography, settings);
     }
 
@@ -76,7 +76,7 @@ class HelperTests {
      */
     @Test
     void getStringGenerationConfiguration(){
-        ArrayList<Object> configuration = this.helper.getStringGenerationConfiguration();
+        List<Object> configuration = this.helper.getStringGenerationConfiguration();
 
         assertEquals(this.settings.readIntProperty(STRING_GENERATION_SETTINGS_ROOT_NODE+"length"),
                 configuration.getFirst());

@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
 
 class DatabaseTests {
 
@@ -18,38 +19,38 @@ class DatabaseTests {
      * path would be the same for each test case. Lastly, the directory is destroyed after each test.
      */
     @TempDir
-    private Path TEST_DIRECTORY;
-    private final static String DATABASE_FILE_EXTENSION = ".modb";
-    private final static String DATABASE_NAME = "test.modb";
-    private final static String SECONDARY_DATABASE_NAME = "test2.modb";
+    private Path testDirectory;
+    private static final String DATABASE_FILE_EXTENSION = ".modb";
+    private static final String DATABASE_NAME = "test.modb";
+    private static final String SECONDARY_DATABASE_NAME = "test2.modb";
 
     // The numbers of total records used
-    private final static int RECORDS_NUMBER = 2;
+    private static final int RECORDS_NUMBER = 2;
 
-    private final static int ID = 1;
-    private final static String USERNAME = "username";
-    private final static String EMAIL_ADDRESS = "email@example.com";
-    private final static String PASSWORD = "password";
-    private final static String SERVICE = "service";
-    private final static String ADDITIONAL_DATA = "Data";
+    private static final int ID = 1;
+    private static final String USERNAME = "username";
+    private static final String EMAIL_ADDRESS = "email@example.com";
+    private static final String PASSWORD = "password";
+    private static final String SERVICE = "service";
+    private static final String ADDITIONAL_DATA = "Data";
 
-    private final static int ID_2 = 2;
-    private final static String USERNAME_2 = "username2";
-    private final static String EMAIL_ADDRESS_2 = "email2@example.com";
-    private final static String PASSWORD_2 = "password2";
-    private final static String SERVICE_2 = "service2";
-    private final static String ADDITIONAL_DATA_2 = "Data2";
+    private static final int ID_2 = 2;
+    private static final String USERNAME_2 = "username2";
+    private static final String EMAIL_ADDRESS_2 = "email2@example.com";
+    private static final String PASSWORD_2 = "password2";
+    private static final String SERVICE_2 = "service2";
+    private static final String ADDITIONAL_DATA_2 = "Data2";
 
-    private final static Data TEST_DATA = new Data(ID, USERNAME, EMAIL_ADDRESS, PASSWORD, SERVICE, ADDITIONAL_DATA);
+    private static final Data TEST_DATA = new Data(ID, USERNAME, EMAIL_ADDRESS, PASSWORD, SERVICE, ADDITIONAL_DATA);
 
     // The updated test data
-    private final static Data UPDATED_TEST_DATA = new Data(ID, USERNAME_2, EMAIL_ADDRESS_2, PASSWORD_2, SERVICE_2,
+    private static final Data UPDATED_TEST_DATA = new Data(ID, USERNAME_2, EMAIL_ADDRESS_2, PASSWORD_2, SERVICE_2,
             ADDITIONAL_DATA_2);
 
-    private final static Data TEST_DATA_2 = new Data(ID_2, USERNAME_2, EMAIL_ADDRESS_2,
+    private static final Data TEST_DATA_2 = new Data(ID_2, USERNAME_2, EMAIL_ADDRESS_2,
             PASSWORD_2, SERVICE_2, ADDITIONAL_DATA_2);
 
-    private final static Data UPDATED_TEST_DATA_2 = new Data(ID_2, USERNAME, EMAIL_ADDRESS, PASSWORD, SERVICE,
+    private static final Data UPDATED_TEST_DATA_2 = new Data(ID_2, USERNAME, EMAIL_ADDRESS, PASSWORD, SERVICE,
             ADDITIONAL_DATA);
 
     private Database database;
@@ -59,7 +60,7 @@ class DatabaseTests {
      */
     @BeforeEach
     void init(){
-        this.database = new Database(TEST_DIRECTORY + "\\" + DATABASE_NAME);
+        this.database = new Database(testDirectory + "\\" + DATABASE_NAME);
     }
 
     /**
@@ -67,7 +68,7 @@ class DatabaseTests {
      */
     @AfterEach
     void cleanup(){
-        this.database.closeConnection();
+        this.database.delete();
     }
 
     /**
@@ -92,9 +93,7 @@ class DatabaseTests {
     @Test
     void addReadRecord(){
         this.database.addDataRecord(TEST_DATA);
-        Data record = this.database.getDataRecord(ID);
-
-        assertEquals(TEST_DATA, record);
+        assertEquals(TEST_DATA, this.database.getDataRecord(ID));
     }
 
     /**
@@ -121,11 +120,11 @@ class DatabaseTests {
         // A deleted record has only the ID set, where the other fields are null thus we use assertNull
         Data deletedRecord = this.database.getDataRecord(ID);
 
-        assertNull(deletedRecord.getUSERNAME());
-        assertNull(deletedRecord.getEMAIL_ADDRESS());
-        assertNull(deletedRecord.getPASSWORD());
-        assertNull(deletedRecord.getSERVICE());
-        assertNull(deletedRecord.getADDITIONAL_DATA());
+        assertNull(deletedRecord.getUsername());
+        assertNull(deletedRecord.getEmailAddress());
+        assertNull(deletedRecord.getPassword());
+        assertNull(deletedRecord.getService());
+        assertNull(deletedRecord.getAdditionalData());
     }
 
     /**
@@ -136,20 +135,20 @@ class DatabaseTests {
         this.database.addDataRecord(TEST_DATA);  // Add the record to the first database
 
         // Change the database to another one and add a new record inside it
-        this.database.change(TEST_DIRECTORY + "\\" + SECONDARY_DATABASE_NAME);
+        this.database.change(testDirectory + "\\" + SECONDARY_DATABASE_NAME);
 
         // We're using the updated data instead of the test data 2 as it will be the first record of the second database,
         // so it requires to have the ID = 1, where the test data 2 has ID = 2
         this.database.addDataRecord(UPDATED_TEST_DATA);
 
         // Change the database to the first one and assert that the record inside it is the right one
-        this.database.change(TEST_DIRECTORY + "\\" + DATABASE_NAME);
+        this.database.change(testDirectory + "\\" + DATABASE_NAME);
 
         Data recordFirstDatabase = this.database.getDataRecord(ID);
         assertEquals(TEST_DATA, recordFirstDatabase);
 
         // Change again the database and assert that the record inside is the second one
-        this.database.change(TEST_DIRECTORY + "\\" + SECONDARY_DATABASE_NAME);
+        this.database.change(testDirectory + "\\" + SECONDARY_DATABASE_NAME);
 
         Data recordSecondDatabase = this.database.getDataRecord(ID);
         assertEquals(UPDATED_TEST_DATA, recordSecondDatabase);
@@ -165,7 +164,7 @@ class DatabaseTests {
         this.database.addDataRecord(TEST_DATA_2);
 
         Data firstServiceField = this.database.getDataFirstServiceField();
-        assertEquals(SERVICE, firstServiceField.getSERVICE());
+        assertEquals(SERVICE, firstServiceField.getService());
     }
 
     /**
@@ -177,9 +176,9 @@ class DatabaseTests {
         this.database.addDataRecord(TEST_DATA);
         this.database.addDataRecord(TEST_DATA_2);
 
-        ArrayList<Data> serviceFields = this.database.getDataServiceFields();
-        assertEquals(SERVICE, serviceFields.getFirst().getSERVICE());
-        assertEquals(SERVICE_2, serviceFields.get(1).getSERVICE());
+        List<Data> serviceFields = this.database.getDataServiceFields();
+        assertEquals(SERVICE, serviceFields.getFirst().getService());
+        assertEquals(SERVICE_2, serviceFields.get(1).getService());
         assertEquals(RECORDS_NUMBER, serviceFields.size());  // Also ensure that the number of records returned is 2
     }
 
@@ -191,7 +190,7 @@ class DatabaseTests {
         this.database.addDataRecord(TEST_DATA);
         this.database.addDataRecord(TEST_DATA_2);
 
-        ArrayList<Data> records = this.database.getDataRecords();
+        List<Data> records = this.database.getDataRecords();
         Data firstRecord = records.getFirst();
         Data secondRecord = records.get(1);
 
@@ -214,7 +213,7 @@ class DatabaseTests {
 
         this.database.changeDataRecords(records);
 
-        ArrayList<Data> updatedRecords = this.database.getDataRecords();
+        List<Data> updatedRecords = this.database.getDataRecords();
 
         Data firstRecord = updatedRecords.getFirst();
         assertEquals(UPDATED_TEST_DATA, firstRecord);

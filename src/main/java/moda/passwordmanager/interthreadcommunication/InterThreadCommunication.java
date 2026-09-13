@@ -7,16 +7,17 @@ import java.util.concurrent.Semaphore;
 
 public class InterThreadCommunication {
 
-    private final LinkedBlockingQueue<Event> INPUT_QUEUE;  // Receive Event from this queue from the other thread
-    private final LinkedBlockingQueue<Event> OUTPUT_QUEUE;  // Send Event from this queue to the other thread
+    private final LinkedBlockingQueue<Event> inputQueue;  // Receive Event from this queue from the other thread
+    private final LinkedBlockingQueue<Event> outputQueue;  // Send Event from this queue to the other thread
 
     /**
      * The ArrayList ensures that the ID generated for any communication is unique
      */
-    private ArrayList<Integer> activeCommunications;
+    private final ArrayList<Integer> activeCommunications;
+    private final Random randomGenerator;  // We can use a non-secure Random as it's used only for ID generation
 
     // Collection of semaphores used to set the threads to wait for a specific type of event
-    private final static int SEMAPHORE_PERMITS = 0;
+    private static final int SEMAPHORE_PERMITS = 0;
     private Semaphore asynchronousSemaphore;
     private Semaphore synchronousSemaphore;
 
@@ -24,21 +25,23 @@ public class InterThreadCommunication {
      * The Events that are synchronous, that means the same thread needs the response from the event it has send,
      * have their communication ID number stored here to filter them.
      */
-    private ArrayList<Integer> synchronousCommunications;
+    private final ArrayList<Integer> synchronousCommunications;
 
     /**
      * @param inputQueue The Queue that receives the Event objects
      * @param outputQueue The Queue that sends the Event objects
      */
     public InterThreadCommunication(LinkedBlockingQueue<Event> inputQueue, LinkedBlockingQueue<Event> outputQueue){
-        this.INPUT_QUEUE = inputQueue;
-        this.OUTPUT_QUEUE = outputQueue;
+        this.inputQueue = inputQueue;
+        this.outputQueue = outputQueue;
 
         this.activeCommunications = new ArrayList<>();
         this.synchronousCommunications = new ArrayList<>();
 
         this.asynchronousSemaphore = new Semaphore(SEMAPHORE_PERMITS);
         this.synchronousSemaphore = new Semaphore(SEMAPHORE_PERMITS);
+
+        this.randomGenerator = new Random();
     }
 
     /**
@@ -58,7 +61,7 @@ public class InterThreadCommunication {
                 addEventID(event);
             }
             event.incrementSequenceNumber();  // Increment the sequence number of the event
-            this.OUTPUT_QUEUE.put(event);  // Put the event in the queue to send it to the other thread
+            this.outputQueue.put(event);  // Put the event in the queue to send it to the other thread
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -84,7 +87,7 @@ public class InterThreadCommunication {
         // receives a synchronous event, it is unable to use the makeResponse method to reply to the request creating a
         // deadlock for the sender thread
         try {
-            Event event = this.INPUT_QUEUE.take();  // Wait for an event sent from the receiver queue
+            Event event = this.inputQueue.take();  // Wait for an event sent from the receiver queue
 
             int eventID = event.getCommunicationID();  // Retrieve the ID of the event
 
@@ -95,7 +98,7 @@ public class InterThreadCommunication {
 
             // Check whether the event is a synchronous one
             if (this.synchronousCommunications.contains(eventID)){
-                this.INPUT_QUEUE.put(event);  // Put the event in the input queue to let it be found by other threads
+                this.inputQueue.put(event);  // Put the event in the input queue to let it be found by other threads
                 waitAsynchronousEvent();  // Let the thread wait until the synchronous event is removed from the queue
                 return receive();  // Recall the receive method until it founds an asynchronous event to return
             }else{  // If the event is not a synchronous one, then return it
@@ -114,7 +117,7 @@ public class InterThreadCommunication {
      */
     private Event receive(int id){
         try {
-            Event event = this.INPUT_QUEUE.take();  // Wait for an event sent from the receiver queue
+            Event event = this.inputQueue.take();  // Wait for an event sent from the receiver queue
 
             // Check whether the ID of the event is the one of the synchronous event we want
             if (event.getCommunicationID() == id){
@@ -123,7 +126,7 @@ public class InterThreadCommunication {
                 this.activeCommunications.remove((Integer) id);  // Remove the ID from the active IDs
                 return event;
             }else{
-                this.INPUT_QUEUE.put(event);  // Put the event in the response queue to be found by other threads
+                this.inputQueue.put(event);  // Put the event in the response queue to be found by other threads
                 waitSynchronousEvent();  // Wait until a synchronous event is the first in the queue
                 return receive(id);  // Recall the method until the request event is found
             }
@@ -165,12 +168,11 @@ public class InterThreadCommunication {
      * @return Generated ID
      */
     private int generateID(){
-        Random random = new Random();  // We can use a non-secure Random as we're not dealing with high sensitive data
-        int id = random.nextInt(0, Integer.MAX_VALUE);
+        int id = this.randomGenerator.nextInt(0, Integer.MAX_VALUE);
 
         // Re-generate the ID if it's the same value as one inside the ActiveIDs ArrayList
         while (this.activeCommunications.contains(id)){
-            id = random.nextInt(0, Integer.MAX_VALUE);
+            id = this.randomGenerator.nextInt(0, Integer.MAX_VALUE);
         }
         return id;
     }
@@ -201,10 +203,10 @@ public class InterThreadCommunication {
 
     /**
      * Add a synchronous event to the list
-     * @param ID The ID of the event
+     * @param id The ID of the event
      */
-    private void addSynchronousEvent(int ID){
-        this.synchronousCommunications.add(ID);
+    private void addSynchronousEvent(int id){
+        this.synchronousCommunications.add(id);
     }
 
 }

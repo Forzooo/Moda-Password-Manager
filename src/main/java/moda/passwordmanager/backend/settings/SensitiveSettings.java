@@ -4,6 +4,7 @@ import moda.passwordmanager.backend.Database;
 import moda.passwordmanager.backend.Helper;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The sensitive settings are stored inside the database file instead of the settings.json file, and are always encrypted
@@ -74,7 +75,7 @@ public class SensitiveSettings extends AbstractSettings {
     }
 
     @Override
-    public ArrayList readListProperty(String propertyPath){
+    public List<Object> readListProperty(String propertyPath){
         return null;
     }
 
@@ -90,7 +91,7 @@ public class SensitiveSettings extends AbstractSettings {
     }
 
     @Override
-    public void writeListProperty(String propertyPath, ArrayList values){
+    public void writeListProperty(String propertyPath, List<Object> values){
 
     }
 }

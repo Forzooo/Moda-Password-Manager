@@ -2,35 +2,21 @@ package moda.passwordmanager.backend;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class DataTests {
 
-    private final static int ID = 1;
-    private final static int ID_NOT_SET = -1;
-    private final static String USERNAME = "username";
-    private final static String EMAIL_ADDRESS = "email@example.com";
-    private final static String PASSWORD = "password";
-    private final static String SERVICE = "service";
-    private final static String ADDITIONAL_DATA = "Data";
-
-    /**
-     * Ensure that when creating a Data object, where the data are passed as a byte array, the ID is set to -1 and the
-     * byte arrays are encoded to UTF-8
-     */
-    @Test
-    void byteConstructor(){
-        Data data = new Data(USERNAME.getBytes(), EMAIL_ADDRESS.getBytes(), PASSWORD.getBytes(), SERVICE.getBytes(),
-                ADDITIONAL_DATA.getBytes());
-        assertEquals(USERNAME, data.getUSERNAME());
-        assertEquals(EMAIL_ADDRESS, data.getEMAIL_ADDRESS());
-        assertEquals(PASSWORD, data.getPASSWORD());
-        assertEquals(SERVICE, data.getSERVICE());
-        assertEquals(ADDITIONAL_DATA, data.getADDITIONAL_DATA());
-        assertEquals(ID_NOT_SET, data.getID());
-    }
+    private static final int ID = 1;
+    private static final int ID_NOT_SET = -1;
+    private static final String USERNAME = "username";
+    private static final String EMAIL_ADDRESS = "email@example.com";
+    private static final String PASSWORD = "password";
+    private static final String SERVICE = "service";
+    private static final String ADDITIONAL_DATA = "Data";
 
     /**
      * Ensure that when creating a Data object without providing an ID, it is set to -1
@@ -38,7 +24,31 @@ class DataTests {
     @Test
     void stringConstructor(){
         Data data = new Data(USERNAME, EMAIL_ADDRESS, PASSWORD, SERVICE, ADDITIONAL_DATA);
-        assertEquals(ID_NOT_SET, data.getID());
+        assertEquals(ID_NOT_SET, data.getId());
+    }
+
+    /**
+     * Ensure that, when creating a Data object with a Map, it instantiates it correctly
+     */
+    @Test
+    void mapConstructor(){
+        EnumMap<Data.Fields, String> map = new EnumMap<>(Data.Fields.class);
+        map.put(Data.Fields.ID, String.valueOf(ID));
+        map.put(Data.Fields.USERNAME, USERNAME);
+        map.put(Data.Fields.EMAIL_ADDRESS, EMAIL_ADDRESS);
+        map.put(Data.Fields.PASSWORD, PASSWORD);
+        map.put(Data.Fields.SERVICE, SERVICE);
+        map.put(Data.Fields.ADDITIONAL_DATA, ADDITIONAL_DATA);
+
+        Data data = new Data(map);
+
+        assertEquals(Integer.class, ((Object) data.getId()).getClass());  // Also assert that the ID is converted from
+                                                                          // String to Integer
+        assertEquals(ID, data.getId());
+        assertEquals(EMAIL_ADDRESS, data.getEmailAddress());
+        assertEquals(PASSWORD, data.getPassword());
+        assertEquals(SERVICE, data.getService());
+        assertEquals(ADDITIONAL_DATA, data.getAdditionalData());
     }
 
     /**
@@ -47,14 +57,14 @@ class DataTests {
     @Test
     void asLinkedHashMap(){
         Data data = new Data(ID, USERNAME, EMAIL_ADDRESS, PASSWORD, SERVICE, ADDITIONAL_DATA);
-        LinkedHashMap<String, String> userData = data.asLinkedHashMap();
+        LinkedHashMap<Data.Fields, String> userData = data.asLinkedHashMap();
 
-        assertEquals(ID, Integer.parseInt(userData.get("id")));
-        assertEquals(USERNAME, userData.get("username"));
-        assertEquals(EMAIL_ADDRESS, userData.get("email_address"));
-        assertEquals(PASSWORD, userData.get("password"));
-        assertEquals(SERVICE, userData.get("service"));
-        assertEquals(ADDITIONAL_DATA, userData.get("additional_data"));
+        assertEquals(ID, Integer.parseInt(userData.get(Data.Fields.ID)));
+        assertEquals(USERNAME, userData.get(Data.Fields.USERNAME));
+        assertEquals(EMAIL_ADDRESS, userData.get(Data.Fields.EMAIL_ADDRESS));
+        assertEquals(PASSWORD, userData.get(Data.Fields.PASSWORD));
+        assertEquals(SERVICE, userData.get(Data.Fields.SERVICE));
+        assertEquals(ADDITIONAL_DATA, userData.get(Data.Fields.ADDITIONAL_DATA));
     }
 
 }

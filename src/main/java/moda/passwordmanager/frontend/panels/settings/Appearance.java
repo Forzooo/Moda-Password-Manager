@@ -85,7 +85,7 @@ public class Appearance extends Section {
     private void changeApplicationTheme(int themeIndex){
         // It's the same index because when the themes are added, they are in the same order as values() ones
         Event request = new Event("set-application-theme", Themes.values()[themeIndex]);
-        getITC().send(request);
+        getItc().send(request);
     }
 
     /**
@@ -94,7 +94,7 @@ public class Appearance extends Section {
      */
     private void changeApplicationLanguage(int languageIndex){
         Event request = new Event("set-application-language", Languages.values()[languageIndex]);
-        getITC().send(request);
+        getItc().send(request);
     }
 
 }

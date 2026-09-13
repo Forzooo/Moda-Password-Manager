@@ -21,10 +21,15 @@ import java.util.ResourceBundle;
  */
 public class Utilities {
 
+    // The utilities class contains only static methods, thus it cannot be instantiated
+    private Utilities() {
+
+    }
+
     /**
      * Perform some initial check on the master password to allow only ones that comply with all the requirements
      * @param masterPassword The master password the user entered
-     * @return Boolean to indicate whether the checks have been passed
+     * @return true if it complies, false otherwise
      */
     public static boolean checkMasterPassword(char[] masterPassword){
         return masterPassword.length != 0;
@@ -173,5 +178,4 @@ public class Utilities {
 
         Toast.show(component, type, message, toastOption);
     }
-
 }

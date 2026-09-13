@@ -55,14 +55,6 @@ method.
 * Data received: -
 * Synchronous: not required
 
-### Reset the service fields
-* Operation: `reset-service-fields`
-* Sender: Backend
-* Description: The service fields stored in the "Show Data" section must be reset
-* Data sent: -
-* Data received: -
-* Synchronous: not required
-
 ### Get Data
 * Operation: `get-data`
 * Sender: Frontend
