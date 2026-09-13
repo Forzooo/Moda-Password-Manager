@@ -116,10 +116,9 @@ public class Backend extends EventListener {
             setDatabasePath(path);
             updateRecentDatabases(path);  // Update the recent databases list with this path
 
-            // As a new database is set, we need to reset the service fields to update the Frontend with the new
-            // data, but updating with initServiceFields happens after the master password has been set,
-            // otherwise the services would be shown as encrypted
-            this.helper.executeInBackground(this::resetServiceFields);
+            // As a new database is set, we would need to reset the service fields to update the Frontend with the new
+            // data but, due to the new configuration of the Application, when don't have to anymore: the database now can
+            // only be set in the Startup dialog which is before the initServiceMapping is called
         });
 
         addOperation("get-database", this::getDatabasePath);
@@ -358,18 +357,6 @@ public class Backend extends EventListener {
         if (!updatedData.isEmpty()){
             Event updateService = new Event("update-service-fields", updatedData);
             getItc().send(updateService);
-        }
-    }
-
-    /**
-     * Reset the service fields data shown in the Frontend
-     */
-    @Deprecated
-    private void resetServiceFields(){
-        // Ensure that the services map is not empty, otherwise resetting the service fields is useless
-        if (!this.servicesMap.isEmpty()){
-            Event reset = new Event("reset-service-fields");
-            getItc().send(reset);
         }
     }
 

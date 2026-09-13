@@ -145,13 +145,13 @@ public class ShowData extends JPanel {
         this.searchBar.getDocument().addDocumentListener(new DocumentListener(){
             @Override
             public void insertUpdate(DocumentEvent e){
-                String searchText = searchBar.getText().toLowerCase().trim();  // Get the input of the user
+                String searchText = searchBarTextFormatter(searchBar.getText());  // Get the input of the user
 
                 // Iterates over the data shown in the JList and filters, by moving the data into the userFilteredData
                 // ArrayList, all the ones that don't match the search bar text
                 for (int i = userDataModel.size()-1; i >= 0; i--){
                     Data data = userDataModel.get(i);
-                    if (!data.getService().toLowerCase().trim().startsWith(searchText)){
+                    if (!searchBarTextFormatter(data.getService()).startsWith(searchText)){
                         userFilteredData.add(data);
                         userDataModel.removeElement(data);
                     }
@@ -165,7 +165,7 @@ public class ShowData extends JPanel {
                 // Iterates over the data filtered and readds it if it now matches the search bar text
                 for (int i = userFilteredData.size()-1; i >= 0; i--){
                     Data data = userFilteredData.get(i);
-                    if (data.getService().toLowerCase().trim().startsWith(searchText)){
+                    if (searchBarTextFormatter(data.getService()).startsWith(searchText)){
                         userDataModel.addElement(data);
                         userFilteredData.remove(data);
                     }
@@ -202,6 +202,39 @@ public class ShowData extends JPanel {
     }
 
     /**
+     * Add a Data object to the JList
+     */
+    public void addData(Data data){
+        // We add the data to the JList directly only if the search bar is not being used or if the service matches
+        // the current filter
+        if (this.searchBar.getText().isBlank() ||
+                searchBarTextFormatter(data.getService()).startsWith(searchBarTextFormatter(this.searchBar.getText()))){
+            this.userDataModel.addElement(data);
+        }else{  // Otherwise we add it to the filtered data and it will be shown when it matches the filer or it becomes
+                // blank
+            this.userFilteredData.add(data);
+        }
+    }
+
+    /**
+     * Remove a Data object from the JList
+     */
+    public void removeData(Data data){
+        // We iterate over the model to find the data that has the same ID
+        // (We cannot use the contains method as the data given by the FrontendEventListener does not contain the
+        // service field)
+        for (int i = 0; i < this.userDataModel.size(); i++){
+            if (data.getId() == this.userDataModel.get(i).getId()){
+                this.userDataModel.removeElementAt(i);
+                return;
+            }
+        }
+
+        // If it hasn't been found in the model we iterate over the filtered data and remove it
+        this.userFilteredData.removeIf(userData -> data.getId() == userData.getId());
+    }
+
+    /**
      * Add a tab to the TabbedPane with the service selected by the user
      */
     private void addDataTab(int id){
@@ -216,8 +249,11 @@ public class ShowData extends JPanel {
         this.dataTabbedPane.setSelectedComponent(userDataTab);  // Set the tab to be shown to be the one created
     }
 
-    public DefaultListModel<Data> getUserDataModel() {
-        return this.userDataModel;
+    /**
+     * Format a text to match the requirements of the search bar filter: the text must be in lower case and trimmed
+     */
+    private String searchBarTextFormatter(String text){
+        return text.toLowerCase().trim();
     }
 
     /**

@@ -28,7 +28,6 @@ public class FrontendEventListener extends EventListener {
     private void initHandler(){
         addOperation("exception-raised", this::exceptionRaised);
         addOperation("update-service-fields", this::updateServiceFields);
-        addOperation("reset-service-fields", this::resetServiceFields);
         addOperation("google-drive-synchronization-conflicts", this::openGoogleDriveSynchronizationDialog);
     }
 
@@ -64,24 +63,14 @@ public class FrontendEventListener extends EventListener {
         // The updated service data from the backend
         ArrayList<Data> backendData = (ArrayList<Data>) getRequestData().getFirst();
 
-        // Get the User Data and its model to update them with the changes
-        DefaultListModel<Data> userDataModel = this.showData.getUserDataModel();
-
         for (Data data : backendData){
             // If the service field is empty that means the record has been deleted, and it has to be removed from the list
             if (data.getService().isBlank()){
-                userDataModel.removeElement(data);
+                this.showData.removeData(data);
             }else{  // Otherwise add/update the Map object with the ID and its service
-                userDataModel.addElement(data);
+                this.showData.addData(data);
             }
         }
-    }
-
-    /**
-     * Reset the service data
-     */
-    private void resetServiceFields(){
-        this.showData.getUserDataModel().clear();
     }
 
     /**
