@@ -82,55 +82,35 @@ public class Backend extends EventListener {
         addOperation("set-master-password", () -> {
             setMasterPassword((char[]) getRequestData().getFirst());
 
-            // We need to store the result of testMasterPassword to initialize the ServiceMapping
-            boolean test = testMasterPassword();
-            if (test){
-                // All these operations require the master password to be set
-                this.helper.executeInBackground(this::initServiceMapping);
-                this.helper.executeInBackground(this.sensitiveSettings::init);
-                this.helper.executeInBackground(this::startGoogleDrive);  // Initialize the connection with Google Drive
-                                                                          // only if enabled by the user
-
-                // If the version control on startup is enabled then we check it in the background and send the result
-                // to the FrontendEventListener
-                if (this.settings.readBooleanProperty("check_version_on_startup")){
-                    this.helper.executeInBackground(() -> {
-                        Event checkVersionEvent = new Event("check-new-version");
-                        String latestVersion = checkNewVersion();
-
-                        if (latestVersion.equals(Application.getVersion())){
-                            checkVersionEvent.addData(false);
-                        }else{  // If the version is not the latest we sent the new version number too
-                            checkVersionEvent.addData(true);
-                            checkVersionEvent.addData(latestVersion);
-                        }
-
-                        getItc().send(checkVersionEvent);
-                    });
-                }
+            // By calling the testMasterPassword method we add the data to the response to let the frontend know whether
+            // the master password entered is right or not
+            // If it is we call postMasterPasswordInitializationRoutines to execute some methods that required the
+            // master password to be set before being called
+            if (testMasterPassword()){
+                postMaterPasswordInitializationRoutines();
             }
         });
 
         // Save the data and update the service fields
-        addOperation("add-data", () -> {
+        addLockedOperation("add-data", () -> {
             saveData((Data) getRequestData().getFirst());
             this.helper.executeInBackground(this::updateServiceFields);
         });
-        addOperation("get-data", this::getData);
+        addLockedOperation("get-data", this::getData);
 
         // Delete a record from the database and update the service fields
-        addOperation("delete-data", () -> {
+        addLockedOperation("delete-data", () -> {
             deleteSingleData((int) getRequestData().getFirst());
             this.helper.executeInBackground(this::updateServiceFields);
         });
 
         // Change a data and update the service fields
-        addOperation("update-data", () -> {
+        addLockedOperation("update-data", () -> {
             updateData((Data) getRequestData().getFirst());
             this.helper.executeInBackground(this::updateServiceFields);
         });
 
-        addOperation("decrypt-data", () -> addResponseData(this.helper.decryptData((Data) getRequestData().getFirst())));
+        addLockedOperation("decrypt-data", () -> addResponseData(this.helper.decryptData((Data) getRequestData().getFirst())));
 
         addOperation("generate-string", this::generateString);
         addOperation("configure-string-generation", this::configureStringGeneration);
@@ -148,11 +128,11 @@ public class Backend extends EventListener {
 
         addOperation("get-database", this::getDatabasePath);
         addOperation("get-string-generation-configuration", this::getStringGenerationConfiguration);
-        addOperation("update-master-password", this::updateMasterPassword);
+        addLockedOperation("update-master-password", this::updateMasterPassword);
 
 
-        addOperation("get-google-drive", this::getGoogleDrive);
-        addOperation("set-google-drive", () -> {
+        addLockedOperation("get-google-drive", this::getGoogleDrive);
+        addLockedOperation("set-google-drive", () -> {
             // If the first data is set to true, then the user wants to enable Google Drive
             if (Boolean.parseBoolean(getRequestData().getFirst().toString())){
                 authenticateGoogleDrive();
@@ -162,20 +142,20 @@ public class Backend extends EventListener {
         });
 
         // Synchronize with Google Drive and update the service fields
-        addOperation("google-drive-synchronize", () -> {
+        addLockedOperation("google-drive-synchronize", () -> {
             synchronizeGoogleDrive();
             this.helper.executeInBackground(this::updateServiceFields);
         });
 
-        addOperation("google-drive-synchronization-conflicts-solved", () -> {
+        addLockedOperation("google-drive-synchronization-conflicts-solved", () -> {
             this.googleDrive.setConflictsSolved();
 
             // After the conflicts are solved, we can resynchronize
             this.googleDrive.sync(this.helper.getDatabasePath(), this.database.getName());
         });
 
-        addOperation("get-google-drive-automatic-synchronization", this::getGoogleDriveSynchronization);
-        addOperation("set-google-drive-automatic-synchronization", () -> {
+        addLockedOperation("get-google-drive-automatic-synchronization", this::getGoogleDriveSynchronization);
+        addLockedOperation("set-google-drive-automatic-synchronization", () -> {
             if (Boolean.parseBoolean((getRequestData().getFirst().toString()))){
                 enableGoogleDriveAutomaticSynchronization();
             }else{
@@ -290,6 +270,59 @@ public class Backend extends EventListener {
         } catch (RuntimeException e){
             addResponseData(false);
             return false;
+        }
+    }
+
+    /**
+     * Executes in background all the initialization methods that required the master password to be set
+     */
+    private void postMaterPasswordInitializationRoutines(){
+        this.helper.executeInBackground(() -> {
+            this.sensitiveSettings.init();
+
+            // After the sensitive settings are initialized we can unlock all the Google Drive operations that depend on it
+            // them
+            unlockOperation("get-google-drive");
+            unlockOperation("set-google-drive");
+            unlockOperation("google-drive-synchronize");
+            unlockOperation("google-drive-synchronization-conflicts-solved");
+            unlockOperation("get-google-drive-automatic-synchronization");
+            unlockOperation("set-google-drive-automatic-synchronization");
+        });
+
+        // After the master password has been set we can unlock all the operations that depend on it
+        this.helper.executeInBackground(() -> {
+            unlockOperation("add-data");
+            unlockOperation("get-data");
+            unlockOperation("delete-data");
+            unlockOperation("update-data");
+            unlockOperation("decrypt-data");
+            unlockOperation("update-master-password");
+        });
+
+        this.helper.executeInBackground(3, this::initServiceMapping);
+        this.helper.executeInBackground(this::startGoogleDrive);  // Initialize the connection with Google Drive
+        // only if enabled by the user
+
+        // If the version control on startup is enabled then we check it in the background and send the result
+        // to the FrontendEventListener
+        // Moreover, we delay it by 30 seconds to allow the frontend to be initialized correctly, otherwise
+        // if it is sent without waiting it can lead to a deadlock on the frontend thread as it's waiting for
+        // responses by the backend
+        if (this.settings.readBooleanProperty("check_version_on_startup")){
+            this.helper.executeInBackground(30, () -> {
+                Event checkVersionEvent = new Event("check-new-version");
+                String latestVersion = checkNewVersion();
+
+                if (latestVersion.equals(Application.getVersion())){
+                    checkVersionEvent.addData(false);
+                }else{  // If the version is not the latest we sent the new version number too
+                    checkVersionEvent.addData(true);
+                    checkVersionEvent.addData(latestVersion);
+                }
+
+                getItc().send(checkVersionEvent);
+            });
         }
     }
 

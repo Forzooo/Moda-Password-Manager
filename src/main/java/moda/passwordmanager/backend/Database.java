@@ -13,7 +13,7 @@ public class Database {
     private static final String FILE_EXTENSION = ".modb";  // The extension of any password manager database
 
     private static final String DATA_TABLE = "data";  // The table that contains the Data objects
-    private static final String GROUP_TABLE = "groups";  // The table that contains the Groups
+    private static final String DATA_GROUPS_TABLE = "data_groups";  // The table that contains the Groups
 
     /**
     The table that contains the sensitive settings of the application, which cannot be stored on the settings.json file.
@@ -72,7 +72,7 @@ public class Database {
             Statement query = this.connection.createStatement();  // Define a new query
 
             query.execute(
-                    "CREATE TABLE IF NOT EXISTS "+Database.GROUP_TABLE+" (" +
+                    "CREATE TABLE IF NOT EXISTS "+Database.DATA_GROUPS_TABLE +" (" +
                             "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE, " +
                             "name TEXT NOT NULL" +
                         ");"
@@ -87,7 +87,7 @@ public class Database {
                             "service TEXT NOT NULL, " +
                             "additional_data TEXT, " +
                             "group_id INTEGER, " +
-                            "FOREIGN KEY(group_id) REFERENCES "+Database.GROUP_TABLE+"(id)" +
+                            "FOREIGN KEY(group_id) REFERENCES "+Database.DATA_GROUPS_TABLE +"(id)" +
                         ");"
             );
 
