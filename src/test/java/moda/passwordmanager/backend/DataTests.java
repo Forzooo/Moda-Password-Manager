@@ -3,7 +3,6 @@ package moda.passwordmanager.backend;
 import org.junit.jupiter.api.Test;
 
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

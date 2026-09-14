@@ -172,10 +172,10 @@ public class Utilities {
     /**
      * Show a Toast (notification) in the bottom right section of the application
      */
-    public static void showToast(Component component, Toast.Type type, String message){
+    public static void showToast(Component owner, Toast.Type type, String message){
         ToastOption toastOption = Toast.createOption();
         toastOption.getLayoutOption().setLocation(ToastLocation.BOTTOM_TRAILING);
 
-        Toast.show(component, type, message, toastOption);
+        Toast.show(owner, type, message, toastOption);
     }
 }
