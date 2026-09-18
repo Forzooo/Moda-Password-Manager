@@ -14,7 +14,6 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.function.IntConsumer;
 
@@ -218,8 +217,13 @@ public class ShowData extends JPanel {
                 this.userDataModel.addElement(data);
             }else{
                 this.userDataModel.set(index, data);
-            }
 
+                // If the tab of the data is open, then we have to update its title too
+                int dataTabIndex = indexOfDataTab(data.getId());
+                if (dataTabIndex != -1){
+                    this.dataTabbedPane.setTitleAt(dataTabIndex, data.getService());
+                }
+            }
         }else{  // Otherwise we add it to the filtered data and it will be shown when it matches the filer or it becomes
                 // blank
 
@@ -229,6 +233,12 @@ public class ShowData extends JPanel {
                 this.userFilteredData.add(data);
             }else{
                 this.userFilteredData.set(index, data);
+
+                // If the tab of the data is open, then we have to update its title too
+                int dataTabIndex = indexOfDataTab(data.getId());
+                if (dataTabIndex != -1){
+                    this.dataTabbedPane.setTitleAt(dataTabIndex, data.getService());
+                }
             }
         }
     }
