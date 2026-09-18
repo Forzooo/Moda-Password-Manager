@@ -11,9 +11,10 @@ public class Database {
 
     private String path;  // Path of the database current in use
     private static final String FILE_EXTENSION = ".modb";  // The extension of any password manager database
+    private static final int PRAGMA_USER_VERSION = 1;  // The current version of the schema of the database
+                                                       // To know the history of the versions check the docs
 
     private static final String DATA_TABLE = "data";  // The table that contains the Data objects
-    private static final String DATA_GROUPS_TABLE = "data_groups";  // The table that contains the Groups
 
     /**
     The table that contains the sensitive settings of the application, which cannot be stored on the settings.json file.
@@ -25,9 +26,27 @@ public class Database {
 
     public Database(String path){
         this.path = path;  // Set the path of the database
+        init();  // Initializes the database
+    }
 
-        initConnection();  // Connect to the database
-        createTables();  // Create the tables of the Vault
+    /**
+     * Initialize the database
+     */
+    private void init(){
+        initConnection();  // Start the connection
+
+        // We have to check whether the database has just been created
+        if (isNew()){
+            createTables();  // Add all the tables to the database
+            updateToLatestVersion();  // Update the version of the database to the latest one
+        }
+
+        // We check the version of the database to upgrade it if it's in an older version
+        if (!isLatestVersion()){
+            createTables();  // Create the new tables
+            updateFromOldVersion();  // Update the old tables to the latest schema
+            updateToLatestVersion();  // Update the version of the database to the latest one
+        }
     }
 
     /**
@@ -53,6 +72,16 @@ public class Database {
     }
 
     /**
+     * Change the database in use
+     * @param databasePath The path of the new database to use
+     */
+    public void change(String databasePath){
+        closeConnection();  // Close the previous connection
+        this.path = databasePath; // Set the new path of the database
+        init();  // Reinitialize the connection with the database
+    }
+
+    /**
      * Closes the connection with the database and deletes it from the file system
      */
     public void delete(){
@@ -60,47 +89,6 @@ public class Database {
         try {
             Files.delete(Path.of(this.path));
         } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * Create the tables of the database, if they not exist already
-     */
-    private void createTables(){
-        try {
-            Statement query = this.connection.createStatement();  // Define a new query
-
-            query.execute(
-                    "CREATE TABLE IF NOT EXISTS "+Database.DATA_GROUPS_TABLE +" (" +
-                            "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE, " +
-                            "name TEXT NOT NULL" +
-                        ");"
-            );
-
-            query.execute(
-                    "CREATE TABLE IF NOT EXISTS "+Database.DATA_TABLE+" (" +
-                            "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                            "username TEXT, " +
-                            "email_address TEXT, " +
-                            "password TEXT, " +
-                            "service TEXT NOT NULL, " +
-                            "additional_data TEXT, " +
-                            "group_id INTEGER, " +
-                            "FOREIGN KEY(group_id) REFERENCES "+Database.DATA_GROUPS_TABLE +"(id)" +
-                        ");"
-            );
-
-            query.execute(
-                    "CREATE TABLE IF NOT EXISTS "+Database.SENSITIVE_SETTINGS_TABLE +" (" +
-                            "propertyPath TEXT PRIMARY KEY NOT NULL UNIQUE," +
-                            "value TEXT NOT NULL" +  // All the values are treated as text, and will be cast by Sensitive
-                                                     // Settings class
-                        ");"
-            );
-
-            query.close();
-        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
@@ -130,14 +118,105 @@ public class Database {
     }
 
     /**
-     * Change the database in use
-     * @param databasePath The path of the new database to use
+     * Checks whether the database has just been created
      */
-    public void change(String databasePath){
-        closeConnection();  // Close the previous connection
-        this.path = databasePath; // Set the new path of the database
-        initConnection();  // Reinitialize the connection
-        createTables();  // Create the table inside the database
+    private boolean isNew(){
+        try {
+            Statement query = this.connection.createStatement();
+
+            // To check if the database is new we can count the number of tables that are inside the database
+            // and are not sqlite ones
+            ResultSet resultSet = query.executeQuery(
+                    "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite%';"
+            );
+
+            int numberOfTables = resultSet.getInt(1);
+
+            query.close();
+
+            return numberOfTables == 0;  // If it's equal to 0 then it's new
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Checks whether the database is updated to the latest version
+     */
+    private boolean isLatestVersion(){
+        try {
+            Statement query = this.connection.createStatement();
+
+            // To know the version we check it from the PRAGMA user_version contained in the database
+            ResultSet resultSet = query.executeQuery("PRAGMA user_version");
+
+            int userVersion = resultSet.getInt(1);
+            query.close();
+
+            return userVersion == PRAGMA_USER_VERSION;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Create the tables of the database, if they not exist already
+     */
+    private void createTables(){
+        try {
+            Statement query = this.connection.createStatement();  // Define a new query
+
+            query.execute(
+                    "CREATE TABLE IF NOT EXISTS "+Database.DATA_TABLE+" (" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                            "username TEXT, " +
+                            "email_address TEXT, " +
+                            "password TEXT, " +
+                            "service TEXT NOT NULL, " +
+                            "additional_data TEXT" +
+                            ");"
+            );
+
+            query.execute(
+                    "CREATE TABLE IF NOT EXISTS "+Database.SENSITIVE_SETTINGS_TABLE +" (" +
+                            "propertyPath TEXT PRIMARY KEY NOT NULL UNIQUE," +
+                            "value TEXT NOT NULL" +  // All the values are treated as text, and will be cast by Sensitive
+                            // Settings class
+                            ");"
+            );
+
+            query.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void updateFromOldVersion(){
+        try {
+            Statement query = this.connection.createStatement();  // Define a new query
+
+            query.execute("INSERT INTO " + Database.DATA_TABLE + " SELECT * FROM moda");
+
+            query.execute("DROP TABLE moda");
+
+            query.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Update the database version to the latest one
+     */
+    private void updateToLatestVersion(){
+        try {
+            Statement query = this.connection.createStatement();
+            query.execute("PRAGMA user_version="+PRAGMA_USER_VERSION);  // We set the value of the PRAGMA user_version
+                                                                            // to the latest one
+            query.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
