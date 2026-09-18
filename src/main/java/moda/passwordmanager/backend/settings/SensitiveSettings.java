@@ -3,7 +3,6 @@ package moda.passwordmanager.backend.settings;
 import moda.passwordmanager.backend.Database;
 import moda.passwordmanager.backend.Helper;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,12 +10,12 @@ import java.util.List;
  */
 public class SensitiveSettings extends AbstractSettings {
 
-    private final Database DATABASE;
-    private final Helper HELPER;
+    private final Database database;
+    private final Helper helper;
 
     public SensitiveSettings(Database database, Helper helper){
-        this.DATABASE = database;
-        this.HELPER = helper;
+        this.database = database;
+        this.helper = helper;
 
     }
 
@@ -31,10 +30,10 @@ public class SensitiveSettings extends AbstractSettings {
      * Add all the record inside the table with their default values
      */
     private void initRecords(){
-        this.DATABASE.addSensitiveSettingsRecord("google_drive/enabled", this.HELPER.encrypt("false"));
-        this.DATABASE.addSensitiveSettingsRecord("google_drive/credentials", this.HELPER.encrypt(""));
-        this.DATABASE.addSensitiveSettingsRecord("google_drive/stored_credentials", this.HELPER.encrypt(""));
-        this.DATABASE.addSensitiveSettingsRecord("google_drive/automatic_synchronization", this.HELPER.encrypt("false"));
+        this.database.addSensitiveSettingsRecord("google_drive/enabled", this.helper.encrypt("false"));
+        this.database.addSensitiveSettingsRecord("google_drive/credentials", this.helper.encrypt(""));
+        this.database.addSensitiveSettingsRecord("google_drive/stored_credentials", this.helper.encrypt(""));
+        this.database.addSensitiveSettingsRecord("google_drive/automatic_synchronization", this.helper.encrypt("false"));
     }
 
     /**
@@ -43,9 +42,9 @@ public class SensitiveSettings extends AbstractSettings {
      */
     @Override
     public String readStringProperty(String propertyPath){
-        String encryptedValue = this.DATABASE.getSensitiveSettingsValue(propertyPath);
+        String encryptedValue = this.database.getSensitiveSettingsValue(propertyPath);
 
-        return this.HELPER.decrypt(encryptedValue);
+        return this.helper.decrypt(encryptedValue);
     }
 
     /**
@@ -54,8 +53,8 @@ public class SensitiveSettings extends AbstractSettings {
      */
     @Override
     public int readIntProperty(String propertyPath){
-        String encryptedValue = this.DATABASE.getSensitiveSettingsValue(propertyPath);
-        String decryptedValue = this.HELPER.decrypt(encryptedValue);
+        String encryptedValue = this.database.getSensitiveSettingsValue(propertyPath);
+        String decryptedValue = this.helper.decrypt(encryptedValue);
 
         return Integer.parseInt(decryptedValue);  // All the values inside the database are treated as TEXT, so it must
                                                   // be parsed to Integer
@@ -67,8 +66,8 @@ public class SensitiveSettings extends AbstractSettings {
      */
     @Override
     public boolean readBooleanProperty(String propertyPath){
-        String encryptedValue = this.DATABASE.getSensitiveSettingsValue(propertyPath);
-        String decryptedValue = this.HELPER.decrypt(encryptedValue);
+        String encryptedValue = this.database.getSensitiveSettingsValue(propertyPath);
+        String decryptedValue = this.helper.decrypt(encryptedValue);
 
         return Boolean.parseBoolean(decryptedValue);  // All the values inside the database are treated as TEXT, so it must
                                                       // be parsed to Boolean
@@ -76,7 +75,7 @@ public class SensitiveSettings extends AbstractSettings {
 
     @Override
     public List<Object> readListProperty(String propertyPath){
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -86,8 +85,8 @@ public class SensitiveSettings extends AbstractSettings {
      */
     @Override
     public void writeProperty(String propertyPath, Object value){
-        String encryptedValue = this.HELPER.encrypt(value.toString());
-        this.DATABASE.updateSensitiveSettingsValue(propertyPath, encryptedValue);
+        String encryptedValue = this.helper.encrypt(value.toString());
+        this.database.updateSensitiveSettingsValue(propertyPath, encryptedValue);
     }
 
     @Override

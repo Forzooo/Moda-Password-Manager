@@ -63,6 +63,15 @@ public class Helper {
         this.backgroundExecutor.schedule(method, 0, TimeUnit.SECONDS);
     }
 
+    /**
+     * Schedule a method to be executed in the background
+     * @param delay The time to wait before executing the method (in seconds)
+     * @param method The method to be executed
+     */
+    public void executeInBackground(int delay, Runnable method){
+        this.backgroundExecutor.schedule(method, delay, TimeUnit.SECONDS);
+    }
+
     /** Schedule a method to be executed in the background
      * @param method The method to be executed
      * @param period The period that has to pass before executing again the method

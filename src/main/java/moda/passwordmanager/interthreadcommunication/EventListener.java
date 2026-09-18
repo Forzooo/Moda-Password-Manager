@@ -1,7 +1,9 @@
 package moda.passwordmanager.interthreadcommunication;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 /**
  * The EventListener class provides the base operations for Events handling, that any EventListener class needs to
@@ -24,11 +26,18 @@ public abstract class EventListener extends Thread {
      */
     private final HashMap<String, Runnable> handlerMap;
 
+    private final ArrayList<String> lockedOperations;
+    private final Semaphore lockedOperation;
+    private static final int LOCKED_PERMITS = 0;
+
     protected EventListener(InterThreadCommunication itc){
         super();
         this.itc = itc;
         this.runFlag = true;
         this.handlerMap = new HashMap<>();
+
+        this.lockedOperations = new ArrayList<>();
+        this.lockedOperation = new Semaphore(LOCKED_PERMITS);
 
         initDefaultOperations();
     }
@@ -38,6 +47,9 @@ public abstract class EventListener extends Thread {
         this.itc = itc;
         this.runFlag = true;
         this.handlerMap = new HashMap<>();
+
+        this.lockedOperations = new ArrayList<>();
+        this.lockedOperation = new Semaphore(LOCKED_PERMITS);
 
         initDefaultOperations();
     }
@@ -49,6 +61,15 @@ public abstract class EventListener extends Thread {
         while (this.runFlag){
             this.request = this.itc.receive();  // Wait for a request
 
+            // If the operation requested is a locked one the event listener must wait until it is unblocked
+            if (this.lockedOperations.contains(this.request.getOperation())){
+                try {
+                    this.lockedOperation.acquire();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
             // If the sequence number of the event is 2 or higher, it means that the event is response to a request,
             // thus we can discard it
             if (this.request.getSequenceNumber() >= 2){
@@ -57,14 +78,10 @@ public abstract class EventListener extends Thread {
 
             // Create the response to send to the other queue, where the name of the operation is always the same
             makeResponse(this.request, this.request.getOperation());
-            handleRequest(this.request);  // Handle the operation requested
+            handleRequest(this.request);  // Handle the operation requested (throws an exception if an unknown event is found)
 
-            // It can happen that the operation requested is not in the handling map, thus it is recognized as
-            // an unknown event, and the data has already been reset
-            if (this.response != null){
-                this.itc.send(this.response);  // Send the response to the other queue
-                resetResponse();  // Reset the data to send for the next Event
-            }
+            this.itc.send(this.response);  // Send the response to the other queue
+            resetResponse();  // Reset the data to send for the next Event
         }
     }
 
@@ -109,6 +126,27 @@ public abstract class EventListener extends Thread {
             throw new OverriddenOperationException("The operation " + operation + " already exists in the handler map.");
         }
         this.handlerMap.put(operation, method);
+    }
+
+    /**
+     * Add a locked operation to the handler. Received locked operations set the EventListener on sleep until they are
+     * unblocked by another thread
+     */
+    protected void addLockedOperation(String operation, Runnable method){
+        addOperation(operation, method);
+        this.lockedOperations.add(operation);  // It has to be added after the addOperation as it checks whether the
+                                               // operation is an overridden one
+    }
+
+    /**
+     * Unlocks an operation and also wakes up the EventListener if it was on sleep due to that operation
+     */
+    protected void unlockOperation(String operation){
+        if (this.request.getOperation().equals(operation)){
+            this.lockedOperation.release();
+        }
+
+        this.lockedOperations.remove(operation);
     }
 
     /**
