@@ -14,6 +14,8 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.function.IntConsumer;
 
 public class ShowData extends JPanel {
@@ -209,11 +211,52 @@ public class ShowData extends JPanel {
         // the current filter
         if (this.searchBar.getText().isBlank() ||
                 searchBarTextFormatter(data.getService()).startsWith(searchBarTextFormatter(this.searchBar.getText()))){
-            this.userDataModel.addElement(data);
+
+            // We have to check whether the data already exists, in that case we replace it instead of adding it
+            int index = indexOfId(data.getId(), this.userDataModel);
+            if (index == -1){
+                this.userDataModel.addElement(data);
+            }else{
+                this.userDataModel.set(index, data);
+            }
+
         }else{  // Otherwise we add it to the filtered data and it will be shown when it matches the filer or it becomes
                 // blank
-            this.userFilteredData.add(data);
+
+            // We have to check whether the data already exists, in that case we replace it instead of adding it
+            int index = indexOfId(data.getId(), this.userFilteredData);
+            if (index == -1){
+                this.userFilteredData.add(data);
+            }else{
+                this.userFilteredData.set(index, data);
+            }
         }
+    }
+
+    /**
+     * Returns the index of the ID inside a Data List. It returns -1 if it does not exist
+     */
+    private int indexOfId(int id, List<Data> list){
+        for (int i = 0; i < list.size(); i++){
+            if (id == list.get(i).getId()){
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * Returns the index of the ID inside a Data ListModel. It returns -1 if it does not exist
+     */
+    private int indexOfId(int id, ListModel<Data> model){
+        for (int i = 0; i < model.getSize(); i++){
+            if (id == model.getElementAt(i).getId()){
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     /**
