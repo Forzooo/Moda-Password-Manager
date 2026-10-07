@@ -265,7 +265,7 @@ public class Database {
             // As the property field of the Sensitive Settings table is unique, if the SensitiveSettings class tries
             // to readd the same property, it is automatically skipped
             PreparedStatement query = this.connection.prepareStatement(
-                    "INSERT OR IGNORE INTO "+Database.SENSITIVE_SETTINGS_TABLE+" (propertyPath, value) VALUES (?, ?) ;"
+                    "INSERT INTO "+Database.SENSITIVE_SETTINGS_TABLE+" (propertyPath, value) VALUES (?, ?) ;"
             );
 
             query.setString(1, propertyPath);
@@ -448,6 +448,24 @@ public class Database {
         }
     }
 
+    public String getFirstSensitiveSettingRecord(){
+        try {
+            PreparedStatement query = this.connection.prepareStatement(
+                    "SELECT value FROM " + SENSITIVE_SETTINGS_TABLE + " LIMIT 1"
+            );
+
+            ResultSet result = query.executeQuery();
+
+            String setting = result.getString("value");
+
+            query.close();
+            result.close();
+
+            return setting;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     /**
      * Retrieve each service field with its ID from the Data table
@@ -540,6 +558,31 @@ public class Database {
             resultSet.close();
 
             return records;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Count the number of sensitive settings of a property
+     * @param property The property is the root of the subproperties (ex. google_drive that has 4 subproperties)
+     */
+    public int countSensitiveSettingsRecords(String property){
+        property += "%";  // We have to add a % for the SQL LIKE operator to find propertyPath that start with the root
+        try {
+            PreparedStatement query = this.connection.prepareStatement(
+                    "SELECT COUNT(*) FROM " + SENSITIVE_SETTINGS_TABLE + " WHERE propertyPath LIKE ?"
+            );
+
+            query.setString(1, property);
+
+            ResultSet resultSet = query.executeQuery();
+            int result = resultSet.getInt(1);  // Retrieve the result of the COUNT function
+
+            query.close();
+            resultSet.close();
+
+            return result;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

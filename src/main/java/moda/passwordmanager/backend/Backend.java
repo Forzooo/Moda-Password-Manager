@@ -252,20 +252,21 @@ public class Backend extends EventListener {
      * @return Returns a boolean value to locally indicate whether the master password is right
      */
     private boolean testMasterPassword(){
-        // TODO. use the sensitive settings instead
-        Data testData = this.database.getDataFirstServiceField();  // Get the first service to try to decrypt it
+        // Get the first sensitive setting to try to decrypt it
+        // Note that we cannot use a record from the Data table as they may not have been added yet, even though
+        // the sensitive settings already exist with a defined master password
+        String testSetting = this.database.getFirstSensitiveSettingRecord();
 
-        // If the service is null, it means there isn't data in it yet, thus the master password is always correct
-        if (testData.getService() == null){
+        // If the setting is null, it means the sensitive settings table hasn't been created yet, thus the master password
+        // is always correct
+        if (testSetting == null){
             addResponseData(true);
             return true;
         }
 
-        byte[] service = Helper.decodeBase64(testData.getService());  // Decode from base64
-
         // Try to decrypt it and add the data to the event based on whether an exception has been thrown
         try{
-            this.cryptography.decrypt(service);
+            this.helper.decrypt(testSetting);
             addResponseData(true);
             return true;
         } catch (RuntimeException e){
