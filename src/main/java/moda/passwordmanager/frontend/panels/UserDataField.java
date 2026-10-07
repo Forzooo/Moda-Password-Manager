@@ -1,6 +1,7 @@
 package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.frontend.Utilities;
+import raven.modal.Toast;
 
 import javax.swing.*;
 import java.awt.*;
@@ -64,7 +65,8 @@ public class UserDataField extends JPanel {
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             StringSelection dataToCopy = new StringSelection(dataField.getText());  // Create a Transferable
             clipboard.setContents(dataToCopy, dataToCopy);  // Copy the transferable
-            JOptionPane.showMessageDialog(getRootPane(), Utilities.getLocaleString("Moda.UserDataField.copiedDataMessageDialog"));
+
+            Utilities.showToast(getRootPane(), Toast.Type.INFO, Utilities.getLocaleString("Moda.UserDataField.copiedDataMessageDialog"));
         };
     }
 
