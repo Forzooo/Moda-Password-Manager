@@ -226,7 +226,6 @@ public class ShowData extends JPanel {
             }
         }else{  // Otherwise we add it to the filtered data and it will be shown when it matches the filer or it becomes
                 // blank
-
             // We have to check whether the data already exists, in that case we replace it instead of adding it
             int index = indexOfId(data.getId(), this.userFilteredData);
             if (index == -1){

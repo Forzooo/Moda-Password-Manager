@@ -3,6 +3,7 @@ package moda.passwordmanager.frontend.panels.settings;
 import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
+import raven.modal.Toast;
 
 import javax.swing.*;
 import java.util.Arrays;
@@ -88,15 +89,18 @@ public class Data extends Section {
      */
     private void updateMasterPassword(){
         // Retrieve the master password from the password field
-        String masterPassword = Arrays.toString(this.updateMasterPasswordTextField.getPassword());
+        char[] masterPassword = this.updateMasterPasswordTextField.getPassword();
 
         // Perform some initial conditions check on the master password
-        if (!Utilities.checkMasterPassword(masterPassword.toCharArray())){
+        if (!Utilities.checkMasterPassword(masterPassword)){
+            Utilities.showToast(getParent(), Toast.Type.ERROR, "The new master password does not meet the minimum"
+                    + " requirements.");
             return;
         }
 
-        Event event = new Event("update-master-password", masterPassword.toCharArray());
+        Event event = new Event("update-master-password", masterPassword);
         getItc().request(event);  // Wait for the end of the operations in the backend
+        Utilities.showToast(getParent(), Toast.Type.SUCCESS, "The master password has been changed.");
     }
 
     /**

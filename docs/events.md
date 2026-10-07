@@ -42,7 +42,7 @@ method.
 ### Update the Master Password
 * Operation: `update-master-password`
 * Sender: Frontend
-* Description: Updates the master password with a new one, reencrypting the data of the database
+* Description: Updates the master password with a new one, reencrypting the tables of the database
 * Data sent: _char[]_ new master password
 * Data received: -
 * Synchronous: required

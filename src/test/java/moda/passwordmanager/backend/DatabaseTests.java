@@ -203,7 +203,7 @@ class DatabaseTests {
      * Ensure that the databases changes all the records inside it
      */
     @Test
-    void changeDataRecords(){
+    void updateDataRecords(){
         this.database.addDataRecord(TEST_DATA);
         this.database.addDataRecord(TEST_DATA_2);
 
@@ -211,7 +211,7 @@ class DatabaseTests {
         records.add(UPDATED_TEST_DATA);
         records.add(UPDATED_TEST_DATA_2);
 
-        this.database.changeDataRecords(records);
+        this.database.updateDataRecords(records);
 
         List<Data> updatedRecords = this.database.getDataRecords();
 

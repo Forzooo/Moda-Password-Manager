@@ -23,7 +23,7 @@ public class SensitiveSettings extends AbstractSettings {
      * The Sensitive Settings must be initialized separately as they require the master password to be used
      */
     public void init(){
-        initRecords();
+        initRecords();  // TODO. Avoid encrypting (adding) the four sensitive settings even if they already exists
     }
 
     /**

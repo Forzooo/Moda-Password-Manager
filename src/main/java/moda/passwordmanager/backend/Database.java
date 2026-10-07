@@ -5,7 +5,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Database {
 
@@ -191,6 +193,9 @@ public class Database {
         }
     }
 
+    /**
+     * Update from an old version of the database schema to the latest one
+     */
     private void updateFromOldVersion(){
         try {
             Statement query = this.connection.createStatement();  // Define a new query
@@ -513,10 +518,37 @@ public class Database {
     }
 
     /**
-     * Change all the records inside the database
-     * @param records The new records
+     * Retrieve all the records inside the Sensitive Settings table
+     * @return Map containing propertyPath->value records
      */
-    public void changeDataRecords(List<Data> records){
+    public Map<String, String> getSensitiveSettingsRecords(){
+        HashMap<String, String> records = new HashMap<>();
+
+        try {
+            Statement query = this.connection.createStatement();
+
+            // Read all the records
+            ResultSet resultSet = query.executeQuery("SELECT * FROM " + Database.SENSITIVE_SETTINGS_TABLE);
+
+            // Iterate over all the records and put them in the hashmap
+            while (resultSet.next()){
+                records.put(resultSet.getString("propertyPath"), resultSet.getString("value"));
+            }
+
+            // Close the query
+            query.close();
+            resultSet.close();
+
+            return records;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Update all the data records
+     */
+    public void updateDataRecords(List<Data> records){
         try {
             PreparedStatement query = this.connection.prepareStatement(
                     "UPDATE "+Database.DATA_TABLE +" SET username=?, email_address=?, password=?, service=?," +
@@ -541,9 +573,35 @@ public class Database {
             query.close();  // Close the query after the execution
 
             this.connection.setAutoCommit(true);  // Set again the auto commit to true
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Update all the sensitive records
+     */
+    public void updateSensitiveSettingsRecords(Map<String, String> records){
+        try {
+            PreparedStatement query = this.connection.prepareStatement(
+                    "UPDATE " + Database.SENSITIVE_SETTINGS_TABLE + " SET value=? WHERE propertyPath=?;");
+
+            // Temporarily set the auto commit to false as we want to execute in a batch group
+            this.connection.setAutoCommit(false);
+
+            for (Map.Entry<String, String> sensitiveSetting : records.entrySet()){
+                query.setString(1, sensitiveSetting.getValue());
+                query.setString(2, sensitiveSetting.getKey());
+                query.addBatch();  // Add the data to the set of the queries to execute
+            }
+
+            query.executeBatch();  // Execute the query as a batch to group all the updates
+            query.close();  // Close the query after the execution
+
+            this.connection.setAutoCommit(true);  // Set again the auto commit to true
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }

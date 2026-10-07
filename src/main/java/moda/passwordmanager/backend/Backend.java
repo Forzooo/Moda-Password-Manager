@@ -252,6 +252,7 @@ public class Backend extends EventListener {
      * @return Returns a boolean value to locally indicate whether the master password is right
      */
     private boolean testMasterPassword(){
+        // TODO. use the sensitive settings instead
         Data testData = this.database.getDataFirstServiceField();  // Get the first service to try to decrypt it
 
         // If the service is null, it means there isn't data in it yet, thus the master password is always correct
@@ -302,7 +303,7 @@ public class Backend extends EventListener {
 
         this.helper.executeInBackground(3, this::initServiceMapping);
         this.helper.executeInBackground(this::startGoogleDrive);  // Initialize the connection with Google Drive
-        // only if enabled by the user
+                                                                  // only if enabled by the user
 
         // If the version control on startup is enabled then we check it in the background and send the result
         // to the FrontendEventListener
@@ -583,26 +584,27 @@ public class Backend extends EventListener {
      * Change the current master password in use for the database, and encrypt the data with the new password
      */
     private void updateMasterPassword(){
-        char[] masterPassword = (char[]) getRequestData().getFirst();  // The new master password
+        ArrayList<Data> newDataRecords = new ArrayList<>();
 
-        List<Data> oldData = this.database.getDataRecords();  // Get all the data from the database
-        ArrayList<Data> newData = new ArrayList<>();  // The data re-encrypted with the new master password
-
-        // Decrypt all the data and add it to newData
-        for (Data data : oldData){
-            newData.add(this.helper.decryptData(data));
+        // Get all the data from the database, decrypt it and add it to newData to let them be re-encrypted with the
+        // new master password
+        for (Data data : this.database.getDataRecords()){
+            newDataRecords.add(this.helper.decryptData(data));
         }
 
-        setMasterPassword(masterPassword);  // Set the new master password before re-encrypting the data
+        // Decrypt all the sensitive settings and add it to the new HashMap to let them be re-encrypted
+        Map<String, String> sensitiveSettingsRecords = this.database.getSensitiveSettingsRecords();
+        sensitiveSettingsRecords.replaceAll((k, v) -> this.helper.decrypt(v));
 
-        // Iterate over the decrypted data while removing it, and re-adding them as the last element per cycle
-        for (int i = 0; i < newData.size(); i++){
-            Data data = newData.getFirst();  // Always get the first element
-            newData.removeFirst();  // Remove it from the ArrayList
-            newData.addLast(this.helper.encryptData(data));  // Re-encrypt the data and add it as the last element
-        }
+        setMasterPassword((char[]) getRequestData().getFirst());  // Set the new master password before re-encrypting the data
 
-        this.database.changeDataRecords(newData);  // Change all the records of the database with the new ones
+        // Iterate over the decrypted data and encrypt them again
+        newDataRecords.replaceAll(this.helper::encryptData);
+        sensitiveSettingsRecords.replaceAll((k, v) -> this.helper.encrypt(v));
+
+        // Update all the records of the database with the new ones
+        this.database.updateDataRecords(newDataRecords);
+        this.database.updateSensitiveSettingsRecords(sensitiveSettingsRecords);
     }
 
     /**
