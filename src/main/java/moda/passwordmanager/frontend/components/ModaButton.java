@@ -7,10 +7,9 @@ import java.awt.event.MouseEvent;
 
 public class ModaButton extends JButton {
 
-    private ButtonStyle buttonStyle;
+    private final ButtonStyle buttonStyle;
 
-    private int arc = 25;
-    private float thickness = 4.0f;
+    private static final float THICKNESS = 4.0f;
 
     //Animazione diddio
     private float currentThickness;
@@ -20,7 +19,7 @@ public class ModaButton extends JButton {
 
         this.buttonStyle = buttonStyle;
 
-        this.currentThickness = this.thickness;
+        this.currentThickness = this.THICKNESS;
 
         this.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, 21));
 
@@ -36,7 +35,7 @@ public class ModaButton extends JButton {
 
         this.buttonStyle = buttonStyle;
 
-        this.currentThickness = this.thickness;
+        this.currentThickness = this.THICKNESS;
 
         this.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, fontSize));
 
@@ -54,7 +53,7 @@ public class ModaButton extends JButton {
 
         this.buttonStyle = buttonStyle;
 
-        this.currentThickness = this.thickness;
+        this.currentThickness = this.THICKNESS;
 
         this.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, fontSize));
 
@@ -68,27 +67,9 @@ public class ModaButton extends JButton {
         animation_init();
     }
 
-    public ModaButton(ButtonStyle buttonStyle, int width, int height, int fontSize) {
-
-        this.buttonStyle = buttonStyle;
-
-        this.currentThickness = this.thickness;
-
-        this.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, fontSize));
-
-        this.setContentAreaFilled(false);
-        this.setBorderPainted(false);
-        this.setFocusPainted(false);
-        this.setOpaque(false);
-
-        this.setMinimumSize(new Dimension(width, height));
-
-        animation_init();
-    }
-
     private void animation_init(){
         timerAnimation = new Timer(15, event -> {
-            float target = getModel().isRollover() ? thickness * 2.5f : thickness;
+            float target = getModel().isRollover() ? THICKNESS * 2.5f : THICKNESS;
 
             float diff = target - currentThickness;
             if (Math.abs(diff) > 0.05f) {
@@ -132,12 +113,9 @@ public class ModaButton extends JButton {
                 borderColor = Color.BLACK;
                 textColor = Color.BLACK;
                 break;
-            case EMPTY:
-                g2.dispose();
-                super.paintComponent(g);
-                break;
         }
 
+        int arc = 25;
         g2.setColor(bgColor);
         g2.fillRoundRect(0, 0, this.getWidth(), this.getHeight(), arc, arc);
 
@@ -155,17 +133,8 @@ public class ModaButton extends JButton {
         super.paintComponent(g);
     }
 
-    public void setArc(int arc) {
-        this.arc = arc;
-    }
-
-    public void setThickness(float thickness) {
-        this.thickness = thickness;
-    }
-
     public enum ButtonStyle {
         CLASSIC_BLACK,
         CLASSIC_WHITE,
-        EMPTY,
     }
 }

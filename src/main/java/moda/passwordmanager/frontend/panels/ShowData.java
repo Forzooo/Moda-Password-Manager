@@ -79,7 +79,8 @@ public class ShowData extends JPanel {
         scrollPane.setBackground(Color.WHITE);
 
         int searchBarSize = 50;  // The size of the search bar
-        this.searchBar = new ModaTextField(searchBarSize);
+        this.searchBar = new ModaTextField();
+        this.searchBar.setMinimumSize(new Dimension(this.searchBar.getWidth(), searchBarSize));
 
         JLabel searchIconLabel = new JLabel();
         ImageIcon searchIcon = Utilities.getIcon("search_icon.png");

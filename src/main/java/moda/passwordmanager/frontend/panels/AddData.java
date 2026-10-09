@@ -76,7 +76,7 @@ public class AddData extends JPanel {
         Utilities.applyTrailingButtonProperties(this.generatePasswordButton);
         this.passwordTextField.putClientProperty("JTextField.trailingComponent", this.generatePasswordButton);
 
-        this.serviceTextField = new ModaTextField(textFieldDimension.height);
+        this.serviceTextField = new ModaTextField();
         this.serviceTextField.putClientProperty("JTextField.placeholderText", Utilities.getLocaleString("Moda.AddData.serviceTextField"));
         this.serviceTextField.setPreferredSize(textFieldDimension);
 

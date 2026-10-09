@@ -5,30 +5,17 @@ import java.awt.*;
 
 public class ModaTextField extends JTextField {
 
+    private final Color backgroundColor;
+    private final Color borderColor;
+
     public ModaTextField() {
-        this.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, 20));
+        this.backgroundColor = UIManager.getColor("Moda.TextField.background");
+        this.borderColor = UIManager.getColor("Moda.TextField.border");
 
-        this.setOpaque(false);
-        this.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 5));
-    }
+        setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, 20));
 
-
-    public ModaTextField(int height) {
-        this.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, 20));
-
-        this.setOpaque(false);
-        this.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 5));
-
-        this.setMinimumSize(new Dimension(getWidth(), height));
-    }
-
-    public ModaTextField(int width, int height) {
-        this.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, 20));
-
-        this.setOpaque(false);
-        this.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 5));
-
-        this.setMinimumSize(new Dimension(width, height));
+        setOpaque(false);
+        setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 5));
     }
 
     @Override
@@ -38,19 +25,16 @@ public class ModaTextField extends JTextField {
 
         int arc = 30;
 
-        g2.setColor(UIManager.getColor("Moda.TextField.background"));
+        g2.setColor(this.backgroundColor);
         g2.fillRoundRect(0, 0, this.getWidth(), this.getHeight(), arc, arc);
 
         float thickness = 3.0f;
 
-        g2.setColor(UIManager.getColor("Moda.TextField.border"));
+        g2.setColor(this.borderColor);
         g2.setStroke(new BasicStroke(thickness));
 
         int offset = (int) (thickness / 2);
         g2.drawRoundRect(offset, offset, this.getWidth() - (int)thickness, this.getHeight() - (int)thickness, arc, arc);
-
-//        g2.setColor(Color.BLACK);
-        g2.setFont(getFont());
 
         g2.dispose();
 

@@ -38,11 +38,6 @@ public class ModaScrollPane extends JScrollPane {
     private static class ModaScrollBarUI extends BasicScrollBarUI {
 
         @Override
-        protected void configureScrollBarColors() {
-            super.configureScrollBarColors();
-        }
-
-        @Override
         protected JButton createDecreaseButton(int orientation) {
             return createButtons();
         }
@@ -59,7 +54,6 @@ public class ModaScrollPane extends JScrollPane {
             button.setMaximumSize(new Dimension(0, 0));
             return button;
         }
-
 
         @Override
         protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {

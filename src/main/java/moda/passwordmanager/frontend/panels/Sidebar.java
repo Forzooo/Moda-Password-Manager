@@ -13,7 +13,7 @@ public class Sidebar extends JPanel {
     // Swing components
     private ModaButton addDataButton;
     private ModaButton showDataButton;
-    private ModaButton settingsButton;
+    private JButton settingsButton;
 
     public Sidebar(){
         super();  // Initialize the Panel
@@ -54,8 +54,13 @@ public class Sidebar extends JPanel {
         this.showDataButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_BLACK, buttonDimension, 30);
         this.showDataButton.setText(ShowData.getPanelTitle());
 
-        // Settings + Details section
-        this.settingsButton = new ModaButton(ModaButton.ButtonStyle.EMPTY, buttonDimension.height/2, buttonDimension.height/2, 30);
+        // Settings section
+        this.settingsButton = new JButton();
+        this.settingsButton.setSize(new Dimension(buttonDimension.height, buttonDimension.height));
+        this.settingsButton.setBackground(null);
+        this.settingsButton.setBorderPainted(false);
+        this.settingsButton.setContentAreaFilled(false);
+
         ImageIcon settingsIcon = Utilities.getIcon("settings_icon.png");
         settingsIcon.setImage(settingsIcon.getImage().getScaledInstance(buttonDimension.height/2,
                 buttonDimension.height/2, Image.SCALE_SMOOTH));
