@@ -24,7 +24,7 @@ public class ShowData extends JPanel {
 
     private JTabbedPane dataTabbedPane;  // The tabbed pane shows the dataList and the data the user has selected
 
-    private ModaTextField searchBar;
+    private ModernTextField searchBar;
 
     /**
      * The data shown in the JList, which are updated by the FrontendEventListener
@@ -74,12 +74,12 @@ public class ShowData extends JPanel {
         this.dataList.setFixedCellHeight(30);
         this.dataList.setBackground(null);
 
-        ModaScrollPane scrollPane = new ModaScrollPane(this.dataList);
+        ModernScrollPane scrollPane = new ModernScrollPane(this.dataList);
         scrollPane.setBorder(new EmptyBorder(10,10,10,10));
         scrollPane.setBackground(Color.WHITE);
 
         int searchBarSize = 50;  // The size of the search bar
-        this.searchBar = new ModaTextField();
+        this.searchBar = new ModernTextField();
         this.searchBar.setMinimumSize(new Dimension(this.searchBar.getWidth(), searchBarSize));
 
         JLabel searchIconLabel = new JLabel();

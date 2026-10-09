@@ -2,7 +2,7 @@ package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.frontend.Frontend;
 import moda.passwordmanager.frontend.Utilities;
-import moda.passwordmanager.frontend.components.ModaButton;
+import moda.passwordmanager.frontend.components.ModernButton;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
@@ -11,8 +11,8 @@ import java.awt.*;
 public class Sidebar extends JPanel {
 
     // Swing components
-    private ModaButton addDataButton;
-    private ModaButton showDataButton;
+    private ModernButton addDataButton;
+    private ModernButton showDataButton;
     private JButton settingsButton;
 
     public Sidebar(){
@@ -48,10 +48,14 @@ public class Sidebar extends JPanel {
         // the sidebar
         Dimension buttonDimension = new Dimension((int) getPreferredSize().getWidth(), 70);
 
-        this.addDataButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_BLACK, buttonDimension, 30);
+        this.addDataButton = new ModernButton(ModernButton.Style.BLACK);
+        this.addDataButton.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, 30));
+        this.addDataButton.setPreferredSize(buttonDimension);
         this.addDataButton.setText(AddData.getPanelTitle());
 
-        this.showDataButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_BLACK, buttonDimension, 30);
+        this.showDataButton = new ModernButton(ModernButton.Style.BLACK);
+        this.showDataButton.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, 30));
+        this.showDataButton.setPreferredSize(buttonDimension);
         this.showDataButton.setText(ShowData.getPanelTitle());
 
         // Settings section

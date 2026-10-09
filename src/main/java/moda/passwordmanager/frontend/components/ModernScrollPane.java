@@ -4,9 +4,9 @@ import javax.swing.*;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
 
-public class ModaScrollPane extends JScrollPane {
+public class ModernScrollPane extends JScrollPane {
 
-    public ModaScrollPane(Component view) {
+    public ModernScrollPane(Component view) {
         super(view);
 
         getVerticalScrollBar().setUI(new ModaScrollBarUI());
@@ -77,8 +77,6 @@ public class ModaScrollPane extends JScrollPane {
             g2.drawRoundRect(x, y, width, height, arc, arc);
 
             g2.dispose();
-
         }
     }
-
 }

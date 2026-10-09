@@ -2,8 +2,8 @@ package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.backend.Data;
 import moda.passwordmanager.frontend.Utilities;
-import moda.passwordmanager.frontend.components.ModaButton;
-import moda.passwordmanager.frontend.components.ModaTextField;
+import moda.passwordmanager.frontend.components.ModernButton;
+import moda.passwordmanager.frontend.components.ModernTextField;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import net.miginfocom.swing.MigLayout;
@@ -16,15 +16,15 @@ public class AddData extends JPanel {
 
     private final InterThreadCommunication itc;
 
-    private ModaTextField usernameTextField;
-    private ModaTextField emailAddressTextField;
-    private ModaTextField passwordTextField;
-    private ModaTextField serviceTextField;
-    private ModaTextField additionalDataTextField;
+    private ModernTextField usernameTextField;
+    private ModernTextField emailAddressTextField;
+    private ModernTextField passwordTextField;
+    private ModernTextField serviceTextField;
+    private ModernTextField additionalDataTextField;
 
-    private ModaButton resetButton;
-    private ModaButton saveButton;
-    private ModaButton generatePasswordButton;
+    private ModernButton resetButton;
+    private ModernButton saveButton;
+    private ModernButton generatePasswordButton;
 
     public AddData(InterThreadCommunication itc){
         super();  // Initialize the Panel
@@ -55,39 +55,43 @@ public class AddData extends JPanel {
         Dimension textFieldDimension = new Dimension(600, 60);  // The dimension of each text field
 
         // Create all the JTextField for the data input
-        this.usernameTextField = new ModaTextField();
+        this.usernameTextField = new ModernTextField();
         this.usernameTextField.putClientProperty("JTextField.placeholderText", Utilities.getLocaleString("Moda.AddData.usernameTextField"));
         this.usernameTextField.setPreferredSize(textFieldDimension);
 
-        this.emailAddressTextField = new ModaTextField();
+        this.emailAddressTextField = new ModernTextField();
         this.emailAddressTextField.putClientProperty("JTextField.placeholderText", Utilities.getLocaleString("Moda.AddData.emailAddressTextField"));
         this.emailAddressTextField.setPreferredSize(textFieldDimension);
 
         // The password field is not a JPasswordField because the user needs to know the password being entered in the database
-        this.passwordTextField = new ModaTextField();
+        this.passwordTextField = new ModernTextField();
         this.passwordTextField.putClientProperty("JTextField.placeholderText", Utilities.getLocaleString("Moda.AddData.passwordTextField"));
         this.passwordTextField.setPreferredSize(textFieldDimension);
 
         // Create the button for the generation of a password
-        this.generatePasswordButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE);
+        this.generatePasswordButton = new ModernButton(ModernButton.Style.WHITE);
         this.generatePasswordButton.setIcon(Utilities.getIcon("generate_string.png"));
         this.generatePasswordButton.setToolTipText(Utilities.getLocaleString("Moda.AddData.generatePasswordButtonToolTip"));
 
         Utilities.applyTrailingButtonProperties(this.generatePasswordButton);
         this.passwordTextField.putClientProperty("JTextField.trailingComponent", this.generatePasswordButton);
 
-        this.serviceTextField = new ModaTextField();
+        this.serviceTextField = new ModernTextField();
         this.serviceTextField.putClientProperty("JTextField.placeholderText", Utilities.getLocaleString("Moda.AddData.serviceTextField"));
         this.serviceTextField.setPreferredSize(textFieldDimension);
 
-        this.additionalDataTextField = new ModaTextField();
+        this.additionalDataTextField = new ModernTextField();
         this.additionalDataTextField.putClientProperty("JTextField.placeholderText", Utilities.getLocaleString("Moda.AddData.additionalDataTextField"));
         this.additionalDataTextField.setPreferredSize(textFieldDimension);
 
-        this.resetButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, 60, 20);
+        this.resetButton = new ModernButton(ModernButton.Style.WHITE);
+        this.resetButton.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, 20));
+        this.resetButton.setPreferredSize(new Dimension(this.resetButton.getWidth(), 60));
         this.resetButton.setText(Utilities.getLocaleString("Moda.AddData.resetButton"));
 
-        this.saveButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_WHITE, 60, 20);
+        this.saveButton = new ModernButton(ModernButton.Style.WHITE);
+        this.saveButton.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, 20));
+        this.saveButton.setPreferredSize(new Dimension(this.resetButton.getWidth(), 60));
         this.saveButton.setText(Utilities.getLocaleString("Moda.AddData.saveButton"));
 
         // Add all the components to the Panel
