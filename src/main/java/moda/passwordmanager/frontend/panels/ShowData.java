@@ -207,38 +207,42 @@ public class ShowData extends JPanel {
      * Add a Data object to the JList
      */
     public void addData(Data data){
-        // We add the data to the JList directly only if the search bar is not being used or if the service matches
+        int filteredIndex = indexOfId(data.getId(), this.userFilteredData);
+        int modelIndex = indexOfId(data.getId(), this.userDataModel);
+
+        // If the tab of the data is open, then we have to update its title too
+        int dataTabIndex = indexOfDataTab(data.getId());
+        if (dataTabIndex != -1){
+            this.dataTabbedPane.setTitleAt(dataTabIndex, data.getService());
+        }
+
+        // We add the data to the JList directly only if the search bar is not being used or if the new service matches
         // the current filter
         if (this.searchBar.getText().isBlank() ||
                 searchBarTextFormatter(data.getService()).startsWith(searchBarTextFormatter(this.searchBar.getText()))){
 
-            // We have to check whether the data already exists, in that case we replace it instead of adding it
-            int index = indexOfId(data.getId(), this.userDataModel);
-            if (index == -1){
+            // If the previous text of the service was inside the Model (the JList) then we can update it
+            if (modelIndex != -1){
+                this.userDataModel.setElementAt(data, modelIndex);
+            }else if (filteredIndex != -1){  // If the previous text of the service was inside the Filtered List we have
+                                             // to remove it from there and add it to the Model instead
+                this.userFilteredData.remove(filteredIndex);
                 this.userDataModel.addElement(data);
-            }else{
-                this.userDataModel.set(index, data);
-
-                // If the tab of the data is open, then we have to update its title too
-                int dataTabIndex = indexOfDataTab(data.getId());
-                if (dataTabIndex != -1){
-                    this.dataTabbedPane.setTitleAt(dataTabIndex, data.getService());
-                }
+            }else{  // Otherwise the data is new and we can add it to the Model (JList)
+                this.userDataModel.addElement(data);
             }
-        }else{  // Otherwise we add it to the filtered data and it will be shown when it matches the filer or it becomes
+        }else{  // Otherwise we add it to the filtered data and it will be shown when it matches the filter or it becomes
                 // blank
-            // We have to check whether the data already exists, in that case we replace it instead of adding it
-            int index = indexOfId(data.getId(), this.userFilteredData);
-            if (index == -1){
+            // If the previous text of the service was inside the Model then we have to remove it from there, as otherwise
+            // it would still show up in the JList, and add it to the Filtered List
+            if (modelIndex != -1){
+                this.userDataModel.removeElementAt(modelIndex);
                 this.userFilteredData.add(data);
-            }else{
-                this.userFilteredData.set(index, data);
-
-                // If the tab of the data is open, then we have to update its title too
-                int dataTabIndex = indexOfDataTab(data.getId());
-                if (dataTabIndex != -1){
-                    this.dataTabbedPane.setTitleAt(dataTabIndex, data.getService());
-                }
+            }else if (filteredIndex != -1){  // If the previous text of the service was inside the Filtered List, then
+                                             // we can update it
+                this.userFilteredData.set(filteredIndex, data);
+            }else{  // Otherwise the data is new and we can add it to the Filtered List
+                this.userFilteredData.add(data);
             }
         }
     }

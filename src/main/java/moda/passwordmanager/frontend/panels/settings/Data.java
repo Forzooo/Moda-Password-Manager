@@ -118,8 +118,6 @@ public class Data extends Section {
      * Set the string generation parameters in the backend
      */
     private void setStringGeneration(){
-        // Retrieve the data from the user
-
         // Ensure that the user has entered an integer, otherwise an exception would be arisen
         int stringLength;
         try{
