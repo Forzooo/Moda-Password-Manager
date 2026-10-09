@@ -113,7 +113,8 @@ public class Backend extends EventListener {
         addLockedOperation("decrypt-data", () -> addResponseData(this.helper.decryptData((Data) getRequestData().getFirst())));
 
         addOperation("generate-string", this::generateString);
-        addOperation("configure-string-generation", this::configureStringGeneration);
+        addOperation("set-string-generation", this::setStringGeneration);
+        addOperation("get-string-generation", this::getStringGeneration);
 
         // Set a database path and reset the service fields
         addOperation("set-database", () -> {
@@ -127,7 +128,6 @@ public class Backend extends EventListener {
         });
 
         addOperation("get-database", this::getDatabasePath);
-        addOperation("get-string-generation-configuration", this::getStringGenerationConfiguration);
         addLockedOperation("update-master-password", this::updateMasterPassword);
 
 
@@ -538,7 +538,7 @@ public class Backend extends EventListener {
     /**
      * Set in the settings file the user preferences for the generation of strings
      */
-    private void configureStringGeneration(){
+    private void setStringGeneration(){
         List<Object> requestData = getRequestData();
 
         int length = (int) requestData.getFirst();  // The length of the string
@@ -571,7 +571,7 @@ public class Backend extends EventListener {
     /**
      * Retrieve from the settings file all the parameters of the string generation
      */
-    private void getStringGenerationConfiguration(){
+    private void getStringGeneration(){
         // Retrieve the properties from the helper
         List<Object> configuration = this.helper.getStringGenerationConfiguration();
 

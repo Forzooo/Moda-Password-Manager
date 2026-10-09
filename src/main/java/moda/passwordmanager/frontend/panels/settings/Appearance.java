@@ -5,6 +5,7 @@ import moda.passwordmanager.frontend.properties.Languages;
 import moda.passwordmanager.frontend.properties.Themes;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
+import raven.modal.Toast;
 
 import javax.swing.*;
 
@@ -20,6 +21,8 @@ public class Appearance extends Section {
         super(Utilities.getLocaleString("Moda.Appearance.panelTitle"), itc);
 
         initComponents();
+        setSelectedSettings();
+
         initListeners();
     }
 
@@ -65,6 +68,15 @@ public class Appearance extends Section {
         addOption(languagesPanel);
     }
 
+    @Override
+    protected void setSelectedSettings() {
+        Event themeEvent = getItc().request(new Event("get-application-theme"));
+        this.changeThemesComboBox.setSelectedItem(Utilities.getLocaleString("Moda.Themes."+themeEvent.getData().getFirst()));
+
+        Event languageEvent = getItc().request(new Event("get-application-language"));
+        this.changeLanguageComboBox.setSelectedItem(Utilities.getLocaleString("Moda.Languages."+languageEvent.getData().getFirst()));
+    }
+
     /**
      * Initialize all the listeners
      */
@@ -86,6 +98,7 @@ public class Appearance extends Section {
         // It's the same index because when the themes are added, they are in the same order as values() ones
         Event request = new Event("set-application-theme", Themes.values()[themeIndex]);
         getItc().send(request);
+        Utilities.showToast(getRootPane(), Toast.Type.INFO, Utilities.getLocaleString("Moda.Toast.themeSelected"));
     }
 
     /**
@@ -95,6 +108,7 @@ public class Appearance extends Section {
     private void changeApplicationLanguage(int languageIndex){
         Event request = new Event("set-application-language", Languages.values()[languageIndex]);
         getItc().send(request);
+        Utilities.showToast(getRootPane(), Toast.Type.INFO, Utilities.getLocaleString("Moda.Toast.languageSelected"));
     }
 
 }

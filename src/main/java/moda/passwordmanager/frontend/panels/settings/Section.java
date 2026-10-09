@@ -113,4 +113,9 @@ public abstract class Section extends JPanel {
     public static Dimension getTextFieldDimension() {
         return TEXT_FIELD_DIMENSION;
     }
+
+    /**
+     * Set the default values of all the components that have a defined one in the settings file
+     */
+    protected abstract void setSelectedSettings();
 }

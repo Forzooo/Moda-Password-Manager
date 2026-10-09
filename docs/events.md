@@ -196,8 +196,8 @@ file
 * Data received: _String_ the generated string
 * Synchronous: required
 
-### Configure String Generation
-* Operation: `configure-string-generation`
+### Set the string generation parameters
+* Operation: `set-string-generation`
 * Sender: Frontend
 * Description: Set the parameters of the string generation
 * Data sent: _int_ length of the string, _bool_ whether letters are enabled, _bool_ whether numbers are enabled, _bool_ 
@@ -205,8 +205,8 @@ whether special characters are enabled
 * Data received: -
 * Synchronous: not required
 
-### Get String Generation Configuration
-* Operation: `get-string-generation-configuration`
+### Get the string generation parameters
+* Operation: `get-generation-configuration`
 * Sender: Frontend
 * Description: Request the parameters of the string generation
 * Data sent: -

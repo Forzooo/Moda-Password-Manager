@@ -6,7 +6,6 @@ import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import raven.modal.Toast;
 
 import javax.swing.*;
-import java.util.Arrays;
 import java.util.List;
 
 public class Data extends Section {
@@ -25,8 +24,8 @@ public class Data extends Section {
         super(Utilities.getLocaleString("Moda.Data.panelTitle"), itc);
 
         initComponents();
+        setSelectedSettings();
         initListeners();
-        setDefaultStringGenerationConfiguration();
     }
 
     @Override
@@ -78,10 +77,23 @@ public class Data extends Section {
         addOption(this.configureStringGenerationButton);
     }
 
+    @Override
+    protected void setSelectedSettings() {
+        Event stringConfigurationEvent = getItc().request(new Event("get-string-generation"));
+
+        List<Object> data = stringConfigurationEvent.getData();  // Retrieve the data
+
+        // Set the data to the components
+        this.stringLengthTextField.setText(String.valueOf(data.getFirst()));
+        this.stringLettersCheckbox.setSelected((boolean) data.get(1));
+        this.stringNumbersCheckbox.setSelected((boolean) data.get(2));
+        this.stringSpecialCharactersCheckbox.setSelected((boolean) data.get(3));
+    }
+
     private void initListeners(){
         this.updateMasterPasswordButton.addActionListener(e -> updateMasterPassword());
 
-        this.configureStringGenerationButton.addActionListener(e -> configureStringGeneration());
+        this.configureStringGenerationButton.addActionListener(e -> setStringGeneration());
     }
 
     /**
@@ -104,9 +116,9 @@ public class Data extends Section {
     }
 
     /**
-     * Configure the string generation
+     * Set the string generation parameters in the backend
      */
-    private void configureStringGeneration(){
+    private void setStringGeneration(){
         // Retrieve the data from the user
         int stringLength = Integer.parseInt(this.stringLengthTextField.getText());  // Convert the text to an int
         boolean lettersSelected = this.stringLettersCheckbox.isSelected();
@@ -114,7 +126,7 @@ public class Data extends Section {
         boolean specialCharactersSelected = this.stringSpecialCharactersCheckbox.isSelected();
 
         // Create the Event with the data
-        Event event = new Event("configure-string-generation");
+        Event event = new Event("set-string-generation");
         event.addData(stringLength);
         event.addData(lettersSelected);
         event.addData(numbersSelected);
@@ -122,22 +134,4 @@ public class Data extends Section {
 
         getItc().send(event);  // Send the event
     }
-
-    /**
-     * Set the default values of the string configuration
-     */
-    private void setDefaultStringGenerationConfiguration(){
-        // Create the event and wait for the data
-        Event event = new Event("get-string-generation-configuration");
-        Event backendResponse = getItc().request(event);
-
-        List<Object> data = backendResponse.getData();  // Retrieve the data
-
-        // Set the data to the components
-        this.stringLengthTextField.setText(String.valueOf(data.getFirst()));
-        this.stringLettersCheckbox.setSelected((boolean) data.get(1));
-        this.stringNumbersCheckbox.setSelected((boolean) data.get(2));
-        this.stringSpecialCharactersCheckbox.setSelected((boolean) data.get(3));
-    }
-
 }
