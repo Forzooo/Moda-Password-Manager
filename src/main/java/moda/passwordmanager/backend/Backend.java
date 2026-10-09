@@ -475,8 +475,24 @@ public class Backend extends EventListener {
         // Retrieve the properties from the helper
         List<Object> configuration = this.helper.getStringGenerationConfiguration();
 
+        // (This is an additional server-side check to the frontend one in the case the user has modified the settings file
+        // without using the application)
+        // If the string length has been set to less than 1, then we avoid an exception by sending an empty string
+        if ((int) configuration.getFirst() < 1){
+            addResponseData("");
+            return;
+        }
+
         char[] stringCharacters = generateStringCharacters((Boolean) configuration.get(1), (Boolean) configuration.get(2),
                 (Boolean) configuration.get(3));  // Generate the characters
+
+        // (This is an additional server-side check to the frontend one)
+        // If not at least one of the configuration parameters has been selected, then we send an empty string to avoid
+        // an exception that arises in the generateRandomString method
+        if (stringCharacters.length == 0){
+            addResponseData("");
+            return;
+        }
 
         addResponseData(Helper.generateRandomString((int) configuration.getFirst(), stringCharacters).toString());
     }

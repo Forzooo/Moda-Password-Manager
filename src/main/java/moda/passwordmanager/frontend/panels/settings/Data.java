@@ -105,14 +105,13 @@ public class Data extends Section {
 
         // Perform some initial conditions check on the master password
         if (!Utilities.checkMasterPassword(masterPassword)){
-            Utilities.showToast(getParent(), Toast.Type.ERROR, "The new master password does not meet the minimum"
-                    + " requirements.");
+            Utilities.showToast(getParent(), Toast.Type.ERROR, Utilities.getLocaleString("Moda.Toast.updateMasterPasswordError"));
             return;
         }
 
         Event event = new Event("update-master-password", masterPassword);
         getItc().request(event);  // Wait for the end of the operations in the backend
-        Utilities.showToast(getParent(), Toast.Type.SUCCESS, "The master password has been changed.");
+        Utilities.showToast(getParent(), Toast.Type.SUCCESS, Utilities.getLocaleString("Moda.Toast.updateMasterPassword"));
     }
 
     /**
@@ -120,10 +119,33 @@ public class Data extends Section {
      */
     private void setStringGeneration(){
         // Retrieve the data from the user
-        int stringLength = Integer.parseInt(this.stringLengthTextField.getText());  // Convert the text to an int
+
+        // Ensure that the user has entered an integer, otherwise an exception would be arisen
+        int stringLength;
+        try{
+            stringLength = Integer.parseInt(this.stringLengthTextField.getText());  // Convert the text to an int
+        } catch (NumberFormatException e) {
+            Utilities.showToast(getRootPane(), Toast.Type.ERROR, Utilities.getLocaleString("Moda.Toast.stringGenerationIntegerError"));
+            return;
+        }
+
+        // The length of the string to generate must be at least 1
+        if (stringLength < 1){
+            Utilities.showToast(getRootPane(), Toast.Type.ERROR, Utilities.getLocaleString("Moda.Toast.stringGenerationLengthError"));
+            return;
+        }
+
         boolean lettersSelected = this.stringLettersCheckbox.isSelected();
         boolean numbersSelected = this.stringNumbersCheckbox.isSelected();
         boolean specialCharactersSelected = this.stringSpecialCharactersCheckbox.isSelected();
+
+        // Ensure that at least one of the three checkbox is selected, otherwise an exception will arise in the backend
+        // when the user tries to generate a string
+        if (!lettersSelected && !numbersSelected && !specialCharactersSelected){
+            Utilities.showToast(getRootPane(), Toast.Type.ERROR, Utilities.getLocaleString("Moda.Toast.stringGenerationOptionsError"));
+
+            return;
+        }
 
         // Create the Event with the data
         Event event = new Event("set-string-generation");
@@ -133,5 +155,6 @@ public class Data extends Section {
         event.addData(specialCharactersSelected);
 
         getItc().send(event);  // Send the event
+        Utilities.showToast(getRootPane(), Toast.Type.SUCCESS, "Moda.Toast.stringGeneration");
     }
 }
