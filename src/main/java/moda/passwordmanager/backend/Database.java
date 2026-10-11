@@ -13,6 +13,7 @@ public class Database {
 
     private String path;  // Path of the database current in use
     private static final String FILE_EXTENSION = ".modb";  // The extension of any password manager database
+    private static final String DEFAULT_DATABASE = "moda-password-manager"+FILE_EXTENSION;
     private static final int PRAGMA_USER_VERSION = 1;  // The current version of the schema of the database
                                                        // To know the history of the versions check the docs
 
@@ -100,6 +101,13 @@ public class Database {
      */
     public String getPath(){
         return this.path;
+    }
+
+    /**
+     * Return the name of the default database used by the password manager
+     */
+    public static String getDefaultDatabase() {
+        return DEFAULT_DATABASE;
     }
 
     /**

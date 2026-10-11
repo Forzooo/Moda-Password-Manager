@@ -1,6 +1,5 @@
 package moda.passwordmanager.backend;
 
-import moda.passwordmanager.backend.settings.Settings;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -9,7 +8,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.concurrent.Semaphore;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,7 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 // are ignored and no test case involves them
 class HelperTests {
 
-    private Settings settings;
     private Helper helper;
 
     private static final String TEST_STRING = "Test";
@@ -29,12 +26,6 @@ class HelperTests {
     private int[] backgroundTestData;
     private Semaphore semaphore;
     private static final int BACKGROUND_TEST_DATA_PERIODICALLY = 3;
-
-    // String generation test attributes
-    private static final String STRING_GENERATION_SETTINGS_ROOT_NODE = "string_generation/";
-
-    // Database test attributes
-    private static final String DATABASE_ROOT_NODE = "database/";
 
     // Decryption test attributes
     private static final String MASTER_PASSWORD = "dev";
@@ -61,8 +52,7 @@ class HelperTests {
     void init(){
         Cryptography cryptography = new Cryptography();
         cryptography.setMasterPassword(MASTER_PASSWORD.getBytes());
-        this.settings = new Settings(testDirectory +"\\"+Helper.getSettingsFile());
-        this.helper = new Helper(cryptography, settings);
+        this.helper = new Helper(cryptography);
 
         this.backgroundTestData = new int[1];
         this.semaphore = new Semaphore(0);
@@ -124,32 +114,6 @@ class HelperTests {
     @Test
     void decodeBase64(){
         assertEquals(TEST_STRING, new String(Helper.decodeBase64(TEST_STRING_BASE64)));
-    }
-
-    /**
-     * Test the getter of string configuration
-     */
-    @Test
-    void getStringGenerationConfiguration(){
-        List<Object> configuration = this.helper.getStringGenerationConfiguration();
-
-        assertEquals(this.settings.readIntProperty(STRING_GENERATION_SETTINGS_ROOT_NODE+"length"),
-                configuration.getFirst());
-        assertEquals(this.settings.readBooleanProperty(STRING_GENERATION_SETTINGS_ROOT_NODE+"letters"),
-                configuration.get(1));
-        assertEquals(this.settings.readBooleanProperty(STRING_GENERATION_SETTINGS_ROOT_NODE+"numbers"),
-                configuration.get(2));
-        assertEquals(this.settings.readBooleanProperty(STRING_GENERATION_SETTINGS_ROOT_NODE+"special"),
-                configuration.get(3));
-    }
-
-    /**
-     * Ensure that the Helper returns the path of the database
-     */
-    @Test
-    void getDatabasePath(){
-        String databasePath = this.helper.getDatabasePath();
-        assertEquals(this.settings.readStringProperty(DATABASE_ROOT_NODE+"selected"), databasePath);
     }
 
     /**

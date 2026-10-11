@@ -50,10 +50,10 @@ public class Backend extends EventListener {
         createAppdataDirectory();  // Create the folder to store the configuration files inside it
 
         // Initialize all the backend components
-        this.settings = new Settings(Helper.getPasswordManagerAppDataPath()+Helper.getSettingsFile());
+        this.settings = new Settings(Helper.getPasswordManagerAppDataPath()+Settings.getFilename());
         this.database = new Database(this.settings.readStringProperty("database/selected"));
         this.cryptography = new Cryptography();
-        this.helper = new Helper(this.cryptography, this.settings);
+        this.helper = new Helper(this.cryptography);
         this.sensitiveSettings = new SensitiveSettings(this.database, this.helper);
         this.googleDrive = new GoogleDrive(getItc());
 
@@ -151,7 +151,7 @@ public class Backend extends EventListener {
             this.googleDrive.setConflictsSolved();
 
             // After the conflicts are solved, we can resynchronize
-            this.googleDrive.sync(this.helper.getDatabasePath(), this.database.getName());
+            this.googleDrive.sync(this.database.getPath(), this.database.getName());
         });
 
         addLockedOperation("get-google-drive-automatic-synchronization", this::getGoogleDriveSynchronization);
@@ -472,19 +472,22 @@ public class Backend extends EventListener {
      * Randomly generate a string of a certain length
      */
     private void generateString(){
-        // Retrieve the properties from the helper
-        List<Object> configuration = this.helper.getStringGenerationConfiguration();
+        // Retrieve the properties from the settings
+        int stringLength = this.settings.readIntProperty("string_generation/length");
 
         // (This is an additional server-side check to the frontend one in the case the user has modified the settings file
         // without using the application)
         // If the string length has been set to less than 1, then we avoid an exception by sending an empty string
-        if ((int) configuration.getFirst() < 1){
+        if (stringLength < 1){
             addResponseData("");
             return;
         }
 
-        char[] stringCharacters = generateStringCharacters((Boolean) configuration.get(1), (Boolean) configuration.get(2),
-                (Boolean) configuration.get(3));  // Generate the characters
+        boolean letters = this.settings.readBooleanProperty("string_generation/letters");
+        boolean numbers = this.settings.readBooleanProperty("string_generation/numbers");
+        boolean special = this.settings.readBooleanProperty("string_generation/special");
+
+        char[] stringCharacters = generateStringCharacters(letters, numbers, special);  // Generate the characters
 
         // (This is an additional server-side check to the frontend one)
         // If not at least one of the configuration parameters has been selected, then we send an empty string to avoid
@@ -494,7 +497,7 @@ public class Backend extends EventListener {
             return;
         }
 
-        addResponseData(Helper.generateRandomString((int) configuration.getFirst(), stringCharacters).toString());
+        addResponseData(Helper.generateRandomString(stringLength, stringCharacters).toString());
     }
 
     /**
@@ -578,23 +581,21 @@ public class Backend extends EventListener {
     }
 
     /**
-     * Retrieve the path of the database current in use
+     * Retrieve the path of the current database in use
      */
     private void getDatabasePath(){
-        addResponseData(this.helper.getDatabasePath());  // Add the path to the data to send
+        addResponseData(this.database.getPath());  // Add the path to the data to send
     }
 
     /**
      * Retrieve from the settings file all the parameters of the string generation
      */
     private void getStringGeneration(){
-        // Retrieve the properties from the helper
-        List<Object> configuration = this.helper.getStringGenerationConfiguration();
-
-        addResponseData(configuration.getFirst());
-        addResponseData(configuration.get(1));
-        addResponseData(configuration.get(2));
-        addResponseData(configuration.get(3));
+        // Retrieve the properties from the settings
+        addResponseData(this.settings.readIntProperty("string_generation/length"));
+        addResponseData(this.settings.readBooleanProperty("string_generation/letters"));
+        addResponseData(this.settings.readBooleanProperty("string_generation/numbers"));
+        addResponseData(this.settings.readBooleanProperty("string_generation/special"));
     }
 
     /**
@@ -708,7 +709,7 @@ public class Backend extends EventListener {
      * Synchronize the database with Google Drive
      */
     private void synchronizeGoogleDrive(){
-        this.googleDrive.sync(this.helper.getDatabasePath(), this.database.getName());
+        this.googleDrive.sync(this.database.getPath(), this.database.getName());
     }
 
     /**
@@ -718,7 +719,7 @@ public class Backend extends EventListener {
         // Ensure that Google Drive is enabled, and the Synchronization is enabled before synchronizing
         if (this.sensitiveSettings.readBooleanProperty("google_drive/enabled") &&
                 this.sensitiveSettings.readBooleanProperty("google_drive/automatic_synchronization")){
-            this.googleDrive.sync(this.helper.getDatabasePath(), this.database.getName());
+            this.googleDrive.sync(this.database.getPath(), this.database.getName());
             this.helper.executeInBackground(this::updateServiceFields);  // Update the service fields in the Frontend
         }
     }

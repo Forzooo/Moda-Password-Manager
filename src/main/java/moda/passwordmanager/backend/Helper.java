@@ -1,6 +1,5 @@
 package moda.passwordmanager.backend;
 
-import moda.passwordmanager.backend.settings.Settings;
 import moda.passwordmanager.frontend.properties.Languages;
 import org.apache.commons.codec.digest.DigestUtils;
 
@@ -18,18 +17,13 @@ import java.util.concurrent.TimeUnit;
  */
 public class Helper {
 
-    private static final String DEFAULT_DATABASE = "moda-password-manager"+Database.getFileExtension();
-    private static final String SETTINGS_FILE = "settings.json";
-
     private final Cryptography cryptography;
-    private final Settings settings;
 
     // Execute operations in the background
     private final ScheduledExecutorService backgroundExecutor;
 
-    public Helper(Cryptography cryptography, Settings settings){
+    public Helper(Cryptography cryptography){
         this.cryptography = cryptography;
-        this.settings = settings;
 
         this.backgroundExecutor = Executors.newScheduledThreadPool(2);  // Initialize the Background Executor
     }
@@ -39,20 +33,6 @@ public class Helper {
      */
     public static String getPasswordManagerAppDataPath() {
         return System.getenv("APPDATA")+"\\Moda\\Password-Manager\\";
-    }
-
-    /**
-     * Return the name of the default database used by the password manager
-     */
-    public static String getDefaultDatabase() {
-        return DEFAULT_DATABASE;
-    }
-
-    /**
-     * Return the name of the settings file used by the password manager
-     */
-    public static String getSettingsFile() {
-        return SETTINGS_FILE;
     }
 
     /**
@@ -146,37 +126,6 @@ public class Helper {
      */
     public static byte[] decodeBase64(String data){
         return Base64.getDecoder().decode(data.getBytes());
-    }
-
-    /**
-     * Read the string generation configuration from the settings file
-     * @return An ArrayList containing the properties of the generation in the following order: 0 - String Length,
-     * 1 - Boolean Letters, 2 - Boolean Numbers, 3 - Boolean Special
-     */
-    public List<Object> getStringGenerationConfiguration(){
-        ArrayList<Object> stringGeneration = new ArrayList<>();
-
-        // Read all the properties from the settings file
-        int stringLength = this.settings.readIntProperty("string_generation/length");
-        boolean letters = this.settings.readBooleanProperty("string_generation/letters");
-        boolean numbers = this.settings.readBooleanProperty("string_generation/numbers");
-        boolean special = this.settings.readBooleanProperty("string_generation/special");
-
-        // Add the properties to the ArrayList
-        stringGeneration.add(stringLength);
-        stringGeneration.add(letters);
-        stringGeneration.add(numbers);
-        stringGeneration.add(special);
-
-        return stringGeneration;
-    }
-
-    /**
-     * Retrieve from the settings file the path of the database
-     * @return String that indicates the path of the database
-     */
-    public String getDatabasePath(){
-        return this.settings.readStringProperty("database/selected");  // Read the path from settings
     }
 
     /**
