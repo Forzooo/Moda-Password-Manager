@@ -142,7 +142,9 @@ public abstract class EventListener extends Thread {
      * Unlocks an operation and also wakes up the EventListener if it was on sleep due to that operation
      */
     protected void unlockOperation(String operation){
-        if (this.request.getOperation().equals(operation)){
+        // We also check whether there is a request, as it may happen that an operation is unlocked before any communication
+        // begins
+        if (this.request != null && this.request.getOperation().equals(operation)){
             this.lockedOperation.release();
         }
 

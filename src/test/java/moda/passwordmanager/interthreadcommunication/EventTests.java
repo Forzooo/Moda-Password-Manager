@@ -22,6 +22,17 @@ class EventTests {
     }
 
     /**
+     * Ensure that the addData method adds the data to the event
+     */
+    @Test
+    void addData(){
+        Object object = new Object();
+
+        this.event.addData(object);
+        assertEquals(object, this.event.getData().getFirst());
+    }
+
+    /**
      * Ensure that the communication ID of an event if it's not set, is equal to -1
      */
     @Test
@@ -54,7 +65,7 @@ class EventTests {
     @Test
     void isCommunicationIDSet(){
         this.event.setCommunicationID(COMMUNICATION_ID);
-        assertTrue(this.event.isIdSet());
+        assertTrue(this.event.isCommunicationIdSet());
     }
 
     /**
@@ -62,7 +73,7 @@ class EventTests {
      */
     @Test
     void isCommunicationIDSetFalse(){
-        assertFalse(this.event.isIdSet());
+        assertFalse(this.event.isCommunicationIdSet());
     }
 
 

@@ -57,7 +57,7 @@ public class InterThreadCommunication {
     public void send(Event event) {
         try {
             // Add an ID to the Event only if it hasn't one yet, as the event could be a response to a request
-            if (!event.isIdSet()){
+            if (!event.isCommunicationIdSet()){
                 addEventID(event);
             }
             event.incrementSequenceNumber();  // Increment the sequence number of the event

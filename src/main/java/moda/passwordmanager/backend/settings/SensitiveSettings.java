@@ -30,7 +30,7 @@ public class SensitiveSettings extends AbstractSettings {
      * Add all the record inside the table with their default values
      */
     private void initRecords(){
-        // We check whether the settings have already been added to avoid wasting resources for useless encryption
+        // We check whether the settings have already been added to avoid wasting resources for useless encryptions
         if (this.database.countSensitiveSettingsRecords("google_drive") != 4){
             this.database.addSensitiveSettingsRecord("google_drive/enabled", this.helper.encrypt("false"));
             this.database.addSensitiveSettingsRecord("google_drive/credentials", this.helper.encrypt(""));

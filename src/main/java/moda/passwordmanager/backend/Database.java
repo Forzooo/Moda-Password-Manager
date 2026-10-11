@@ -345,9 +345,14 @@ public class Database {
             query.setString(1, DATA_TABLE);
 
             ResultSet resultSet = query.executeQuery();
+
+            // We cannot just return the result of the getter because we also need to close the query: the result
+            // cannot be retrieved if the query is already closed
+            int autoincrementValue = resultSet.getInt("seq");
+
             query.close();
 
-            return resultSet.getInt("seq");
+            return autoincrementValue;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -423,31 +428,8 @@ public class Database {
     }
 
     /**
-     * Retrieve the first service field from the Data table
-     * @return Data containing the encrypted service field
+     * Retrieve the value of the first Sensitive Settings record added
      */
-    public Data getDataFirstServiceField(){
-        try{
-            // Create the query to retrieve the service
-            PreparedStatement query = this.connection.prepareStatement(
-                    "SELECT id, service FROM "+ DATA_TABLE + " LIMIT 1"
-            );
-            ResultSet result = query.executeQuery();  // Execute the query and retrieve the result
-
-            result.next();  // Set the cursor to the row
-            int serviceID = result.getInt("id");  // Get the ID
-            String service = result.getString("service");  // Get the service
-
-            // Close the query after the end of the operations
-            query.close();
-            result.close();
-
-            return new Data(serviceID, service);
-        } catch (SQLException e){
-            throw new RuntimeException(e);
-        }
-    }
-
     public String getFirstSensitiveSettingRecord(){
         try {
             PreparedStatement query = this.connection.prepareStatement(
@@ -565,10 +547,13 @@ public class Database {
 
     /**
      * Count the number of sensitive settings of a property
-     * @param property The property is the root of the subproperties (ex. google_drive that has 4 subproperties)
+     * @param property The property is the root of the subproperties (ex. google_drive that has 4 subproperties) without
+     *                 any slash '/'
      */
     public int countSensitiveSettingsRecords(String property){
-        property += "%";  // We have to add a % for the SQL LIKE operator to find propertyPath that start with the root
+        property += "/%";  // We have to add a % for the SQL LIKE operator to find propertyPath that start with the root
+                           // Also a '/' is required as it could happen that we have "test" and "test2" which, without
+                           // the slash, the "test" one would also include all the "test2" ones
         try {
             PreparedStatement query = this.connection.prepareStatement(
                     "SELECT COUNT(*) FROM " + SENSITIVE_SETTINGS_TABLE + " WHERE propertyPath LIKE ?"
@@ -622,7 +607,7 @@ public class Database {
     }
 
     /**
-     * Update all the sensitive records
+     * Update all the sensitive records values
      */
     public void updateSensitiveSettingsRecords(Map<String, String> records){
         try {

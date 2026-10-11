@@ -74,7 +74,7 @@ public class Helper {
 
     /** Schedule a method to be executed in the background
      * @param method The method to be executed
-     * @param period The period that has to pass before executing again the method
+     * @param period The period that has to pass before executing again the method (in seconds)
      */
     public void executePeriodicallyInBackground(Runnable method, long period){
         this.backgroundExecutor.scheduleAtFixedRate(method, 0, period, TimeUnit.SECONDS);

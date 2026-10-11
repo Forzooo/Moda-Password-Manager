@@ -5,8 +5,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -18,7 +22,13 @@ class HelperTests {
     private Helper helper;
 
     private static final String TEST_STRING = "Test";
+    private static final String TEST_MD5_CHECKSUM = "0cbc6611f5540bd0809a388dc95a615b";
     private static final String TEST_STRING_BASE64 = "VGVzdA==";
+
+    // Background executor tests attributes
+    private int[] backgroundTestData;
+    private Semaphore semaphore;
+    private static final int BACKGROUND_TEST_DATA_PERIODICALLY = 3;
 
     // String generation test attributes
     private static final String STRING_GENERATION_SETTINGS_ROOT_NODE = "string_generation/";
@@ -53,6 +63,51 @@ class HelperTests {
         cryptography.setMasterPassword(MASTER_PASSWORD.getBytes());
         this.settings = new Settings(testDirectory +"\\"+Helper.getSettingsFile());
         this.helper = new Helper(cryptography, settings);
+
+        this.backgroundTestData = new int[1];
+        this.semaphore = new Semaphore(0);
+    }
+
+    /**
+     * Ensure that the Helper can execute a method in the background
+     */
+    @Test
+    void executeInBackground(){
+        // To check that it works, we set the test data to 1 and release the semaphore
+        this.helper.executeInBackground(() -> {
+            this.backgroundTestData[0] = 1;
+            this.semaphore.release();
+        });
+
+        try {
+            this.semaphore.acquire();  // The main thread has to wait until the Executor Service has set the value to 1
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        assertEquals(1, this.backgroundTestData[0]);
+    }
+
+    /**
+     * Ensure that the Helper can execute a method in the background periodically
+     */
+    @Test
+    void executePeriodicallyInBackground(){
+        // The same logic as before, but this time we increment it multiple times until it reaches 3
+        this.helper.executePeriodicallyInBackground(() -> {
+            if (this.backgroundTestData[0] < BACKGROUND_TEST_DATA_PERIODICALLY){
+                this.backgroundTestData[0] += 1;
+                this.semaphore.release();
+            }
+        }, 1);
+
+        try {
+            this.semaphore.acquire(BACKGROUND_TEST_DATA_PERIODICALLY);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        assertEquals(BACKGROUND_TEST_DATA_PERIODICALLY, this.backgroundTestData[0]);
     }
 
     /**
@@ -110,4 +165,21 @@ class HelperTests {
         assertEquals(DATA_PLAINTEXT, this.helper.decryptData(DATA_CIPHERTEXT));
     }
 
+    /**
+     * Ensure that it calculates the MD5 checksum of the content of a file properly
+     */
+    @Test
+    void calculateFileMD5(){
+        File file = new File(testDirectory +"\\test.txt");
+        try {
+            file.createNewFile();
+            FileWriter writer = new FileWriter(file);
+            writer.write(TEST_STRING);
+            writer.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        assertEquals(TEST_MD5_CHECKSUM, Helper.calculateFileMD5(file.toString()));
+    }
 }
