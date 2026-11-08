@@ -4,8 +4,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.concurrent.Semaphore;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -13,32 +16,29 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 // are ignored and no test case involves them
 class HelperTests {
 
-    private Settings settings;
     private Helper helper;
 
-    private final static String TEST_STRING = "Test";
-    private final static String TEST_STRING_BASE64 = "VGVzdA==";
+    private static final String TEST_STRING = "Test";
+    private static final String TEST_MD5_CHECKSUM = "0cbc6611f5540bd0809a388dc95a615b";
+    private static final String TEST_STRING_BASE64 = "VGVzdA==";
 
-    // String generation test attributes
-    private final static String STRING_GENERATION_SETTINGS_ROOT_NODE = "string_generation/";
-
-    // Google Drive test attributes
-    private final static String GOOGLE_DRIVE_ROOT_NODE = "google_drive/";
-
-    // Database test attributes
-    private final static String DATABASE_ROOT_NODE = "database/";
+    // Background executor tests attributes
+    private int[] backgroundTestData;
+    private Semaphore semaphore;
+    private static final int BACKGROUND_TEST_DATA_PERIODICALLY = 3;
 
     // Decryption test attributes
-    private final static String STRING_PLAINTEXT = "Test";
-    private final static String STRING_CIPHERTEXT = "aCRSwS7aFZXmixeSRHPxgLwHLXejH22ZkJAxfxDtqxtJWZBxhdQyyFGuM3+UNI3Z";
-    private final static Data DATA_PLAINTEXT = new Data(STRING_PLAINTEXT, STRING_PLAINTEXT, STRING_PLAINTEXT,
+    private static final String MASTER_PASSWORD = "dev";
+    private static final String STRING_PLAINTEXT = "Test";
+    private static final String STRING_CIPHERTEXT = "yrflaOOdfwumdECCw4OaxY+R+myhKKr1XU843ieinqMx1Y7BGItZBL3+ybitpPbH";
+    private static final Data DATA_PLAINTEXT = new Data(STRING_PLAINTEXT, STRING_PLAINTEXT, STRING_PLAINTEXT,
             STRING_PLAINTEXT, STRING_PLAINTEXT);
-    private final static Data DATA_CIPHERTEXT = new Data(
-            "SvZNvHkFLzlNyYnAfiubsivzoD8kDCxs+WN1L6XObeQfRbSL469P+sWWZvLiB3+v",
-            "hqm3IG7983V5gbfxsyixvo4ZO6Ziajr9Hlds0zjgYstxcZqv6rhT2vfWHMqUWcPY",
-            "4X7xLUCgUs+5bDORr6mTUCAeDqR0NaCM53f+wuppHDMY6kNnE1uGIvBGQepRbtFZ",
-            "tmWEn5QoLbzoLOW4tGNCTSYHhgbQ9JGFfZnlIhRCVnPNKt+N0IpNTcair2KYVliI",
-            "m5pMeoBQ++fmEO/5FedHYXG5HkYdAYXczoSGOrkBZ25h2uzk+/NCWNeU/Wfu5YHm"
+    private static final Data DATA_CIPHERTEXT = new Data(
+            "cJ2pjIGv3/xrxKbcC+kf3Xdwj4eC6MFozR3ffiT5asBNCQkEBZn/JuixAYJYJmQP",
+            "YoIOEHEf5Bb+PSuaKa0Ctk6c/2SJqs90IWllpemEJp0KuGyDrQbKXE3T1tLW2m/d",
+            "sDTNHKDmEsrCCz/lFTUzptcwb3ZyWMDSqif/OvaNDjOTomCVrNHM+w92tNVQ97xS",
+            "jeMOllUlPG0P8YWzZ78Np5dH8KkXyvn4H+IkDiPq+aRgCMRuBAuPx3myq9/SkOTq",
+            "B12TW0JIRTJH5o12kVkWpo7v1rttKILjetBplc1RmnBr6I4cwoy9FLbU7js0t/Ac"
     );
 
     /**
@@ -46,13 +46,58 @@ class HelperTests {
      * path would be the same for each test case. Lastly, the directory is destroyed after each test.
      */
     @TempDir
-    private Path TEST_DIRECTORY;
+    private Path testDirectory;
 
     @BeforeEach
     void init(){
         Cryptography cryptography = new Cryptography();
-        this.settings = new Settings(TEST_DIRECTORY+"\\"+Helper.getSettingsFile());
-        this.helper = new Helper(cryptography, settings);
+        cryptography.setMasterPassword(MASTER_PASSWORD.getBytes());
+        this.helper = new Helper(cryptography);
+
+        this.backgroundTestData = new int[1];
+        this.semaphore = new Semaphore(0);
+    }
+
+    /**
+     * Ensure that the Helper can execute a method in the background
+     */
+    @Test
+    void executeInBackground(){
+        // To check that it works, we set the test data to 1 and release the semaphore
+        this.helper.executeInBackground(() -> {
+            this.backgroundTestData[0] = 1;
+            this.semaphore.release();
+        });
+
+        try {
+            this.semaphore.acquire();  // The main thread has to wait until the Executor Service has set the value to 1
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        assertEquals(1, this.backgroundTestData[0]);
+    }
+
+    /**
+     * Ensure that the Helper can execute a method in the background periodically
+     */
+    @Test
+    void executePeriodicallyInBackground(){
+        // The same logic as before, but this time we increment it multiple times until it reaches 3
+        this.helper.executePeriodicallyInBackground(() -> {
+            if (this.backgroundTestData[0] < BACKGROUND_TEST_DATA_PERIODICALLY){
+                this.backgroundTestData[0] += 1;
+                this.semaphore.release();
+            }
+        }, 1);
+
+        try {
+            this.semaphore.acquire(BACKGROUND_TEST_DATA_PERIODICALLY);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        assertEquals(BACKGROUND_TEST_DATA_PERIODICALLY, this.backgroundTestData[0]);
     }
 
     /**
@@ -72,46 +117,11 @@ class HelperTests {
     }
 
     /**
-     * Test the getter of string configuration
-     */
-    @Test
-    void getStringGenerationConfiguration(){
-        ArrayList<Object> configuration = this.helper.getStringGenerationConfiguration();
-
-        assertEquals(this.settings.readIntProperty(STRING_GENERATION_SETTINGS_ROOT_NODE+"length"),
-                configuration.getFirst());
-        assertEquals(this.settings.readBooleanProperty(STRING_GENERATION_SETTINGS_ROOT_NODE+"letters"),
-                configuration.get(1));
-        assertEquals(this.settings.readBooleanProperty(STRING_GENERATION_SETTINGS_ROOT_NODE+"numbers"),
-                configuration.get(2));
-        assertEquals(this.settings.readBooleanProperty(STRING_GENERATION_SETTINGS_ROOT_NODE+"special"),
-                configuration.get(3));
-    }
-
-    /**
-     * Ensure that the Helper returns the current state of Google Drive
-     */
-    @Test
-    void isGoogleDriveEnabled(){
-        boolean googleDriveState = this.helper.isGoogleDriveEnabled();
-        assertEquals(this.settings.readBooleanProperty(GOOGLE_DRIVE_ROOT_NODE+"enabled"), googleDriveState);
-    }
-
-    /**
-     * Ensure that the Helper returns the path of the database
-     */
-    @Test
-    void getDatabasePath(){
-        String databasePath = this.helper.getDatabasePath();
-        assertEquals(this.settings.readStringProperty(DATABASE_ROOT_NODE+"path"), databasePath);
-    }
-
-    /**
      * Test the decryption of a string encoded in base 64
      */
     @Test
     void decryptString(){
-        assertEquals(STRING_PLAINTEXT, this.helper.decryptString(STRING_CIPHERTEXT));
+        assertEquals(STRING_PLAINTEXT, this.helper.decrypt(STRING_CIPHERTEXT));
     }
 
     @Test
@@ -119,4 +129,21 @@ class HelperTests {
         assertEquals(DATA_PLAINTEXT, this.helper.decryptData(DATA_CIPHERTEXT));
     }
 
+    /**
+     * Ensure that it calculates the MD5 checksum of the content of a file properly
+     */
+    @Test
+    void calculateFileMD5(){
+        File file = new File(testDirectory +"\\test.txt");
+        try {
+            file.createNewFile();
+            FileWriter writer = new FileWriter(file);
+            writer.write(TEST_STRING);
+            writer.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        assertEquals(TEST_MD5_CHECKSUM, Helper.calculateFileMD5(file.toString()));
+    }
 }

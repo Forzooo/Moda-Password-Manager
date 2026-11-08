@@ -10,6 +10,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 class DatabaseTests {
 
@@ -18,38 +21,44 @@ class DatabaseTests {
      * path would be the same for each test case. Lastly, the directory is destroyed after each test.
      */
     @TempDir
-    private Path TEST_DIRECTORY;
-    private final static String DATABASE_NAME = "test.modb";
-    private final static String SECONDARY_DATABASE_NAME = "test2.modb";
+    private Path testDirectory;
+    private static final String DATABASE_FILE_EXTENSION = ".modb";
+    private static final String DATABASE_NAME = "test.modb";
+    private static final String SECONDARY_DATABASE_NAME = "test2.modb";
 
     // The numbers of total records used
-    private final static int RECORDS_NUMBER = 2;
+    private static final int RECORDS_NUMBER = 2;
 
-    private final static int ID = 1;
-    private final static String USERNAME = "username";
-    private final static String EMAIL_ADDRESS = "email@example.com";
-    private final static String PASSWORD = "password";
-    private final static String SERVICE = "service";
-    private final static String ADDITIONAL_DATA = "Data";
+    // Data table
+    private static final int ID = 1;
+    private static final String USERNAME = "username";
+    private static final String EMAIL_ADDRESS = "email@example.com";
+    private static final String PASSWORD = "password";
+    private static final String SERVICE = "service";
+    private static final String ADDITIONAL_DATA = "Data";
 
-    private final static int ID_2 = 2;
-    private final static String USERNAME_2 = "username2";
-    private final static String EMAIL_ADDRESS_2 = "email2@example.com";
-    private final static String PASSWORD_2 = "password2";
-    private final static String SERVICE_2 = "service2";
-    private final static String ADDITIONAL_DATA_2 = "Data2";
+    private static final int ID_2 = 2;
+    private static final String USERNAME_2 = "username2";
+    private static final String EMAIL_ADDRESS_2 = "email2@example.com";
+    private static final String PASSWORD_2 = "password2";
+    private static final String SERVICE_2 = "service2";
+    private static final String ADDITIONAL_DATA_2 = "Data2";
 
-    private final static Data TEST_DATA = new Data(ID, USERNAME, EMAIL_ADDRESS, PASSWORD, SERVICE, ADDITIONAL_DATA);
+    private static final Data TEST_DATA = new Data(ID, USERNAME, EMAIL_ADDRESS, PASSWORD, SERVICE, ADDITIONAL_DATA);
+    private static final Data UPDATED_TEST_DATA = new Data(ID, USERNAME_2, EMAIL_ADDRESS_2, PASSWORD_2, SERVICE_2, ADDITIONAL_DATA_2);
+    private static final Data TEST_DATA_2 = new Data(ID_2, USERNAME_2, EMAIL_ADDRESS_2, PASSWORD_2, SERVICE_2, ADDITIONAL_DATA_2);
+    private static final Data UPDATED_TEST_DATA_2 = new Data(ID_2, USERNAME, EMAIL_ADDRESS, PASSWORD, SERVICE, ADDITIONAL_DATA);
 
-    // The updated test data
-    private final static Data UPDATED_TEST_DATA = new Data(ID, USERNAME_2, EMAIL_ADDRESS_2, PASSWORD_2, SERVICE_2,
-            ADDITIONAL_DATA_2);
+    // Sensitive Settings table
+    private static final String TEST_ROOT_PROPERTY = "test";
+    private static final int TEST_ROOT_PROPERTY_SIZE = 1;
 
-    private final static Data TEST_DATA_2 = new Data(ID_2, USERNAME_2, EMAIL_ADDRESS_2,
-            PASSWORD_2, SERVICE_2, ADDITIONAL_DATA_2);
+    private static final String TEST_PROPERTY_PATH = TEST_ROOT_PROPERTY+"/example";
+    private static final String TEST_PROPERTY_VALUE = "value";
+    private static final String UPDATED_TEST_PROPERTY_VALUE = "value_updated";
 
-    private final static Data UPDATED_TEST_DATA_2 = new Data(ID_2, USERNAME, EMAIL_ADDRESS, PASSWORD, SERVICE,
-            ADDITIONAL_DATA);
+    private static final String TEST_PROPERTY_PATH_2 = "test2/example2";
+    private static final String TEST_PROPERTY_VALUE_2 = "value2";
 
     private Database database;
 
@@ -58,7 +67,7 @@ class DatabaseTests {
      */
     @BeforeEach
     void init(){
-        this.database = new Database(TEST_DIRECTORY + "\\" + DATABASE_NAME);
+        this.database = new Database(testDirectory + "\\" + DATABASE_NAME);
     }
 
     /**
@@ -66,123 +75,157 @@ class DatabaseTests {
      */
     @AfterEach
     void cleanup(){
-        this.database.closeConnection();
+        this.database.delete();
+    }
+
+    /**
+     * Ensure that the Database class has .modb as its file extension
+     */
+    @Test
+    void getFileExtension(){
+        assertEquals(DATABASE_FILE_EXTENSION, Database.getFileExtension());
     }
 
     /**
      * Ensure that the getDatabaseName returns the name of the database
      */
     @Test
-    void getDatabaseName(){
-        assertEquals(DATABASE_NAME, this.database.getDatabaseName());
-    }
-
-    /**
-     * Ensure that a record is added to the database
-     */
-    @Test
-    void addReadRecord(){
-        this.database.addRecord(TEST_DATA);
-        Data record = this.database.getRecord(ID);
-
-        assertEquals(TEST_DATA, record);
-    }
-
-    /**
-     * Ensure that a record is updated correctly
-     */
-    @Test
-    void updateRecord(){
-        this.database.addRecord(TEST_DATA);
-        this.database.updateRecord(UPDATED_TEST_DATA);
-
-        Data updatedRecord = this.database.getRecord(ID);
-
-        assertEquals(UPDATED_TEST_DATA, updatedRecord);
-    }
-
-    /**
-     * Ensure that a record is deleted correctly
-     */
-    @Test
-    void deleteRecord(){
-        this.database.addRecord(TEST_DATA);
-        this.database.deleteRecord(ID);
-
-        // A deleted record has only the ID set, where the other fields are null thus we use assertNull
-        Data deletedRecord = this.database.getRecord(ID);
-
-        assertNull(deletedRecord.getUSERNAME());
-        assertNull(deletedRecord.getEMAIL_ADDRESS());
-        assertNull(deletedRecord.getPASSWORD());
-        assertNull(deletedRecord.getSERVICE());
-        assertNull(deletedRecord.getADDITIONAL_DATA());
+    void getName(){
+        assertEquals(DATABASE_NAME, this.database.getName());
     }
 
     /**
      * Ensure that changing a database works properly
      */
     @Test
-    void changeDatabase(){
-        this.database.addRecord(TEST_DATA);  // Add the record to the first database
+    void change(){
+        this.database.addDataRecord(TEST_DATA);  // Add the record to the first database
 
         // Change the database to another one and add a new record inside it
-        this.database.changeDatabase(TEST_DIRECTORY + "\\" + SECONDARY_DATABASE_NAME);
+        this.database.change(testDirectory + "\\" + SECONDARY_DATABASE_NAME);
 
         // We're using the updated data instead of the test data 2 as it will be the first record of the second database,
         // so it requires to have the ID = 1, where the test data 2 has ID = 2
-        this.database.addRecord(UPDATED_TEST_DATA);
+        this.database.addDataRecord(UPDATED_TEST_DATA);
 
         // Change the database to the first one and assert that the record inside it is the right one
-        this.database.changeDatabase(TEST_DIRECTORY + "\\" + DATABASE_NAME);
+        this.database.change(testDirectory + "\\" + DATABASE_NAME);
 
-        Data recordFirstDatabase = this.database.getRecord(ID);
+        Data recordFirstDatabase = this.database.getDataRecord(ID);
         assertEquals(TEST_DATA, recordFirstDatabase);
 
         // Change again the database and assert that the record inside is the second one
-        this.database.changeDatabase(TEST_DIRECTORY + "\\" + SECONDARY_DATABASE_NAME);
+        this.database.change(testDirectory + "\\" + SECONDARY_DATABASE_NAME);
 
-        Data recordSecondDatabase = this.database.getRecord(ID);
+        Data recordSecondDatabase = this.database.getDataRecord(ID);
         assertEquals(UPDATED_TEST_DATA, recordSecondDatabase);
     }
 
     /**
-     * Ensure that the database returns the first service field
+     * Ensure that a record is added to the data table
      */
     @Test
-    void getFirstServiceField(){
-        // We have to add records to the database before we're getting the first service field
-        this.database.addRecord(TEST_DATA);
-        this.database.addRecord(TEST_DATA_2);
+    void addDataRecord(){
+        this.database.addDataRecord(TEST_DATA);
+        assertEquals(TEST_DATA, this.database.getDataRecord(ID));
+    }
 
-        Data firstServiceField = this.database.getFirstServiceField();
-        assertEquals(SERVICE, firstServiceField.getSERVICE());
+    /**
+     * Ensure that a record is added to the sensitive settings table
+     */
+    @Test
+    void addSensitiveSettingsRecord(){
+        this.database.addSensitiveSettingsRecord(TEST_PROPERTY_PATH, TEST_PROPERTY_VALUE);
+        assertEquals(TEST_PROPERTY_VALUE, this.database.getSensitiveSettingsValue(TEST_PROPERTY_PATH));
+    }
+
+    /**
+     * Ensure that a record is deleted correctly
+     */
+    @Test
+    void deleteDataRecord(){
+        this.database.addDataRecord(TEST_DATA);
+        this.database.deleteDataRecord(ID);
+
+        // A deleted record has only the ID set, where the other fields are null thus we use assertNull
+        Data deletedRecord = this.database.getDataRecord(ID);
+
+        assertNull(deletedRecord.getUsername());
+        assertNull(deletedRecord.getEmailAddress());
+        assertNull(deletedRecord.getPassword());
+        assertNull(deletedRecord.getService());
+        assertNull(deletedRecord.getAdditionalData());
+    }
+
+    /**
+     * Ensure that the database returns the right autoincrement value for the Data table
+     */
+    @Test
+    void getAutoincrementDataTable(){
+        this.database.addDataRecord(TEST_DATA);
+
+        assertEquals(1, this.database.getAutoincrementDataTable());
+    }
+
+    /**
+     * Ensure that a Data record is updated correctly
+     */
+    @Test
+    void updateDataRecord(){
+        this.database.addDataRecord(TEST_DATA);
+        this.database.updateDataRecord(UPDATED_TEST_DATA);
+
+        Data updatedRecord = this.database.getDataRecord(ID);
+
+        assertEquals(UPDATED_TEST_DATA, updatedRecord);
+    }
+
+    /**
+     * Ensure that a Sensitive Settings record is updated correctly
+     */
+    @Test
+    void updateSensitiveSettingsValue(){
+        this.database.addSensitiveSettingsRecord(TEST_PROPERTY_PATH, TEST_PROPERTY_VALUE);
+        this.database.updateSensitiveSettingsValue(TEST_PROPERTY_PATH, UPDATED_TEST_PROPERTY_VALUE);
+
+        assertEquals(UPDATED_TEST_PROPERTY_VALUE, this.database.getSensitiveSettingsValue(TEST_PROPERTY_PATH));
+    }
+
+    /**
+     * Ensure that only the value of the first sensitive setting added is returned
+     */
+    @Test
+    void getFirstSensitiveSettingRecord(){
+        this.database.addSensitiveSettingsRecord(TEST_PROPERTY_PATH, TEST_PROPERTY_VALUE);
+        this.database.addSensitiveSettingsRecord(TEST_PROPERTY_PATH_2, TEST_PROPERTY_VALUE_2);
+
+        assertEquals(TEST_PROPERTY_VALUE, this.database.getFirstSensitiveSettingRecord());
     }
 
     /**
      * Ensure that the database returns all the service fields
      */
     @Test
-    void getServiceFields(){
+    void getDataServiceFields(){
         // We have to add records to the database before we're getting the first service field
-        this.database.addRecord(TEST_DATA);
-        this.database.addRecord(TEST_DATA_2);
+        this.database.addDataRecord(TEST_DATA);
+        this.database.addDataRecord(TEST_DATA_2);
 
-        ArrayList<Data> serviceFields = this.database.getServiceFields();
-        assertEquals(SERVICE, serviceFields.getFirst().getSERVICE());
-        assertEquals(SERVICE_2, serviceFields.get(1).getSERVICE());
+        List<Data> serviceFields = this.database.getDataServiceFields();
+        assertEquals(SERVICE, serviceFields.getFirst().getService());
+        assertEquals(SERVICE_2, serviceFields.get(1).getService());
         assertEquals(RECORDS_NUMBER, serviceFields.size());  // Also ensure that the number of records returned is 2
     }
 
     /**
-     * Ensure that the database returns all the records inside it
+     * Ensure that the database returns all the Data records inside it
      */
     @Test
-    void getRecords(){
-        this.database.addRecord(TEST_DATA);
-        this.database.addRecord(TEST_DATA_2);
+    void getDataRecords(){
+        this.database.addDataRecord(TEST_DATA);
+        this.database.addDataRecord(TEST_DATA_2);
 
-        ArrayList<Data> records = this.database.getRecords();
+        List<Data> records = this.database.getDataRecords();
         Data firstRecord = records.getFirst();
         Data secondRecord = records.get(1);
 
@@ -192,26 +235,73 @@ class DatabaseTests {
     }
 
     /**
-     * Ensure that the databases changes all the records inside it
+     * Ensure that the database returns all the Sensitive Settings records inside it
      */
     @Test
-    void changeRecords(){
-        this.database.addRecord(TEST_DATA);
-        this.database.addRecord(TEST_DATA_2);
+    void getSensitiveSettingsRecords(){
+        this.database.addSensitiveSettingsRecord(TEST_PROPERTY_PATH, TEST_PROPERTY_VALUE);
+        this.database.addSensitiveSettingsRecord(TEST_PROPERTY_PATH_2, TEST_PROPERTY_VALUE_2);
+
+        Map<String, String> records = this.database.getSensitiveSettingsRecords();
+
+        assertEquals(TEST_PROPERTY_VALUE, records.get(TEST_PROPERTY_PATH));
+        assertEquals(TEST_PROPERTY_VALUE_2, records.get(TEST_PROPERTY_PATH_2));
+        assertEquals(RECORDS_NUMBER, records.size());
+    }
+
+    /**
+     * Ensure that only the properties that share the same root are counted
+     */
+    @Test
+    void countSensitiveSettingsRecords(){
+        this.database.addSensitiveSettingsRecord(TEST_PROPERTY_PATH, TEST_PROPERTY_VALUE);
+        this.database.addSensitiveSettingsRecord(TEST_PROPERTY_PATH_2, TEST_PROPERTY_VALUE_2);
+
+        assertEquals(TEST_ROOT_PROPERTY_SIZE, this.database.countSensitiveSettingsRecords(TEST_ROOT_PROPERTY));
+    }
+
+    /**
+     * Ensure that the databases updates the Data records inside it
+     */
+    @Test
+    void updateDataRecords(){
+        this.database.addDataRecord(TEST_DATA);
+        this.database.addDataRecord(TEST_DATA_2);
 
         ArrayList<Data> records = new ArrayList<>();
         records.add(UPDATED_TEST_DATA);
         records.add(UPDATED_TEST_DATA_2);
 
-        this.database.changeRecords(records);
+        this.database.updateDataRecords(records);
 
-        ArrayList<Data> updatedRecords = this.database.getRecords();
+        List<Data> updatedRecords = this.database.getDataRecords();
 
         Data firstRecord = updatedRecords.getFirst();
         assertEquals(UPDATED_TEST_DATA, firstRecord);
 
         Data secondRecord = updatedRecords.get(1);
         assertEquals(UPDATED_TEST_DATA_2, secondRecord);
+    }
+
+    /**
+     * Ensure that the database updates the Sensitive Settings
+     */
+    @Test
+    void updateSensitiveSettingsRecords(){
+        this.database.addSensitiveSettingsRecord(TEST_PROPERTY_PATH, TEST_PROPERTY_VALUE);
+        this.database.addSensitiveSettingsRecord(TEST_PROPERTY_PATH_2, TEST_PROPERTY_VALUE_2);
+
+        // To avoid the creation of other class attributes, we can simply switch the values between the two properties
+        Map<String, String> records = new HashMap<>();
+        records.put(TEST_PROPERTY_PATH, TEST_PROPERTY_VALUE_2);
+        records.put(TEST_PROPERTY_PATH_2, TEST_PROPERTY_VALUE);
+
+        this.database.updateSensitiveSettingsRecords(records);
+
+        Map<String, String> updateRecords = this.database.getSensitiveSettingsRecords();
+
+        assertEquals(TEST_PROPERTY_VALUE_2, updateRecords.get(TEST_PROPERTY_PATH));
+        assertEquals(TEST_PROPERTY_VALUE, updateRecords.get(TEST_PROPERTY_PATH_2));
     }
 
 }

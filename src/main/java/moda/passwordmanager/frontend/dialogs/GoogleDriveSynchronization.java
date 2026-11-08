@@ -1,0 +1,314 @@
+package moda.passwordmanager.frontend.dialogs;
+
+import moda.passwordmanager.Application;
+import moda.passwordmanager.backend.Data;
+import moda.passwordmanager.backend.googledrive.ConflictData;
+import moda.passwordmanager.frontend.Utilities;
+import moda.passwordmanager.frontend.components.ModernScrollPane;
+import moda.passwordmanager.interthreadcommunication.Event;
+import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
+import net.miginfocom.swing.MigLayout;
+import raven.modal.Toast;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.*;
+import java.util.List;
+
+/**
+ * The Google Drive Synchronization dialog lets the user solve the conflicts related to synchronizing with Google Drive.
+ */
+public class GoogleDriveSynchronization extends JDialog {
+
+    private final InterThreadCommunication itc;
+    private final List<ConflictData> conflictDataList;  // The remote data that needs its conflicts to be solved
+
+    // As the Data object are final, and we need to update it over time based on the user behaviour, we can use a
+    // temporary HashMap to map the ID to the various fields
+    // In this way we can easily create Data objects to use when the "Solve" button is clicked
+    private final HashMap<Integer, LinkedHashMap<Data.Fields, String>> updatedData;
+
+    private final ArrayList<Data> addedData;
+
+    private JPanel conflictsPanel;
+
+    // The buttons that complete/ignores the operations
+    private JButton solveButton;  // The conflicts have been solved, an ITC event will be sent with the results
+    private JButton cancelButton;  // The conflicts have been ignored and the dialog will be disposed
+
+    public GoogleDriveSynchronization(Frame owner, InterThreadCommunication itc, List<ConflictData> conflictDataList){
+        super(owner);  // We have to set the owner of the frame to use notifications inside the frame and not in dialog
+
+        this.itc = itc;
+        this.conflictDataList = conflictDataList;
+        this.addedData = new ArrayList<>();
+        this.updatedData = new HashMap<>();
+
+        initDialog();
+        initComponents();
+        addConflictedData();
+        initListeners();
+    }
+
+    /**
+     * Configurate the properties of the dialog
+     */
+    private void initDialog(){
+        setTitle(Application.getApplicationTitle());
+        setIconImage(Application.getIcon());
+        setSize(new Dimension(700, 600));
+        setModal(true);
+        setResizable(false);
+        setLocationRelativeTo(getOwner());
+        setLayout(new MigLayout(""));
+    }
+
+    /**
+     * Initialize the components
+     */
+    private void initComponents(){
+        JLabel titleLabel = new JLabel();
+        titleLabel.setText(Utilities.getLocaleString("Moda.GoogleDriveSynchronizationConflicts.title"));
+        titleLabel.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, 32));
+
+        this.conflictsPanel = new JPanel();
+
+        // The layout of the conflicts is: local data panel, vertical separator, remote data panel and a gap of 20 between
+        // two data
+        this.conflictsPanel.setLayout(new MigLayout("align center", "[]20[]20[]", "[]20[]"));
+        ModernScrollPane scrollPane = new ModernScrollPane(this.conflictsPanel);
+
+        // The two labels are used to let the user know whether the data is local or remote
+        JLabel localDataSectionLabel = new JLabel();
+        localDataSectionLabel.setText(Utilities.getLocaleString("Moda.GoogleDriveSynchronizationConflicts.localDataSectionLabel"));
+        localDataSectionLabel.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, 24));
+
+        JLabel remoteDataSectionLabel = new JLabel();
+        remoteDataSectionLabel.setText(Utilities.getLocaleString("Moda.GoogleDriveSynchronizationConflicts.remoteDataSectionLabel"));
+        remoteDataSectionLabel.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, 24));
+
+        this.conflictsPanel.add(localDataSectionLabel, "align center");
+        this.conflictsPanel.add(remoteDataSectionLabel, "align center, skip, wrap");
+
+        this.solveButton = new JButton();
+        this.solveButton.setText(Utilities.getLocaleString("Moda.GoogleDriveSynchronizationConflicts.solveButton"));
+
+        this.cancelButton = new JButton();
+        this.cancelButton.setText(Utilities.getLocaleString("Moda.GoogleDriveSynchronizationConflicts.cancelButton"));
+
+        add(titleLabel, "align center, span, wrap");
+        add(scrollPane, "align center, span, push, grow, wrap");
+
+        // TODO. Check if it's feasible to anchor the two buttons to the south-est of the conflictsPanel
+        add(this.cancelButton, "align right, split 2");
+        add(this.solveButton);
+    }
+
+    /**
+     * Initialize the listeners of the components
+     */
+    private void initListeners(){
+        this.solveButton.addActionListener(e -> {
+            // We iterate over the HashMap (ID->Data fields), and we create a Data object for each of them
+            for (Map.Entry<Integer, LinkedHashMap<Data.Fields, String>> dataEntry : updatedData.entrySet()){
+                // It is set to null only when the record has already been deleted locally/remotely, and the user has
+                // chosen to confirm its deletion
+                if (dataEntry.getValue() == null){
+                    this.itc.request(new Event("delete-data", dataEntry.getKey()));
+                }else{
+                    // To create the Data object we set the ID in the updatedData to use a cleaner Data constructor
+                    LinkedHashMap<Data.Fields, String> dataAsHashMap = this.updatedData.get(dataEntry.getKey());
+                    dataAsHashMap.put(Data.Fields.ID, String.valueOf(dataEntry.getKey()));
+                    Data data = new Data(dataAsHashMap);
+
+                    // We update the record in the database
+                    this.itc.request(new Event("update-data", data));
+                }
+            }
+
+            // We add the record in the local database has it has been added only to the remote one yet
+            for (Data data : this.addedData) {
+                this.itc.request(new Event("add-data", data));  // TODO. Check whether ID are kept even
+                                                                         // TODO. if added without setting it
+                                                                         // TODO. from the remote one
+            }
+
+            // After all the conflicts have been solved, we can update the Google Drive status to complete the
+            // synchronization
+            this.itc.request(new Event("google-drive-synchronization-conflicts-solved"));
+            Utilities.showToast(getOwner(), Toast.Type.SUCCESS, Utilities.getLocaleString("Moda.Toast.solvedGoogleDriveConflicts"));
+            dispose();  // The dialog is destroyed as it's not required anymore
+        });
+
+        this.cancelButton.addActionListener(e -> dispose());
+    }
+
+    /**
+     * Adds all the panels that contain the conflicted data to the dialog
+     */
+    private void addConflictedData(){
+        for (ConflictData conflictData : this.conflictDataList){
+            conflictData = decryptData(conflictData);  // We decrypt the data here as it can be used for the service section
+            Data localData = getData(conflictData.getId());  // The local data must have the same ID of the remote one
+
+            // The service section label is used to let the user know what data he is solving the issues for
+            // It is shown in each case unless is they have two different service values and both are not null
+            JLabel serviceSectionLabel = new JLabel();
+            serviceSectionLabel.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, 18));
+
+            // Each data has its own panel where the conflicted fields are shown: one for the local data and one for the
+            // remote one to divide them
+            JPanel localDataPanel = new JPanel();
+            localDataPanel.setLayout(new MigLayout("", "[]"));
+
+            JPanel remoteDataPanel = new JPanel();
+            remoteDataPanel.setLayout(new MigLayout("", "[]"));
+
+            // If the conflicted data has been added on remote, we add it automatically to the DB
+            if (conflictData.getType() == ConflictData.ConflictType.NEW_REMOTE){
+                this.addedData.add(conflictData);  // We add the data added on remote to this ArrayList to let the solve
+                                                   // button listener know that it has to call "add-data" on these data
+                                                   // instead of "update-data"
+                continue;  // We skip to the next iteration as there is no need to add components to the panel for the
+                           // data added on remote
+            }else if (conflictData.getType() == ConflictData.ConflictType.MODIFIED){  // The data has been modified
+                serviceSectionLabel.setText(localData.getService());  // We set the service section label to the local one
+
+                LinkedHashMap<Data.Fields, String> localUserData = localData.asLinkedHashMap();
+                LinkedHashMap<Data.Fields, String> remoteUserData = conflictData.asLinkedHashMap();
+
+                this.updatedData.put(localData.getId(), localUserData);  // By default, the local one is always chosen
+
+                // Iterate over each field and show only the ones that are different
+                for (Map.Entry<Data.Fields, String> localDataEntry : localUserData.entrySet()){
+                    if (!localDataEntry.getValue().equals(remoteUserData.get(localDataEntry.getKey()))){
+                        // The button group allows to select only one of the two radio buttons
+                        ButtonGroup buttonGroup = new ButtonGroup();
+
+                        JRadioButton localDataRadio = new JRadioButton();
+                        localDataRadio.setText(formatText(localDataEntry.getValue()) + " (" + localDataEntry.getKey().toString() +  ")");
+                        localDataRadio.setSelected(true);  // By default, the local one is always chosen to avoid having to
+                                                           // check whether all the conflicts have been solved: in this way
+                                                           // the solve button is already enabled
+
+                        // If the radio button is selected, then we update it in the solved data: the HashMap that will be
+                        // used to update the database in the backend
+                        localDataRadio.addActionListener(
+                                e -> updatedData.get(localData.getId()).put(localDataEntry.getKey(), localDataEntry.getValue())
+                        );
+
+                        JRadioButton remoteDataRadio = new JRadioButton();
+                        remoteDataRadio.setText(formatText(remoteUserData.get(localDataEntry.getKey())) +
+                                " (" + localDataEntry.getKey().toString() +  ")");
+                        remoteDataRadio.addActionListener(
+                                e -> updatedData.get(localData.getId()).put(localDataEntry.getKey(), remoteUserData.get(localDataEntry.getKey()))
+                        );
+
+                        buttonGroup.add(localDataRadio);
+                        buttonGroup.add(remoteDataRadio);
+
+                        localDataPanel.add(localDataRadio, "wrap");
+                        remoteDataPanel.add(remoteDataRadio, "wrap");
+                    }
+                }
+            }else{  // The data has been deleted either locally or remotely
+                // The button group allows to select only one of the two radio buttons
+                ButtonGroup buttonGroup = new ButtonGroup();
+
+                JRadioButton restoreRadio = new JRadioButton();
+                restoreRadio.setText(Utilities.getLocaleString("Moda.GoogleDriveSynchronizationConflicts.restoreRadio"));
+                restoreRadio.setSelected(true);  // By default, the data is restored
+
+                JRadioButton removeRadio = new JRadioButton();
+                removeRadio.setText(Utilities.getLocaleString("Moda.GoogleDriveSynchronizationConflicts.removeRadio"));
+
+                buttonGroup.add(restoreRadio);
+                buttonGroup.add(removeRadio);
+
+                // Based on whether the data has been deleted locally or remotely, we have to manage the local and remote
+                // radio buttons properly and also to set the text of the service section label
+                if (conflictData.getType() == ConflictData.ConflictType.DELETED_LOCAL){
+
+                    serviceSectionLabel.setText(conflictData.getService() + " (" +
+                        Utilities.getLocaleString("Moda.GoogleDriveSynchronizationConflicts.deletedLocally") + ")");
+
+                    ConflictData finalConflictData = conflictData;
+                    restoreRadio.addActionListener(e -> {
+                        // We have to check whether it already contains the Data before adding it as the user could click
+                        // on the restoreRadio more than once
+                        // Also we use addedData instead of updatedData because we cannot use the "update-data" Event on
+                        // a data that is not anymore on the DB
+                        if (!this.addedData.contains(finalConflictData)){
+                            this.addedData.add(finalConflictData);
+                        }
+                    });
+
+                    // If the user chooses Remove then in the solved data hash map we set its linked hash map as null
+                    // to let solve button listener know that it needs to be deleted
+                    removeRadio.addActionListener(e -> this.addedData.remove(finalConflictData));
+                    localDataPanel.add(removeRadio, "span, wrap");
+                    remoteDataPanel.add(restoreRadio, "span, wrap");
+                }else{
+                    serviceSectionLabel.setText(localData.getService() + " (" +
+                        Utilities.getLocaleString("Moda.GoogleDriveSynchronizationConflicts.deletedOnRemote") + ")");
+
+                    restoreRadio.addActionListener(e -> this.updatedData.put(localData.getId(),
+                            localData.asLinkedHashMap()));
+
+                    // If the user chooses Remove then in the solved data hash map we set its linked hash map as null
+                    // to let solve button listener know that it needs to be deleted
+                    removeRadio.addActionListener(e -> this.updatedData.put(localData.getId(), null));
+                    localDataPanel.add(restoreRadio, "span, wrap");
+                    remoteDataPanel.add(removeRadio, "span, wrap");
+                }
+
+                restoreRadio.doClick();  // We trigger the actionListener by default to have an initial value inside the
+                                         // solvedData/updatedData as otherwise it may occur that the user solves the
+                                         // conflicts without clicking one of the radio leaving without a data
+            }
+
+            this.conflictsPanel.add(serviceSectionLabel, "align center, span, wrap");
+
+            // After we have added the components related to each case, we can add the panels divided by a separator
+            this.conflictsPanel.add(localDataPanel, "grow");
+            this.conflictsPanel.add(new JSeparator(SwingConstants.VERTICAL), "growy, width 4!, align center");
+            this.conflictsPanel.add(remoteDataPanel, "grow, wrap");
+
+            // Lastly, we add a horizontal separator to divide the different services
+            this.conflictsPanel.add(new JSeparator(SwingConstants.HORIZONTAL), "span, growx, wrap");
+        }
+    }
+
+    /**
+     * Get the decrypted data of one encrypted
+     */
+    private ConflictData decryptData(ConflictData data){
+        Event request = new Event("decrypt-data", data);  // We can send it as a ConflictData as it
+                                                                   // inherits the Data class
+        Event response = this.itc.request(request);
+
+        // We need to recreate a new ConflictData object as the Backend returns a Data object instead
+        return new ConflictData((Data) response.getData().getFirst(), data.getType());
+    }
+
+    /**
+     * Get the decrypted data of a record based on its ID
+     */
+    private Data getData(int id){
+        Event request = new Event("get-data", id);
+        Event response = this.itc.request(request);
+
+        return (Data) response.getData().getFirst();
+    }
+
+    /**
+     * A text formatter that strips the text of some of its character to adhere to the maximum length of 32
+     */
+    private String formatText(String text){
+        if (text.length() >= 32){
+            return text.substring(0, 13) + "[...]" + text.substring(text.length() - 13);
+        }
+
+        return text;
+    }
+}

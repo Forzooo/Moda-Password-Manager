@@ -2,30 +2,21 @@ package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.frontend.Frontend;
 import moda.passwordmanager.frontend.Utilities;
-import moda.passwordmanager.frontend.components.ModaButton;
-import moda.passwordmanager.frontend.dialogs.Settings;
-import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
+import moda.passwordmanager.frontend.components.ModernButton;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 public class Sidebar extends JPanel {
 
-    private final InterThreadCommunication ITC;
-
     // Swing components
-    private ModaButton addDataButton;
-    private ModaButton showDataButton;
-    private ModaButton settingsButton;
+    private ModernButton addDataButton;
+    private ModernButton showDataButton;
+    private JButton settingsButton;
 
-    public Sidebar(InterThreadCommunication itc){
+    public Sidebar(){
         super();  // Initialize the Panel
-
-        // Set the attributes given by the JFrame
-        this.ITC = itc;
 
         initPanel();
         initComponents();
@@ -50,25 +41,34 @@ public class Sidebar extends JPanel {
         // Title Section
         JLabel passwordManagerLabel = new JLabel();  // Create the JLabel that displays the name of the Password Manager
         passwordManagerLabel.setText("MODA");
-        passwordManagerLabel.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 80));
+        passwordManagerLabel.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.PLAIN, 80));
         passwordManagerLabel.setForeground(UIManager.getColor("Moda.Sidebar.Title.foreground"));
 
         // Create the JButtons used to switch between JPanels of the dynamic part, where their width is the same as
         // the sidebar
         Dimension buttonDimension = new Dimension((int) getPreferredSize().getWidth(), 70);
 
-        this.addDataButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_BLACK, buttonDimension, 30);
-        this.addDataButton.setText("Add Data");
+        this.addDataButton = new ModernButton(ModernButton.Style.BLACK);
+        this.addDataButton.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, 30));
+        this.addDataButton.setPreferredSize(buttonDimension);
+        this.addDataButton.setText(AddData.getPanelTitle());
 
-        this.showDataButton = new ModaButton(ModaButton.ButtonStyle.CLASSIC_BLACK, buttonDimension, 30);
-        this.showDataButton.setText("Show Data");
+        this.showDataButton = new ModernButton(ModernButton.Style.BLACK);
+        this.showDataButton.setFont(new Font(UIManager.getString("Moda.GeneralUseFontFamily"), Font.BOLD, 30));
+        this.showDataButton.setPreferredSize(buttonDimension);
+        this.showDataButton.setText(ShowData.getPanelTitle());
 
-        // Settings + Details section
-        this.settingsButton = new ModaButton(ModaButton.ButtonStyle.EMPTY, buttonDimension.height/2, buttonDimension.height/2, 30);
-        ImageIcon settings_icon = Utilities.getIcon("settings_icon.png");
-        settings_icon.setImage(settings_icon.getImage().getScaledInstance(buttonDimension.height/2,
+        // Settings section
+        this.settingsButton = new JButton();
+        this.settingsButton.setSize(new Dimension(buttonDimension.height, buttonDimension.height));
+        this.settingsButton.setBackground(null);
+        this.settingsButton.setBorderPainted(false);
+        this.settingsButton.setContentAreaFilled(false);
+
+        ImageIcon settingsIcon = Utilities.getIcon("settings_icon.png");
+        settingsIcon.setImage(settingsIcon.getImage().getScaledInstance(buttonDimension.height/2,
                 buttonDimension.height/2, Image.SCALE_SMOOTH));
-        this.settingsButton.setIcon(settings_icon);
+        this.settingsButton.setIcon(settingsIcon);
         this.settingsButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         add(passwordManagerLabel, "al center, wrap 150");
@@ -82,13 +82,10 @@ public class Sidebar extends JPanel {
      */
     private void initListeners(){
         this.addDataButton.addActionListener(e -> switchPanel(AddData.getPanelTitle()));
-//        setHoverEffect(this.addDataButton);
 
         this.showDataButton.addActionListener(e -> switchPanel(ShowData.getPanelTitle()));
-//        setHoverEffect(this.showDataButton);
 
-        this.settingsButton.addActionListener(e -> openSettings());
-//        setHoverEffect(this.settingsButton);
+        this.settingsButton.addActionListener(e -> switchPanel(Settings.getPanelTitle()));
     }
 
     /**
@@ -99,32 +96,5 @@ public class Sidebar extends JPanel {
         // switchPanel that is inside the Frontend
         Frontend frontend = (Frontend) getParent();
         frontend.switchPanel(panelTitle);
-    }
-
-    /**
-     * Open the settings dialog
-     */
-    private void openSettings(){
-        Settings settingsDialog = new Settings(this.ITC);
-        settingsDialog.setVisible(true);
-    }
-
-    /**
-     * Set a hover effect on a JButton
-     */
-    private void setHoverEffect(JButton button){
-        button.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                super.mouseEntered(e);
-                button.setBackground(Color.gray);
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                super.mouseExited(e);
-                button.setBackground(null);
-            }
-        });
     }
 }

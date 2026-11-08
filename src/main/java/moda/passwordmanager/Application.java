@@ -1,8 +1,12 @@
 package moda.passwordmanager;
 
+import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import moda.passwordmanager.backend.Backend;
+import moda.passwordmanager.backend.Database;
+import moda.passwordmanager.frontend.properties.Languages;
+import moda.passwordmanager.frontend.properties.Themes;
 import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.Frontend;
@@ -10,13 +14,15 @@ import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Locale;
 import java.util.concurrent.LinkedBlockingQueue;
 
 
 public class Application extends JFrame {
 
-    private final static String TITLE = "MODA - Password Manager";
-    private final static String VERSION = "0.5.2";  // The current version of the software
+    private static final String TITLE = "MODA - Password Manager";
+    private static final String VERSION = "0.6.0";  // The current version of the software
+    private static Locale applicationLocale;  // The language used by the application
 
     public Application(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
                        String databaseToUse){
@@ -25,14 +31,19 @@ public class Application extends JFrame {
     }
 
     /**
-     * Apply the FlatLaf look and feel to the UI and set general properties
+     * Register the FlatLaf custom default sources to load the properties files
      */
     private void initFlatLaf(){
         FlatLaf.registerCustomDefaultsSource("moda.passwordmanager");  // Register the properties files
-        try {
-            UIManager.setLookAndFeel(new FlatLightLaf());
-        } catch (UnsupportedLookAndFeelException e) {
-            throw new RuntimeException(e);
+    }
+
+    /**
+     * Apply a theme to the application
+     */
+    public static void applyTheme(Themes theme){
+        switch (theme){
+            case LIGHT -> FlatLightLaf.setup();
+            case DARK -> FlatDarkLaf.setup();
         }
     }
 
@@ -66,7 +77,7 @@ public class Application extends JFrame {
 
         for (String arg : args){
             // The databases that the Password Manager use have the extension ".modb"
-            if (arg.endsWith(".modb")){
+            if (arg.endsWith(Database.getFileExtension())){
                 databasePath = arg;
                 break;
             }
@@ -96,6 +107,23 @@ public class Application extends JFrame {
      */
     public static String getVersion(){
         return VERSION;
+    }
+
+    /**
+     * Set the language of the application
+     */
+    public static void setApplicationLanguage(Languages language) {
+        switch (language){
+            case ENGLISH -> Application.applicationLocale = Locale.ENGLISH;
+            case ITALIAN -> Application.applicationLocale = Locale.ITALY;
+        }
+    }
+
+    /**
+     * Get the current language of the translation
+     */
+    public static Locale getApplicationLocale(){
+        return Application.applicationLocale;
     }
 
     public static void main(String[] args){

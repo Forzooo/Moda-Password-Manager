@@ -12,25 +12,25 @@ import java.awt.*;
  */
 public abstract class Section extends JPanel {
 
-    private final static Dimension BUTTON_DIMENSION = new Dimension(250, 20);
-    private final static Dimension TEXT_FIELD_DIMENSION = new Dimension(300, 20);
+    private static final Dimension BUTTON_DIMENSION = new Dimension(250, 20);
+    private static final Dimension TEXT_FIELD_DIMENSION = new Dimension(300, 20);
 
     /**
      * Defines the title of the section. <br>
      * It is displayed inside the Settings dialog.
      */
-    private final String SECTION_TITLE;
+    private final String sectionTitle;
 
-    private final InterThreadCommunication ITC;
+    private final InterThreadCommunication itc;
 
     /**
      * The current section is the panel where the options are added
      */
     private JPanel currentSection;
 
-    public Section(String title, InterThreadCommunication itc){
-        this.SECTION_TITLE = title;
-        this.ITC = itc;
+    protected Section(String title, InterThreadCommunication itc){
+        this.sectionTitle = title;
+        this.itc = itc;
 
         initPanel();
     }
@@ -46,8 +46,8 @@ public abstract class Section extends JPanel {
     /**
      * Get the title of the section
      */
-    public String getSectionTitle(){
-        return this.SECTION_TITLE;
+    public String getTitle(){
+        return this.sectionTitle;
     }
 
     /**
@@ -96,8 +96,8 @@ public abstract class Section extends JPanel {
     /**
      * Get the ITC object used to communicate
      */
-    protected InterThreadCommunication getITC(){
-        return this.ITC;
+    protected InterThreadCommunication getItc(){
+        return this.itc;
     }
 
     /**
@@ -113,4 +113,9 @@ public abstract class Section extends JPanel {
     public static Dimension getTextFieldDimension() {
         return TEXT_FIELD_DIMENSION;
     }
+
+    /**
+     * Set the default values of all the components that have a defined one in the settings file
+     */
+    protected abstract void setSelectedSettings();
 }

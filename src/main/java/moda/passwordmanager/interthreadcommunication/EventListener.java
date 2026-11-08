@@ -2,6 +2,8 @@ package moda.passwordmanager.interthreadcommunication;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.Semaphore;
 
 /**
  * The EventListener class provides the base operations for Events handling, that any EventListener class needs to
@@ -9,7 +11,7 @@ import java.util.HashMap;
  */
 public abstract class EventListener extends Thread {
 
-    private final InterThreadCommunication ITC;
+    private final InterThreadCommunication itc;
     private boolean runFlag;  // Flag used to indicate when the thread has to terminate its execution
 
     /**
@@ -22,22 +24,32 @@ public abstract class EventListener extends Thread {
     /**
      * The handlerMap maps the operations with a method reference and it's used by the handleRequest method
      */
-    private final HashMap<String, Runnable> HANDLER_MAP;
+    private final HashMap<String, Runnable> handlerMap;
 
-    public EventListener(InterThreadCommunication itc){
+    private final ArrayList<String> lockedOperations;
+    private final Semaphore lockedOperation;
+    private static final int LOCKED_PERMITS = 0;
+
+    protected EventListener(InterThreadCommunication itc){
         super();
-        this.ITC = itc;
+        this.itc = itc;
         this.runFlag = true;
-        this.HANDLER_MAP = new HashMap<>();
+        this.handlerMap = new HashMap<>();
+
+        this.lockedOperations = new ArrayList<>();
+        this.lockedOperation = new Semaphore(LOCKED_PERMITS);
 
         initDefaultOperations();
     }
 
-    public EventListener(InterThreadCommunication itc, String threadName){
+    protected EventListener(InterThreadCommunication itc, String threadName){
         super(threadName);  // Set the name of the thread for log purposes
-        this.ITC = itc;
+        this.itc = itc;
         this.runFlag = true;
-        this.HANDLER_MAP = new HashMap<>();
+        this.handlerMap = new HashMap<>();
+
+        this.lockedOperations = new ArrayList<>();
+        this.lockedOperation = new Semaphore(LOCKED_PERMITS);
 
         initDefaultOperations();
     }
@@ -47,7 +59,16 @@ public abstract class EventListener extends Thread {
         super.run();
 
         while (this.runFlag){
-            this.request = this.ITC.receive();  // Wait for a request
+            this.request = this.itc.receive();  // Wait for a request
+
+            // If the operation requested is a locked one the event listener must wait until it is unblocked
+            if (this.lockedOperations.contains(this.request.getOperation())){
+                try {
+                    this.lockedOperation.acquire();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
 
             // If the sequence number of the event is 2 or higher, it means that the event is response to a request,
             // thus we can discard it
@@ -57,14 +78,10 @@ public abstract class EventListener extends Thread {
 
             // Create the response to send to the other queue, where the name of the operation is always the same
             makeResponse(this.request, this.request.getOperation());
-            handleRequest(this.request);  // Handle the operation requested
+            handleRequest(this.request);  // Handle the operation requested (throws an exception if an unknown event is found)
 
-            // It can happen that the operation requested is not in the handling map, thus it is recognized as
-            // an unknown event, and the data has already been reset
-            if (this.response != null){
-                this.ITC.send(this.response);  // Send the response to the other queue
-                resetResponse();  // Reset the data to send for the next Event
-            }
+            this.itc.send(this.response);  // Send the response to the other queue
+            resetResponse();  // Reset the data to send for the next Event
         }
     }
 
@@ -86,7 +103,7 @@ public abstract class EventListener extends Thread {
      * Make the response to the event received
      */
     private void makeResponse(Event request, String operation){
-        this.response = this.ITC.makeResponse(request, operation);
+        this.response = this.itc.makeResponse(request, operation);
     }
 
     /**
@@ -94,8 +111,8 @@ public abstract class EventListener extends Thread {
      */
     private void handleRequest(Event request) {
         String operation = request.getOperation();  // Get the operation to perform
-        if (this.HANDLER_MAP.containsKey(operation)){
-            this.HANDLER_MAP.get(operation).run();  // Execute the method reference
+        if (this.handlerMap.containsKey(operation)){
+            this.handlerMap.get(operation).run();  // Execute the method reference
         }else{
             throw new UnknownOperationException("The operation " + request.getOperation() + " requested is unknown.");
         }
@@ -105,10 +122,33 @@ public abstract class EventListener extends Thread {
      * Add an operation to the handler
      */
     protected void addOperation(String operation, Runnable method) {
-        if (this.HANDLER_MAP.containsKey(operation)){
+        if (this.handlerMap.containsKey(operation)){
             throw new OverriddenOperationException("The operation " + operation + " already exists in the handler map.");
         }
-        this.HANDLER_MAP.put(operation, method);
+        this.handlerMap.put(operation, method);
+    }
+
+    /**
+     * Add a locked operation to the handler. Received locked operations set the EventListener on sleep until they are
+     * unblocked by another thread
+     */
+    protected void addLockedOperation(String operation, Runnable method){
+        addOperation(operation, method);
+        this.lockedOperations.add(operation);  // It has to be added after the addOperation as it checks whether the
+                                               // operation is an overridden one
+    }
+
+    /**
+     * Unlocks an operation and also wakes up the EventListener if it was on sleep due to that operation
+     */
+    protected void unlockOperation(String operation){
+        // We also check whether there is a request, as it may happen that an operation is unlocked before any communication
+        // begins
+        if (this.request != null && this.request.getOperation().equals(operation)){
+            this.lockedOperation.release();
+        }
+
+        this.lockedOperations.remove(operation);
     }
 
     /**
@@ -118,7 +158,7 @@ public abstract class EventListener extends Thread {
         this.response = null;
     }
 
-    protected ArrayList<Object> getRequestData(){
+    protected List<Object> getRequestData(){
         return this.request.getData();
     }
 
@@ -129,8 +169,8 @@ public abstract class EventListener extends Thread {
         this.response.addData(data);
     }
 
-    protected InterThreadCommunication getITC(){
-        return this.ITC;
+    protected InterThreadCommunication getItc(){
+        return this.itc;
     }
 
     /**
@@ -138,8 +178,8 @@ public abstract class EventListener extends Thread {
      */
     protected void handleExceptionRaised(){
         // Create a dummy response used only to stop any synchronous event
-        Event response = this.ITC.makeResponse(this.request, "");
-        this.ITC.send(response);
+        Event dummyResponse = this.itc.makeResponse(this.request, "");
+        this.itc.send(dummyResponse);
     }
 
 }

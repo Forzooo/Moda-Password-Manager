@@ -1,12 +1,12 @@
 package moda.passwordmanager.frontend.panels;
 
 import moda.passwordmanager.frontend.Utilities;
+import raven.modal.Toast;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class UserDataField extends JPanel {
@@ -14,9 +14,9 @@ public class UserDataField extends JPanel {
     private JTextField dataField;
     private JButton copyButton;
 
-    public UserDataField(String dataField){
+    public UserDataField(String fieldValue){
         initPanel();
-        initComponents(dataField);
+        initComponents(fieldValue);
         initListeners();
     }
 
@@ -30,9 +30,9 @@ public class UserDataField extends JPanel {
     /**
      * Initialize the components of the panel
      */
-    private void initComponents(String dataField){
+    private void initComponents(String fieldValue){
         this.dataField = new JTextField();
-        this.dataField.setText(dataField);
+        this.dataField.setText(fieldValue);
         this.dataField.setEditable(false);  // The user cannot modify the data unless "Modify" is clicked
         this.dataField.setPreferredSize(new Dimension(600, 70));
         this.dataField.setMaximumSize(new Dimension(600, 70));
@@ -40,7 +40,7 @@ public class UserDataField extends JPanel {
         // Create the JButton to copy the data field
         this.copyButton = new JButton();
         this.copyButton.setIcon(Utilities.getIcon("copy.png"));
-        this.copyButton.setToolTipText("Copy the data.");
+        this.copyButton.setToolTipText(Utilities.getLocaleString("Moda.UserDataField.copyButtonToolTip"));
         Utilities.applyTrailingButtonProperties(this.copyButton);
 
         this.dataField.putClientProperty("JTextField.trailingComponent", this.copyButton);
@@ -60,15 +60,13 @@ public class UserDataField extends JPanel {
      * @return ActionListener with actionPerformed method
      */
     private ActionListener getCopyDataActionListener(){
-        return new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Get the clipboard from the system
-                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                StringSelection dataToCopy = new StringSelection(dataField.getText());  // Create a Transferable
-                clipboard.setContents(dataToCopy, dataToCopy);  // Copy the transferable
-                JOptionPane.showMessageDialog(getRootPane(), "Copied the data to the clipboard.");
-            }
+        return e -> {
+            // Get the clipboard from the system
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            StringSelection dataToCopy = new StringSelection(dataField.getText());  // Create a Transferable
+            clipboard.setContents(dataToCopy, dataToCopy);  // Copy the transferable
+
+            Utilities.showToast(getRootPane(), Toast.Type.INFO, Utilities.getLocaleString("Moda.UserDataField.copiedDataMessageDialog"));
         };
     }
 

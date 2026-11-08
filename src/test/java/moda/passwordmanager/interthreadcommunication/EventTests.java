@@ -7,10 +7,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class EventTests {
 
-    private final static String OPERATION = "Test";
-    private final static int COMMUNICATION_ID = 1;
-    private final static int EVENT_COMMUNICATION_ID_NOT_SET = -1;
-    private final static int EXPECTED_SEQUENCE_NUMBER = 1;
+    private static final String OPERATION = "Test";
+    private static final int COMMUNICATION_ID = 1;
+    private static final int EVENT_COMMUNICATION_ID_NOT_SET = -1;
+    private static final int EXPECTED_SEQUENCE_NUMBER = 1;
     private Event event;
 
     /**
@@ -22,11 +22,22 @@ class EventTests {
     }
 
     /**
+     * Ensure that the addData method adds the data to the event
+     */
+    @Test
+    void addData(){
+        Object object = new Object();
+
+        this.event.addData(object);
+        assertEquals(object, this.event.getData().getFirst());
+    }
+
+    /**
      * Ensure that the communication ID of an event if it's not set, is equal to -1
      */
     @Test
     void defaultCommunicationID(){
-        assertEquals(-1, this.event.getCommunicationID());
+        assertEquals(EVENT_COMMUNICATION_ID_NOT_SET, this.event.getCommunicationID());
     }
 
     /**
@@ -54,7 +65,7 @@ class EventTests {
     @Test
     void isCommunicationIDSet(){
         this.event.setCommunicationID(COMMUNICATION_ID);
-        assertTrue(this.event.isIdSet());
+        assertTrue(this.event.isCommunicationIdSet());
     }
 
     /**
@@ -62,7 +73,7 @@ class EventTests {
      */
     @Test
     void isCommunicationIDSetFalse(){
-        assertFalse(this.event.isIdSet());
+        assertFalse(this.event.isCommunicationIdSet());
     }
 
 

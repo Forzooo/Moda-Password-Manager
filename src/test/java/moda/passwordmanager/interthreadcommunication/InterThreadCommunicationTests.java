@@ -11,11 +11,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 class InterThreadCommunicationTests {
 
-    private final static String EVENT_NAME = "Test";
-    private final static int EVENT_ID = 1;
+    private static final String EVENT_NAME = "Test";
+    private static final int EVENT_ID = 1;
 
     // The sequence number has to be 1 after the event is sent one time
-    private final static int EVENT_SEQUENCE_SENT_ONE_TIME = 1;
+    private static final int EVENT_SEQUENCE_SENT_ONE_TIME = 1;
     private InterThreadCommunication sender;
     private InterThreadCommunication receiver;
 
@@ -50,8 +50,8 @@ class InterThreadCommunicationTests {
      */
     @Test
     void sendAndReceiveTwoThreads(){
-        Thread sender = new Thread(() -> this.sender.send(new Event(EVENT_NAME)));
-        sender.start();
+        Thread senderThread = new Thread(() -> this.sender.send(new Event(EVENT_NAME)));
+        senderThread.start();
         Event event = this.receiver.receive();
 
         assertEquals(EVENT_NAME, event.getOperation());

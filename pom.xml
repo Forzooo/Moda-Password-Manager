@@ -11,7 +11,7 @@
 
     <groupId>moda</groupId>
     <artifactId>moda-password-manager</artifactId>
-    <version>0.5.2</version>
+    <version>0.6.0</version>
     <name>Moda Password Manager</name>
     <description>Il Moda Password Manager</description>
     <url>https://github.com/Forzooo/Moda-Password-Manager/</url>
@@ -101,7 +101,7 @@
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk18on</artifactId>
-            <version>1.80</version>
+            <version>1.86</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc -->
         <dependency>
@@ -131,13 +131,13 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.21.2</version>
+            <version>2.22.3</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.19.2</version>
+            <version>2.22.3</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
         <dependency>
@@ -163,6 +163,11 @@
             <groupId>com.miglayout</groupId>
             <artifactId>miglayout-swing</artifactId>
             <version>11.4.2</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.dj-raven</groupId>
+            <artifactId>modal-dialog</artifactId>
+            <version>2.6.2</version>
         </dependency>
     </dependencies>
 </project>

@@ -1,13 +1,11 @@
 package moda.passwordmanager.frontend.panels.settings;
 
 import com.formdev.flatlaf.util.SystemFileChooser;
+import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class GoogleDrive extends Section {
 
@@ -16,9 +14,10 @@ public class GoogleDrive extends Section {
     private JCheckBox automaticSynchronizationCheckbox;  // Enable or disable the automatic synchronization
 
     public GoogleDrive(InterThreadCommunication itc){
-        super("Google Drive", itc);
+        super(Utilities.getLocaleString("Moda.GoogleDrive.panelTitle"), itc);
 
         initComponents();
+        setSelectedSettings();
         initListeners();
     }
 
@@ -31,95 +30,89 @@ public class GoogleDrive extends Section {
         this.googleDriveCheckbox = new JCheckBox();
 
         this.synchronizeButton = new JButton();
-        this.synchronizeButton.setText("Synchronize");
+        this.synchronizeButton.setText(Utilities.getLocaleString("Moda.GoogleDrive.synchronizeButton"));
         this.synchronizeButton.setMaximumSize(getButtonDimension());
         this.synchronizeButton.setEnabled(false);  // The sync is allowed only when Google Drive is enabled
 
         this.automaticSynchronizationCheckbox = new JCheckBox();
-
-        // Set the initial configuration of the Google Drive module
-        initGoogleDriveCheckbox();
-        initAutomaticSynchronizationCheckbox();
 
         addOption(this.googleDriveCheckbox);
         addOption(this.synchronizeButton);
         addOption(this.automaticSynchronizationCheckbox);
     }
 
+    @Override
+    protected void setSelectedSettings() {
+        // Retrieve from the settings file the current configuration of Google Drive to set the initial state of the checkbox
+        Event getGoogleDriveEvent = getItc().request(new Event("get-google-drive"));
+
+        if ((boolean) getGoogleDriveEvent.getData().getFirst()){
+            this.googleDriveCheckbox.setText(Utilities.getLocaleString("Moda.GoogleDrive.googleDriveCheckboxEnabled"));
+            this.googleDriveCheckbox.setSelected(true);
+            this.synchronizeButton.setEnabled(true);
+            this.automaticSynchronizationCheckbox.setEnabled(true);
+        }else{
+            this.googleDriveCheckbox.setText(Utilities.getLocaleString("Moda.GoogleDrive.googleDriveCheckboxDisabled"));
+            this.googleDriveCheckbox.setSelected(false);
+            this.synchronizeButton.setEnabled(false);
+            this.automaticSynchronizationCheckbox.setEnabled(false);  // Is allowed only when Google Drive is enabled
+        }
+
+        // Retrieve from the settings file the current configuration of Google Drive synchronization to set the visibilities
+        // of the buttons that enable and disable it
+        Event getGoogleDriveSynchronizationEvent = getItc().request(new Event("get-google-drive-automatic-synchronization"));
+
+        if ((boolean) getGoogleDriveSynchronizationEvent.getData().getFirst()){
+            this.automaticSynchronizationCheckbox.setText(Utilities.getLocaleString("Moda.GoogleDrive.automaticSynchronizationCheckboxEnabled"));
+            this.automaticSynchronizationCheckbox.setSelected(true);
+        }else{
+            this.automaticSynchronizationCheckbox.setText(Utilities.getLocaleString("Moda.GoogleDrive.automaticSynchronizationCheckboxDisabled"));
+            this.automaticSynchronizationCheckbox.setSelected(false);
+        }
+    }
+
     private void initListeners(){
         // Let the user choose its credential.json file for the authentication, then send an Event to the backend
-        this.googleDriveCheckbox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (googleDriveCheckbox.isSelected()){
-                    // Create the File Chooser to allow user to select the credentials.json file
-                    SystemFileChooser fileChooser = new SystemFileChooser();
-                    fileChooser.setDialogTitle("Choose the OAuth credentials file");
-                    fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
+        this.googleDriveCheckbox.addActionListener(e -> {
+            if (googleDriveCheckbox.isSelected()){
+                // Create the File Chooser to allow user to select the credentials.json file
+                SystemFileChooser fileChooser = new SystemFileChooser();
+                fileChooser.setDialogTitle(Utilities.getLocaleString("Moda.GoogleDrive.googleDriveCheckboxFileChooserTitle"));
+                fileChooser.setAcceptAllFileFilterUsed(false);  // Don't accept all the types of files
 
-                    // Create the filter to choose only .modb files
-                    SystemFileChooser.FileNameExtensionFilter filter = new SystemFileChooser.FileNameExtensionFilter("OAuth Credentials (.json)",
-                            "json");
-                    fileChooser.setFileFilter(filter);
+                // Create the filter to choose only .modb files
+                SystemFileChooser.FileNameExtensionFilter filter = new SystemFileChooser.FileNameExtensionFilter(
+                        Utilities.getLocaleString("Moda.GoogleDrive.googleDriveCheckboxFileChooserFilter") + " (.json)",
+                        "json");
+                fileChooser.setFileFilter(filter);
 
-                    // Open the file chooser
-                    if (fileChooser.showOpenDialog(getPanel()) == SystemFileChooser.APPROVE_OPTION){
-                        String path = fileChooser.getSelectedFile().getAbsolutePath();  // Retrieve the path chosen
+                // Open the file chooser
+                if (fileChooser.showOpenDialog(getPanel()) == SystemFileChooser.APPROVE_OPTION){
+                    String path = fileChooser.getSelectedFile().getAbsolutePath();  // Retrieve the path chosen
 
-                        // Check whether the database has been chosen
-                        if (!path.isBlank()){
-                            enableGoogleDrive(path);
-                        }else{
-                            // The operation was aborted or failed, so we deselect the checkbox
-                            googleDriveCheckbox.setSelected(false);
-                        }
+                    // Check whether the database has been chosen
+                    if (!path.isBlank()){
+                        enableGoogleDrive(path);
                     }else{
                         // The operation was aborted or failed, so we deselect the checkbox
                         googleDriveCheckbox.setSelected(false);
                     }
                 }else{
-                    disableGoogleDrive();
+                    // The operation was aborted or failed, so we deselect the checkbox
+                    googleDriveCheckbox.setSelected(false);
                 }
-                updatePreferences();
+            }else{
+                disableGoogleDrive();
             }
+            updatePreferences();
         });
 
         this.synchronizeButton.addActionListener(e -> synchronizeGoogleDrive());
 
-        this.automaticSynchronizationCheckbox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (automaticSynchronizationCheckbox.isSelected()){
-                    enableAutomaticSynchronization();
-                }else{
-                    disableAutomaticSynchronization();
-                }
-                updatePreferences();
-            }
+        this.automaticSynchronizationCheckbox.addActionListener(e -> {
+            setAutomaticSynchronization(automaticSynchronizationCheckbox.isSelected());
+            updatePreferences();
         });
-    }
-
-    /**
-     * Retrieve from the settings file the current configuration of Google Drive to set the initial state of the
-     * checkbox
-     */
-    private void initGoogleDriveCheckbox(){
-        // Retrieve from the settings file the configuration of Google Drive visibility
-        Event event = new Event("get-google-drive");
-        Event response = getITC().request(event);
-        boolean enabled = (boolean) response.getData().getFirst();
-
-        if (enabled){
-            this.googleDriveCheckbox.setText("Disable Google Drive");
-            this.googleDriveCheckbox.setSelected(true);
-            this.synchronizeButton.setEnabled(true);
-            this.automaticSynchronizationCheckbox.setEnabled(true);
-        }else{
-            this.googleDriveCheckbox.setText("Enable Google Drive");
-            this.googleDriveCheckbox.setSelected(false);
-            this.synchronizeButton.setEnabled(false);
-            this.automaticSynchronizationCheckbox.setEnabled(false);  // Is allowed only when Google Drive is enabled
-        }
     }
 
     /**
@@ -127,38 +120,19 @@ public class GoogleDrive extends Section {
      */
     private void updatePreferences(){
         if (this.googleDriveCheckbox.isSelected()){
-            this.googleDriveCheckbox.setText("Disable Google Drive");
+            this.googleDriveCheckbox.setText(Utilities.getLocaleString("Moda.GoogleDrive.googleDriveCheckboxEnabled"));
             this.synchronizeButton.setEnabled(true);
             this.automaticSynchronizationCheckbox.setEnabled(true);
         }else{
-            this.googleDriveCheckbox.setText("Enable Google Drive");
+            this.googleDriveCheckbox.setText(Utilities.getLocaleString("Moda.GoogleDrive.googleDriveCheckboxDisabled"));
             this.synchronizeButton.setEnabled(false);
             this.automaticSynchronizationCheckbox.setEnabled(false);
         }
 
         if (this.automaticSynchronizationCheckbox.isSelected()){
-            this.automaticSynchronizationCheckbox.setText("Disable automatic synchronization");
+            this.automaticSynchronizationCheckbox.setText(Utilities.getLocaleString("Moda.GoogleDrive.automaticSynchronizationCheckboxEnabled"));
         }else{
-            this.automaticSynchronizationCheckbox.setText("Enable automatic synchronization");
-        }
-    }
-
-    /**
-     * Retrieve from the settings file the current configuration of Google Drive synchronization to set the visibilities
-     * of the buttons that enable and disable it
-     */
-    private void initAutomaticSynchronizationCheckbox(){
-        // Retrieve from the settings file the configuration of Google Drive synchronization visibility
-        Event event = new Event("get-google-drive-synchronization");
-        Event response = getITC().request(event);
-        boolean enabled = (boolean) response.getData().getFirst();
-
-        if (enabled){
-            this.automaticSynchronizationCheckbox.setText("Disable automatic synchronization");
-            this.automaticSynchronizationCheckbox.setSelected(true);
-        }else{
-            this.automaticSynchronizationCheckbox.setText("Enable automatic synchronization");
-            this.automaticSynchronizationCheckbox.setSelected(false);
+            this.automaticSynchronizationCheckbox.setText(Utilities.getLocaleString("Moda.GoogleDrive.automaticSynchronizationCheckboxDisabled"));
         }
     }
 
@@ -167,16 +141,18 @@ public class GoogleDrive extends Section {
      * @param credentialsPath The path of the OAuth credentials used for the authentication
      */
     private void enableGoogleDrive(String credentialsPath){
-        Event event = new Event("google-drive-authenticate", credentialsPath);
-        getITC().request(event);
+        Event event = new Event("set-google-drive");
+        event.addData(true);  // It allows the authentication
+        event.addData(credentialsPath);
+        getItc().request(event);
     }
 
     /**
      * Disable the Google Drive synchronization
      */
     private void disableGoogleDrive(){
-        Event event = new Event("google-drive-unauthenticate");
-        getITC().request(event);  // Wait for the end of operations before disabling the button
+        Event event = new Event("set-google-drive", false);
+        getItc().request(event);  // Wait for the end of operations before disabling the button
     }
 
     /**
@@ -184,23 +160,14 @@ public class GoogleDrive extends Section {
      */
     private void synchronizeGoogleDrive(){
         Event event = new Event("google-drive-synchronize");
-        getITC().request(event);
+        getItc().send(event);
     }
 
     /**
-     * Enable the automatic synchronization of Google Drive
+     * Set the automatic synchronization of Google Drive
      */
-    private void enableAutomaticSynchronization(){
-        Event event = new Event("enable-google-drive-synchronization");
-        getITC().request(event);
+    private void setAutomaticSynchronization(boolean state){
+        Event event = new Event("set-google-drive-automatic-synchronization", state);
+        getItc().request(event);
     }
-
-    /**
-     * Disable the automatic synchronization of Google Drive
-     */
-    private void disableAutomaticSynchronization(){
-        Event event = new Event("disable-google-drive-synchronization");
-        getITC().request(event);
-    }
-
 }

@@ -10,8 +10,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class EventListenerTests {
 
-    private final static String EVENT_NAME = "Test";
-    private final static String EVENT_NAME_2 = "Test_2";
+    private static final String OPERATION = "Test";
+    private static final String OPERATION_2 = "Test_2";
     private InterThreadCommunication sender;
     private EventListener eventListener;
 
@@ -35,13 +35,32 @@ class EventListenerTests {
      */
     @Test
     void handleRequest(){
-        this.eventListener.addOperation(EVENT_NAME, ()->{});  // Add the operation to the handler map
+        this.eventListener.addOperation(OPERATION, ()->{});  // Add the operation to the handler map
 
         // Create and make a request to the event listener
-        Event event = new Event(EVENT_NAME);
+        Event event = new Event(OPERATION);
         Event response = this.sender.request(event);
 
-        assertEquals(EVENT_NAME, response.getOperation());
+        assertEquals(OPERATION, response.getOperation());
+    }
+
+    /**
+     * Test that the EventListener handles the locked operation only when it becomes unlocked
+     */
+    @Test
+    void lockedOperation(){
+        // Add the locked operation to the handler map
+        this.eventListener.addLockedOperation(OPERATION, () -> {});
+
+        // Send the event with the locked operation
+        Event event = new Event(OPERATION);
+        this.sender.send(event);
+
+        // Unlock the operation and wait for a response
+        this.eventListener.unlockOperation(OPERATION);
+        Event response = this.sender.receive();
+
+        assertEquals(OPERATION, response.getOperation());
     }
 
     /**
@@ -50,22 +69,22 @@ class EventListenerTests {
     @Test
     void discardEvent(){
         // Add the operations to the handler map
-        this.eventListener.addOperation(EVENT_NAME, () -> {});
-        this.eventListener.addOperation(EVENT_NAME_2, () -> {});
+        this.eventListener.addOperation(OPERATION, () -> {});
+        this.eventListener.addOperation(OPERATION_2, () -> {});
 
         // The event which has to be discarded from the EventListener, thus we need to increment the sequence number
         // two times
-        Event eventToDiscard = new Event(EVENT_NAME);
+        Event eventToDiscard = new Event(OPERATION);
         eventToDiscard.incrementSequenceNumber();
         eventToDiscard.incrementSequenceNumber();
 
-        Event eventToReceive = new Event(EVENT_NAME_2);
+        Event eventToReceive = new Event(OPERATION_2);
 
         this.sender.send(eventToDiscard);
         this.sender.send(eventToReceive);
 
         Event eventListenerResponse = this.sender.receive();
-        assertEquals(EVENT_NAME_2, eventListenerResponse.getOperation());
+        assertEquals(OPERATION_2, eventListenerResponse.getOperation());
     }
 
     /**
@@ -75,10 +94,10 @@ class EventListenerTests {
     void raiseOverriddenOperationException(){
         boolean exceptionRaised = false;
 
-        this.eventListener.addOperation(EVENT_NAME, () -> {});
+        this.eventListener.addOperation(OPERATION, () -> {});
 
         try{
-            this.eventListener.addOperation(EVENT_NAME, () -> {});
+            this.eventListener.addOperation(OPERATION, () -> {});
         }catch (OverriddenOperationException e){
             exceptionRaised = true;
         }
@@ -86,4 +105,19 @@ class EventListenerTests {
         assertTrue(exceptionRaised);
     }
 
+    /**
+     * Ensure that when the handleExceptionRaised method is called, it sends an empty Event
+     */
+    @Test
+    void handleExceptionRaised(){
+        this.eventListener.addOperation(OPERATION, () -> {});
+
+        // We need to handle a synchronous event first, otherwise the handleExceptionRaised won't have a sequence number
+        this.sender.request(new Event(OPERATION));
+        this.eventListener.handleExceptionRaised();
+
+        Event response = this.sender.receive();
+
+        assertEquals("", response.getOperation());
+    }
 }

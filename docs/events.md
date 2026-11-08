@@ -35,14 +35,14 @@ method.
 * Operation: `set-master-password`
 * Sender: Frontend
 * Description: Sends the master password entered by the user
-* Dati: _char[]_ masterPassword
+* Data: _char[]_ masterPassword
 * Data received: _boolean_ flag that is set to true only if the master password entered is the right one
 * Synchronous: required
 
 ### Update the Master Password
 * Operation: `update-master-password`
 * Sender: Frontend
-* Description: Updates the master password with a new one, reencrypting the data of the database
+* Description: Updates the master password with a new one, reencrypting the tables of the database
 * Data sent: _char[]_ new master password
 * Data received: -
 * Synchronous: required
@@ -55,14 +55,6 @@ method.
 * Data received: -
 * Synchronous: not required
 
-### Reset the service fields
-* Operation: `reset-service-fields`
-* Sender: Backend
-* Description: The service fields stored in the "Show Data" section must be reset
-* Data sent: -
-* Data received: -
-* Synchronous: not required
-
 ### Get Data
 * Operation: `get-data`
 * Sender: Frontend
@@ -71,8 +63,8 @@ method.
 * Data received: _Data_ decrypted data
 * Synchronous: required
 
-### Save Data
-* Operation: `save-data`
+### Add Data
+* Operation: `add-data`
 * Sender: Frontend
 * Description: Send the data to the backend to save it inside the database
 * Data sent: _Data_ data entered by the user
@@ -95,6 +87,14 @@ method.
 * Data received: -
 * Synchronous: required
 
+### Decrypt Data
+* Operation: `decrypt-data`
+* Sender: Frontend
+* Description: Decrypt an encrypted _Data_ object
+* Data sent: _Data_ the encrypt data
+* Data received: _Data_ the decrypted data
+* Synchronous: required
+
 ***
 
 ## Database Operations
@@ -114,7 +114,7 @@ method.
 * Data received: _String_ path
 * Synchronous: required
 
-### get-recent-databases
+### Get the recent databases
 * Operation: `get-recent-databases`
 * Sender: Frontend
 * Description: Get the paths of the last databases used
@@ -125,7 +125,7 @@ method.
 ***
 
 ## Google Drive
-### Get Google Drive
+### Get the Google Drive status
 * Operation: `get-google-drive`
 * Sender: Frontend
 * Description: Requests whether Google Drive synchronization is enabled
@@ -133,53 +133,56 @@ method.
 * Data received:  _boolean_ google drive synchronizations status
 * Synchronous: required
 
-### Google Drive authentication
-* Operation: `google-drive-authenticate`
+### Set the Google Drive status
+* Operation: `set-google-drive`
 * Sender: Frontend
-* Description: Send the path of the JSON credentials file used to authenticate with Google Drive
-* Data sent: _String_ path of "credentials.json"
+* Description: Enable or disable the Google Drive service, which also requires the JSON credentials file used to 
+authenticate with Google Drive (only if it has to be enabled)
+* Data sent: _boolean_ status of Google Drive, _String_ path of "credentials.json" (only if the status is set to true)
 * Data received: -
 * Synchronous: not required
 
-### Google Drive unathentication
-* Operation: `google-drive-unauthenticate`
-* Sender: Frontend
-* Description: Unauthenticate from Google Drive
-* Data sent: -
-* Data received: -
-* Synchronous: not required
-
-### Google Drive synchronization
+### Synchronization with Google Drive
 * Operation: `google-drive-synchronize`
 * Sender: Frontend
 * Description: Perform a synchronization with Google Drive
 * Data sent: -
 * Data received: -
+* Synchronous: not required
+
+### Google Drive synchronization conflicts
+* Operation: `google-drive-synchronization-conflicts`
+* Sender: Backend
+* Description: During the synchronization some conflicts between the local database and the remote one have been found.
+  The user has to solve them by updating the local database with the changes he wants.
+* Data sent: _ArrayList<Data>_ the conflict data
+* Data received: -
+* Synchronous: not required
+
+### Google Drive synchronization conflicts solved
+* Operation: `google-drive-synchronization-conflicts-solved`
+* Sender: Frontend
+* Description: The synchronization conflicts found have been solved, thus the local database has been updated, and the
+  synchronization can be performed.
+* Data sent: -
+* Data received: -
 * Synchronous: required
 
-### Enable Google Drive automatic synchronization
-* Operation: `enable-google-drive-synchronization`
-* Sender: Frontend
-* Description: Enable the automatic synchronization
-* Data sent: -
-* Data received: -
-* Synchronous: not required
-
-### Disable Google Drive automatic synchronization
-* Operation: `disable-google-drive-synchronization`
-* Sender: Frontend
-* Description: Disable the automatic synchronization
-* Data sent: -
-* Data received: -
-* Synchronous: not required
-
-### Get Google Drive automatic synchronization
-* Operation: `get-google-drive-synchronization`
+### Get the Google Drive automatic synchronization
+* Operation: `get-google-drive-automatic-synchronization`
 * Sender: Frontend
 * Description: Request whether the automatic synchronization is enabled
 * Data sent: -
 * Data received: _boolean_ automatic synchronization status
 * Synchronous: required
+
+### Set the Google Drive automatic synchronization
+* Operation: `set-google-drive-automatic-synchronization`
+* Sender: Frontend
+* Description: Enable or disable the automatic synchronization
+* Data sent: _boolean_ status of the automatic synchronization
+* Data received: -
+* Synchronous: not required
 
 ***
 
@@ -193,8 +196,8 @@ file
 * Data received: _String_ the generated string
 * Synchronous: required
 
-### Configure String Generation
-* Operation: `configure-string-generation`
+### Set the string generation parameters
+* Operation: `set-string-generation`
 * Sender: Frontend
 * Description: Set the parameters of the string generation
 * Data sent: _int_ length of the string, _bool_ whether letters are enabled, _bool_ whether numbers are enabled, _bool_ 
@@ -202,11 +205,76 @@ whether special characters are enabled
 * Data received: -
 * Synchronous: not required
 
-### Get String Generation Configuration
-* Operation: `get-string-generation-configuration`
+### Get the string generation parameters
+* Operation: `get-generation-configuration`
 * Sender: Frontend
 * Description: Request the parameters of the string generation
 * Data sent: -
 * Data received: _int_ length of the string, _bool_ whether letters are enabled, _bool_ whether numbers are enabled, _bool_
   whether special characters are enabled
 * Synchronous: required
+
+### Get the application theme
+* Operation: `get-application-theme`
+* Sender: Frontend
+* Description: Request the theme used by the application
+* Data sent: -
+* Data received: _Themes_ theme
+* Synchronous: required
+
+### Set the application theme
+* Operation: `set-application-theme`
+* Sender: Frontend
+* Description: Set the new theme of the application
+* Data sent: _Themes_ the new theme
+* Data received: -
+* Synchronous: not required
+
+### Get the application language
+* Operation: `get-application-language`
+* Sender: Frontend
+* Description: Request the language used by the application
+* Data sent: -
+* Data received: _Languages_ language
+* Synchronous: required
+
+### Set the application theme
+* Operation: `set-application-theme`
+* Sender: Frontend
+* Description: Set the new language of the application
+* Data sent: _Languages_ the new language
+* Data received: -
+* Synchronous: not required
+
+### Check for a new version
+* Operation: `check-new-version`
+* Sender: Frontend
+* Description: Check for a new version of the application
+* Data sent: 
+* Data received: _bool_ newVersion, _int_ version (if newVersion is true)
+* Synchronous: not required
+
+### Is the control for a new version on startup enabled
+* Operation: `is-check-new-version-on-startup`
+* Sender: Frontend
+* Description: Get the control status saved in the settings
+* Data sent: -
+* Data received: _bool_ status
+* Synchronous: not required
+
+### Set the control for a new version on startup
+* Operation: `set-check-new-version-on-startup`
+* Sender: Frontend
+* Description: Set the control for a new version on startup
+* Data sent: _bool_ status
+* Data received: -
+* Synchronous: not required
+
+### Show a Toast
+* Operation: `show-toast`
+* Sender: Backend
+* Description: The backend tells the Frontend Event Listener to show a Toast containing some data to be displayed to the user
+* Data sent: _String_ text of the Toast formatted as the locale string, _Toast.Type_ the type of the Toast: Info, Error,
+             Success, ...
+* Data received_ -
+* Synchronous: not required

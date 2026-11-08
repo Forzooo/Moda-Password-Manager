@@ -1,6 +1,10 @@
 package moda.passwordmanager.frontend;
 
+import moda.passwordmanager.Application;
+import moda.passwordmanager.frontend.components.ModernScrollPane;
 import moda.passwordmanager.frontend.dialogs.Startup;
+import moda.passwordmanager.frontend.properties.Languages;
+import moda.passwordmanager.frontend.properties.Themes;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.frontend.panels.*;
@@ -13,10 +17,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class Frontend extends JPanel {
 
     // The InterThreadCommunication objects used to communicate with the Backend thread
-    private final InterThreadCommunication ITC;
-
-    // The Frontend Event Listener used to receive and handle requests from the backend
-    private FrontendEventListener eventListener;
+    private final InterThreadCommunication itc;
 
     // The panel that contains the one being shown in the frontend and is used to retrieve its CardLayout to switch
     // between panels, which have to implement the PanelTitle interface
@@ -28,19 +29,23 @@ public class Frontend extends JPanel {
                     String databasePath){
 
         // Start the communication between the backend and the frontend
-        this.ITC = new InterThreadCommunication(backendQueue, frontendQueue);
+        this.itc = new InterThreadCommunication(backendQueue, frontendQueue);
 
         setInitialDatabase(databasePath);  // Set, if not empty, the database to use
 
         // Set the default exception handler for the Frontend threads
         Thread.setDefaultUncaughtExceptionHandler(this::exceptionHandler);
 
+        Application.setApplicationLanguage(getApplicationLanguage());
+        Application.applyTheme(getApplicationTheme());
         initStartup();
 
         initPanel();  // Set the properties of the panel
         initComponents();  // Initialize all the JPanels
-        initEventListener();  // Initialize the Event Listener only after all the frontend components have been init
 
+        // The Frontend Event Listener used to receive and handle requests from the backend, it must be initialized
+        // after all the frontend components have been set up
+        new FrontendEventListener(this.itc, this.showDataPanel).start();
     }
 
     /**
@@ -51,7 +56,7 @@ public class Frontend extends JPanel {
         String stackTrace = Utilities.getStackTrace(e);  // Get the full stack trace of the throwable
         // Show the exception as a Message Dialog with the type of error message
         JOptionPane.showMessageDialog(this, Utilities.getStackTraceRows(stackTrace, 5),
-                "The following exception occurred in the " + t.getName() + " thread", JOptionPane.ERROR_MESSAGE);
+                Utilities.getLocaleString("Moda.Frontend.exceptionHandlerTitle") + " " + t.getName(), JOptionPane.ERROR_MESSAGE);
     }
 
     /**
@@ -64,14 +69,34 @@ public class Frontend extends JPanel {
             return;
         }
         Event event = new Event("set-database", databasePath);
-        this.ITC.request(event);
+        this.itc.request(event);
+    }
+
+    /**
+     * Get the theme of the application from the settings
+     */
+    private Themes getApplicationTheme(){
+        Event request = new Event("get-application-theme");
+        Event response = this.itc.request(request);
+
+        return (Themes) response.getData().getFirst();
+    }
+
+    /**
+     * Get the language of the application from the settings
+     */
+    private Languages getApplicationLanguage(){
+        Event request = new Event("get-application-language");
+        Event response = this.itc.request(request);
+
+        return (Languages) response.getData().getFirst();
     }
 
     /**
      * Ask the user for the master password before starting to use the password manager
      */
     private void initStartup(){
-        Startup startup = new Startup(this.ITC);
+        Startup startup = new Startup(this.itc);
         startup.setVisible(true);
     }
 
@@ -80,29 +105,24 @@ public class Frontend extends JPanel {
      */
     private void initPanel(){
         setFocusable(true);  // Set the focus on the frame to get the keyboard inputs
-        setLayout(new MigLayout("insets 0 0 0 0"));
-    }
-
-    /**
-     * Initialize the Frontend event listener
-     */
-    private void initEventListener(){
-        this.eventListener = new FrontendEventListener(this.ITC, this.showDataPanel);
-        this.eventListener.start();
+        setLayout(new MigLayout("insets 0 0 0 0, fill", "[]0[]"));  // The gap between cols must be 0
     }
 
     /**
      * Initialize the components
      */
     private void initComponents(){
-        Sidebar sidebar = new Sidebar(this.ITC);
+        Sidebar sidebar = new Sidebar();
 
         this.frontendPanel = new JPanel();
         this.frontendPanel.setLayout(new CardLayout());
 
-        this.showDataPanel = new ShowData(this.ITC);
+        this.showDataPanel = new ShowData(this.itc);
         this.frontendPanel.add(this.showDataPanel, ShowData.getPanelTitle());
-        this.frontendPanel.add(new AddData(this.ITC), AddData.getPanelTitle());
+        this.frontendPanel.add(new AddData(this.itc), AddData.getPanelTitle());
+
+        ModernScrollPane settingsScrollPane = new ModernScrollPane(new Settings(this.itc));
+        this.frontendPanel.add(settingsScrollPane, Settings.getPanelTitle());
 
         add(sidebar, "grow");
         add(this.frontendPanel, "span, grow, push");

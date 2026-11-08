@@ -1,5 +1,6 @@
 package moda.passwordmanager.backend;
 
+import moda.passwordmanager.backend.settings.Settings;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -13,18 +14,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class SettingsTests {
 
     // The property node used by the test can be any
-    private final static String PROPERTY_NODE = "database/path";
-    private final static String STRING_PROPERTY = "Test";
-    private final static int INT_PROPERTY = 1;
-    private final static boolean BOOLEAN_PROPERTY = true;
-    private final static List LIST_PROPERTY = new ArrayList();
+    private static final String PROPERTY_NODE = "check_version_on_startup";
+    private static final String SUBPROPERTY_NODE = "database/selected";
+    private static final String STRING_PROPERTY = "Test";
+    private static final int INT_PROPERTY = 1;
+    private static final boolean BOOLEAN_PROPERTY = true;
+    private static final List<Object> LIST_PROPERTY = new ArrayList<>();
 
     /**
      * The temporary directory where the settings file will be placed. It must not be a static attribute as otherwise the
      * path would be the same for each test case. Lastly, the directory is destroyed after each test.
      */
     @TempDir
-    private Path TEST_DIRECTORY;
+    private Path testDirectory;
 
     private Settings settings;
 
@@ -33,7 +35,7 @@ class SettingsTests {
      */
     @BeforeEach
     void init(){
-        this.settings = new Settings(TEST_DIRECTORY +"\\"+Helper.getSettingsFile());
+        this.settings = new Settings(testDirectory +"\\"+Settings.getFilename());
     }
 
     /**
@@ -46,12 +48,30 @@ class SettingsTests {
     }
 
     /**
+     * Ensure that a string subproperty is written in the file
+     */
+    @Test
+    void writeReadStringSubproperty(){
+        this.settings.writeSubproperty(SUBPROPERTY_NODE, STRING_PROPERTY);
+        assertEquals(STRING_PROPERTY, this.settings.readStringProperty(SUBPROPERTY_NODE));
+    }
+
+    /**
      * Ensure that a int property is written in the file
      */
     @Test
     void writeReadIntProperty(){
         this.settings.writeProperty(PROPERTY_NODE, INT_PROPERTY);
         assertEquals(INT_PROPERTY, this.settings.readIntProperty(PROPERTY_NODE));
+    }
+
+    /**
+     * Ensure that a int subproperty is written in the file
+     */
+    @Test
+    void writeReadIntSubproperty(){
+        this.settings.writeSubproperty(SUBPROPERTY_NODE, INT_PROPERTY);
+        assertEquals(INT_PROPERTY, this.settings.readIntProperty(SUBPROPERTY_NODE));
     }
 
     /**
@@ -64,12 +84,30 @@ class SettingsTests {
     }
 
     /**
-     * Ensure that a boolean property is written in the file
+     * Ensure that a boolean subproperty is written in the file
+     */
+    @Test
+    void writeReadBooleanSubproperty(){
+        this.settings.writeSubproperty(SUBPROPERTY_NODE, BOOLEAN_PROPERTY);
+        assertEquals(BOOLEAN_PROPERTY, this.settings.readBooleanProperty(SUBPROPERTY_NODE));
+    }
+
+    /**
+     * Ensure that a list property is written in the file
      */
     @Test
     void writeReadListProperty(){
         this.settings.writeListProperty(PROPERTY_NODE, LIST_PROPERTY);
         assertEquals(LIST_PROPERTY, this.settings.readListProperty(PROPERTY_NODE));
+    }
+
+    /**
+     * Ensure that a list subproperty is written in the file
+     */
+    @Test
+    void writeReadListSubproperty(){
+        this.settings.writeListSubproperty(SUBPROPERTY_NODE, LIST_PROPERTY);
+        assertEquals(LIST_PROPERTY, this.settings.readListProperty(SUBPROPERTY_NODE));
     }
 
 }
