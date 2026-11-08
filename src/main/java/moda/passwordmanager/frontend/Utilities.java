@@ -154,7 +154,7 @@ public class Utilities {
      * Get the filename from a path
      */
     public static String getFilenameFromPath(String path){
-        Path filePath = Paths.get(path);
+        Path filePath = Path.of(path);
 
         return filePath.getFileName().toString();
     }
