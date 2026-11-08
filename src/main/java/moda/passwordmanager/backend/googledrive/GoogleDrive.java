@@ -1,4 +1,4 @@
-package moda.passwordmanager.backend;
+package moda.passwordmanager.backend.googledrive;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.auth.oauth2.StoredCredential;
@@ -18,6 +18,9 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
+import moda.passwordmanager.backend.Data;
+import moda.passwordmanager.backend.Database;
+import moda.passwordmanager.backend.Helper;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
@@ -341,78 +344,98 @@ public class GoogleDrive {
             return;
         }
 
-        // If the remote database and the local one have the same checksum it means that no changes have been made,
-        // thus we can avoid further operations
+        // If the remote database and the local one do not have the same checksum it means that some changes were made
         if (!remoteDatabaseChecksum.equals(Helper.calculateFileMD5(databasePath))){
-            // The name of the remote database in the path is the checksum of the remote database to ensure that there
-            // are no duplicate files (hash collision are rare)
+            // The name of the remote database file is its checksum to ensure that there are no duplicate
+            // files (hash collision are rare)
             Database remoteDatabase = downloadDatabase(databaseName,
                     Helper.getPasswordManagerAppDataPath()+remoteDatabaseChecksum+Database.getFileExtension());
             List<Data> remoteDataRecords = remoteDatabase.getDataRecords();
             int remoteDataAutoincrement = remoteDatabase.getAutoincrementDataTable();  // We need it to check for any
                                                                                        // record deleted on the remote
-            remoteDatabase.delete();  // After the remote records are obtained, we can
-                                      // delete the remote database from the file system
+            remoteDatabase.delete();  // After the remote records are obtained, we can delete the remote database
+                                      // from the file system
 
+            // Retrieve all the local records to compare them
             Database localDatabase = new Database(databasePath);
             List<Data> localDataRecords = localDatabase.getDataRecords();
+            int localDataAutoincrement = localDatabase.getAutoincrementDataTable();
             localDatabase.closeConnection();
 
-            // We iterate over the local Data objects to look for any that are not inside the remote database: we want
-            // to know if there is any record that has been deleted on the remote database
-            for (int i = localDataRecords.size()-1; i >= 0; i--){
-                boolean existsOnRemote = false;
-                Data localData = localDataRecords.get(i);
-
-                // If we find a matching ID: we can skip it
-                for (Data remoteData : remoteDataRecords){
-                    if (localData.getId() == remoteData.getId()){
-                        existsOnRemote = true;
-                        break;
-                    }
-                }
-
-                // If the data is not on the remote database and its ID is less than or equal to the remote database
-                // autoincrement value we know that it has been deleted, otherwise if the ID is greater the data has been
-                // created on the local database, thus we can ignore it
-                if (!existsOnRemote && localData.getId() <= remoteDataAutoincrement){
-                    // So, we set its service attribute to null to let the frontend know that it is a record that has
-                    // been deleted
-                    remoteDataRecords.add(new Data(localData.getId(), null));
-                    localDataRecords.remove(localData);  // The data is removed from the local records as otherwise when
-                                                         // we are looking for records that have the same hashcode
-                                                         // it could occur that they could be removed
-                }
-            }
-
-            // We remove the data that are still the same on the remote database
-            // And for the iteration we have to do it backwards for the outer loop as if we remove Data objects from
-            // the start, the ArrayList automatically re-indexes itself, thus skipping some objects
-            for (int i = remoteDataRecords.size()-1; i >= 0; i--){
-                Data remoteData = remoteDataRecords.get(i);
-
-                // The inner loop can use a foreach because if we find a matching Data object we will break
-                // the iteration and we will restart it from the new ArrayList in the next outer iteration,
-                // ignoring the re-index problem
-                for (Data localData : localDataRecords){
-                    if (localData.getId() == remoteData.getId() && localData.hashCode() == remoteData.hashCode()){
-                        remoteDataRecords.remove(remoteData);
-                        localDataRecords.remove(localData);
-                        break;
-                    }
-                }
-            }
+            // We calculate the conflicts between the local and the remote records
+            List<ConflictData> conflicts = calculateConflicts(localDataRecords, remoteDataRecords, localDataAutoincrement, remoteDataAutoincrement);
 
             // If the remote data records are empty it means that no update has been made to the Data table (probably
             // it has to the sensitive settings) thus we can set the conflicts solved to true
-            if (remoteDataRecords.isEmpty()){
+            if (conflicts.isEmpty()){
                 this.conflictsSolved = true;
             }else{  // Otherwise, the user has to solve the conflicts before Google Drive is allowed to upload the
                     // database
                 this.conflictsSolved = false;
-                this.itc.send(new Event("google-drive-synchronization-conflicts", remoteDataRecords));
+                this.itc.send(new Event("google-drive-synchronization-conflicts", conflicts));
             }
         }
+    }
+
+    /**
+     * Calculate the conflicts between the local database records and the remote one. It returns a List of ConflictData
+     * that specifies which type of conflict has been identified for each record, and contains the remote Data as the
+     * frontend can only get the local Data while the remote ones would be lost
+     */
+    private List<ConflictData> calculateConflicts(List<Data> localDataRecords, List<Data> remoteDataRecords, int localDataAutoincrement,
+                                          int remoteAutoincrement){
+        List<ConflictData> conflicts = new ArrayList<>();
+
+        // We iterate over the two lists and remove all the objects that have the same ID: in the end we plan to have
+        // only Data objects that have been deleted on local/remote or added locally
+        // Also, we add to the conflicts list all the remoteData that its hashCode does not match the local one because
+        // the GoogleDriveSynchronization class needs it to solve the synchronization: the remote DB has already been
+        // deleted so there is no way to recover them later
+        for (int i = localDataRecords.size()-1; i >= 0; i--){  // We iterate backwards to avoid the re-indexing of the
+                                                               // ArrayList after each remove method call.
+            Data localData = localDataRecords.get(i);
+
+            for (Data remoteData : remoteDataRecords){
+                if (localData.getId() == remoteData.getId()){
+                    if (localData.hashCode() != remoteData.hashCode()){
+                        conflicts.add(new ConflictData(remoteData, ConflictData.ConflictType.MODIFIED));
+                    }
+                    localDataRecords.remove(localData);
+                    remoteDataRecords.remove(remoteData);
+                    break;  // We stop the inner loop because we have found the matching Data and continuing the iteration
+                            // would lead in a ConcurrentModificationException
+                }
+            }
+        }
+
+        // Then, we want to add to the conflicts list all the remote records that have been created on remote
+        for (int i = remoteDataRecords.size()-1; i >= 0; i--){
+            Data remoteData = remoteDataRecords.get(i);
+
+            // If the remote ID is greater than the local DB autoincrement value it means that we the Data is new
+            if (remoteData.getId() > localDataAutoincrement){
+                conflicts.add(new ConflictData(remoteData, ConflictData.ConflictType.NEW_REMOTE));
+                remoteDataRecords.remove(remoteData);  // We remove it from the remoteDataRecords list for the next steps
+            }
+        }
+
+        // In the remoteDataRecords list, after all the removals, there are only, if any, the Data that have been deleted
+        // in the local database. So we can add them to the conflicts list
+        for (Data remoteData : remoteDataRecords){
+            conflicts.add(new ConflictData(remoteData, ConflictData.ConflictType.DELETED_LOCAL));
+        }
+
+        // Lastly, in the localDataRecords we may find Data that have been added by the user or Data that have been
+        // deleted in the remote. If the latter is the case, then we add it to the conflicts list
+        for (Data localData : localDataRecords){
+            // If the localData ID is less than the remote DB autoincrement value then it means the data existed on
+            // remote but it has been deleted
+            if (localData.getId() < remoteAutoincrement){
+                conflicts.add(new ConflictData(localData, ConflictData.ConflictType.DELETED_REMOTE));
+            }
+        }
+
+        return conflicts;
     }
 
     /**

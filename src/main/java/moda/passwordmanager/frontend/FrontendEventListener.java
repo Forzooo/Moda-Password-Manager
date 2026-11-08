@@ -1,6 +1,7 @@
 package moda.passwordmanager.frontend;
 
 import moda.passwordmanager.backend.Data;
+import moda.passwordmanager.backend.googledrive.ConflictData;
 import moda.passwordmanager.frontend.dialogs.GoogleDriveSynchronization;
 import moda.passwordmanager.frontend.panels.ShowData;
 import moda.passwordmanager.interthreadcommunication.EventListener;
@@ -78,7 +79,7 @@ public class FrontendEventListener extends EventListener {
      * Open the Google Drive Synchronization dialog with the conflicted data
      */
     private void openGoogleDriveSynchronizationDialog(){
-        ArrayList<Data> conflictData = (ArrayList<Data>) getRequestData().getFirst();
+        ArrayList<ConflictData> conflictData = (ArrayList<ConflictData>) getRequestData().getFirst();
 
         SwingUtilities.invokeLater(() -> {
             // To get the Frontend frame we have to use the getFrames method of the Frame class as we don't have a
