@@ -5,12 +5,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Database {
 
     private String path;  // Path of the database current in use
     private static final String FILE_EXTENSION = ".modb";  // The extension of any password manager database
+    private static final String DEFAULT_DATABASE = "moda-password-manager"+FILE_EXTENSION;
     private static final int PRAGMA_USER_VERSION = 1;  // The current version of the schema of the database
                                                        // To know the history of the versions check the docs
 
@@ -98,6 +101,13 @@ public class Database {
      */
     public String getPath(){
         return this.path;
+    }
+
+    /**
+     * Return the name of the default database used by the password manager
+     */
+    public static String getDefaultDatabase() {
+        return DEFAULT_DATABASE;
     }
 
     /**
@@ -191,6 +201,9 @@ public class Database {
         }
     }
 
+    /**
+     * Update from an old version of the database schema to the latest one
+     */
     private void updateFromOldVersion(){
         try {
             Statement query = this.connection.createStatement();  // Define a new query
@@ -260,7 +273,7 @@ public class Database {
             // As the property field of the Sensitive Settings table is unique, if the SensitiveSettings class tries
             // to readd the same property, it is automatically skipped
             PreparedStatement query = this.connection.prepareStatement(
-                    "INSERT OR IGNORE INTO "+Database.SENSITIVE_SETTINGS_TABLE+" (propertyPath, value) VALUES (?, ?) ;"
+                    "INSERT INTO "+Database.SENSITIVE_SETTINGS_TABLE+" (propertyPath, value) VALUES (?, ?) ;"
             );
 
             query.setString(1, propertyPath);
@@ -340,9 +353,14 @@ public class Database {
             query.setString(1, DATA_TABLE);
 
             ResultSet resultSet = query.executeQuery();
+
+            // We cannot just return the result of the getter because we also need to close the query: the result
+            // cannot be retrieved if the query is already closed
+            int autoincrementValue = resultSet.getInt("seq");
+
             query.close();
 
-            return resultSet.getInt("seq");
+            return autoincrementValue;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -418,31 +436,26 @@ public class Database {
     }
 
     /**
-     * Retrieve the first service field from the Data table
-     * @return Data containing the encrypted service field
+     * Retrieve the value of the first Sensitive Settings record added
      */
-    public Data getDataFirstServiceField(){
-        try{
-            // Create the query to retrieve the service
+    public String getFirstSensitiveSettingRecord(){
+        try {
             PreparedStatement query = this.connection.prepareStatement(
-                    "SELECT id, service FROM "+ DATA_TABLE + " LIMIT 1"
+                    "SELECT value FROM " + SENSITIVE_SETTINGS_TABLE + " LIMIT 1"
             );
-            ResultSet result = query.executeQuery();  // Execute the query and retrieve the result
 
-            result.next();  // Set the cursor to the row
-            int serviceID = result.getInt("id");  // Get the ID
-            String service = result.getString("service");  // Get the service
+            ResultSet result = query.executeQuery();
 
-            // Close the query after the end of the operations
+            String setting = result.getString("value");
+
             query.close();
             result.close();
 
-            return new Data(serviceID, service);
-        } catch (SQLException e){
+            return setting;
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
-
 
     /**
      * Retrieve each service field with its ID from the Data table
@@ -513,10 +526,65 @@ public class Database {
     }
 
     /**
-     * Change all the records inside the database
-     * @param records The new records
+     * Retrieve all the records inside the Sensitive Settings table
+     * @return Map containing propertyPath->value records
      */
-    public void changeDataRecords(List<Data> records){
+    public Map<String, String> getSensitiveSettingsRecords(){
+        HashMap<String, String> records = new HashMap<>();
+
+        try {
+            Statement query = this.connection.createStatement();
+
+            // Read all the records
+            ResultSet resultSet = query.executeQuery("SELECT * FROM " + Database.SENSITIVE_SETTINGS_TABLE);
+
+            // Iterate over all the records and put them in the hashmap
+            while (resultSet.next()){
+                records.put(resultSet.getString("propertyPath"), resultSet.getString("value"));
+            }
+
+            // Close the query
+            query.close();
+            resultSet.close();
+
+            return records;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Count the number of sensitive settings of a property
+     * @param property The property is the root of the subproperties (ex. google_drive that has 4 subproperties) without
+     *                 any slash '/'
+     */
+    public int countSensitiveSettingsRecords(String property){
+        property += "/%";  // We have to add a % for the SQL LIKE operator to find propertyPath that start with the root
+                           // Also a '/' is required as it could happen that we have "test" and "test2" which, without
+                           // the slash, the "test" one would also include all the "test2" ones
+        try {
+            PreparedStatement query = this.connection.prepareStatement(
+                    "SELECT COUNT(*) FROM " + SENSITIVE_SETTINGS_TABLE + " WHERE propertyPath LIKE ?"
+            );
+
+            query.setString(1, property);
+
+            ResultSet resultSet = query.executeQuery();
+            int result = resultSet.getInt(1);  // Retrieve the result of the COUNT function
+
+            query.close();
+            resultSet.close();
+
+            return result;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Update all the data records
+     */
+    public void updateDataRecords(List<Data> records){
         try {
             PreparedStatement query = this.connection.prepareStatement(
                     "UPDATE "+Database.DATA_TABLE +" SET username=?, email_address=?, password=?, service=?," +
@@ -541,9 +609,35 @@ public class Database {
             query.close();  // Close the query after the execution
 
             this.connection.setAutoCommit(true);  // Set again the auto commit to true
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Update all the sensitive records values
+     */
+    public void updateSensitiveSettingsRecords(Map<String, String> records){
+        try {
+            PreparedStatement query = this.connection.prepareStatement(
+                    "UPDATE " + Database.SENSITIVE_SETTINGS_TABLE + " SET value=? WHERE propertyPath=?;");
+
+            // Temporarily set the auto commit to false as we want to execute in a batch group
+            this.connection.setAutoCommit(false);
+
+            for (Map.Entry<String, String> sensitiveSetting : records.entrySet()){
+                query.setString(1, sensitiveSetting.getValue());
+                query.setString(2, sensitiveSetting.getKey());
+                query.addBatch();  // Add the data to the set of the queries to execute
+            }
+
+            query.executeBatch();  // Execute the query as a batch to group all the updates
+            query.close();  // Close the query after the execution
+
+            this.connection.setAutoCommit(true);  // Set again the auto commit to true
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }

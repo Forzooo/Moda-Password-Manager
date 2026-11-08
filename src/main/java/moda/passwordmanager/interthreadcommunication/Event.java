@@ -79,18 +79,18 @@ public class Event {
         return this.communicationID;
     }
 
+    /**
+     * Returns whether the communication ID has been set to a value different than -1
+     */
+    protected boolean isCommunicationIdSet(){
+        return this.communicationID != -1;
+    }
+
     protected void incrementSequenceNumber(){
         this.sequenceNumber++;
     }
 
     protected int getSequenceNumber(){
         return this.sequenceNumber;
-    }
-
-    /**
-     * Returns whether the ID has been set to a value different than -1
-     */
-    protected boolean isIdSet(){
-        return this.communicationID != -1;
     }
 }

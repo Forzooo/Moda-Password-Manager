@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.auth.oauth2.StoredCredential;
 import com.google.api.client.json.gson.GsonFactory;
 import moda.passwordmanager.Application;
+import moda.passwordmanager.backend.googledrive.GoogleDrive;
 import moda.passwordmanager.backend.settings.SensitiveSettings;
 import moda.passwordmanager.backend.settings.Settings;
 import moda.passwordmanager.frontend.properties.Languages;
@@ -12,6 +13,7 @@ import moda.passwordmanager.frontend.properties.Themes;
 import moda.passwordmanager.interthreadcommunication.EventListener;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
+import raven.modal.Toast;
 
 import java.io.*;
 import java.net.URI;
@@ -50,10 +52,10 @@ public class Backend extends EventListener {
         createAppdataDirectory();  // Create the folder to store the configuration files inside it
 
         // Initialize all the backend components
-        this.settings = new Settings(Helper.getPasswordManagerAppDataPath()+Helper.getSettingsFile());
+        this.settings = new Settings(Helper.getPasswordManagerAppDataPath()+Settings.getFilename());
         this.database = new Database(this.settings.readStringProperty("database/selected"));
         this.cryptography = new Cryptography();
-        this.helper = new Helper(this.cryptography, this.settings);
+        this.helper = new Helper(this.cryptography);
         this.sensitiveSettings = new SensitiveSettings(this.database, this.helper);
         this.googleDrive = new GoogleDrive(getItc());
 
@@ -113,7 +115,8 @@ public class Backend extends EventListener {
         addLockedOperation("decrypt-data", () -> addResponseData(this.helper.decryptData((Data) getRequestData().getFirst())));
 
         addOperation("generate-string", this::generateString);
-        addOperation("configure-string-generation", this::configureStringGeneration);
+        addOperation("set-string-generation", this::setStringGeneration);
+        addOperation("get-string-generation", this::getStringGeneration);
 
         // Set a database path and reset the service fields
         addOperation("set-database", () -> {
@@ -127,7 +130,6 @@ public class Backend extends EventListener {
         });
 
         addOperation("get-database", this::getDatabasePath);
-        addOperation("get-string-generation-configuration", this::getStringGenerationConfiguration);
         addLockedOperation("update-master-password", this::updateMasterPassword);
 
 
@@ -151,7 +153,7 @@ public class Backend extends EventListener {
             this.googleDrive.setConflictsSolved();
 
             // After the conflicts are solved, we can resynchronize
-            this.googleDrive.sync(this.helper.getDatabasePath(), this.database.getName());
+            synchronizeGoogleDrive();
         });
 
         addLockedOperation("get-google-drive-automatic-synchronization", this::getGoogleDriveSynchronization);
@@ -252,19 +254,21 @@ public class Backend extends EventListener {
      * @return Returns a boolean value to locally indicate whether the master password is right
      */
     private boolean testMasterPassword(){
-        Data testData = this.database.getDataFirstServiceField();  // Get the first service to try to decrypt it
+        // Get the first sensitive setting to try to decrypt it
+        // Note that we cannot use a record from the Data table as they may not have been added yet, even though
+        // the sensitive settings already exist with a defined master password
+        String testSetting = this.database.getFirstSensitiveSettingRecord();
 
-        // If the service is null, it means there isn't data in it yet, thus the master password is always correct
-        if (testData.getService() == null){
+        // If the setting is null, it means the sensitive settings table hasn't been created yet, thus the master password
+        // is always correct
+        if (testSetting == null){
             addResponseData(true);
             return true;
         }
 
-        byte[] service = Helper.decodeBase64(testData.getService());  // Decode from base64
-
         // Try to decrypt it and add the data to the event based on whether an exception has been thrown
         try{
-            this.cryptography.decrypt(service);
+            this.helper.decrypt(testSetting);
             addResponseData(true);
             return true;
         } catch (RuntimeException e){
@@ -302,7 +306,7 @@ public class Backend extends EventListener {
 
         this.helper.executeInBackground(3, this::initServiceMapping);
         this.helper.executeInBackground(this::startGoogleDrive);  // Initialize the connection with Google Drive
-        // only if enabled by the user
+                                                                  // only if enabled by the user
 
         // If the version control on startup is enabled then we check it in the background and send the result
         // to the FrontendEventListener
@@ -433,6 +437,16 @@ public class Backend extends EventListener {
     }
 
     /**
+     * Send to the Frontend Event Listener a message that has to be displayed in a Toast
+     */
+    private void showToast(String localeString, Toast.Type type){
+        Event showToast = new Event("show-toast", localeString);
+        showToast.addData(type);
+
+        getItc().send(showToast);
+    }
+
+    /**
      * Save the user data, after encrypting it, inside the database
      * @param data The data to save inside the database
      */
@@ -470,13 +484,32 @@ public class Backend extends EventListener {
      * Randomly generate a string of a certain length
      */
     private void generateString(){
-        // Retrieve the properties from the helper
-        List<Object> configuration = this.helper.getStringGenerationConfiguration();
+        // Retrieve the properties from the settings
+        int stringLength = this.settings.readIntProperty("string_generation/length");
 
-        char[] stringCharacters = generateStringCharacters((Boolean) configuration.get(1), (Boolean) configuration.get(2),
-                (Boolean) configuration.get(3));  // Generate the characters
+        // (This is an additional server-side check to the frontend one in the case the user has modified the settings file
+        // without using the application)
+        // If the string length has been set to less than 1, then we avoid an exception by sending an empty string
+        if (stringLength < 1){
+            addResponseData("");
+            return;
+        }
 
-        addResponseData(Helper.generateRandomString((int) configuration.getFirst(), stringCharacters).toString());
+        boolean letters = this.settings.readBooleanProperty("string_generation/letters");
+        boolean numbers = this.settings.readBooleanProperty("string_generation/numbers");
+        boolean special = this.settings.readBooleanProperty("string_generation/special");
+
+        char[] stringCharacters = generateStringCharacters(letters, numbers, special);  // Generate the characters
+
+        // (This is an additional server-side check to the frontend one)
+        // If not at least one of the configuration parameters has been selected, then we send an empty string to avoid
+        // an exception that arises in the generateRandomString method
+        if (stringCharacters.length == 0){
+            addResponseData("");
+            return;
+        }
+
+        addResponseData(Helper.generateRandomString(stringLength, stringCharacters).toString());
     }
 
     /**
@@ -536,7 +569,7 @@ public class Backend extends EventListener {
     /**
      * Set in the settings file the user preferences for the generation of strings
      */
-    private void configureStringGeneration(){
+    private void setStringGeneration(){
         List<Object> requestData = getRequestData();
 
         int length = (int) requestData.getFirst();  // The length of the string
@@ -560,49 +593,48 @@ public class Backend extends EventListener {
     }
 
     /**
-     * Retrieve the path of the database current in use
+     * Retrieve the path of the current database in use
      */
     private void getDatabasePath(){
-        addResponseData(this.helper.getDatabasePath());  // Add the path to the data to send
+        addResponseData(this.database.getPath());  // Add the path to the data to send
     }
 
     /**
      * Retrieve from the settings file all the parameters of the string generation
      */
-    private void getStringGenerationConfiguration(){
-        // Retrieve the properties from the helper
-        List<Object> configuration = this.helper.getStringGenerationConfiguration();
-
-        addResponseData(configuration.getFirst());
-        addResponseData(configuration.get(1));
-        addResponseData(configuration.get(2));
-        addResponseData(configuration.get(3));
+    private void getStringGeneration(){
+        // Retrieve the properties from the settings
+        addResponseData(this.settings.readIntProperty("string_generation/length"));
+        addResponseData(this.settings.readBooleanProperty("string_generation/letters"));
+        addResponseData(this.settings.readBooleanProperty("string_generation/numbers"));
+        addResponseData(this.settings.readBooleanProperty("string_generation/special"));
     }
 
     /**
      * Change the current master password in use for the database, and encrypt the data with the new password
      */
     private void updateMasterPassword(){
-        char[] masterPassword = (char[]) getRequestData().getFirst();  // The new master password
+        ArrayList<Data> newDataRecords = new ArrayList<>();
 
-        List<Data> oldData = this.database.getDataRecords();  // Get all the data from the database
-        ArrayList<Data> newData = new ArrayList<>();  // The data re-encrypted with the new master password
-
-        // Decrypt all the data and add it to newData
-        for (Data data : oldData){
-            newData.add(this.helper.decryptData(data));
+        // Get all the data from the database, decrypt it and add it to newData to let them be re-encrypted with the
+        // new master password
+        for (Data data : this.database.getDataRecords()){
+            newDataRecords.add(this.helper.decryptData(data));
         }
 
-        setMasterPassword(masterPassword);  // Set the new master password before re-encrypting the data
+        // Decrypt all the sensitive settings and add it to the new HashMap to let them be re-encrypted
+        Map<String, String> sensitiveSettingsRecords = this.database.getSensitiveSettingsRecords();
+        sensitiveSettingsRecords.replaceAll((k, v) -> this.helper.decrypt(v));
 
-        // Iterate over the decrypted data while removing it, and re-adding them as the last element per cycle
-        for (int i = 0; i < newData.size(); i++){
-            Data data = newData.getFirst();  // Always get the first element
-            newData.removeFirst();  // Remove it from the ArrayList
-            newData.addLast(this.helper.encryptData(data));  // Re-encrypt the data and add it as the last element
-        }
+        setMasterPassword((char[]) getRequestData().getFirst());  // Set the new master password before re-encrypting the data
 
-        this.database.changeDataRecords(newData);  // Change all the records of the database with the new ones
+        // Iterate over the decrypted data and encrypt them again
+        newDataRecords.replaceAll(this.helper::encryptData);
+        sensitiveSettingsRecords.replaceAll((k, v) -> this.helper.encrypt(v));
+
+        // Update all the records of the database with the new ones
+        this.database.updateDataRecords(newDataRecords);
+        this.database.updateSensitiveSettingsRecords(sensitiveSettingsRecords);
     }
 
     /**
@@ -686,20 +718,25 @@ public class Backend extends EventListener {
     }
 
     /**
-     * Synchronize the database with Google Drive
+     * Synchronize the database with Google Drive and add the result of the operation
      */
     private void synchronizeGoogleDrive(){
-        this.googleDrive.sync(this.helper.getDatabasePath(), this.database.getName());
+        // Based on the result of the synchronization we send a different Toast to the Frontend Event Listener
+        if (this.googleDrive.sync(this.database.getPath(), this.database.getName())){
+            showToast("Moda.Toast.googleDriveSynchronizationSuccessful", Toast.Type.SUCCESS);
+        }else{
+            showToast("Mota.Toast.googleDriveSynchronizationUnsuccessful", Toast.Type.ERROR);
+        }
     }
 
     /**
      * Synchronization performed automatically every 60 seconds
      */
     private void automaticSynchronizeGoogleDrive(){
-        // Ensure that Google Drive is enabled, and the Synchronization is enabled before synchronizing
+        // Ensure that Google Drive is enabled, and the automatic synchronization is enabled before synchronizing
         if (this.sensitiveSettings.readBooleanProperty("google_drive/enabled") &&
                 this.sensitiveSettings.readBooleanProperty("google_drive/automatic_synchronization")){
-            this.googleDrive.sync(this.helper.getDatabasePath(), this.database.getName());
+            synchronizeGoogleDrive();
             this.helper.executeInBackground(this::updateServiceFields);  // Update the service fields in the Frontend
         }
     }

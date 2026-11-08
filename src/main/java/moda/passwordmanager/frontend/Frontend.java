@@ -1,7 +1,7 @@
 package moda.passwordmanager.frontend;
 
 import moda.passwordmanager.Application;
-import moda.passwordmanager.frontend.components.ModaScrollPane;
+import moda.passwordmanager.frontend.components.ModernScrollPane;
 import moda.passwordmanager.frontend.dialogs.Startup;
 import moda.passwordmanager.frontend.properties.Languages;
 import moda.passwordmanager.frontend.properties.Themes;
@@ -121,7 +121,7 @@ public class Frontend extends JPanel {
         this.frontendPanel.add(this.showDataPanel, ShowData.getPanelTitle());
         this.frontendPanel.add(new AddData(this.itc), AddData.getPanelTitle());
 
-        ModaScrollPane settingsScrollPane = new ModaScrollPane(new Settings(this.itc));
+        ModernScrollPane settingsScrollPane = new ModernScrollPane(new Settings(this.itc));
         this.frontendPanel.add(settingsScrollPane, Settings.getPanelTitle());
 
         add(sidebar, "grow");

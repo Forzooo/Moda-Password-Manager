@@ -1,6 +1,7 @@
 package moda.passwordmanager.frontend;
 
 import moda.passwordmanager.backend.Data;
+import moda.passwordmanager.backend.googledrive.ConflictData;
 import moda.passwordmanager.frontend.dialogs.GoogleDriveSynchronization;
 import moda.passwordmanager.frontend.panels.ShowData;
 import moda.passwordmanager.interthreadcommunication.EventListener;
@@ -26,10 +27,26 @@ public class FrontendEventListener extends EventListener {
      * Add all the operations to handle
      */
     private void initHandler(){
-        addOperation("exception-raised", this::exceptionRaised);
-        addOperation("update-service-fields", this::updateServiceFields);
-        addOperation("google-drive-synchronization-conflicts", this::openGoogleDriveSynchronizationDialog);
         addOperation("check-new-version", this::checkNewVersion);
+        addOperation("exception-raised", this::exceptionRaised);
+        addOperation("google-drive-synchronization-conflicts", this::openGoogleDriveSynchronizationDialog);
+        addOperation("show-toast", this::showToast);
+        addOperation("update-service-fields", this::updateServiceFields);
+    }
+
+    /**
+     * Let the user know the result of a version check
+     */
+    private void checkNewVersion(){
+        // If a new version exists, we show the version number too
+        if ((boolean) getRequestData().getFirst()) {
+            SwingUtilities.invokeLater(() -> Utilities.showToast(this.showData.getParent(), Toast.Type.INFO,
+                    Utilities.getLocaleString("Moda.Toast.checkNewVersionAvailable") + " "
+                            + getRequestData().get(1)));
+        }else{
+            SwingUtilities.invokeLater(() -> Utilities.showToast(this.showData.getParent(), Toast.Type.INFO,
+                    Utilities.getLocaleString("Moda.Toast.checkNewVersionUnavailable")));
+        }
     }
 
     /**
@@ -58,6 +75,34 @@ public class FrontendEventListener extends EventListener {
     }
 
     /**
+     * Open the Google Drive Synchronization dialog with the conflicted data
+     */
+    private void openGoogleDriveSynchronizationDialog(){
+        ArrayList<ConflictData> conflictData = (ArrayList<ConflictData>) getRequestData().getFirst();
+
+        SwingUtilities.invokeLater(() -> {
+            // To get the Frontend frame we have to use the getFrames method of the Frame class as we don't have a
+            // reference for it
+            // Also, it is always the first index as there are no other JFrame
+            GoogleDriveSynchronization googleDriveSynchronization = new GoogleDriveSynchronization(java.awt.Frame.getFrames()[0],
+                    getItc(), conflictData);
+            googleDriveSynchronization.setVisible(true);
+        });
+    }
+
+    /**
+     * Show the Toast that the Backend request to display
+     */
+    private void showToast(){
+        String localeString = (String) getRequestData().getFirst();
+        Toast.Type type = (Toast.Type) getRequestData().get(1);
+
+        // We need to localize the string as the Backend returns its locale value to avoid having to call the Frontend
+        // Utilities class
+        Utilities.showToast(this.showData.getRootPane(), type, Utilities.getLocaleString(localeString));
+    }
+
+    /**
      * Update the service data with the new one
      */
     private void updateServiceFields(){
@@ -71,37 +116,6 @@ public class FrontendEventListener extends EventListener {
             }else{  // Otherwise add/update the Map object with the ID and its service
                 this.showData.addData(data);
             }
-        }
-    }
-
-    /**
-     * Open the Google Drive Synchronization dialog with the conflicted data
-     */
-    private void openGoogleDriveSynchronizationDialog(){
-        ArrayList<Data> conflictData = (ArrayList<Data>) getRequestData().getFirst();
-
-        SwingUtilities.invokeLater(() -> {
-            // To get the Frontend frame we have to use the getFrames method of the Frame class as we don't have a
-            // reference for it
-            // Also, it is always the first index as there are no other JFrame
-            GoogleDriveSynchronization googleDriveSynchronization = new GoogleDriveSynchronization(java.awt.Frame.getFrames()[0],
-                    getItc(), conflictData);
-            googleDriveSynchronization.setVisible(true);
-        });
-    }
-
-    /**
-     * Let the user know the result of a version check
-     */
-    private void checkNewVersion(){
-        // If a new version exists, we show the version number too
-        if ((boolean) getRequestData().getFirst()) {
-            SwingUtilities.invokeLater(() -> Utilities.showToast(this.showData.getParent(), Toast.Type.INFO,
-                    Utilities.getLocaleString("Moda.Toast.checkNewVersionAvailable") + " "
-                            + getRequestData().get(1)));
-        }else{
-            SwingUtilities.invokeLater(() -> Utilities.showToast(this.showData.getParent(), Toast.Type.INFO,
-                    Utilities.getLocaleString("Moda.Toast.checkNewVersionUnavailable")));
         }
     }
 }

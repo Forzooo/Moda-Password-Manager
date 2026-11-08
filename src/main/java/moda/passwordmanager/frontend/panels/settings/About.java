@@ -91,4 +91,9 @@ public class About extends Section{
     public JPanel getPanel() {
         return this;
     }
+
+    @Override
+    protected void setSelectedSettings() {
+        // This class has no setting defined in the settings.json
+    }
 }

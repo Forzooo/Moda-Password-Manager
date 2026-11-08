@@ -30,10 +30,13 @@ public class SensitiveSettings extends AbstractSettings {
      * Add all the record inside the table with their default values
      */
     private void initRecords(){
-        this.database.addSensitiveSettingsRecord("google_drive/enabled", this.helper.encrypt("false"));
-        this.database.addSensitiveSettingsRecord("google_drive/credentials", this.helper.encrypt(""));
-        this.database.addSensitiveSettingsRecord("google_drive/stored_credentials", this.helper.encrypt(""));
-        this.database.addSensitiveSettingsRecord("google_drive/automatic_synchronization", this.helper.encrypt("false"));
+        // We check whether the settings have already been added to avoid wasting resources for useless encryptions
+        if (this.database.countSensitiveSettingsRecords("google_drive") != 4){
+            this.database.addSensitiveSettingsRecord("google_drive/enabled", this.helper.encrypt("false"));
+            this.database.addSensitiveSettingsRecord("google_drive/credentials", this.helper.encrypt(""));
+            this.database.addSensitiveSettingsRecord("google_drive/stored_credentials", this.helper.encrypt(""));
+            this.database.addSensitiveSettingsRecord("google_drive/automatic_synchronization", this.helper.encrypt("false"));
+        }
     }
 
     /**
@@ -56,7 +59,7 @@ public class SensitiveSettings extends AbstractSettings {
         String encryptedValue = this.database.getSensitiveSettingsValue(propertyPath);
         String decryptedValue = this.helper.decrypt(encryptedValue);
 
-        return Integer.parseInt(decryptedValue);  // All the values inside the database are treated as TEXT, so it must
+        return Integer.parseInt(decryptedValue);  // All the values inside the table are treated as TEXT, so it must
                                                   // be parsed to Integer
     }
 

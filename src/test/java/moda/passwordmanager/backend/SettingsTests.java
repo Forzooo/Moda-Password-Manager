@@ -35,7 +35,7 @@ class SettingsTests {
      */
     @BeforeEach
     void init(){
-        this.settings = new Settings(testDirectory +"\\"+Helper.getSettingsFile());
+        this.settings = new Settings(testDirectory +"\\"+Settings.getFilename());
     }
 
     /**

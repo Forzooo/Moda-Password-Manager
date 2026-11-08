@@ -3,9 +3,9 @@ package moda.passwordmanager.frontend.panels.settings;
 import moda.passwordmanager.frontend.Utilities;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
+import raven.modal.Toast;
 
 import javax.swing.*;
-import java.util.Arrays;
 import java.util.List;
 
 public class Data extends Section {
@@ -24,8 +24,8 @@ public class Data extends Section {
         super(Utilities.getLocaleString("Moda.Data.panelTitle"), itc);
 
         initComponents();
+        setSelectedSettings();
         initListeners();
-        setDefaultStringGenerationConfiguration();
     }
 
     @Override
@@ -77,57 +77,11 @@ public class Data extends Section {
         addOption(this.configureStringGenerationButton);
     }
 
-    private void initListeners(){
-        this.updateMasterPasswordButton.addActionListener(e -> updateMasterPassword());
+    @Override
+    protected void setSelectedSettings() {
+        Event stringConfigurationEvent = getItc().request(new Event("get-string-generation"));
 
-        this.configureStringGenerationButton.addActionListener(e -> configureStringGeneration());
-    }
-
-    /**
-     * Change the current master password of the database to a new one
-     */
-    private void updateMasterPassword(){
-        // Retrieve the master password from the password field
-        String masterPassword = Arrays.toString(this.updateMasterPasswordTextField.getPassword());
-
-        // Perform some initial conditions check on the master password
-        if (!Utilities.checkMasterPassword(masterPassword.toCharArray())){
-            return;
-        }
-
-        Event event = new Event("update-master-password", masterPassword.toCharArray());
-        getItc().request(event);  // Wait for the end of the operations in the backend
-    }
-
-    /**
-     * Configure the string generation
-     */
-    private void configureStringGeneration(){
-        // Retrieve the data from the user
-        int stringLength = Integer.parseInt(this.stringLengthTextField.getText());  // Convert the text to an int
-        boolean lettersSelected = this.stringLettersCheckbox.isSelected();
-        boolean numbersSelected = this.stringNumbersCheckbox.isSelected();
-        boolean specialCharactersSelected = this.stringSpecialCharactersCheckbox.isSelected();
-
-        // Create the Event with the data
-        Event event = new Event("configure-string-generation");
-        event.addData(stringLength);
-        event.addData(lettersSelected);
-        event.addData(numbersSelected);
-        event.addData(specialCharactersSelected);
-
-        getItc().send(event);  // Send the event
-    }
-
-    /**
-     * Set the default values of the string configuration
-     */
-    private void setDefaultStringGenerationConfiguration(){
-        // Create the event and wait for the data
-        Event event = new Event("get-string-generation-configuration");
-        Event backendResponse = getItc().request(event);
-
-        List<Object> data = backendResponse.getData();  // Retrieve the data
+        List<Object> data = stringConfigurationEvent.getData();  // Retrieve the data
 
         // Set the data to the components
         this.stringLengthTextField.setText(String.valueOf(data.getFirst()));
@@ -136,4 +90,69 @@ public class Data extends Section {
         this.stringSpecialCharactersCheckbox.setSelected((boolean) data.get(3));
     }
 
+    private void initListeners(){
+        this.updateMasterPasswordButton.addActionListener(e -> updateMasterPassword());
+
+        this.configureStringGenerationButton.addActionListener(e -> setStringGeneration());
+    }
+
+    /**
+     * Change the current master password of the database to a new one
+     */
+    private void updateMasterPassword(){
+        // Retrieve the master password from the password field
+        char[] masterPassword = this.updateMasterPasswordTextField.getPassword();
+
+        // Perform some initial conditions check on the master password
+        if (!Utilities.checkMasterPassword(masterPassword)){
+            Utilities.showToast(getParent(), Toast.Type.ERROR, Utilities.getLocaleString("Moda.Toast.updateMasterPasswordError"));
+            return;
+        }
+
+        Event event = new Event("update-master-password", masterPassword);
+        getItc().request(event);  // Wait for the end of the operations in the backend
+        Utilities.showToast(getParent(), Toast.Type.SUCCESS, Utilities.getLocaleString("Moda.Toast.updateMasterPassword"));
+    }
+
+    /**
+     * Set the string generation parameters in the backend
+     */
+    private void setStringGeneration(){
+        // Ensure that the user has entered an integer, otherwise an exception would be arisen
+        int stringLength;
+        try{
+            stringLength = Integer.parseInt(this.stringLengthTextField.getText());  // Convert the text to an int
+        } catch (NumberFormatException e) {
+            Utilities.showToast(getRootPane(), Toast.Type.ERROR, Utilities.getLocaleString("Moda.Toast.stringGenerationIntegerError"));
+            return;
+        }
+
+        // The length of the string to generate must be at least 1
+        if (stringLength < 1){
+            Utilities.showToast(getRootPane(), Toast.Type.ERROR, Utilities.getLocaleString("Moda.Toast.stringGenerationLengthError"));
+            return;
+        }
+
+        boolean lettersSelected = this.stringLettersCheckbox.isSelected();
+        boolean numbersSelected = this.stringNumbersCheckbox.isSelected();
+        boolean specialCharactersSelected = this.stringSpecialCharactersCheckbox.isSelected();
+
+        // Ensure that at least one of the three checkbox is selected, otherwise an exception will arise in the backend
+        // when the user tries to generate a string
+        if (!lettersSelected && !numbersSelected && !specialCharactersSelected){
+            Utilities.showToast(getRootPane(), Toast.Type.ERROR, Utilities.getLocaleString("Moda.Toast.stringGenerationOptionsError"));
+
+            return;
+        }
+
+        // Create the Event with the data
+        Event event = new Event("set-string-generation");
+        event.addData(stringLength);
+        event.addData(lettersSelected);
+        event.addData(numbersSelected);
+        event.addData(specialCharactersSelected);
+
+        getItc().send(event);  // Send the event
+        Utilities.showToast(getRootPane(), Toast.Type.SUCCESS, "Moda.Toast.stringGeneration");
+    }
 }

@@ -14,6 +14,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.IntConsumer;
 
 public class ShowData extends JPanel {
@@ -23,7 +24,7 @@ public class ShowData extends JPanel {
 
     private JTabbedPane dataTabbedPane;  // The tabbed pane shows the dataList and the data the user has selected
 
-    private ModaTextField searchBar;
+    private ModernTextField searchBar;
 
     /**
      * The data shown in the JList, which are updated by the FrontendEventListener
@@ -73,12 +74,13 @@ public class ShowData extends JPanel {
         this.dataList.setFixedCellHeight(30);
         this.dataList.setBackground(null);
 
-        ModaScrollPane scrollPane = new ModaScrollPane(this.dataList);
+        ModernScrollPane scrollPane = new ModernScrollPane(this.dataList);
         scrollPane.setBorder(new EmptyBorder(10,10,10,10));
         scrollPane.setBackground(Color.WHITE);
 
         int searchBarSize = 50;  // The size of the search bar
-        this.searchBar = new ModaTextField(searchBarSize);
+        this.searchBar = new ModernTextField();
+        this.searchBar.setMinimumSize(new Dimension(this.searchBar.getWidth(), searchBarSize));
 
         JLabel searchIconLabel = new JLabel();
         ImageIcon searchIcon = Utilities.getIcon("search_icon.png");
@@ -205,15 +207,70 @@ public class ShowData extends JPanel {
      * Add a Data object to the JList
      */
     public void addData(Data data){
-        // We add the data to the JList directly only if the search bar is not being used or if the service matches
+        int filteredIndex = indexOfId(data.getId(), this.userFilteredData);
+        int modelIndex = indexOfId(data.getId(), this.userDataModel);
+
+        // If the tab of the data is open, then we have to update its title too
+        int dataTabIndex = indexOfDataTab(data.getId());
+        if (dataTabIndex != -1){
+            this.dataTabbedPane.setTitleAt(dataTabIndex, data.getService());
+        }
+
+        // We add the data to the JList directly only if the search bar is not being used or if the new service matches
         // the current filter
         if (this.searchBar.getText().isBlank() ||
                 searchBarTextFormatter(data.getService()).startsWith(searchBarTextFormatter(this.searchBar.getText()))){
-            this.userDataModel.addElement(data);
-        }else{  // Otherwise we add it to the filtered data and it will be shown when it matches the filer or it becomes
+
+            // If the previous text of the service was inside the Model (the JList) then we can update it
+            if (modelIndex != -1){
+                this.userDataModel.setElementAt(data, modelIndex);
+            }else if (filteredIndex != -1){  // If the previous text of the service was inside the Filtered List we have
+                                             // to remove it from there and add it to the Model instead
+                this.userFilteredData.remove(filteredIndex);
+                this.userDataModel.addElement(data);
+            }else{  // Otherwise the data is new and we can add it to the Model (JList)
+                this.userDataModel.addElement(data);
+            }
+        }else{  // Otherwise we add it to the filtered data and it will be shown when it matches the filter or it becomes
                 // blank
-            this.userFilteredData.add(data);
+            // If the previous text of the service was inside the Model then we have to remove it from there, as otherwise
+            // it would still show up in the JList, and add it to the Filtered List
+            if (modelIndex != -1){
+                this.userDataModel.removeElementAt(modelIndex);
+                this.userFilteredData.add(data);
+            }else if (filteredIndex != -1){  // If the previous text of the service was inside the Filtered List, then
+                                             // we can update it
+                this.userFilteredData.set(filteredIndex, data);
+            }else{  // Otherwise the data is new and we can add it to the Filtered List
+                this.userFilteredData.add(data);
+            }
         }
+    }
+
+    /**
+     * Returns the index of the ID inside a Data List. It returns -1 if it does not exist
+     */
+    private int indexOfId(int id, List<Data> list){
+        for (int i = 0; i < list.size(); i++){
+            if (id == list.get(i).getId()){
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * Returns the index of the ID inside a Data ListModel. It returns -1 if it does not exist
+     */
+    private int indexOfId(int id, ListModel<Data> model){
+        for (int i = 0; i < model.getSize(); i++){
+            if (id == model.getElementAt(i).getId()){
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     /**

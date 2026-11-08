@@ -154,9 +154,12 @@ public class Utilities {
      * Get the filename from a path
      */
     public static String getFilenameFromPath(String path){
-        Path filePath = Paths.get(path);
+        // We have to normalize the Windows backslashes ("\\") to a slash ("/") to have it compatible across all the OS
+        if (path.contains("\\")){
+            path = path.replace("\\", "/");
+        }
 
-        return filePath.getFileName().toString();
+        return Path.of(path).getFileName().toString();
     }
 
     /**

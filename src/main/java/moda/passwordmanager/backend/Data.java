@@ -17,12 +17,6 @@ public class Data {
         PASSWORD,
         SERVICE,
         ADDITIONAL_DATA,
-        /**
-         * The "Added on remote" field is used only by the Google Drive class to indicate a Data record that has been
-         * added on the remote version of the database. Thus, it must be used only in that context. Lastly, it does not
-         * cause any issue with the asLinkedHashMap method because it does not appear in it.
-         */
-        ADDED_ON_REMOTE
     }
 
     /**

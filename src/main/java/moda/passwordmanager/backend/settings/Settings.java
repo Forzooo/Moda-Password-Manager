@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import moda.passwordmanager.backend.Database;
 import moda.passwordmanager.backend.Helper;
 import moda.passwordmanager.frontend.properties.Themes;
 
@@ -20,11 +21,16 @@ import java.util.Map;
 public class Settings extends AbstractSettings {
 
     /**
+     * The name of the settings file
+     */
+    private static final String FILENAME = "settings.json";
+
+    /**
      * The settings version is used to know whether the file needs to be updated with the new data. Also, it can occur
      * that the version does not match the application's one as the setting's version updates only when they are
      * modified.
      */
-    private static final String SETTINGS_VERSION = "0.6.0";
+    private static final String VERSION = "0.6.0";
     private final ObjectMapper objectMapper;
     private final File settingsFile;
 
@@ -49,6 +55,13 @@ public class Settings extends AbstractSettings {
     }
 
     /**
+     * Get the name of the settings file, including its extension
+     */
+    public static String getFilename(){
+        return FILENAME;
+    }
+
+    /**
      * Retrieve the current default settings for the application
      */
     private ObjectNode getDefaultSettings(){
@@ -56,7 +69,7 @@ public class Settings extends AbstractSettings {
 
         // Set all the database values
         ArrayList<String> recentDatabases = new ArrayList<>();
-        recentDatabases.add(Helper.getPasswordManagerAppDataPath()+Helper.getDefaultDatabase());  // The default database used
+        recentDatabases.add(Helper.getPasswordManagerAppDataPath()+ Database.getDefaultDatabase());  // The default database used
 
         ObjectNode database = this.objectMapper.createObjectNode();  // Contains all the database values
         database.put("selected", recentDatabases.getFirst());
@@ -75,7 +88,7 @@ public class Settings extends AbstractSettings {
         appearance.put("theme", Themes.LIGHT.toString());
 
         // Define the hierarchy of the JSON
-        rootNode.put("version", SETTINGS_VERSION);
+        rootNode.put("version", VERSION);
         rootNode.put("check_version_on_startup", true);
         rootNode.put("database", database);
         rootNode.put("string_generation", stringGeneration);
