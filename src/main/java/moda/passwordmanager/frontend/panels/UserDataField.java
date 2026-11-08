@@ -14,9 +14,9 @@ public class UserDataField extends JPanel {
     private JTextField dataField;
     private JButton copyButton;
 
-    public UserDataField(String dataField){
+    public UserDataField(String fieldValue){
         initPanel();
-        initComponents(dataField);
+        initComponents(fieldValue);
         initListeners();
     }
 
@@ -30,9 +30,9 @@ public class UserDataField extends JPanel {
     /**
      * Initialize the components of the panel
      */
-    private void initComponents(String dataField){
+    private void initComponents(String fieldValue){
         this.dataField = new JTextField();
-        this.dataField.setText(dataField);
+        this.dataField.setText(fieldValue);
         this.dataField.setEditable(false);  // The user cannot modify the data unless "Modify" is clicked
         this.dataField.setPreferredSize(new Dimension(600, 70));
         this.dataField.setMaximumSize(new Dimension(600, 70));

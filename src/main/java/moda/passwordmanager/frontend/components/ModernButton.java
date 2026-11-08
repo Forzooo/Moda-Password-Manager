@@ -84,7 +84,7 @@ public class ModernButton extends JButton {
 
         int arc = 25;
         g2.setColor(this.backgroundColor);
-        g2.fillRoundRect(0, 0, this.getWidth(), this.getHeight(), arc, arc);
+        g2.fillRoundRect(2, 2, this.getWidth() - (int) this.currentThickness, this.getHeight() - (int) this.currentThickness, arc, arc);
 
         if (this.currentThickness > 0.1f) {
             g2.setColor(this.borderColor);
