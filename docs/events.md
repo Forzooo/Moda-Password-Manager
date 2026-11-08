@@ -125,7 +125,7 @@ method.
 ***
 
 ## Google Drive
-### Get Google Drive Status
+### Get the Google Drive status
 * Operation: `get-google-drive`
 * Sender: Frontend
 * Description: Requests whether Google Drive synchronization is enabled
@@ -133,7 +133,7 @@ method.
 * Data received:  _boolean_ google drive synchronizations status
 * Synchronous: required
 
-### Set Google Drive Status
+### Set the Google Drive status
 * Operation: `set-google-drive`
 * Sender: Frontend
 * Description: Enable or disable the Google Drive service, which also requires the JSON credentials file used to 
@@ -142,7 +142,7 @@ authenticate with Google Drive (only if it has to be enabled)
 * Data received: -
 * Synchronous: not required
 
-### Google Drive synchronization
+### Synchronization with Google Drive
 * Operation: `google-drive-synchronize`
 * Sender: Frontend
 * Description: Perform a synchronization with Google Drive
@@ -168,7 +168,7 @@ authenticate with Google Drive (only if it has to be enabled)
 * Data received: -
 * Synchronous: required
 
-### Get Google Drive automatic synchronization
+### Get the Google Drive automatic synchronization
 * Operation: `get-google-drive-automatic-synchronization`
 * Sender: Frontend
 * Description: Request whether the automatic synchronization is enabled
@@ -176,7 +176,7 @@ authenticate with Google Drive (only if it has to be enabled)
 * Data received: _boolean_ automatic synchronization status
 * Synchronous: required
 
-### Enable Google Drive automatic synchronization
+### Set the Google Drive automatic synchronization
 * Operation: `set-google-drive-automatic-synchronization`
 * Sender: Frontend
 * Description: Enable or disable the automatic synchronization
@@ -268,4 +268,13 @@ whether special characters are enabled
 * Description: Set the control for a new version on startup
 * Data sent: _bool_ status
 * Data received: -
+* Synchronous: not required
+
+### Show a Toast
+* Operation: `show-toast`
+* Sender: Backend
+* Description: The backend tells the Frontend Event Listener to show a Toast containing some data to be displayed to the user
+* Data sent: _String_ text of the Toast formatted as the locale string, _Toast.Type_ the type of the Toast: Info, Error,
+             Success, ...
+* Data received_ -
 * Synchronous: not required

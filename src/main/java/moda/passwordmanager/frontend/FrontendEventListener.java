@@ -27,10 +27,26 @@ public class FrontendEventListener extends EventListener {
      * Add all the operations to handle
      */
     private void initHandler(){
-        addOperation("exception-raised", this::exceptionRaised);
-        addOperation("update-service-fields", this::updateServiceFields);
-        addOperation("google-drive-synchronization-conflicts", this::openGoogleDriveSynchronizationDialog);
         addOperation("check-new-version", this::checkNewVersion);
+        addOperation("exception-raised", this::exceptionRaised);
+        addOperation("google-drive-synchronization-conflicts", this::openGoogleDriveSynchronizationDialog);
+        addOperation("show-toast", this::showToast);
+        addOperation("update-service-fields", this::updateServiceFields);
+    }
+
+    /**
+     * Let the user know the result of a version check
+     */
+    private void checkNewVersion(){
+        // If a new version exists, we show the version number too
+        if ((boolean) getRequestData().getFirst()) {
+            SwingUtilities.invokeLater(() -> Utilities.showToast(this.showData.getParent(), Toast.Type.INFO,
+                    Utilities.getLocaleString("Moda.Toast.checkNewVersionAvailable") + " "
+                            + getRequestData().get(1)));
+        }else{
+            SwingUtilities.invokeLater(() -> Utilities.showToast(this.showData.getParent(), Toast.Type.INFO,
+                    Utilities.getLocaleString("Moda.Toast.checkNewVersionUnavailable")));
+        }
     }
 
     /**
@@ -59,23 +75,6 @@ public class FrontendEventListener extends EventListener {
     }
 
     /**
-     * Update the service data with the new one
-     */
-    private void updateServiceFields(){
-        // The updated service data from the backend
-        ArrayList<Data> backendData = (ArrayList<Data>) getRequestData().getFirst();
-
-        for (Data data : backendData){
-            // If the service field is empty that means the record has been deleted, and it has to be removed from the list
-            if (data.getService().isBlank()){
-                this.showData.removeData(data);
-            }else{  // Otherwise add/update the Map object with the ID and its service
-                this.showData.addData(data);
-            }
-        }
-    }
-
-    /**
      * Open the Google Drive Synchronization dialog with the conflicted data
      */
     private void openGoogleDriveSynchronizationDialog(){
@@ -92,17 +91,31 @@ public class FrontendEventListener extends EventListener {
     }
 
     /**
-     * Let the user know the result of a version check
+     * Show the Toast that the Backend request to display
      */
-    private void checkNewVersion(){
-        // If a new version exists, we show the version number too
-        if ((boolean) getRequestData().getFirst()) {
-            SwingUtilities.invokeLater(() -> Utilities.showToast(this.showData.getParent(), Toast.Type.INFO,
-                    Utilities.getLocaleString("Moda.Toast.checkNewVersionAvailable") + " "
-                            + getRequestData().get(1)));
-        }else{
-            SwingUtilities.invokeLater(() -> Utilities.showToast(this.showData.getParent(), Toast.Type.INFO,
-                    Utilities.getLocaleString("Moda.Toast.checkNewVersionUnavailable")));
+    private void showToast(){
+        String localeString = (String) getRequestData().getFirst();
+        Toast.Type type = (Toast.Type) getRequestData().get(1);
+
+        // We need to localize the string as the Backend returns its locale value to avoid having to call the Frontend
+        // Utilities class
+        Utilities.showToast(this.showData.getRootPane(), type, Utilities.getLocaleString(localeString));
+    }
+
+    /**
+     * Update the service data with the new one
+     */
+    private void updateServiceFields(){
+        // The updated service data from the backend
+        ArrayList<Data> backendData = (ArrayList<Data>) getRequestData().getFirst();
+
+        for (Data data : backendData){
+            // If the service field is empty that means the record has been deleted, and it has to be removed from the list
+            if (data.getService().isBlank()){
+                this.showData.removeData(data);
+            }else{  // Otherwise add/update the Map object with the ID and its service
+                this.showData.addData(data);
+            }
         }
     }
 }

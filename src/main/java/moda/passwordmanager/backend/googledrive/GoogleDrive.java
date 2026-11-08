@@ -319,11 +319,11 @@ public class GoogleDrive {
     }
 
     /**
-     * Synchronize the current database and download/upload it based on the last change made
+     * Synchronize the current database and download/upload it based on the last changes made
      * @param databasePath The path of the database in use
      * @param databaseName The name of the database in use
      */
-    public void sync(String databasePath, String databaseName){
+    public boolean sync(String databasePath, String databaseName){
         // TODO: Analyze whether it is worth to use an Enum to indicate the states of the synchronization: to perform,
         // TODO: conflicts found and conflicts solved. It could avoid recalculating the conflicts if the automatic
         // TODO: synchronization is enabled
@@ -332,7 +332,7 @@ public class GoogleDrive {
             uploadDatabase(databasePath, databaseName);
             this.conflictsSolved = false;  // The conflicts are set again to false to avoid to re-enter this if statement
                                            // without checking for differences with the remote database
-            return;
+            return true;
         }
 
         String remoteDatabaseChecksum = getDatabaseChecksum(databaseName);
@@ -341,7 +341,7 @@ public class GoogleDrive {
         // upload it to Drive
         if (remoteDatabaseChecksum.isBlank()){
             uploadDatabase(databasePath, databaseName);
-            return;
+            return true;
         }
 
         // If the remote database and the local one do not have the same checksum it means that some changes were made
@@ -366,15 +366,20 @@ public class GoogleDrive {
             List<ConflictData> conflicts = calculateConflicts(localDataRecords, remoteDataRecords, localDataAutoincrement, remoteDataAutoincrement);
 
             // If the remote data records are empty it means that no update has been made to the Data table (probably
-            // it has to the sensitive settings) thus we can set the conflicts solved to true
+            // it has to the sensitive settings) thus we can upload the database
             if (conflicts.isEmpty()){
-                this.conflictsSolved = true;
+                uploadDatabase(databasePath, databaseName);  // We upload the database as the conflicts are solved
+                this.conflictsSolved = false;  // Just for the definition of conflictsSolved, we have to set them back
+                                               // to false after the uploading of the database
+                return true;
             }else{  // Otherwise, the user has to solve the conflicts before Google Drive is allowed to upload the
                     // database
                 this.conflictsSolved = false;
                 this.itc.send(new Event("google-drive-synchronization-conflicts", conflicts));
+                return false;
             }
         }
+        return true;
     }
 
     /**
@@ -421,9 +426,7 @@ public class GoogleDrive {
 
         // In the remoteDataRecords list, after all the removals, there are only, if any, the Data that have been deleted
         // in the local database. So we can add them to the conflicts list
-        for (Data remoteData : remoteDataRecords){
-            conflicts.add(new ConflictData(remoteData, ConflictData.ConflictType.DELETED_LOCAL));
-        }
+        remoteDataRecords.forEach(remoteData -> conflicts.add(new ConflictData(remoteData, ConflictData.ConflictType.DELETED_LOCAL)));
 
         // Lastly, in the localDataRecords we may find Data that have been added by the user or Data that have been
         // deleted in the remote. If the latter is the case, then we add it to the conflicts list

@@ -13,6 +13,7 @@ import moda.passwordmanager.frontend.properties.Themes;
 import moda.passwordmanager.interthreadcommunication.EventListener;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
+import raven.modal.Toast;
 
 import java.io.*;
 import java.net.URI;
@@ -152,7 +153,7 @@ public class Backend extends EventListener {
             this.googleDrive.setConflictsSolved();
 
             // After the conflicts are solved, we can resynchronize
-            this.googleDrive.sync(this.database.getPath(), this.database.getName());
+            synchronizeGoogleDrive();
         });
 
         addLockedOperation("get-google-drive-automatic-synchronization", this::getGoogleDriveSynchronization);
@@ -436,6 +437,16 @@ public class Backend extends EventListener {
     }
 
     /**
+     * Send to the Frontend Event Listener a message that has to be displayed in a Toast
+     */
+    private void showToast(String localeString, Toast.Type type){
+        Event showToast = new Event("show-toast", localeString);
+        showToast.addData(type);
+
+        getItc().send(showToast);
+    }
+
+    /**
      * Save the user data, after encrypting it, inside the database
      * @param data The data to save inside the database
      */
@@ -707,20 +718,25 @@ public class Backend extends EventListener {
     }
 
     /**
-     * Synchronize the database with Google Drive
+     * Synchronize the database with Google Drive and add the result of the operation
      */
     private void synchronizeGoogleDrive(){
-        this.googleDrive.sync(this.database.getPath(), this.database.getName());
+        // Based on the result of the synchronization we send a different Toast to the Frontend Event Listener
+        if (this.googleDrive.sync(this.database.getPath(), this.database.getName())){
+            showToast("Moda.Toast.googleDriveSynchronizationSuccessful", Toast.Type.SUCCESS);
+        }else{
+            showToast("Mota.Toast.googleDriveSynchronizationUnsuccessful", Toast.Type.ERROR);
+        }
     }
 
     /**
      * Synchronization performed automatically every 60 seconds
      */
     private void automaticSynchronizeGoogleDrive(){
-        // Ensure that Google Drive is enabled, and the Synchronization is enabled before synchronizing
+        // Ensure that Google Drive is enabled, and the automatic synchronization is enabled before synchronizing
         if (this.sensitiveSettings.readBooleanProperty("google_drive/enabled") &&
                 this.sensitiveSettings.readBooleanProperty("google_drive/automatic_synchronization")){
-            this.googleDrive.sync(this.database.getPath(), this.database.getName());
+            synchronizeGoogleDrive();
             this.helper.executeInBackground(this::updateServiceFields);  // Update the service fields in the Frontend
         }
     }

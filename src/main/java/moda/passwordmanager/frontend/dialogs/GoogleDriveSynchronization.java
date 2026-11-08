@@ -26,7 +26,7 @@ public class GoogleDriveSynchronization extends JDialog {
     // As the Data object are final, and we need to update it over time based on the user behaviour, we can use a
     // temporary HashMap to map the ID to the various fields
     // In this way we can easily create Data objects to use when the "Solve" button is clicked
-    private final HashMap<Integer, LinkedHashMap<Data.Fields, String>> solvedData;
+    private final HashMap<Integer, LinkedHashMap<Data.Fields, String>> updatedData;
 
     private final ArrayList<Data> addedData;
 
@@ -42,7 +42,7 @@ public class GoogleDriveSynchronization extends JDialog {
         this.itc = itc;
         this.conflictDataList = conflictDataList;
         this.addedData = new ArrayList<>();
-        this.solvedData = new HashMap<>();
+        this.updatedData = new HashMap<>();
 
         initDialog();
         initComponents();
@@ -110,16 +110,16 @@ public class GoogleDriveSynchronization extends JDialog {
     private void initListeners(){
         this.solveButton.addActionListener(e -> {
             // We iterate over the HashMap (ID->Data fields), and we create a Data object for each of them
-            for (Map.Entry<Integer, LinkedHashMap<Data.Fields, String>> dataEntry : solvedData.entrySet()){
+            for (Map.Entry<Integer, LinkedHashMap<Data.Fields, String>> dataEntry : updatedData.entrySet()){
                 // It is set to null only when the record has already been deleted locally/remotely, and the user has
                 // chosen to confirm its deletion
                 if (dataEntry.getValue() == null){
                     this.itc.request(new Event("delete-data", dataEntry.getKey()));
                 }else{
-                    // To create the Daa object we set the ID in the updatedData to use a cleaner Data constructor
-                    LinkedHashMap<Data.Fields, String> updatedData = solvedData.get(dataEntry.getKey());
-                    updatedData.put(Data.Fields.ID, String.valueOf(dataEntry.getKey()));
-                    Data data = new Data(updatedData);
+                    // To create the Data object we set the ID in the updatedData to use a cleaner Data constructor
+                    LinkedHashMap<Data.Fields, String> dataAsHashMap = this.updatedData.get(dataEntry.getKey());
+                    dataAsHashMap.put(Data.Fields.ID, String.valueOf(dataEntry.getKey()));
+                    Data data = new Data(dataAsHashMap);
 
                     // We update the record in the database
                     this.itc.request(new Event("update-data", data));
@@ -177,7 +177,7 @@ public class GoogleDriveSynchronization extends JDialog {
                 LinkedHashMap<Data.Fields, String> localUserData = localData.asLinkedHashMap();
                 LinkedHashMap<Data.Fields, String> remoteUserData = conflictData.asLinkedHashMap();
 
-                this.solvedData.put(localData.getId(), localUserData);  // By default, the local one is always chosen
+                this.updatedData.put(localData.getId(), localUserData);  // By default, the local one is always chosen
 
                 // Iterate over each field and show only the ones that are different
                 for (Map.Entry<Data.Fields, String> localDataEntry : localUserData.entrySet()){
@@ -188,20 +188,20 @@ public class GoogleDriveSynchronization extends JDialog {
                         JRadioButton localDataRadio = new JRadioButton();
                         localDataRadio.setText(formatText(localDataEntry.getValue()) + " (" + localDataEntry.getKey().toString() +  ")");
                         localDataRadio.setSelected(true);  // By default, the local one is always chosen to avoid having to
-                        // check whether all the conflicts have been solved: in this way
-                        // the solve button is already enabled
+                                                           // check whether all the conflicts have been solved: in this way
+                                                           // the solve button is already enabled
 
                         // If the radio button is selected, then we update it in the solved data: the HashMap that will be
                         // used to update the database in the backend
                         localDataRadio.addActionListener(
-                                e -> solvedData.get(localData.getId()).put(localDataEntry.getKey(), localDataEntry.getValue())
+                                e -> updatedData.get(localData.getId()).put(localDataEntry.getKey(), localDataEntry.getValue())
                         );
 
                         JRadioButton remoteDataRadio = new JRadioButton();
                         remoteDataRadio.setText(formatText(remoteUserData.get(localDataEntry.getKey())) +
                                 " (" + localDataEntry.getKey().toString() +  ")");
                         remoteDataRadio.addActionListener(
-                                e -> solvedData.get(localData.getId()).put(localDataEntry.getKey(), remoteUserData.get(localDataEntry.getKey()))
+                                e -> updatedData.get(localData.getId()).put(localDataEntry.getKey(), remoteUserData.get(localDataEntry.getKey()))
                         );
 
                         buttonGroup.add(localDataRadio);
@@ -211,8 +211,8 @@ public class GoogleDriveSynchronization extends JDialog {
                         remoteDataPanel.add(remoteDataRadio, "wrap");
                     }
                 }
-            }else{
-                // The button group allows to select only of the two radio buttons
+            }else{  // The data has been deleted either locally or remotely
+                // The button group allows to select only one of the two radio buttons
                 ButtonGroup buttonGroup = new ButtonGroup();
 
                 JRadioButton restoreRadio = new JRadioButton();
@@ -228,31 +228,43 @@ public class GoogleDriveSynchronization extends JDialog {
                 // Based on whether the data has been deleted locally or remotely, we have to manage the local and remote
                 // radio buttons properly and also to set the text of the service section label
                 if (conflictData.getType() == ConflictData.ConflictType.DELETED_LOCAL){
+
                     serviceSectionLabel.setText(conflictData.getService() + " (" +
                         Utilities.getLocaleString("Moda.GoogleDriveSynchronizationConflicts.deletedLocally") + ")");
 
                     ConflictData finalConflictData = conflictData;
-                    restoreRadio.addActionListener(e -> this.solvedData.put(finalConflictData.getId(),
-                            finalConflictData.asLinkedHashMap()));
+                    restoreRadio.addActionListener(e -> {
+                        // We have to check whether it already contains the Data before adding it as the user could click
+                        // on the restoreRadio more than once
+                        // Also we use addedData instead of updatedData because we cannot use the "update-data" Event on
+                        // a data that is not anymore on the DB
+                        if (!this.addedData.contains(finalConflictData)){
+                            this.addedData.add(finalConflictData);
+                        }
+                    });
 
                     // If the user chooses Remove then in the solved data hash map we set its linked hash map as null
                     // to let solve button listener know that it needs to be deleted
-                    removeRadio.addActionListener(e -> this.solvedData.put(finalConflictData.getId(), null));
+                    removeRadio.addActionListener(e -> this.addedData.remove(finalConflictData));
                     localDataPanel.add(removeRadio, "span, wrap");
                     remoteDataPanel.add(restoreRadio, "span, wrap");
                 }else{
                     serviceSectionLabel.setText(localData.getService() + " (" +
                         Utilities.getLocaleString("Moda.GoogleDriveSynchronizationConflicts.deletedOnRemote") + ")");
 
-                    restoreRadio.addActionListener(e -> this.solvedData.put(localData.getId(),
+                    restoreRadio.addActionListener(e -> this.updatedData.put(localData.getId(),
                             localData.asLinkedHashMap()));
 
                     // If the user chooses Remove then in the solved data hash map we set its linked hash map as null
                     // to let solve button listener know that it needs to be deleted
-                    removeRadio.addActionListener(e -> this.solvedData.put(localData.getId(), null));
+                    removeRadio.addActionListener(e -> this.updatedData.put(localData.getId(), null));
                     localDataPanel.add(restoreRadio, "span, wrap");
                     remoteDataPanel.add(removeRadio, "span, wrap");
                 }
+
+                restoreRadio.doClick();  // We trigger the actionListener by default to have an initial value inside the
+                                         // solvedData/updatedData as otherwise it may occur that the user solves the
+                                         // conflicts without clicking one of the radio leaving without a data
             }
 
             this.conflictsPanel.add(serviceSectionLabel, "align center, span, wrap");
