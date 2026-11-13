@@ -42,13 +42,10 @@ public class Settings extends AbstractSettings {
             // If the file does not exist yet, create it
             if (this.settingsFile.createNewFile()) {
                 updateSettingsFile(getDefaultSettings());  // Update the file with the default settings
+            }else if (!readStringProperty("version").equals(VERSION)){  // The settings must be updated to
+                                                                        // follow the latest changes made
+                updateSettingsFile(updateFromOldVersion());
             }
-            // TODO. The version check has to be used after 0.6.0 because every user needs to already have the
-            // TODO. version in the settings
-            // }else if (!readStringProperty("version").equals(SETTINGS_VERSION)){  // The settings must be updated to
-                                                                                 // follow the latest changes made
-            updateSettingsFile(updateFromOldVersion());
-            // }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -69,7 +66,7 @@ public class Settings extends AbstractSettings {
 
         // Set all the database values
         ArrayList<String> recentDatabases = new ArrayList<>();
-        recentDatabases.add(Helper.getPasswordManagerAppDataPath()+ Database.getDefaultDatabase());  // The default database used
+        recentDatabases.add(Helper.getDataDirectoryPath()+Database.getDefaultDatabase());  // The default database used
 
         ObjectNode database = this.objectMapper.createObjectNode();  // Contains all the database values
         database.put("selected", recentDatabases.getFirst());
