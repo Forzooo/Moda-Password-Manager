@@ -3,6 +3,8 @@ package moda.passwordmanager.interthreadcommunication;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 class EventTests {
 
     private static final String OPERATION = "Test";
