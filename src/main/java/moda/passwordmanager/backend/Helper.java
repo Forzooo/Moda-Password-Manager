@@ -29,10 +29,36 @@ public class Helper {
     }
 
     /**
-     * Return the path of "%appdata%/Moda/Password-Manager/" directory for the current user
+     * Get the Operative System where the application is being executed on
      */
-    public static String getPasswordManagerAppDataPath() {
-        return System.getenv("APPDATA")+"\\Moda\\Password-Manager\\";
+    public static String getOS(){
+        return System.getProperty("os.name");
+    }
+
+    /**
+     * Return the path of ".../Moda/Password-Manager/" directory for the current user
+     */
+    public static String getDataDirectoryPath() {
+        return switch (getOS()) {
+            // Only Ubuntu is tested, the other distros are assumed to be working
+            case "Linux" -> System.getProperty("user.home") + "/.moda/password-manager/";
+
+            // Only Windows 11 is tested, 10 is assumed to be working
+            case "Windows 10", "Windows 11" -> System.getenv("AppData") + "\\.moda\\password-manager\\";
+            default -> "./moda/password-manager/";  // If the OS is not supported at all, we use a local directory
+        };
+    }
+
+    /**
+     * Get the filename from a path
+     */
+    public static String getFilenameFromPath(String path){
+        // We have to normalize the Windows backslashes ("\\") to a slash ("/") to have it compatible across all the OS
+        if (path.contains("\\")){
+            path = path.replace("\\", "/");
+        }
+
+        return Path.of(path).getFileName().toString();
     }
 
     /**

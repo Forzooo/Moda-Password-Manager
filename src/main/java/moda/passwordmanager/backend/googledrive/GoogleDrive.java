@@ -349,7 +349,7 @@ public class GoogleDrive {
             // The name of the remote database file is its checksum to ensure that there are no duplicate
             // files (hash collision are rare)
             Database remoteDatabase = downloadDatabase(databaseName,
-                    Helper.getPasswordManagerAppDataPath()+remoteDatabaseChecksum+Database.getFileExtension());
+                    Helper.getDataDirectoryPath()+remoteDatabaseChecksum+Database.getFileExtension());
             List<Data> remoteDataRecords = remoteDatabase.getDataRecords();
             int remoteDataAutoincrement = remoteDatabase.getAutoincrementDataTable();  // We need it to check for any
                                                                                        // record deleted on the remote

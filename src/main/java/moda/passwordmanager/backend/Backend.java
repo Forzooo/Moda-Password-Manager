@@ -49,10 +49,10 @@ public class Backend extends EventListener {
         // Set the name of the thread for debug purposes
         super(new InterThreadCommunication(frontendQueue, backendQueue), "Backend");
 
-        createAppdataDirectory();  // Create the folder to store the configuration files inside it
+        createDataDirectory();  // Create the folder to store the configuration files inside it
 
         // Initialize all the backend components
-        this.settings = new Settings(Helper.getPasswordManagerAppDataPath()+Settings.getFilename());
+        this.settings = new Settings(Helper.getDataDirectoryPath()+Settings.getFilename());
         this.database = new Database(this.settings.readStringProperty("database/selected"));
         this.cryptography = new Cryptography();
         this.helper = new Helper(this.cryptography);
@@ -63,17 +63,17 @@ public class Backend extends EventListener {
     }
 
     /**
-     * Create the Appdata folder for the software to store inside it files
+     * Create the data directory for the software to store inside it its files
      */
-    private void createAppdataDirectory(){
-        File appdataDirectory = new File(Helper.getPasswordManagerAppDataPath());
+    private void createDataDirectory(){
+        File dataDirectory = new File(Helper.getDataDirectoryPath());
 
         // Check whether the directory already exists to avoid recreating it
-        if (appdataDirectory.exists()){
+        if (dataDirectory.exists()){
             return;
         }
 
-        appdataDirectory.mkdirs();  // Create the directories
+        dataDirectory.mkdirs();  // Create the directories
     }
 
     /**
@@ -129,7 +129,7 @@ public class Backend extends EventListener {
             // only be set in the Startup dialog which is before the initServiceMapping is called
         });
 
-        addOperation("get-database", this::getDatabasePath);
+        addOperation("get-database-name", () -> addResponseData(this.database.getName()));
         addLockedOperation("update-master-password", this::updateMasterPassword);
 
 
@@ -226,7 +226,7 @@ public class Backend extends EventListener {
         throwable.printStackTrace(printWriter);
 
         try {
-            File traceback = new File(Helper.getPasswordManagerAppDataPath()+"traceback-"+
+            File traceback = new File(Helper.getDataDirectoryPath()+"traceback-"+
                     LocalDateTime.now(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("uuuu-MM-dd-HH-mm-ss")) +".txt");
             traceback.createNewFile();  // Create the traceback file
 
@@ -590,13 +590,6 @@ public class Backend extends EventListener {
     private void setDatabasePath(String databasePath){
         this.settings.writeSubproperty("database/selected", databasePath);  // Set the path of the database
         this.database.change(databasePath);  // Set the new database to be the one used
-    }
-
-    /**
-     * Retrieve the path of the current database in use
-     */
-    private void getDatabasePath(){
-        addResponseData(this.database.getPath());  // Add the path to the data to send
     }
 
     /**

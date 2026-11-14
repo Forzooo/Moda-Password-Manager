@@ -122,9 +122,7 @@ public class Database {
      * @return String containing the name of the current database
      */
     public String getName(){
-        // The name of the database is gotten from the last slash of the path, and the +1 is required to
-        // remove the slash from the name
-        return this.path.substring(this.path.lastIndexOf("\\")+1);
+        return Helper.getFilenameFromPath(this.path);
     }
 
     /**

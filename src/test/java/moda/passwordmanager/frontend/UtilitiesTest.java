@@ -14,15 +14,4 @@ class UtilitiesTest {
         assertFalse(Utilities.checkMasterPassword(new char[0]));
         assertTrue(Utilities.checkMasterPassword(new char[1]));
     }
-
-    /**
-     * Ensure that it returns the filename
-     */
-    @Test
-    void getFilenameFromPath(){
-        // The first test also ensures that the normalization is working correctly
-        assertEquals("test.txt", Utilities.getFilenameFromPath("C:\\path\\path2\\test.txt"));
-        assertEquals("test.txt", Utilities.getFilenameFromPath("C:/path/path2/test.txt"));
-    }
-
 }

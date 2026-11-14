@@ -106,12 +106,12 @@ method.
 * Data received: -
 * Synchronous: required
 
-### Get the database
-* Operation: `get-database`
+### Get the database name
+* Operation: `get-database-name`
 * Sender: Frontend
-* Description: Get the path of the database in use
+* Description: Get the name of the database in use
 * Data sent: -
-* Data received: _String_ path
+* Data received: _String_ name of the database
 * Synchronous: required
 
 ### Get the recent databases

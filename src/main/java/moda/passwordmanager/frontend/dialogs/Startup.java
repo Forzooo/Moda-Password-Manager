@@ -95,7 +95,7 @@ public class Startup extends JDialog {
         // Database operations panel
         this.currentDatabaseLabel = new JLabel();
         this.currentDatabaseLabel.setText(Utilities.getLocaleString("Moda.Startup.currentDatabaseLabel") + " " +
-                Utilities.getFilenameFromPath(getCurrentDatabase()));
+                getCurrentDatabase());
 
         this.newDatabaseButton = new JButton();
         this.newDatabaseButton.setText(Utilities.getLocaleString("Moda.Startup.newDatabaseButton"));
@@ -199,7 +199,7 @@ public class Startup extends JDialog {
      */
     private String getCurrentDatabase(){
         // Receive the path of the database from the backend
-        Event databasePathEvent = this.itc.request(new Event("get-database"));
+        Event databasePathEvent = this.itc.request(new Event("get-database-name"));
 
         return (String) databasePathEvent.getData().getFirst();
     }
