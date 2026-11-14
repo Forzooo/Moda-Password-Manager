@@ -156,7 +156,6 @@ public class AddData extends JPanel {
         Data userData = new Data(username, emailAddress, password, service, additionalData);
 
         this.itc.send(new Event("add-data", userData));
-        Utilities.showToast(getParent(), Toast.Type.SUCCESS, Utilities.getLocaleString("Moda.Toast.addDataSuccessful"));
     }
 
     /**

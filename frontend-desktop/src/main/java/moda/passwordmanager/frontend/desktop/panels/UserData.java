@@ -262,7 +262,6 @@ public class UserData extends JPanel {
     private void deleteData(){
         Event event = new Event("delete-data", this.id);
         this.itc.request(event);
-        Utilities.showToast(getParent(), Toast.Type.SUCCESS, Utilities.getLocaleString("Moda.Toast.deletedDataSuccessful"));
     }
 
     /**

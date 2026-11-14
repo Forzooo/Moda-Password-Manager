@@ -1,5 +1,6 @@
 package moda.passwordmanager.frontend.desktop;
 
+import moda.passwordmanager.Application;
 import moda.passwordmanager.backend.Data;
 import moda.passwordmanager.backend.googledrive.ConflictData;
 import moda.passwordmanager.frontend.desktop.dialogs.GoogleDriveSynchronization;
@@ -29,6 +30,7 @@ public class FrontendEventListener extends EventListener {
     private void initHandler(){
         addOperation("check-new-version", this::checkNewVersion);
         addOperation("exception-raised", this::exceptionRaised);
+        addOperation("get-application-version", () -> addResponseData(Application.getVersion()));
         addOperation("google-drive-synchronization-conflicts", this::openGoogleDriveSynchronizationDialog);
         addOperation("show-toast", this::showToast);
         addOperation("update-service-fields", this::updateServiceFields);
@@ -95,7 +97,7 @@ public class FrontendEventListener extends EventListener {
      */
     private void showToast(){
         String localeString = (String) getRequestData().getFirst();
-        Toast.Type type = (Toast.Type) getRequestData().get(1);
+        Toast.Type type = Toast.Type.valueOf(getRequestData().get(1).toString());
 
         // We need to localize the string as the Backend returns its locale value to avoid having to call the Frontend
         // Utilities class

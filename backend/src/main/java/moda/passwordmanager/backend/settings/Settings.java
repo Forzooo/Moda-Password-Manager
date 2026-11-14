@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import moda.passwordmanager.backend.Database;
 import moda.passwordmanager.backend.Helper;
-//import moda.passwordmanager.frontend.desktop.properties.Themes;
 
 import java.io.File;
 import java.io.IOException;
@@ -82,7 +81,7 @@ public class Settings extends AbstractSettings {
         // Set the appearance properties
         ObjectNode appearance = this.objectMapper.createObjectNode();
         appearance.put("language", Helper.getSystemLanguage());
-//        appearance.put("theme", Themes.LIGHT.toString());
+        appearance.put("theme", "LIGHT");  // TODO. Check if it can be done without a hard-coded string
 
         // Define the hierarchy of the JSON
         rootNode.put("version", VERSION);
@@ -169,7 +168,7 @@ public class Settings extends AbstractSettings {
         JsonNode currentNode;
 
         String[] nodes = nodePath.split("/");  // Split each node
-        JsonNode rootNode = null;  // Read the settings
+        JsonNode rootNode;  // Read the settings
         try {
             rootNode = this.objectMapper.readTree(this.settingsFile);
         } catch (IOException e) {
@@ -273,7 +272,7 @@ public class Settings extends AbstractSettings {
         }
 
         // As the property is inside the root we have to use the put method directly on rootNode itself
-        ObjectNode rootNode = null;
+        ObjectNode rootNode;
         try {
             rootNode = (ObjectNode) this.objectMapper.readTree(this.settingsFile);
         } catch (IOException e) {
@@ -291,7 +290,7 @@ public class Settings extends AbstractSettings {
     @Override
     public void writeSubproperty(String nodePath, Object value){
         // As we need to change a property we need to keep the same root node, otherwise the changes would not be saved
-        JsonNode rootNode = null;
+        JsonNode rootNode;
         try {
             rootNode = this.objectMapper.readTree(this.settingsFile);
         } catch (IOException e) {
@@ -323,7 +322,7 @@ public class Settings extends AbstractSettings {
         }
 
         // As the property is inside the root we have to use the putPOJO method directly on rootNode itself
-        ObjectNode rootNode = null;
+        ObjectNode rootNode;
         try {
             rootNode = (ObjectNode) this.objectMapper.readTree(this.settingsFile);
         } catch (IOException e) {
@@ -341,7 +340,7 @@ public class Settings extends AbstractSettings {
     @Override
     public void writeListSubproperty(String nodePath, List<Object> values){
         // As we need to change a property we need to keep the same root node, otherwise the changes would not be saved
-        JsonNode rootNode = null;
+        JsonNode rootNode;
         try {
             rootNode = this.objectMapper.readTree(this.settingsFile);
         } catch (IOException e) {

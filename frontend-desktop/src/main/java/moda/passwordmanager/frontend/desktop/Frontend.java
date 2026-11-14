@@ -36,7 +36,7 @@ public class Frontend extends JPanel {
         // Set the default exception handler for the Frontend threads
         Thread.setDefaultUncaughtExceptionHandler(this::exceptionHandler);
 
-        Application.setApplicationLanguage(getApplicationLanguage() );
+        Application.setApplicationLanguage(getApplicationLanguage());
         Application.applyTheme(getApplicationTheme());
         initStartup();
 

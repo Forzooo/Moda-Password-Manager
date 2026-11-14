@@ -4,14 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.auth.oauth2.StoredCredential;
 import com.google.api.client.json.gson.GsonFactory;
-//import moda.passwordmanager.Application;
 import moda.passwordmanager.backend.googledrive.GoogleDrive;
 import moda.passwordmanager.backend.settings.SensitiveSettings;
 import moda.passwordmanager.backend.settings.Settings;
 import moda.passwordmanager.interthreadcommunication.EventListener;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
-//import raven.modal.Toast;
 
 import java.io.*;
 import java.net.URI;
@@ -28,14 +26,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class Backend extends EventListener {
 
-    private final Helper helper;
-
-    // Main components of the backend classes
     private final Cryptography cryptography;
     private final Database database;
     private final GoogleDrive googleDrive;
     private final Settings settings;
     private final SensitiveSettings sensitiveSettings;
+    private final Helper helper;
+    private String applicationVersion;
 
     /**
      * The servicesMap is used to map IDs with the hashCode of the service field
@@ -93,20 +90,25 @@ public class Backend extends EventListener {
 
         // Save the data and update the service fields
         addLockedOperation("add-data", () -> {
-            saveData((Data) getRequestData().getFirst());
+            // Encrypt the data with the helper, then add it
+            this.database.addDataRecord(this.helper.encryptData((Data) getRequestData().getFirst()));
             this.helper.executeInBackground(this::updateServiceFields);
+            showToast("Moda.Toast.addDataSuccessful", "SUCCESS");
         });
+
         addLockedOperation("get-data", this::getData);
 
         // Delete a record from the database and update the service fields
         addLockedOperation("delete-data", () -> {
-            deleteSingleData((int) getRequestData().getFirst());
+            this.database.deleteDataRecord((int) getRequestData().getFirst());
             this.helper.executeInBackground(this::updateServiceFields);
+            showToast("Moda.Toast.deletedDataSuccessful", "SUCCESS");
         });
 
         // Change a data and update the service fields
         addLockedOperation("update-data", () -> {
-            updateData((Data) getRequestData().getFirst());
+            // Encrypt the data with the helper before saving it
+            this.database.updateDataRecord(this.helper.encryptData((Data) getRequestData().getFirst()));
             this.helper.executeInBackground(this::updateServiceFields);
         });
 
@@ -131,7 +133,8 @@ public class Backend extends EventListener {
         addLockedOperation("update-master-password", this::updateMasterPassword);
 
 
-        addLockedOperation("get-google-drive", this::getGoogleDrive);
+        addLockedOperation("get-google-drive", () ->
+                addResponseData(this.sensitiveSettings.readBooleanProperty("google_drive/enabled")));
         addLockedOperation("set-google-drive", () -> {
             // If the first data is set to true, then the user wants to enable Google Drive
             if (Boolean.parseBoolean(getRequestData().getFirst().toString())){
@@ -149,21 +152,17 @@ public class Backend extends EventListener {
 
         addLockedOperation("google-drive-synchronization-conflicts-solved", () -> {
             this.googleDrive.setConflictsSolved();
-
-            // After the conflicts are solved, we can resynchronize
-            synchronizeGoogleDrive();
+            synchronizeGoogleDrive();  // After the conflicts are solved, we can resynchronize
         });
 
-        addLockedOperation("get-google-drive-automatic-synchronization", this::getGoogleDriveSynchronization);
-        addLockedOperation("set-google-drive-automatic-synchronization", () -> {
-            if (Boolean.parseBoolean((getRequestData().getFirst().toString()))){
-                enableGoogleDriveAutomaticSynchronization();
-            }else{
-                disableGoogleDriveAutomaticSynchronization();
-            }
-        });
+        addLockedOperation("get-google-drive-automatic-synchronization", () ->
+                addResponseData(this.sensitiveSettings.readBooleanProperty("google_drive/automatic_synchronization"))
+        );
 
-        addOperation("get-recent-databases", this::getRecentDatabases);
+        addLockedOperation("set-google-drive-automatic-synchronization", () ->
+                this.sensitiveSettings.writeProperty("google_drive/automatic_synchronization", getRequestData().getFirst()));
+
+        addOperation("get-recent-databases", () -> addResponseData(this.settings.readListProperty("database/recent")));
 
         addOperation("get-application-theme", () -> addResponseData(this.settings.readStringProperty("appearance/theme")));
         addOperation("set-application-theme", () -> this.settings.writeSubproperty("appearance/theme", getRequestData().getFirst()));
@@ -171,20 +170,22 @@ public class Backend extends EventListener {
         addOperation("get-application-language", () -> addResponseData(this.settings.readStringProperty("appearance/language")));
         addOperation("set-application-language", () -> this.settings.writeSubproperty("appearance/language", getRequestData().getFirst()));
 
-        addOperation("check-new-version", () -> {
-            String latestVersion = checkNewVersion();
+        // The operation is locked as the Backend has to ask in the background the current version to the Frontend
+        addLockedOperation("check-new-version", () -> {
+            String latestVersion = getLatestReleasedVersion();
 
             // We have to add the data here to allow the method to be used by the Helper's executeInBackground method too
-//            if (latestVersion.equals(Application.getVersion())){
-            if (true){
+            if (latestVersion.equals(this.applicationVersion)){
                 addResponseData(false);
             }else{  // If the version is not the latest we sent the new version number too
                 addResponseData(true);
                 addResponseData(latestVersion);
             }
         });
-        addOperation("is-check-new-version-on-startup", this::isCheckNewVersionOnStartup);
-        addOperation("set-check-new-version-on-startup", this::setCheckNewVersionOnStartup);
+        addOperation("is-check-new-version-on-startup", () -> addResponseData(
+                this.settings.readBooleanProperty("check_version_on_startup")));
+        addOperation("set-check-new-version-on-startup", () ->
+                this.settings.writeProperty("check_version_on_startup", getRequestData().getFirst()));
     }
 
     /**
@@ -307,18 +308,22 @@ public class Backend extends EventListener {
         this.helper.executeInBackground(this::startGoogleDrive);  // Initialize the connection with Google Drive
                                                                   // only if enabled by the user
 
-        // If the version control on startup is enabled then we check it in the background and send the result
-        // to the FrontendEventListener
-        // Moreover, we delay it by 30 seconds to allow the frontend to be initialized correctly, otherwise
+        // We delay it by 30 seconds to allow the frontend to be initialized correctly, otherwise
         // if it is sent without waiting it can lead to a deadlock on the frontend thread as it's waiting for
         // responses by the backend
-        if (this.settings.readBooleanProperty("check_version_on_startup")){
-            this.helper.executeInBackground(30, () -> {
-                Event checkVersionEvent = new Event("check-new-version");
-                String latestVersion = checkNewVersion();
+        this.helper.executeInBackground(30, () -> {
+            // Retrieve and set the application version, otherwise we cannot check for new versions
+            Event response = getItc().request(new Event("get-application-version"));
+            this.applicationVersion = response.getData().getFirst().toString();
+            unlockOperation("check-new-version");
 
-//                if (latestVersion.equals(Application.getVersion())){
-                if (true){
+            // If the version control on startup is enabled then we check it in the background and send the result
+            // to the FrontendEventListener
+            if (this.settings.readBooleanProperty("check_version_on_startup")){
+                Event checkVersionEvent = new Event("check-new-version");
+                String latestVersion = getLatestReleasedVersion();
+
+                if (latestVersion.equals(this.applicationVersion)){
                     checkVersionEvent.addData(false);
                 }else{  // If the version is not the latest we sent the new version number too
                     checkVersionEvent.addData(true);
@@ -326,8 +331,8 @@ public class Backend extends EventListener {
                 }
 
                 getItc().send(checkVersionEvent);
-            });
-        }
+            }
+        });
     }
 
     /**
@@ -439,20 +444,11 @@ public class Backend extends EventListener {
     /**
      * Send to the Frontend Event Listener a message that has to be displayed in a Toast
      */
-    /*
-    private void showToast(String localeString, Toast.Type type){
+    private void showToast(String localeString, String type){
         Event showToast = new Event("show-toast", localeString);
         showToast.addData(type);
 
         getItc().send(showToast);
-    }*/
-
-    /**
-     * Save the user data, after encrypting it, inside the database
-     * @param data The data to save inside the database
-     */
-    private void saveData(Data data){
-        this.database.addDataRecord(this.helper.encryptData(data));  // Encrypt the data with the helper, then add it
     }
 
     /**
@@ -463,22 +459,6 @@ public class Backend extends EventListener {
         Data singleData = this.database.getDataRecord(id);  // Retrive the data associated with the ID
 
         addResponseData(this.helper.decryptData(singleData));  // Decrypt the data with the helper
-    }
-
-    /**
-     * Delete the record of the database with a specific ID
-     * @param id The ID of the record to delete
-     */
-    private void deleteSingleData(int id){
-        this.database.deleteDataRecord(id);
-    }
-
-    /**
-     * Change the data of a record inside the database
-     * @param data The updated data to save
-     */
-    private void updateData(Data data){
-        this.database.updateDataRecord(this.helper.encryptData(data));  // Encrypt the data with the helper before saving it
     }
 
     /**
@@ -632,21 +612,6 @@ public class Backend extends EventListener {
     }
 
     /**
-     * Retrieve from the Sensitive Settings whether Google Drive is enabled
-     */
-    private void getGoogleDrive(){
-       addResponseData(this.sensitiveSettings.readBooleanProperty("google_drive/enabled"));
-    }
-
-    /**
-     * Retrieve from the Sensitive Settings whether the automatic synchronization is enabled
-     */
-    private void getGoogleDriveSynchronization(){
-        boolean synchronizationEnabled = this.sensitiveSettings.readBooleanProperty("google_drive/automatic_synchronization");
-        addResponseData(synchronizationEnabled);
-    }
-
-    /**
      * Start the Google Drive communication and the automatic synchronization only if they're enabled in the Sensitive
      * Settings
      */
@@ -717,9 +682,9 @@ public class Backend extends EventListener {
     private void synchronizeGoogleDrive(){
         // Based on the result of the synchronization we send a different Toast to the Frontend Event Listener
         if (this.googleDrive.sync(this.database.getPath(), this.database.getName())){
-//            showToast("Moda.Toast.googleDriveSynchronizationSuccessful", Toast.Type.SUCCESS);
+            showToast("Moda.Toast.googleDriveSynchronizationSuccessful", "SUCCESS");
         }else{
-//            showToast("Mota.Toast.googleDriveSynchronizationUnsuccessful", Toast.Type.ERROR);
+            showToast("Mota.Toast.googleDriveSynchronizationUnsuccessful", "ERROR");
         }
     }
 
@@ -733,28 +698,6 @@ public class Backend extends EventListener {
             synchronizeGoogleDrive();
             this.helper.executeInBackground(this::updateServiceFields);  // Update the service fields in the Frontend
         }
-    }
-
-    /**
-     * Enable the Google Drive automatic synchronization
-     */
-    private void enableGoogleDriveAutomaticSynchronization(){
-        this.sensitiveSettings.writeProperty("google_drive/automatic_synchronization", true);
-    }
-
-    /**
-     * Disable the Google Drive automatic synchronization
-     */
-    private void disableGoogleDriveAutomaticSynchronization(){
-        this.sensitiveSettings.writeProperty("google_drive/automatic_synchronization", false);
-    }
-
-    /**
-     * Get the last databases used from the settings file
-     */
-    private void getRecentDatabases(){
-        List<Object> recentDatabases = this.settings.readListProperty("database/recent");
-        addResponseData(recentDatabases);
     }
 
     /**
@@ -773,9 +716,9 @@ public class Backend extends EventListener {
     }
 
     /**
-     * Check a new version of the application using the GitHub API
+     * Get the latest version released of the application using the GitHub API
      */
-    private String checkNewVersion(){
+    private String getLatestReleasedVersion(){
         HttpClient httpClient = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest
                 .newBuilder(URI.create("https://api.github.com/repos/forzooo/Moda-Password-Manager/releases"))
@@ -796,19 +739,5 @@ public class Backend extends EventListener {
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    /**
-     * Get the status of the check version on startup property
-     */
-    private void isCheckNewVersionOnStartup(){
-        addResponseData(this.settings.readBooleanProperty("check_version_on_startup"));
-    }
-
-    /**
-     * Set the status of the check version on startup property
-     */
-    private void setCheckNewVersionOnStartup(){
-        this.settings.writeProperty("check_version_on_startup", getRequestData().getFirst());
     }
 }

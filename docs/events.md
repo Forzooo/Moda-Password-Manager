@@ -214,6 +214,14 @@ whether special characters are enabled
   whether special characters are enabled
 * Synchronous: required
 
+### Get the application version
+* Operation: `get-application-version`
+* Sender: Backend
+* Description: Request the version of the application
+* Data sent: -
+* Data received: _String_ the version
+* Synchronous: required
+
 ### Get the application theme
 * Operation: `get-application-theme`
 * Sender: Frontend
@@ -274,7 +282,7 @@ whether special characters are enabled
 * Operation: `show-toast`
 * Sender: Backend
 * Description: The backend tells the Frontend Event Listener to show a Toast containing some data to be displayed to the user
-* Data sent: _String_ text of the Toast formatted as the locale string, _Toast.Type_ the type of the Toast: Info, Error,
-             Success, ...
+* Data sent: _String_ text of the Toast formatted as the locale string, _String_ the type of the Toast: ERROR, INFO,
+             SUCCESS, ... as a String which will be converted to Toast.Type
 * Data received_ -
 * Synchronous: not required
