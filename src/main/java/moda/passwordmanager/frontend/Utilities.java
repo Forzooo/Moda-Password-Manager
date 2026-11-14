@@ -151,18 +151,6 @@ public class Utilities {
     }
 
     /**
-     * Get the filename from a path
-     */
-    public static String getFilenameFromPath(String path){
-        // We have to normalize the Windows backslashes ("\\") to a slash ("/") to have it compatible across all the OS
-        if (path.contains("\\")){
-            path = path.replace("\\", "/");
-        }
-
-        return Path.of(path).getFileName().toString();
-    }
-
-    /**
      * Get a string from the locale file for the current language used
      */
     public static String getLocaleString(String key){

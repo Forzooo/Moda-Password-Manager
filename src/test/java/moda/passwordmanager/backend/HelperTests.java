@@ -1,5 +1,6 @@
 package moda.passwordmanager.backend;
 
+import moda.passwordmanager.frontend.Utilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -98,6 +99,16 @@ class HelperTests {
         }
 
         assertEquals(BACKGROUND_TEST_DATA_PERIODICALLY, this.backgroundTestData[0]);
+    }
+
+    /**
+     * Ensure that it returns the filename
+     */
+    @Test
+    void getFilenameFromPath(){
+        // The first test also ensures that the normalization is working correctly
+        assertEquals("test.txt", Helper.getFilenameFromPath("C:\\path\\path2\\test.txt"));
+        assertEquals("test.txt", Helper.getFilenameFromPath("C:/path/path2/test.txt"));
     }
 
     /**

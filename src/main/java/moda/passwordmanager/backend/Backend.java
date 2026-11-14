@@ -129,7 +129,7 @@ public class Backend extends EventListener {
             // only be set in the Startup dialog which is before the initServiceMapping is called
         });
 
-        addOperation("get-database", this::getDatabasePath);
+        addOperation("get-database-name", () -> addResponseData(this.database.getName()));
         addLockedOperation("update-master-password", this::updateMasterPassword);
 
 
@@ -590,13 +590,6 @@ public class Backend extends EventListener {
     private void setDatabasePath(String databasePath){
         this.settings.writeSubproperty("database/selected", databasePath);  // Set the path of the database
         this.database.change(databasePath);  // Set the new database to be the one used
-    }
-
-    /**
-     * Retrieve the path of the current database in use
-     */
-    private void getDatabasePath(){
-        addResponseData(this.database.getPath());  // Add the path to the data to send
     }
 
     /**
