@@ -33,7 +33,7 @@ public class Settings extends JPanel {
      * Initialize the sections
      */
     private void initSections(){
-//        addSection(new Appearance(this.itc));
+        addSection(new Appearance(this.itc));
         addSection(new Data(this.itc));
         addSection(new GoogleDrive(this.itc));
         addSection(new About(this.itc));

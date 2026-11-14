@@ -96,7 +96,7 @@ public class Appearance extends Section {
      */
     private void changeApplicationTheme(int themeIndex){
         // It's the same index because when the themes are added, they are in the same order as values() ones
-        Event request = new Event("set-application-theme", Themes.values()[themeIndex]);
+        Event request = new Event("set-application-theme", Themes.values()[themeIndex].toString());
         getItc().send(request);
         Utilities.showToast(getRootPane(), Toast.Type.INFO, Utilities.getLocaleString("Moda.Toast.themeSelected"));
     }
@@ -106,7 +106,7 @@ public class Appearance extends Section {
      * @param languageIndex The index of the language selected must be used to avoid issues when another language is used
      */
     private void changeApplicationLanguage(int languageIndex){
-        Event request = new Event("set-application-language", Languages.values()[languageIndex]);
+        Event request = new Event("set-application-language", Languages.values()[languageIndex].toString());
         getItc().send(request);
         Utilities.showToast(getRootPane(), Toast.Type.INFO, Utilities.getLocaleString("Moda.Toast.languageSelected"));
     }

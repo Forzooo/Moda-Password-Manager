@@ -36,10 +36,8 @@ public class Frontend extends JPanel {
         // Set the default exception handler for the Frontend threads
         Thread.setDefaultUncaughtExceptionHandler(this::exceptionHandler);
 
-//        Application.setApplicationLanguage(getApplicationLanguage());
-//        Application.applyTheme(getApplicationTheme());
-        Application.setApplicationLanguage(Languages.ENGLISH);
-        Application.applyTheme(Themes.LIGHT);
+        Application.setApplicationLanguage(getApplicationLanguage() );
+        Application.applyTheme(getApplicationTheme());
         initStartup();
 
         initPanel();  // Set the properties of the panel
@@ -78,20 +76,18 @@ public class Frontend extends JPanel {
      * Get the theme of the application from the settings
      */
     private Themes getApplicationTheme(){
-        Event request = new Event("get-application-theme");
-        Event response = this.itc.request(request);
+        Event response = this.itc.request(new Event("get-application-theme"));
 
-        return (Themes) response.getData().getFirst();
+        return Themes.valueOf(response.getData().getFirst().toString());
     }
 
     /**
      * Get the language of the application from the settings
      */
     private Languages getApplicationLanguage(){
-        Event request = new Event("get-application-language");
-        Event response = this.itc.request(request);
+        Event response = this.itc.request(new Event("get-application-language"));
 
-        return (Languages) response.getData().getFirst();
+        return Languages.valueOf(response.getData().getFirst().toString());
     }
 
     /**

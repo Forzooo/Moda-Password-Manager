@@ -8,8 +8,6 @@ import com.google.api.client.json.gson.GsonFactory;
 import moda.passwordmanager.backend.googledrive.GoogleDrive;
 import moda.passwordmanager.backend.settings.SensitiveSettings;
 import moda.passwordmanager.backend.settings.Settings;
-//import moda.passwordmanager.frontend.desktop.properties.Languages;
-//import moda.passwordmanager.frontend.desktop.properties.Themes;
 import moda.passwordmanager.interthreadcommunication.EventListener;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
@@ -167,11 +165,11 @@ public class Backend extends EventListener {
 
         addOperation("get-recent-databases", this::getRecentDatabases);
 
-        addOperation("get-application-theme", this::getApplicationTheme);
-        addOperation("set-application-theme", this::setApplicationTheme);
+        addOperation("get-application-theme", () -> addResponseData(this.settings.readStringProperty("appearance/theme")));
+        addOperation("set-application-theme", () -> this.settings.writeSubproperty("appearance/theme", getRequestData().getFirst()));
 
-        addOperation("get-application-language", this::getApplicationLanguage);
-        addOperation("set-application-language", this::setApplicationLanguage);
+        addOperation("get-application-language", () -> addResponseData(this.settings.readStringProperty("appearance/language")));
+        addOperation("set-application-language", () -> this.settings.writeSubproperty("appearance/language", getRequestData().getFirst()));
 
         addOperation("check-new-version", () -> {
             String latestVersion = checkNewVersion();
@@ -772,38 +770,6 @@ public class Backend extends EventListener {
         }
         recentDatabases.addFirst(path);  // Add the path as the first element of the list
         this.settings.writeListSubproperty("database/recent", recentDatabases);  // Write the updated list in the settings
-    }
-
-    /**
-     * Retrieve the theme of the application from the settings
-     */
-    private void getApplicationTheme(){
-        String theme = this.settings.readStringProperty("appearance/theme");
-//        addResponseData(Themes.valueOf(theme));
-    }
-
-    /**
-     * Set the new theme of the application
-     */
-    private void setApplicationTheme(){
-//        Themes theme = (Themes) getRequestData().getFirst();
-//        this.settings.writeSubproperty("appearance/theme", theme.toString());
-    }
-
-    /**
-     * Retrieve the language of the application from the settings
-     */
-    private void getApplicationLanguage(){
-        String language = this.settings.readStringProperty("appearance/language");
-//        addResponseData(Languages.valueOf(language));
-    }
-
-    /**
-     * Set the new language of the application
-     */
-    private void setApplicationLanguage(){
-//        Languages language = (Languages) getRequestData().getFirst();
-//        this.settings.writeSubproperty("appearance/language", language.toString());
     }
 
     /**
