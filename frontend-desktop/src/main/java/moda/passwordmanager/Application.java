@@ -22,7 +22,7 @@ public class Application extends JFrame {
 
     private static final String TITLE = "MODA - Password Manager";
     // TODO. Check if the version can be defined in the backend instead
-    private static final String VERSION = "0.6.0";  // The current version of the software
+    private static final String VERSION = "1.0.0";  // The current version of the software
     private static Locale applicationLocale;  // The language used by the application
 
     public Application(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,
@@ -35,7 +35,7 @@ public class Application extends JFrame {
      * Register the FlatLaf custom default sources to load the properties files
      */
     private void initFlatLaf(){
-        FlatLaf.registerCustomDefaultsSource("moda.passwordmanager");  // Register the properties files
+        FlatLaf.registerCustomDefaultsSource("moda.passwordmanager.desktop.frontend");  // Register the properties files
     }
 
     /**
