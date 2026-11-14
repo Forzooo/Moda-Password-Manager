@@ -60,9 +60,27 @@ npm-debug.log
 
 temp
 
-# Test Databases
-*.db
-
 # Sensitive Google Drive File
 src/main/resources/credentials.json
 tokens/StoredCredential
+
+# Gradle
+.gradle
+**/build/
+!**/src/**/build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+!gradle-wrapper.jar
+
+# Avoid ignore Gradle wrapper properties
+!gradle-wrapper.properties
+
+# Cache of project
+.gradletasknamecache
+
+# Eclipse Gradle plugin generated files
+# Eclipse Core
+.project

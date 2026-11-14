@@ -1,0 +1,87 @@
+package moda.passwordmanager.interthreadcommunication;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+class EventTests {
+
+    private static final String OPERATION = "Test";
+    private static final int COMMUNICATION_ID = 1;
+    private static final int EVENT_COMMUNICATION_ID_NOT_SET = -1;
+    private static final int EXPECTED_SEQUENCE_NUMBER = 1;
+    private Event event;
+
+    /**
+     * Initialize the Event object before each test
+     */
+    @BeforeEach
+    void init(){
+        this.event = new Event(OPERATION);
+    }
+
+    /**
+     * Ensure that the addData method adds the data to the event
+     */
+    @Test
+    void addData(){
+        Object object = new Object();
+
+        this.event.addData(object);
+        assertEquals(object, this.event.getData().getFirst());
+    }
+
+    /**
+     * Ensure that the communication ID of an event if it's not set, is equal to -1
+     */
+    @Test
+    void defaultCommunicationID(){
+        assertEquals(EVENT_COMMUNICATION_ID_NOT_SET, this.event.getCommunicationID());
+    }
+
+    /**
+     * Ensure that setting the communication ID of an event works
+     */
+    @Test
+    void setCommunicationID(){
+        this.event.setCommunicationID(COMMUNICATION_ID);
+        assertEquals(COMMUNICATION_ID, this.event.getCommunicationID());
+    }
+
+    /**
+     * Ensure that the value of the communication ID of an Event cannot be changed
+     */
+    @Test
+    void modifyCommunicationID(){
+        this.event.setCommunicationID(COMMUNICATION_ID);
+        this.event.setCommunicationID(COMMUNICATION_ID+1);
+        assertEquals(COMMUNICATION_ID, this.event.getCommunicationID());
+    }
+
+    /**
+     * Ensure that when setting the communication ID, the isIdSet method returns true
+     */
+    @Test
+    void isCommunicationIDSet(){
+        this.event.setCommunicationID(COMMUNICATION_ID);
+        assertTrue(this.event.isCommunicationIdSet());
+    }
+
+    /**
+     * Ensure that when the communication ID is not set yet, the isIdSet method returns false
+     */
+    @Test
+    void isCommunicationIDSetFalse(){
+        assertFalse(this.event.isCommunicationIdSet());
+    }
+
+
+    /**
+     * Ensure that the method 'incrementSequenceNumber' increments the sequence number of the event
+     */
+    @Test
+    void incrementSequenceNumber(){
+        this.event.incrementSequenceNumber();
+        assertEquals(EXPECTED_SEQUENCE_NUMBER, this.event.getSequenceNumber());
+    }
+
+}
