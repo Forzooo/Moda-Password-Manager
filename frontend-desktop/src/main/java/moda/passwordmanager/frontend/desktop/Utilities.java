@@ -1,7 +1,6 @@
 package moda.passwordmanager.frontend.desktop;
 
 import com.formdev.flatlaf.util.SystemFileChooser;
-import moda.passwordmanager.Application;
 import moda.passwordmanager.backend.Database;
 import raven.modal.Toast;
 import raven.modal.toast.option.ToastLocation;

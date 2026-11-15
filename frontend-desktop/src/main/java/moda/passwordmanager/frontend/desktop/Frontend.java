@@ -1,6 +1,5 @@
 package moda.passwordmanager.frontend.desktop;
 
-import moda.passwordmanager.Application;
 import moda.passwordmanager.frontend.desktop.components.ModernScrollPane;
 import moda.passwordmanager.frontend.desktop.dialogs.Startup;
 import moda.passwordmanager.frontend.desktop.properties.Languages;

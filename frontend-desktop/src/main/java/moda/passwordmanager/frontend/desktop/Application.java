@@ -1,4 +1,4 @@
-package moda.passwordmanager;
+package moda.passwordmanager.frontend.desktop;
 
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLaf;
@@ -7,9 +7,7 @@ import moda.passwordmanager.backend.Backend;
 import moda.passwordmanager.backend.Database;
 import moda.passwordmanager.frontend.desktop.properties.Languages;
 import moda.passwordmanager.frontend.desktop.properties.Themes;
-import moda.passwordmanager.frontend.desktop.Utilities;
 import moda.passwordmanager.interthreadcommunication.Event;
-import moda.passwordmanager.frontend.desktop.Frontend;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 
 import javax.swing.*;

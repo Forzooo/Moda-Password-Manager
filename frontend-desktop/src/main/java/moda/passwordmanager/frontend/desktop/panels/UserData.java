@@ -1,12 +1,11 @@
 package moda.passwordmanager.frontend.desktop.panels;
 
-import moda.passwordmanager.Application;
+import moda.passwordmanager.frontend.desktop.Application;
 import moda.passwordmanager.backend.Data;
 import moda.passwordmanager.frontend.desktop.Utilities;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
 import net.miginfocom.swing.MigLayout;
-import raven.modal.Toast;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;

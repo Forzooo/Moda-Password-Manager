@@ -1,6 +1,6 @@
 package moda.passwordmanager.frontend.desktop.dialogs;
 
-import moda.passwordmanager.Application;
+import moda.passwordmanager.frontend.desktop.Application;
 import moda.passwordmanager.frontend.desktop.Utilities;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;

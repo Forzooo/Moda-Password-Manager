@@ -1,6 +1,6 @@
 package moda.passwordmanager.frontend.desktop.dialogs;
 
-import moda.passwordmanager.Application;
+import moda.passwordmanager.frontend.desktop.Application;
 import moda.passwordmanager.backend.Data;
 import moda.passwordmanager.backend.googledrive.ConflictData;
 import moda.passwordmanager.frontend.desktop.Utilities;
