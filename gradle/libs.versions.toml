@@ -1,0 +1,27 @@
+[versions]
+com-fasterxml-jackson-core-jackson-core = "2.22.3"
+com-fasterxml-jackson-core-jackson-databind = "2.22.3"
+com-formdev-flatlaf = "3.7"
+com-google-api-client-google-api-client = "2.7.2"
+com-google-apis-google-api-services-drive = "v3-rev20250210-2.0.0"
+com-google-oauth-client-google-oauth-client-jetty = "1.38.0"
+com-miglayout-miglayout-swing = "11.4.2"
+commons-io-commons-io = "2.20.0"
+io-github-dj-raven-modal-dialog = "2.6.2"
+org-bouncycastle-bcprov-jdk18on = "1.86"
+org-junit-jupiter-junit-jupiter-api = "6.0.1"
+org-xerial-sqlite-jdbc = "3.50.3.0"
+
+[libraries]
+com-fasterxml-jackson-core-jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "com-fasterxml-jackson-core-jackson-core" }
+com-fasterxml-jackson-core-jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "com-fasterxml-jackson-core-jackson-databind" }
+com-formdev-flatlaf = { module = "com.formdev:flatlaf", version.ref = "com-formdev-flatlaf" }
+com-google-api-client-google-api-client = { module = "com.google.api-client:google-api-client", version.ref = "com-google-api-client-google-api-client" }
+com-google-apis-google-api-services-drive = { module = "com.google.apis:google-api-services-drive", version.ref = "com-google-apis-google-api-services-drive" }
+com-google-oauth-client-google-oauth-client-jetty = { module = "com.google.oauth-client:google-oauth-client-jetty", version.ref = "com-google-oauth-client-google-oauth-client-jetty" }
+com-miglayout-miglayout-swing = { module = "com.miglayout:miglayout-swing", version.ref = "com-miglayout-miglayout-swing" }
+commons-io-commons-io = { module = "commons-io:commons-io", version.ref = "commons-io-commons-io" }
+io-github-dj-raven-modal-dialog = { module = "io.github.dj-raven:modal-dialog", version.ref = "io-github-dj-raven-modal-dialog" }
+org-bouncycastle-bcprov-jdk18on = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "org-bouncycastle-bcprov-jdk18on" }
+org-junit-jupiter-junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "org-junit-jupiter-junit-jupiter-api" }
+org-xerial-sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "org-xerial-sqlite-jdbc" }

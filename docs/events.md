@@ -214,19 +214,27 @@ whether special characters are enabled
   whether special characters are enabled
 * Synchronous: required
 
+### Get the application version
+* Operation: `get-application-version`
+* Sender: Backend
+* Description: Request the version of the application
+* Data sent: -
+* Data received: _String_ the version
+* Synchronous: required
+
 ### Get the application theme
 * Operation: `get-application-theme`
 * Sender: Frontend
 * Description: Request the theme used by the application
 * Data sent: -
-* Data received: _Themes_ theme
+* Data received: _String_ the theme
 * Synchronous: required
 
 ### Set the application theme
 * Operation: `set-application-theme`
 * Sender: Frontend
 * Description: Set the new theme of the application
-* Data sent: _Themes_ the new theme
+* Data sent: _String_ the new theme
 * Data received: -
 * Synchronous: not required
 
@@ -235,14 +243,14 @@ whether special characters are enabled
 * Sender: Frontend
 * Description: Request the language used by the application
 * Data sent: -
-* Data received: _Languages_ language
+* Data received: _String_ language
 * Synchronous: required
 
 ### Set the application theme
 * Operation: `set-application-theme`
 * Sender: Frontend
 * Description: Set the new language of the application
-* Data sent: _Languages_ the new language
+* Data sent: _String_ the new language
 * Data received: -
 * Synchronous: not required
 
@@ -274,7 +282,7 @@ whether special characters are enabled
 * Operation: `show-toast`
 * Sender: Backend
 * Description: The backend tells the Frontend Event Listener to show a Toast containing some data to be displayed to the user
-* Data sent: _String_ text of the Toast formatted as the locale string, _Toast.Type_ the type of the Toast: Info, Error,
-             Success, ...
+* Data sent: _String_ text of the Toast formatted as the locale string, _String_ the type of the Toast: ERROR, INFO,
+             SUCCESS, ... as a String which will be converted to Toast.Type
 * Data received_ -
 * Synchronous: not required
