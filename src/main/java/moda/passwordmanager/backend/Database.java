@@ -436,6 +436,26 @@ public class Database {
     }
 
     /**
+     * Retrive the service field of the first Data record
+     */
+    public String getFirstServiceDataRecord(){
+        try{
+            PreparedStatement query = this.connection.prepareStatement(
+                    "SELECT service FROM " + DATA_TABLE + " LIMIT 1;"
+            );
+
+            ResultSet result = query.executeQuery();
+            String service = result.getString("service");
+
+            query.close();
+
+            return service;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
      * Retrieve the value of the first Sensitive Settings record added
      */
     public String getFirstSensitiveSettingRecord(){
