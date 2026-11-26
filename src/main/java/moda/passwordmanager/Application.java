@@ -21,7 +21,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class Application extends JFrame {
 
     private static final String TITLE = "MODA - Password Manager";
-    private static final String VERSION = "0.6.0";  // The current version of the software
+    private static final String VERSION = "0.6.1";  // The current version of the software
     private static Locale applicationLocale;  // The language used by the application
 
     public Application(LinkedBlockingQueue<Event> backendQueue, LinkedBlockingQueue<Event> frontendQueue,

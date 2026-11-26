@@ -254,21 +254,26 @@ public class Backend extends EventListener {
      * @return Returns a boolean value to locally indicate whether the master password is right
      */
     private boolean testMasterPassword(){
-        // Get the first sensitive setting to try to decrypt it
-        // Note that we cannot use a record from the Data table as they may not have been added yet, even though
-        // the sensitive settings already exist with a defined master password
-        String testSetting = this.database.getFirstSensitiveSettingRecord();
+        // We retrieve both the first service data and the first sensitive setting to test them against the master password
+        String testData = this.database.getFirstServiceDataRecord();
+        String testSensitiveSetting = this.database.getFirstSensitiveSettingRecord();
 
-        // If the setting is null, it means the sensitive settings table hasn't been created yet, thus the master password
-        // is always correct
-        if (testSetting == null){
-            addResponseData(true);
-            return true;
-        }
-
-        // Try to decrypt it and add the data to the event based on whether an exception has been thrown
+        // Try to decrypt the data and add the result to the event based on whether an exception has been thrown
         try{
-            this.helper.decrypt(testSetting);
+            // If there are no data records, it means the user has not added one yet. But the master password will still
+            // be tested with the sensitive settings to check whether it is right
+            if (testData != null){
+                this.helper.decrypt(testData);
+            }
+
+            // If the database has just been upgraded, then there won't be any record inside it yet, thus we can skip
+            // the decryption
+            if (testSensitiveSetting != null){
+                this.helper.decrypt(testSensitiveSetting);
+            }
+
+            // We add true to the response data when both the records are null or the decryption has been completed
+            // successfully
             addResponseData(true);
             return true;
         } catch (RuntimeException e){
