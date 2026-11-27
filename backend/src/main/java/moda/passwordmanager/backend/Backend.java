@@ -10,6 +10,7 @@ import moda.passwordmanager.backend.settings.Settings;
 import moda.passwordmanager.interthreadcommunication.EventListener;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
+import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.net.URI;
@@ -44,6 +45,7 @@ public class Backend extends EventListener {
         // Set the name of the thread for debug purposes
         super(new InterThreadCommunication(frontendQueue, backendQueue), "Backend");
 
+        migrateDataDirectory();  // Migrate the data directory from a previous version, if it exists
         createDataDirectory();  // Create the folder to store the configuration files inside it
 
         // Initialize all the backend components
@@ -55,6 +57,24 @@ public class Backend extends EventListener {
         this.googleDrive = new GoogleDrive(getItc());
 
         initHandler();  // Initialize all the operations to handle
+    }
+
+    /**
+     * For Windows only, migrate the Data directory from the previous path to the new one
+     */
+    public static void migrateDataDirectory(){
+        // Other environments haven't been developed when the older path was being used, thus only Windows has to be
+        // migrated
+        if (Helper.getOS().startsWith("Windows")){
+            String oldDataDirectory = System.getenv("AppData") + "\\Moda\\Password-Manager";
+            if (Files.exists(Path.of(oldDataDirectory))){  // We migrate it only if it hasn't been done already
+                try {
+                    FileUtils.moveDirectory(new File(oldDataDirectory), new File(Helper.getDataDirectoryPath()));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
     }
 
     /**
