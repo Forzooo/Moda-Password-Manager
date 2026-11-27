@@ -187,6 +187,14 @@ authenticate with Google Drive (only if it has to be enabled)
 ***
 
 ## Utilities
+### Reset the settings file
+* Operation: `reset-settings`
+* Sender: Frontend
+* Description: Reset the settings file to its default values, while keeping the selected path to the current one
+* Data sent: -
+* Data received: -
+* Synchronous: required
+
 ### Generate a string
 * Operation: `generate-string`
 * Sender: Frontend

@@ -2,6 +2,7 @@ package moda.passwordmanager.frontend.desktop.panels.settings;
 
 import moda.passwordmanager.frontend.desktop.Application;
 import moda.passwordmanager.frontend.desktop.Utilities;
+import moda.passwordmanager.frontend.desktop.panels.Settings;
 import moda.passwordmanager.interthreadcommunication.Event;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import raven.modal.Toast;
@@ -12,11 +13,13 @@ public class About extends Section{
 
     private JButton checkVersionButton;
     private JCheckBox checkVersionStartupCheckbox;
+    private JButton resetDefaultSettingsButton;
 
     public About(InterThreadCommunication itc){
         super(Utilities.getLocaleString("Moda.About.panelTitle"), itc);
         initComponents();
         initListeners();
+        setSelectedSettings();
     }
 
     /**
@@ -39,16 +42,18 @@ public class About extends Section{
 
         this.checkVersionStartupCheckbox = new JCheckBox();
         this.checkVersionStartupCheckbox.setText(Utilities.getLocaleString("Moda.About.checkVersionStartupCheckbox"));
-        this.checkVersionStartupCheckbox.setSelected(getCheckVersionStartup());  // Set the initial status based on the
-                                                                                 // settings file
 
         versionPanel.add(versionLabel);
         versionPanel.add(this.checkVersionButton);
+
+        this.resetDefaultSettingsButton = new JButton();
+        this.resetDefaultSettingsButton.setText(Utilities.getLocaleString("Moda.About.resetSettingsButton"));
 
         addOption(authorsLabel);
         addOption(licenseLabel);
         addOption(versionPanel);
         addOption(this.checkVersionStartupCheckbox);
+        addOption(this.resetDefaultSettingsButton);
     }
 
     /**
@@ -60,6 +65,8 @@ public class About extends Section{
         this.checkVersionStartupCheckbox.addActionListener(e -> getItc().send(
                 new Event("set-check-new-version-on-startup", checkVersionStartupCheckbox.isSelected()))
         );
+
+        this.resetDefaultSettingsButton.addActionListener(e -> resetDefaultSettings());
     }
 
     /**
@@ -94,6 +101,16 @@ public class About extends Section{
 
     @Override
     protected void setSelectedSettings() {
-        // This class has no setting defined in the settings.json
+        // Set the initial status based on the settings file
+        this.checkVersionStartupCheckbox.setSelected(getCheckVersionStartup());
+    }
+
+    /**
+     * Reset the settings to their default values
+     */
+    private void resetDefaultSettings(){
+        getItc().request(new Event("reset-settings"));
+        Settings settings = (Settings) getParent();
+        settings.reloadSections();
     }
 }

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 class SettingsTests {
 
@@ -36,6 +37,20 @@ class SettingsTests {
     @BeforeEach
     void init(){
         this.settings = new Settings(testDirectory +"\\"+Settings.getFilename());
+    }
+
+    /**
+     * Ensure that the settings file successfully resets to its default values
+     */
+    @Test
+    void reset(){
+        // We simply test this by updating two properties from they default values, then we reset the settings and
+        // ensure that the settings file has returned to its default values
+        this.settings.writeProperty(PROPERTY_NODE, STRING_PROPERTY);
+        this.settings.writeSubproperty(SUBPROPERTY_NODE, STRING_PROPERTY);
+        this.settings.reset();
+        assertNotEquals(STRING_PROPERTY, PROPERTY_NODE);
+        assertNotEquals(STRING_PROPERTY, SUBPROPERTY_NODE);
     }
 
     /**

@@ -10,6 +10,7 @@ import moda.passwordmanager.backend.settings.Settings;
 import moda.passwordmanager.interthreadcommunication.EventListener;
 import moda.passwordmanager.interthreadcommunication.InterThreadCommunication;
 import moda.passwordmanager.interthreadcommunication.Event;
+import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.net.URI;
@@ -44,6 +45,7 @@ public class Backend extends EventListener {
         // Set the name of the thread for debug purposes
         super(new InterThreadCommunication(frontendQueue, backendQueue), "Backend");
 
+        migrateDataDirectory();  // Migrate the data directory from a previous version, if it exists
         createDataDirectory();  // Create the folder to store the configuration files inside it
 
         // Initialize all the backend components
@@ -55,6 +57,24 @@ public class Backend extends EventListener {
         this.googleDrive = new GoogleDrive(getItc());
 
         initHandler();  // Initialize all the operations to handle
+    }
+
+    /**
+     * For Windows only, migrate the Data directory from the previous path to the new one
+     */
+    private static void migrateDataDirectory(){
+        // Other environments haven't been developed when the older path was being used, thus only Windows has to be
+        // migrated
+        if (Helper.getOS().startsWith("Windows")){
+            String oldDataDirectory = System.getenv("AppData") + "\\Moda\\Password-Manager";
+            if (Files.exists(Path.of(oldDataDirectory))){  // We migrate it only if it hasn't been done already
+                try {
+                    FileUtils.moveDirectory(new File(oldDataDirectory), new File(Helper.getDataDirectoryPath()));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
     }
 
     /**
@@ -115,7 +135,10 @@ public class Backend extends EventListener {
         addLockedOperation("decrypt-data", () -> addResponseData(this.helper.decryptData((Data) getRequestData().getFirst())));
 
         addOperation("generate-string", this::generateString);
-        addOperation("set-string-generation", this::setStringGeneration);
+        addOperation("set-string-generation", () -> {
+            setStringGeneration();
+            showToast("Moda.Toast.stringGeneration", "SUCCESS");
+        });
         addOperation("get-string-generation", this::getStringGeneration);
 
         // Set a database path and reset the service fields
@@ -130,8 +153,18 @@ public class Backend extends EventListener {
         });
 
         addOperation("get-database-name", () -> addResponseData(this.database.getName()));
-        addLockedOperation("update-master-password", this::updateMasterPassword);
+        addLockedOperation("update-master-password", () -> {
+            updateMasterPassword();
+            showToast("Moda.Toast.updateMasterPassword", "SUCCESS");
+        });
 
+        addOperation("reset-settings", () -> {
+            // After resetting the settings file, we have to set again the database selected property to the current
+            // database in use
+            this.settings.reset();
+            this.settings.writeSubproperty("database/selected", this.database.getPath());
+            showToast("Moda.Toast.resetSettings", "SUCCESS");
+        });
 
         addLockedOperation("get-google-drive", () ->
                 addResponseData(this.sensitiveSettings.readBooleanProperty("google_drive/enabled")));
@@ -152,6 +185,7 @@ public class Backend extends EventListener {
 
         addLockedOperation("google-drive-synchronization-conflicts-solved", () -> {
             this.googleDrive.setConflictsSolved();
+            showToast("Moda.Toast.solvedGoogleDriveConflicts", "SUCCESS");
             synchronizeGoogleDrive();  // After the conflicts are solved, we can resynchronize
         });
 

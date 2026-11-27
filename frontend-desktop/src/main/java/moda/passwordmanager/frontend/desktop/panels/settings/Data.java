@@ -42,10 +42,14 @@ public class Data extends Section {
         this.updateMasterPasswordTextField = new JPasswordField();
         this.updateMasterPasswordTextField.setPreferredSize(getTextFieldDimension());
         this.updateMasterPasswordTextField.putClientProperty("JTextField.placeholderText", Utilities.getLocaleString("Moda.Data.updateMasterPasswordTextFieldPlaceholder"));
+//        this.updateMasterPasswordTextField.putClientProperty("PasswordField.showRevealButton", "true");  // TODO
 
         this.updateMasterPasswordButton = new JButton();
         this.updateMasterPasswordButton.setText(Utilities.getLocaleString("Moda.Data.updateMasterPasswordButton"));
         this.updateMasterPasswordButton.setMaximumSize(getButtonDimension());
+
+        updateMasterPasswordPanel.add(this.updateMasterPasswordTextField);
+        updateMasterPasswordPanel.add(this.updateMasterPasswordButton);
 
         this.stringLengthTextField = new JTextField();
         this.stringLengthTextField.putClientProperty("JTextField.placeholderText", Utilities.getLocaleString("Moda.Data.stringLengthTextField"));
@@ -62,9 +66,6 @@ public class Data extends Section {
         this.configureStringGenerationButton = new JButton();
         this.configureStringGenerationButton.setText(Utilities.getLocaleString("Moda.Data.configureStringGenerationButton"));
         this.configureStringGenerationButton.setMaximumSize(getButtonDimension());
-
-        updateMasterPasswordPanel.add(this.updateMasterPasswordTextField);
-        updateMasterPasswordPanel.add(this.updateMasterPasswordButton);
 
         addOption(updateMasterPasswordLabel);
         addOption(updateMasterPasswordPanel);
@@ -109,9 +110,10 @@ public class Data extends Section {
             return;
         }
 
+        // TODO. Find a way to show the Toast before the Event is requested to the ITC
+//        Utilities.showToast(getRootPane(), Toast.Type.INFO, Utilities.getLocaleString("Moda.Toast.updateMasterPasswordWaiting"));
         Event event = new Event("update-master-password", masterPassword);
         getItc().request(event);  // Wait for the end of the operations in the backend
-        Utilities.showToast(getParent(), Toast.Type.SUCCESS, Utilities.getLocaleString("Moda.Toast.updateMasterPassword"));
     }
 
     /**
@@ -153,6 +155,5 @@ public class Data extends Section {
         event.addData(specialCharactersSelected);
 
         getItc().send(event);  // Send the event
-        Utilities.showToast(getRootPane(), Toast.Type.SUCCESS, "Moda.Toast.stringGeneration");
     }
 }

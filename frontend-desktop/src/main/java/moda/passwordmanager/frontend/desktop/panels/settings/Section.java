@@ -115,6 +115,13 @@ public abstract class Section extends JPanel {
     }
 
     /**
+     * Reload the components of the section that depend on some Backend values by requesting them again
+     */
+    public void reload(){
+        setSelectedSettings();
+    }
+
+    /**
      * Set the default values of all the components that have a defined one in the settings file
      */
     protected abstract void setSelectedSettings();
