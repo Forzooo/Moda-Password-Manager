@@ -7,15 +7,18 @@ import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import java.util.ArrayList;
 
 public class Settings extends JPanel {
 
     private final InterThreadCommunication itc;
+    private final ArrayList<Section> sections;
 
     public Settings(InterThreadCommunication itc){
         super();
 
         this.itc = itc;
+        this.sections = new ArrayList<>();
 
         initPanel();
         initSections();
@@ -46,8 +49,12 @@ public class Settings extends JPanel {
         return Utilities.getLocaleString("Moda.Settings.panelTitle");
     }
 
-
+    /**
+     * Add a section to the settings panel
+     */
     private void addSection(Section section){
+        this.sections.add(section);
+
         JSeparator separator = new JSeparator(SwingConstants.HORIZONTAL);
         JLabel sectionName = new JLabel(section.getTitle());
 
@@ -55,4 +62,14 @@ public class Settings extends JPanel {
         add(separator, "span, grow, wrap");
         add(section, "span");
     }
+
+    /**
+     * Reload the sections after the settings file has been reset
+     */
+    public void reloadSections(){
+        for (Section section : this.sections){
+            section.reload();
+        }
+    }
+
 }

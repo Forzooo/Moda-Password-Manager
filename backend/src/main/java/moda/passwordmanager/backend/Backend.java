@@ -62,7 +62,7 @@ public class Backend extends EventListener {
     /**
      * For Windows only, migrate the Data directory from the previous path to the new one
      */
-    public static void migrateDataDirectory(){
+    private static void migrateDataDirectory(){
         // Other environments haven't been developed when the older path was being used, thus only Windows has to be
         // migrated
         if (Helper.getOS().startsWith("Windows")){
@@ -152,6 +152,12 @@ public class Backend extends EventListener {
         addOperation("get-database-name", () -> addResponseData(this.database.getName()));
         addLockedOperation("update-master-password", this::updateMasterPassword);
 
+        addOperation("reset-settings", () -> {
+            // After resetting the settings file, we have to set again the database selected property to the current
+            // database in use
+            this.settings.reset();
+            this.settings.writeSubproperty("database/selected", this.database.getPath());
+        });
 
         addLockedOperation("get-google-drive", () ->
                 addResponseData(this.sensitiveSettings.readBooleanProperty("google_drive/enabled")));

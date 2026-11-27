@@ -153,6 +153,6 @@ public class Data extends Section {
         event.addData(specialCharactersSelected);
 
         getItc().send(event);  // Send the event
-        Utilities.showToast(getRootPane(), Toast.Type.SUCCESS, "Moda.Toast.stringGeneration");
+        Utilities.showToast(getRootPane(), Toast.Type.SUCCESS, "Moda.Toast.stringGeneration");  // TODO
     }
 }

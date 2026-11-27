@@ -58,6 +58,13 @@ public class Settings extends AbstractSettings {
     }
 
     /**
+     * Reset the settings file to the default values
+     */
+    public void reset(){
+        updateSettingsFile(getDefaultSettings());
+    }
+
+    /**
      * Retrieve the current default settings for the application
      */
     private ObjectNode getDefaultSettings(){
