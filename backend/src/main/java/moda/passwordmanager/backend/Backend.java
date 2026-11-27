@@ -135,7 +135,10 @@ public class Backend extends EventListener {
         addLockedOperation("decrypt-data", () -> addResponseData(this.helper.decryptData((Data) getRequestData().getFirst())));
 
         addOperation("generate-string", this::generateString);
-        addOperation("set-string-generation", this::setStringGeneration);
+        addOperation("set-string-generation", () -> {
+            setStringGeneration();
+            showToast("Moda.Toast.stringGeneration", "SUCCESS");
+        });
         addOperation("get-string-generation", this::getStringGeneration);
 
         // Set a database path and reset the service fields
@@ -150,13 +153,17 @@ public class Backend extends EventListener {
         });
 
         addOperation("get-database-name", () -> addResponseData(this.database.getName()));
-        addLockedOperation("update-master-password", this::updateMasterPassword);
+        addLockedOperation("update-master-password", () -> {
+            updateMasterPassword();
+            showToast("Moda.Toast.updateMasterPassword", "SUCCESS");
+        });
 
         addOperation("reset-settings", () -> {
             // After resetting the settings file, we have to set again the database selected property to the current
             // database in use
             this.settings.reset();
             this.settings.writeSubproperty("database/selected", this.database.getPath());
+            showToast("Moda.Toast.resetSettings", "SUCCESS");
         });
 
         addLockedOperation("get-google-drive", () ->
@@ -178,6 +185,7 @@ public class Backend extends EventListener {
 
         addLockedOperation("google-drive-synchronization-conflicts-solved", () -> {
             this.googleDrive.setConflictsSolved();
+            showToast("Moda.Toast.solvedGoogleDriveConflicts", "SUCCESS");
             synchronizeGoogleDrive();  // After the conflicts are solved, we can resynchronize
         });
 

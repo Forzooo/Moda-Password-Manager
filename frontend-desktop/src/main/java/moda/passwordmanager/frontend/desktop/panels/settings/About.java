@@ -47,7 +47,7 @@ public class About extends Section{
         versionPanel.add(this.checkVersionButton);
 
         this.resetDefaultSettingsButton = new JButton();
-        this.resetDefaultSettingsButton.setText("Reset the settings");
+        this.resetDefaultSettingsButton.setText(Utilities.getLocaleString("Moda.About.resetSettingsButton"));
 
         addOption(authorsLabel);
         addOption(licenseLabel);

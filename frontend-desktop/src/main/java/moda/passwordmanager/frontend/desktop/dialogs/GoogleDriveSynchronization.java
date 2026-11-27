@@ -136,7 +136,6 @@ public class GoogleDriveSynchronization extends JDialog {
             // After all the conflicts have been solved, we can update the Google Drive status to complete the
             // synchronization
             this.itc.request(new Event("google-drive-synchronization-conflicts-solved"));
-            Utilities.showToast(getOwner(), Toast.Type.SUCCESS, Utilities.getLocaleString("Moda.Toast.solvedGoogleDriveConflicts"));
             dispose();  // The dialog is destroyed as it's not required anymore
         });
 
